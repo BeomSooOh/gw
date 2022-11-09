@@ -1,0 +1,1828 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="addrManage">
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	
+	<insert id="AddrManageService.InsrtAddrGroupInfo" parameterClass="java.util.HashMap">
+			
+		<!-- 2018.10.18 maria에서 oracle로 수정. 방영민 -->
+		/* AddrManageService.InsrtAddrGroupInfo - oracleDB */
+		INSERT INTO $DB_NEOS$t_tmpg_addrGroup
+			(
+			  addr_group_seq
+			 ,addr_group_nm
+			 ,addr_group_tp
+			 ,addr_group_desc
+			 ,use_yn
+			 ,order_num
+			 ,create_seq
+			 ,create_date
+			)
+		VALUES
+			(
+			  #addr_group_id#
+			 ,#addr_group_nm#
+			 ,#addr_group_tp#
+			 ,#addr_group_desc#
+			 ,#useYn#
+			 ,#orderNum#
+			 ,#empSeq#
+			 ,TO_DATE(SYSDATE,'yyyy-mm-dd hh24:mi:ss')
+			)
+		
+	</insert>
+	
+	<update id="AddrManageService.UpdateAddrGroupInfo" parameterClass="java.util.HashMap">
+	    
+	    <!-- 2018.10.19 maria에서 oracle로 수정. 방영민 -->
+	    /* AddrManageService.UpdateAddrGroupInfo - mariaDB */
+		UPDATE $DB_NEOS$t_tmpg_addrGroup
+			SET addr_group_nm = #addr_group_nm#
+			   ,addr_group_tp = #addr_group_tp#
+			   ,addr_group_desc = #addr_group_desc#
+			   ,use_yn = #useYn#
+			   ,order_num = #orderNum#
+			   ,modify_seq = #empSeq#
+			   ,modify_date = TO_DATE(SYSDATE,'yyyy-mm-dd hh24:mi:ss')
+	    WHERE addr_group_seq = #addr_group_id#
+	    
+	</update>
+	
+	
+	
+	<select id="AddrManageService.GetAddrGroupID" resultClass="String">
+		/* AddrManageService.GetAddrGroupID - oracle */
+		SELECT 
+			MAX(CAST(addr_group_seq AS INT))
+		FROM $DB_NEOS$t_tmpg_addrGroup
+	</select>
+	
+	
+	<select id="AddrManageService.GetAddrPublicID" resultClass="String">
+		
+		<!-- 2018.10.19 maria에서 oracle로 수정. 방영민 -->
+		/* AddrManageService.GetAddrPublicID - oracleDB */
+		select $DB_NEOS$F_NEXTVAL('addrPublic') from t_seq where rownum=1
+		
+	</select>
+	
+	<delete id="AddrManageService.DeleteAddrPublicID" parameterClass="java.util.HashMap">
+		
+		<!-- 2018.10.19 maria에서 oracle로 수정. 방영민 -->
+		/* AddrManageService.DeleteAddrPublicID - oracleDB */
+		DELETE FROM $DB_NEOS$t_tmpg_addrpublic
+		WHERE addr_group_seq = #addr_group_id#
+		
+	</delete>
+	
+	
+	
+	<insert id="AddrManageService.InsertAddrPublicInfo" parameterClass="java.util.HashMap">
+			
+		<!-- 2018.10.19 maria에서 oracle로 수정. 방영민 -->
+		/* AddrManageService.InsertAddrPublicInfo - oracleDB */
+		
+		INSERT INTO $DB_NEOS$t_tmpg_addrPublic
+			(
+			  addr_public_seq
+			 ,addr_group_seq
+			 <isNotEmpty property="addrDeptSeq">
+			 ,dept_seq
+			 </isNotEmpty>
+			 ,org_div
+			 ,org_seq
+			 ,org_subSeq
+			 ,create_seq
+			 ,create_date
+			)
+		VALUES
+			(
+			  #addr_public_id#
+			 ,#addr_group_id#
+			 <isNotEmpty property="addrDeptSeq">
+			 ,#addrDeptSeq#
+			 </isNotEmpty>
+			 ,#gbnInfo#
+			 ,#seqInfo#
+			 ,null
+			 ,#empSeq#
+			 ,TO_DATE(SYSDATE,'yyyy-mm-dd hh24:mi:ss')
+			)
+			
+	</insert>
+	
+	
+	
+	
+	
+	<select id="AddrManageService.GetAddrGroupList" resultClass="java.util.HashMap" parameterClass="java.util.HashMap">
+	    
+	 	/* AddrManageService.GetAddrGroupList - oracleDB */
+	 	SELECT *
+	 	FROM
+	 	(
+		 	SELECT
+		 	ROWNUM AS "RNUM"
+		 	,RESULT1.*
+		 	FROM
+		 	(
+			 	SELECT Distinct 
+					a.addr_group_seq as "addr_group_seq"
+					,case when a.addr_group_tp = '10' then $DB_NEOS$get_code_detail_info('0', 'option0045', '0', #langCode#) 
+					when a.addr_group_tp = '20' then $DB_NEOS$get_code_detail_info('0', 'mp0007', '20', #langCode#) 
+					when a.addr_group_tp = '30' then $DB_NEOS$get_code_detail_info('0', 'mp0007', '30', #langCode#) 
+					when a.addr_group_tp = '50' then $DB_NEOS$get_code_detail_info('0', 'option0005', '1', #langCode#) end as "addr_group_tp_nm"
+					,a.addr_group_tp as "addr_group_tp"
+					,a.addr_group_nm as "addr_group_nm"
+					,$DB_NEOS$FN_GetMultiLang(#langCode#, em.emp_name_multi) as "create_nm"
+					,a.addr_group_desc as "addr_group_desc"
+					,a.create_seq as "create_seq"
+					,a.use_yn as "use_yn"
+					,a.order_num as "order_num"
+					,(select nvl2(count(*),count(*),0)
+							from $DB_NEOS$t_tmpg_addr B 
+							where B.addr_group_seq = a.addr_group_seq) as "cntAddr"
+					,#empSeq# as "userEmpSeq"
+				from $DB_NEOS$t_tmpg_addrgroup a
+				left outer join $DB_NEOS$v_t_co_emp_multi em on a.create_seq = em.emp_seq
+				left outer join $DB_NEOS$t_tmpg_addr B on A.addr_group_seq = B.addr_group_seq
+				left outer join $DB_NEOS$t_tmpg_addrpublic C on a.addr_group_seq = c.addr_group_seq
+				WHERE nvl(addr_group_nm,chr(32)) LIKE nvl('%$txtSearchGroupNm$%',chr(32))
+				<isEmpty property="chkMyGroup">
+				   		AND (( a.addr_group_tp = '30' and (A.create_seq = #empSeq# or B.create_seq = #empSeq#)
+				   			or a.addr_group_tp = '10' and (B.comp_seq = #compSeq# or C.org_seq = #compSeq#)
+				   			or a.addr_group_tp = '20' and #deptSeq# in (
+				   				SELECT org2.dept_seq
+				   				FROM $DB_NEOS$v_org_chart org
+				   				INNER JOIN $DB_NEOS$v_org_chart org2
+				   				ON CONCAT(CONCAT('|',org2.path),'|') LIKE CONCAT(CONCAT('%|', org.path), '|%')
+				   				WHERE org.seq = C.org_seq and org.gbn_org = 'd'
+				   			) or C.org_seq = #empSeq#
+				   			or #compSeq# in (
+				   				SELECT org2.comp_seq
+				   				FROM $DB_NEOS$v_org_chart org
+				   				INNER JOIN $DB_NEOS$v_org_chart org2
+				   				ON CONCAT(CONCAT('|',org2.path),'|') LIKE CONCAT(CONCAT('%|', org.path), '|%')
+				   				WHERE org.seq = C.org_seq and org.gbn_org = 'c'
+				   			)
+				   			or a.addr_group_tp = '50' and C.org_seq = #compSeq#
+				   		) or a.create_seq = #empSeq# ) 
+				   		
+				   		   
+			    </isEmpty>		
+				<isNotEmpty property="chkMyGroup">
+				   		AND a.create_seq = #empSeq#
+			    </isNotEmpty>
+				<isNotEmpty property="useYN">
+				   		AND a.use_yn = #useYN#  		   
+			    </isNotEmpty>	    
+			    
+			    <isNotEmpty property="addrGroupTp">
+			    	<isNotEqual property="addrGroupTp" compareValue="0">
+			    		AND a.addr_group_tp = #addrGroupTp#
+			    	</isNotEqual>	    	
+			    </isNotEmpty>
+			    order by a.order_num,
+			    case a.addr_group_tp
+			   	when '30' then 1
+			   	when '10' then 2
+			   	when '20' then 3
+			   	end, case a.addr_group_nm when 'SENT' THEN 2 ELSE 1 END desc
+		    ) RESULT1
+		    <isNotEmpty property="endNum">
+		    WHERE ROWNUM <![CDATA[<=]]> #endNum#
+		    </isNotEmpty>
+		    
+	    )RESULT2
+	    <isNotEmpty property="startNum">
+	    WHERE "RNUM" <![CDATA[>=]]> #startNum#
+	    </isNotEmpty>
+	</select>
+	
+	<select id="AddrManageService.GetCmmPopAddrGroupList" resultClass="java.util.HashMap" parameterClass="java.util.HashMap" remapResults="true">
+		/* AddrManageService.GetCmmPopAddrGroupList - oracle */
+		SELECT *
+		  FROM(
+		  		SELECT 
+		  			ROWNUM AS "RNUM"
+		  			, DUMMY.folder as "folder"
+		  			, DUMMY.group_seq as "group_seq"
+		  			, DUMMY.addr_group_tp_nm as "addr_group_tp_nm"
+		  			, DUMMY.addr_group_tp as "addr_group_tp"
+		  			, DUMMY.group_nm as "group_nm"
+		  			, DUMMY.create_nm as "create_nm"
+		  			, DUMMY.addr_group_desc as "addr_group_desc"
+		  			, DUMMY.create_seq as "create_seq"
+		  			, DUMMY.use_yn as "use_yn"
+		  			, DUMMY."cntAddr" as "cntAddr"
+		  			, DUMMY.order_num as "order_num"
+		  		  FROM(
+						SELECT Distinct 
+							  'folder' as folder	
+							, a.addr_group_seq as group_seq
+							, case a.addr_group_tp when '10' then $DB_NEOS$get_code_detail_info('0', 'option0045', '0', #langCode#) 
+												  when '20' then $DB_NEOS$get_code_detail_info('0', 'mp0007', '20', #langCode#) 
+												  when '30' then $DB_NEOS$get_code_detail_info('0', 'mp0007', '30', #langCode#) 
+												  when '50' then $DB_NEOS$get_code_detail_info('0', 'option0005', '1', #langCode#) 
+							  end as addr_group_tp_nm
+							, a.addr_group_tp
+							, a.addr_group_nm as group_nm
+							, (select emp_name from $DB_NEOS$v_user_info b
+								where a.create_seq = b.emp_seq and b.emp_lang_code=#langCode#
+								  and rownum <![CDATA[<=]]> 1			
+								) as create_nm
+							, a.addr_group_desc
+							, a.create_seq
+							, a.use_yn
+							, (select CASE WHEN COUNT(*) > 0 THEN COUNT(*)
+										  ELSE 0
+										  END  
+									from $DB_NEOS$t_tmpg_addr B 
+									where B.addr_group_seq = a.addr_group_seq) "cntAddr"
+							, a.order_num
+						from $DB_NEOS$t_tmpg_addrgroup a
+						left outer join $DB_NEOS$t_tmpg_addr B on A.addr_group_seq = B.addr_group_seq
+						left outer join $DB_NEOS$t_tmpg_addrpublic C on a.addr_group_seq = c.addr_group_seq
+						WHERE NVL(addr_group_nm,chr(32)) LIKE NVL('%$txtSearchGroupNm$%',chr(32))
+						<isEmpty property="chkMyGroup">
+						   		AND 1 = (case when a.addr_group_tp = '30' AND (A.create_seq = #empSeq# or B.create_seq = #empSeq#) then 1  
+											  when a.addr_group_tp = '10' AND (B.comp_seq = #compSeq# or C.org_seq = #compSeq#) then 1
+											  when a.addr_group_tp = '20' AND (#deptSeq# in (
+																 SELECT org2.dept_seq 
+																	FROM $DB_NEOS$v_org_chart org
+																 INNER JOIN $DB_NEOS$v_org_chart org2
+																	 ON org2.path LIKE CONCAT(org.path, '|%')
+																 WHERE org.seq = C.org_seq and org.gbn_org = 'd'
+																   ) or C.org_seq = #empSeq# 
+													 or #compSeq# in (
+																 SELECT org2.comp_seq 
+																	FROM $DB_NEOS$v_org_chart org
+																 INNER JOIN $DB_NEOS$v_org_chart org2
+																	 ON org2.path LIKE CONCAT(org.path, '|%')
+																 WHERE org.seq = C.org_seq and org.gbn_org = 'c'
+																   )) then 1 
+										      when a.addr_group_tp = '50' AND C.org_seq = #compSeq# then 1
+										      else 0
+										      end)  		   
+					    </isEmpty>		
+						<isNotEmpty property="chkMyGroup">
+						   		AND a.create_seq = #empSeq#  		   
+					    </isNotEmpty>
+						<isNotEmpty property="useYN">
+						   		AND a.use_yn = #useYN#  		   
+					    </isNotEmpty>	    
+					    
+					    <isNotEmpty property="addrGroupTp">
+					    		AND a.addr_group_tp = #addrGroupTp#
+					    </isNotEmpty>
+					    order by a.order_num, 
+					    case a.addr_group_tp
+					   	when '30' then 1
+					   	when '10' then 2
+					   	when '20' then 3
+					   	else 0
+					   	end, decode(a.addr_group_nm,'SENT', 1,0) desc
+					   	) DUMMY
+					<isNotEmpty property="startNum">
+					WHERE ROWNUM <![CDATA[<]]> $startNum$ + $endNum$
+					</isNotEmpty>
+					)
+			<isNotEmpty property="startNum">
+			WHERE RNUM <![CDATA[>=]]> $startNum$   	
+			</isNotEmpty>		   	
+	    
+	</select>
+	
+	
+	<select id="AddrManageService.GetAddrGroupList2" resultClass="java.util.HashMap" parameterClass="java.util.HashMap">
+	    
+	    <!-- 2018.10.19 maria에서 oracle로 수정. 방영민 -->
+	    /* AddrManageService.GetAddrGroupList2 - oracleDB*/
+		SELECT Distinct 
+			a.addr_group_seq as "addrGroupSeq"
+			,case when a.addr_group_tp = 10 then $DB_NEOS$get_code_detail_info('0', 'option0045', '0', #langCode#) 
+			when a.addr_group_tp = 20 then $DB_NEOS$get_code_detail_info('0', 'mp0007', '20', #langCode#) 
+			when a.addr_group_tp = 30 then $DB_NEOS$get_code_detail_info('0', 'mp0007', '30', #langCode#) 
+			when a.addr_group_tp = 50 then $DB_NEOS$get_code_detail_info('0', 'option0005', '1', #langCode#) end as "addrGroupTpNm"
+			,a.addr_group_tp as "addrGroupTp" 
+			,a.addr_group_nm as "addrGroupNm"
+			,a.addr_group_desc as "addrGroupDesc" 
+			,(select nvl2(count(*),count(*),0)
+					from $DB_NEOS$t_tmpg_addr B 
+					where B.addr_group_seq = a.addr_group_seq) as "cntAddr"
+			,a.addr_group_tp as "addr_Group_Tp" 
+			,a.addr_group_nm as "addr_Group_Nm"
+			,a.order_num as "order_num"
+		from $DB_NEOS$t_tmpg_addrgroup a
+		left outer join $DB_NEOS$t_tmpg_addr B on A.addr_group_seq = B.addr_group_seq
+		left outer join $DB_NEOS$t_tmpg_addrpublic C on a.addr_group_seq = c.addr_group_seq
+		WHERE nvl(addr_group_nm,chr(32)) LIKE nvl('%$txtSearchGroupNm$%',chr(32))
+		AND (a.addr_group_tp = 30 and (A.create_seq = #empSeq# or B.create_seq = #empSeq# )
+		     or a.addr_group_tp = 10 and (B.comp_seq = #compSeq# or C.org_seq = #compSeq#)
+		     or a.addr_group_tp = 20 and #deptSeq# in (
+		     	SELECT org2.dept_seq 
+				FROM $DB_NEOS$v_org_chart org
+				INNER JOIN $DB_NEOS$v_org_chart org2
+				ON '|' || org2.path || '|' LIKE '%|' || org.path || '|%'
+				WHERE org.seq = C.org_seq and org.gbn_org = 'd'
+		     ) or C.org_seq = #empSeq# 
+		     or #compSeq# in (
+		     	SELECT org2.comp_seq 
+				FROM $DB_NEOS$v_org_chart org
+			 	INNER JOIN $DB_NEOS$v_org_chart org2
+			 	ON '|' || org2.path || '|' LIKE '%|' || org.path || '|%'
+			 	WHERE org.seq = C.org_seq and org.gbn_org = 'c'
+		     ) or a.addr_group_tp = 5 and C.org_seq = #compSeq#
+		)		
+		<isNotEmpty property="useYN">
+		   		AND a.use_yn = #useYN#  		   
+	    </isNotEmpty>
+	    <isNotEmpty property="chkMyGroup">
+		   		AND a.create_seq = #empSeq#  		   
+	    </isNotEmpty>
+	    <isNotEmpty property="addrGroupTp">
+	    		AND a.addr_group_tp = #addrGroupTp#
+	    </isNotEmpty>
+	    <isNotEmpty property="startNum">
+		   		AND rownum <![CDATA[ >= ]]> $startNum$ AND rownum <![CDATA[ <= ]]> $endNum$  
+	    </isNotEmpty>
+	    order by a.order_num, 
+	    case a.addr_group_tp
+	   	when '30' then 1
+	   	when '10' then 2
+	   	when '20' then 3
+	   	end, case a.addr_group_nm when 'SENT' then 2 else 1 end desc
+	    
+	    
+	</select>
+	
+	
+	<select id="AddrManageService.GetAddrGroupList_api" resultClass="java.util.HashMap" parameterClass="java.util.HashMap">
+	    
+	    <!-- 2018.10.19 maria에서 oracle로 수정. 방영민 -->
+	    /* AddrManageService.GetAddrGroupList_api - oracleDB */
+		SELECT Distinct 
+			nvl(a.addr_group_seq,chr(32)) as "addrGroupSeq"
+			,nvl(a.addr_group_nm,chr(32)) as "addrGroupNm"
+			,a.order_num as "a.order_num"
+			,a.addr_group_tp as "a.addr_group_tp"
+			,a.addr_group_nm as "a.addr_group_nm"
+		from $DB_NEOS$t_tmpg_addrgroup a
+		left outer join $DB_NEOS$t_tmpg_addr B on A.addr_group_seq = B.addr_group_seq
+		left outer join $DB_NEOS$t_tmpg_addrpublic C on a.addr_group_seq = c.addr_group_seq
+		WHERE nvl(addr_group_nm,chr(32)) LIKE nvl('%$txtSearchGroupNm$%',chr(32))
+		AND (a.addr_group_tp = 30 and (A.create_seq = #empSeq# or B.create_seq = #empSeq#)
+		     or a.addr_group_tp = 10 and (B.comp_seq = #compSeq# or C.org_seq = #compSeq#)
+		     or a.addr_group_tp = 20 and #deptSeq# in (
+		     	SELECT org2.dept_seq 
+				FROM $DB_NEOS$v_org_chart org
+				INNER JOIN $DB_NEOS$v_org_chart org2
+				ON '|' || org2.path || '|' LIKE '%|' || org.path || '|%'
+				WHERE org.seq = C.org_seq and org.gbn_org = 'd'
+		     ) or C.org_seq = #empSeq#
+		     or #compSeq# in (
+		     	SELECT org2.comp_seq 
+				FROM $DB_NEOS$v_org_chart org
+				INNER JOIN $DB_NEOS$v_org_chart org2
+				ON '|' || org2.path || '|' LIKE '%|' || org.path || '|%'
+				WHERE org.seq = C.org_seq and org.gbn_org = 'c'
+		     ) or a.addr_group_tp = 50 and C.org_seq = #compSeq#
+		)	
+		<isNotEmpty property="useYN">
+		   		AND a.use_yn = #useYN#  		   
+	    </isNotEmpty>
+	    <isNotEmpty property="chkMyGroup">
+		   		AND a.create_seq = #empSeq#  		   
+	    </isNotEmpty>
+	    <isNotEmpty property="startNum">
+		   	AND rownum <![CDATA[ >= ]]> $startNum$ AND rownum <![CDATA[ <= ]]> $endNum$   
+	    </isNotEmpty>
+	    order by a.order_num, 
+	    case a.addr_group_tp
+	   	when '30' then 1
+	   	when '10' then 2
+	   	when '20' then 3
+	   	end, case a.addr_group_nm when 'SENT' then 2 else 1 end desc
+	    
+	</select>
+	
+	<select id="AddrManageService.GetAddrGroupTpList" parameterClass="hashmap" resultClass="egovMap">
+	
+	<!--  2018.10.19 maroadb(AddrManage_SQL.xml)에는 있고 oracle(AddrManage_SQL.xml)에는 없어서 추가함. 방영민 확인  -->
+			select 
+				$DB_NEOS$FN_GetMultiLang(#langCode#, b.detail_name_multi) as tp_name,  
+				a.detail_code as tp_code 
+			from $DB_NEOS$t_co_code_detail a
+			inner join $DB_NEOS$v_t_co_code_detail_multi b on a.detail_code = b.detail_code and a.code = b.code
+			where a.code = #code#
+			
+	</select>
+	
+	<select id="AddrManageService.GetAddrGroupList_TOTALCOUNT" parameterClass="java.util.HashMap" resultClass="String">
+		/* AddrManageService.GetAddrGroupList_TOTALCOUNT - oracleDB */
+		
+	 	SELECT COUNT(Distinct a.addr_group_seq) AS "cnt"
+		from $DB_NEOS$t_tmpg_addrgroup a
+		left outer join $DB_NEOS$v_t_co_emp_multi em on a.create_seq = em.emp_seq
+		left outer join $DB_NEOS$t_tmpg_addr B on A.addr_group_seq = B.addr_group_seq
+		left outer join $DB_NEOS$t_tmpg_addrpublic C on a.addr_group_seq = c.addr_group_seq
+		WHERE nvl(addr_group_nm,chr(32)) LIKE nvl('%$txtSearchGroupNm$%',chr(32))
+		<isEmpty property="chkMyGroup">
+		   		AND (( a.addr_group_tp = '30' and (A.create_seq = #empSeq# or B.create_seq = #empSeq#)
+		   			or a.addr_group_tp = '10' and (B.comp_seq = #compSeq# or C.org_seq = #compSeq#)
+		   			or a.addr_group_tp = '20' and #deptSeq# in (
+		   				SELECT org2.dept_seq
+		   				FROM $DB_NEOS$v_org_chart org
+		   				INNER JOIN $DB_NEOS$v_org_chart org2
+		   				ON CONCAT(CONCAT('|',org2.path),'|') LIKE CONCAT(CONCAT('%|', org.path), '|%')
+		   				WHERE org.seq = C.org_seq and org.gbn_org = 'd'
+		   			) or C.org_seq = #empSeq#
+		   			or #compSeq# in (
+		   				SELECT org2.comp_seq
+		   				FROM $DB_NEOS$v_org_chart org
+		   				INNER JOIN $DB_NEOS$v_org_chart org2
+		   				ON CONCAT(CONCAT('|',org2.path),'|') LIKE CONCAT(CONCAT('%|', org.path), '|%')
+		   				WHERE org.seq = C.org_seq and org.gbn_org = 'c'
+		   			)
+		   			or a.addr_group_tp = '50' and C.org_seq = #compSeq#
+		   		) or a.create_seq = #empSeq# ) 
+		   		
+		   		   
+	    </isEmpty>		
+		<isNotEmpty property="chkMyGroup">
+		   		AND a.create_seq = #empSeq#
+	    </isNotEmpty>
+		<isNotEmpty property="useYN">
+		   		AND a.use_yn = #useYN#  		   
+	    </isNotEmpty>	    
+	    
+	    <isNotEmpty property="addrGroupTp">
+	    	<isNotEqual property="addrGroupTp" compareValue="0">
+	    		AND a.addr_group_tp = #addrGroupTp#
+	    	</isNotEqual>	    	
+	    </isNotEmpty>
+	</select>
+	
+	<delete id="AddrManageService.DeleteAddrGroupInfo" parameterClass="java.util.HashMap">
+	/* AddrManageService.DeleteAddrGroupInfo - Oracle */
+		DELETE FROM $DB_NEOS$t_tmpg_addrGroup
+		WHERE addr_group_seq = #addr_group_seq#
+	</delete>
+	
+	<delete id="AddrManageService.DeleteAddrPublicInfo" parameterClass="java.util.HashMap">
+		/* AddrManageService.DeleteAddrPublicInfo - Oracle */
+		DELETE FROM $DB_NEOS$t_tmpg_addrPublic
+		WHERE addr_group_seq = #addr_group_seq#
+	</delete>
+	
+	
+	<delete id="AddrManageService.DeleteAddrPublicList" parameterClass="java.util.HashMap">
+		/* AddrManageService.DeleteAddrPublicList - Oracle */
+		DELETE FROM $DB_NEOS$t_tmpg_addrPublic
+		WHERE addr_group_seq in($arrGroupSeqList$)
+	</delete>
+	
+	<select id="AddrManageService.GetGroupList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap" remapResults="true">
+		/* AddrManageService.GetGroupList - Oracle */
+		SELECT Distinct 
+			a.addr_group_seq as "CD_SEQ"
+			,a.addr_group_nm as "CD_NAME"
+			,a.order_num
+			,a.addr_group_tp
+		from $DB_NEOS$t_tmpg_addrgroup a
+		left outer join $DB_NEOS$t_tmpg_addr B on A.addr_group_seq = B.addr_group_seq
+		left outer join $DB_NEOS$t_tmpg_addrpublic C on a.addr_group_seq = c.addr_group_seq
+		WHERE NVL(addr_group_nm,'') LIKE '%$txtSearchGroupNm$%'
+		<isNotEqual property="adminAuth" compareValue="ADMIN">
+			 AND (
+	                (a.addr_group_tp = '30' and (A.create_seq = #empSeq# or B.create_seq = #empSeq#  ))
+	                or 
+	                (a.addr_group_tp = '10' and (B.comp_seq = #compSeq# or C.org_seq = #compSeq#))
+	                or 
+	                (
+	                		a.addr_group_tp = '20' 
+	                		and #deptSeq# in (
+	                             SELECT org2.dept_seq 
+	                                FROM $DB_NEOS$v_org_chart org
+	                             INNER JOIN $DB_NEOS$v_org_chart org2
+	                                 ON '|' || org2.path || '|' LIKE '%|' || org.path || '|%'
+	                             WHERE org.seq = C.org_seq and org.gbn_org = 'd'
+	                               ) 
+	                		or C.org_seq = #empSeq#  
+	                		or #compSeq# in (
+	                             SELECT org2.comp_seq 
+	                                FROM $DB_NEOS$v_org_chart org
+	                             INNER JOIN $DB_NEOS$v_org_chart org2
+	                                ON '|' || org2.path || '|' LIKE '%|' || org.path || '|%'
+	                             WHERE org.seq = C.org_seq and org.gbn_org = 'c'
+	                               ) 
+	                )
+	                or 
+	                (a.addr_group_tp = '50' and C.org_seq = #compSeq#)
+                )
+		</isNotEqual>
+		<isNotEmpty property="groupDiv">
+			AND a.addr_group_tp = #groupDiv#
+ 		</isNotEmpty>
+ 		order by a.order_num, 
+ 		case a.addr_group_tp
+	   	when '30' then 1
+	   	when '10' then 2
+	   	when '20' then 3
+	   	end, case a.addr_group_nm when 'SENT' then 2 else 1 end desc
+	</select>
+	
+	
+	<select id="AddrManageService.GetAddrList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+    
+	/* AddrManageService.GetAddrList - oracleDB */
+	
+	SELECT
+	*
+	FROM
+	(
+		SELECT
+			rownum as "rnum"
+			,case when addr_div = 10 then $DB_NEOS$get_code_detail_info('0', 'option0045', '0', #langCode#)
+			when addr_div = 20 then $DB_NEOS$get_code_detail_info('0', 'mp0007', '20', #langCode#) 
+			when addr_div = 30 then $DB_NEOS$get_code_detail_info('0', 'mp0007', '30', #langCode#) 
+			when addr_div = 50 then $DB_NEOS$get_code_detail_info('0', 'option0005', '1', #langCode#) 
+			end as "addr_div_nm"
+			,addr_seq as "addr_seq"
+			,addr_div as "addr_div"
+			,B.addr_group_nm as "addr_group_nm"
+			,emp_nm as "emp_nm"
+			,comp_nm as "comp_nm"
+			,emp_email as "emp_email"
+			,emp_fax as "emp_fax"
+			,comp_fax as "comp_fax"
+			,$DB_NEOS$FN_GetMultiLang(#langCode#, cem.emp_name_multi) as "create_nm"
+			,A.create_seq as "create_seq"
+			,A.order_num as "order_num"
+			,#empSeq# as "userEmpSeq"
+			FROM $DB_NEOS$t_tmpg_addr A
+			INNER JOIN $DB_NEOS$t_tmpg_addrGroup B on A.addr_group_seq = B.addr_group_seq
+			left join v_t_co_emp_multi cem on A.create_seq = cem.emp_seq
+			left join (select distinct addr_group_seq
+					   from $DB_NEOS$t_tmpg_addrpublic A
+					   where org_div = 'c' and org_seq = #compSeq#
+					   or org_div = 'd' and #deptSeq# in (
+					   		SELECT org2.dept_seq
+					   		FROM $DB_NEOS$v_org_chart org
+					   		INNER JOIN $DB_NEOS$v_org_chart org2
+					   		ON CONCAT(CONCAT('|',org2.path),'|') LIKE CONCAT(CONCAT('%|', org.path), '|%')
+					   		WHERE org.seq = A.org_seq
+					   ) or org_div = 'm' and org_seq = #empSeq#				 									  
+			) C on C.addr_group_seq = B.addr_group_seq and (B.addr_group_tp = '20' or B.addr_group_tp = '50') 
+			WHERE 1=1
+			<isNotEmpty property="txtEmpNm">
+				AND nvl(emp_nm,chr(32)) LIKE nvl('%$txtEmpNm$%',chr(32))
+			</isNotEmpty>	
+			<isNotEmpty property="txtCompNm">
+				AND nvl(comp_nm,chr(32)) LIKE nvl('%$txtCompNm$%',chr(32))
+			</isNotEmpty>
+			<isNotEmpty property="txtPhNum">
+				AND (nvl(emp_hp,chr(32)) LIKE nvl('%$txtPhNum$%',chr(32))
+				OR  nvl(emp_tel,chr(32)) LIKE nvl('%$txtPhNum$%',chr(32))
+				OR  nvl(comp_tel,chr(32)) LIKE nvl('%$txtPhNum$%',chr(32)))
+			</isNotEmpty>
+			<isNotEmpty>
+				AND (nvl(emp_fax,chr(32)) LIKE nvl('%$txtFaxNum$%',chr(32))
+				OR  nvl(comp_fax,chr(32)) LIKE nvl('%$txtFaxNum$%',chr(32)))
+			</isNotEmpty>
+			<isNotEmpty property="syncTime">
+				and SUBSTR(TO_CHAR(A.create_date,'YYYY-MM-DD HH24:MI:SS'), 1, 17) <![CDATA[ < ]]> #syncTime#
+			</isNotEmpty>
+			<isEmpty property="adminAuth">
+				AND (A.create_seq = #empSeq# or (A.addr_div = '10' and A.comp_seq = #compSeq#) or (A.addr_div = '20' and C.addr_group_seq is not null) or (A.addr_div = '30' and A.create_seq = #empSeq#))
+			</isEmpty>
+			<isNotEmpty property="adminAuth">
+				<isEqual property="adminAuth" compareValue="USER">
+					AND (A.create_seq = #empSeq# or (A.addr_div = '10' and A.comp_seq = #compSeq#) or (A.addr_div = '20' and C.addr_group_seq is not null) or (A.addr_div = '30' and A.create_seq = #empSeq#))
+				</isEqual>
+			</isNotEmpty>
+			<isNotEmpty property="chkMyGroup">
+		   		AND A.create_seq = #empSeq#  		   
+	   		</isNotEmpty>
+	   		<isNotEmpty property="addrDiv">
+		   		AND A.addr_div = #addrDiv#  		   
+	   		</isNotEmpty>
+	   		<isNotEmpty property="addrGroupSeq">
+		   		<isNotEqual property="addrGroupSeq" compareValue="0">
+		   			AND A.addr_group_seq = #addrGroupSeq#
+		   		</isNotEqual>
+	   		</isNotEmpty>
+	   		<isNotEmpty property="searchTarget">
+	   			<isEqual property="searchTarget" compareValue="all">
+		        	<isNotEmpty property="txtSearch">
+		        		AND (nvl(emp_nm,chr(32)) LIKE '%$txtSearch$%' or nvl(comp_nm,chr(32)) LIKE '%$txtSearch$%' or nvl(emp_email,chr(32)) LIKE '%$txtSearch$%' or nvl(emp_fax,chr(32)) LIKE '%$txtSearch$%' or nvl(comp_fax,chr(32)) LIKE '%$txtSearch$%') 
+		        	</isNotEmpty>
+		        </isEqual>
+		        <isEqual property="searchTarget" compareValue="name">
+		        	<isNotEmpty property="txtSearch">
+		        		AND nvl(emp_nm,chr(32)) LIKE '%$txtSearch$%'
+		        	</isNotEmpty>
+		        </isEqual>
+		        <isEqual property="searchTarget" compareValue="comp">
+		        	<isNotEmpty property="txtSearch">
+		        		AND nvl(comp_nm,chr(32)) LIKE '%$txtSearch$%'
+		        	</isNotEmpty>
+		        </isEqual>
+		        <isEqual property="searchTarget" compareValue="email">
+		        	<isNotEmpty property="txtSearch">
+		        		AND nvl(emp_email,chr(32)) LIKE '%$txtSearch$%'
+		        	</isNotEmpty>
+		        	<isEmpty property="txtSearch">
+		        		AND length(emp_email) > 0
+		        	</isEmpty>
+		        </isEqual>
+		        <isEqual property="searchTarget" compareValue="fax">
+		        	<isNotEmpty property="txtSearch">
+		        		AND (nvl(emp_fax,chr(32)) LIKE '%$txtSearch$%' or nvl(comp_fax,chr(32)) LIKE '%$txtSearch$%') 
+		        	</isNotEmpty>
+		        	<isEmpty property="txtSearch">
+		        		AND (length(emp_fax) > 0 or length(comp_fax) > 0)
+		        	</isEmpty>
+		        </isEqual>
+	   		</isNotEmpty>
+			<isNotEmpty property="startNum">
+				AND ROWNUM <![CDATA[ <= ]]> #endNum#  
+			</isNotEmpty>
+			<isNotEmpty>
+				<isEqual property="apiFlag" compareValue="fax">
+			</isEqual>	   			
+	   		</isNotEmpty>
+	   		order by nvl2(CASE WHEN nvl(A.order_num,chr(32)) = chr(32) THEN chr(32) ELSE A.order_num END, '9999999999', A.order_num), A.create_date desc
+    	) RESULT
+    	WHERE "rnum" >= #startNum#
+	</select>
+	
+	<select id="AddrManageService.GetCmmAddrList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap" remapResults="true">
+		/* AddrManageService.GetCmmAddrList - oracle */
+		SELECT
+			addr_seq as "addr_seq"
+			,a.addr_group_seq as "addr_group_seq"
+			,a.comp_nm as "comp_nm"
+			,a.emp_nm as "emp_nm"
+			,a.emp_fax as "comp_fax"
+			,a.emp_hp as "comp_tel"
+			,emp_email as "emp_email"
+			,A.order_num as "order_num"
+		FROM $DB_NEOS$t_tmpg_addr A
+		INNER JOIN $DB_NEOS$t_tmpg_addrGroup B on A.addr_group_seq = B.addr_group_seq
+		left join (select distinct addr_group_seq
+						from $DB_NEOS$t_tmpg_addrpublic A
+						where 1 = (case when org_div = 'c' AND org_seq = #compSeq# then 1 
+									    when org_div = 'd' AND (#deptSeq# in (
+																		 SELECT org2.dept_seq 
+																			FROM $DB_NEOS$v_org_chart org
+																		 INNER JOIN $DB_NEOS$v_org_chart org2
+																		     ON ('|' || org2.path || '|') LIKE ('%|' || org.path || '|%')																			 
+																		 WHERE org.seq = A.org_seq
+																		    )) then 1
+									  when org_div = 'm' AND org_seq = #empSeq#  then 1 
+									  else 0
+									  end)
+					 ) C on C.addr_group_seq = B.addr_group_seq and (B.addr_group_tp = '20' or B.addr_group_tp = '50') 
+		WHERE NVL(emp_nm,chr(32)) LIKE NVL('%$txtEmpNm$%',chr(32))
+			AND NVL(comp_nm,chr(32)) LIKE NVL('%$txtCompNm$%',chr(32))
+			AND (NVL(emp_hp,chr(32)) LIKE NVL('%$txtPhNum$%',chr(32))
+			OR  NVL(emp_tel,chr(32)) LIKE NVL('%$txtPhNum$%',chr(32))
+			OR  NVL(comp_tel,chr(32)) LIKE NVL('%$txtPhNum$%',chr(32)))
+			AND (NVL(emp_fax,chr(32)) LIKE NVL('%$txtFaxNum$%',chr(32))
+			OR  NVL(comp_fax,chr(32)) LIKE NVL('%$txtFaxNum$%',chr(32)))
+			<isEmpty property="adminAuth">
+				<isNotEqual property="adminAuth" compareValue="ADMIN">
+					AND (A.create_seq = #empSeq# or (A.addr_div = '10' and A.comp_seq = #compSeq#) or (A.addr_div = '20' and C.addr_group_seq is not null) or (A.addr_div = '30' and A.create_seq = #empSeq#))
+				</isNotEqual>
+			</isEmpty>
+			<isNotEmpty property="adminAuth">
+				<isEqual property="adminAuth" compareValue="USER">
+					AND (A.create_seq = #empSeq# or (A.addr_div = '10' and A.comp_seq = #compSeq#) or (A.addr_div = '20' and C.addr_group_seq is not null) or (A.addr_div = '30' and A.create_seq = #empSeq#))
+				</isEqual>
+			</isNotEmpty>
+			<isNotEmpty property="addrGroupSeq">
+		   		<isNotEqual property="addrGroupSeq" compareValue="0">
+		   			AND A.addr_group_seq = #addrGroupSeq#
+		   		</isNotEqual>
+	   		</isNotEmpty>
+			<isNotEmpty property="searchDiv">
+	   			<isEqual property="searchDiv" compareValue="all">
+		        	<isNotEmpty property="txtSearch">
+		        		AND (NVL(emp_nm,chr(32)) LIKE '%$txtSearch$%' or NVL(comp_nm,chr(32)) LIKE '%$txtSearch$%' or NVL(emp_email,chr(32)) LIKE '%$txtSearch$%') 
+		        	</isNotEmpty>
+		        </isEqual>	   		
+	   			<isEqual property="searchDiv" compareValue="이름">
+		        	<isNotEmpty property="txtSearch">
+		        		AND NVL(emp_nm,chr(32)) LIKE '%$txtSearch$%'
+		        	</isNotEmpty>
+		        </isEqual>
+		        <isEqual property="searchDiv" compareValue="회사">
+		        	<isNotEmpty property="txtSearch">
+		        		AND NVL(comp_nm,chr(32)) LIKE '%$txtSearch$%'
+		        	</isNotEmpty>
+		        </isEqual>
+		        <isEqual property="searchDiv" compareValue="팩스번호">
+		        	<isNotEmpty property="txtSearch">
+		        		AND NVL(emp_fax,chr(32)) LIKE '%$txtSearch$%'
+		        	</isNotEmpty>
+		        </isEqual>    
+		        <isEqual property="searchDiv" compareValue="휴대전화">
+		        	<isNotEmpty property="txtSearch">
+		        		AND NVL(emp_hp,chr(32)) LIKE '%$txtSearch$%'
+		        	</isNotEmpty>
+		        </isEqual>
+	       </isNotEmpty>
+	       order by DECODE(NVL(A.order_num,chr(32)), chr(32), '9999999999', A.order_num), A.create_date desc
+	</select>
+	
+	<select id="AddrManageService.GetAddrList_api" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	select *from
+	(
+		SELECT
+			rownum as rnum						
+			,nvl(B.addr_group_nm,'') as "addrGroupNm"
+			,nvl(emp_nm,'') as "empNm"
+			,nvl(comp_nm,'') as "compNm"
+			,nvl(emp_email,'') as "empEmail"			
+			,nvl(emp_fax,'') as "empFax"
+		FROM t_tmpg_addr A
+		INNER JOIN t_tmpg_addrGroup B on A.addr_group_seq = B.addr_group_seq
+		left join (select distinct addr_group_seq
+						from t_tmpg_addrpublic
+						
+						where (((org_div = 'c') AND (org_seq = #compSeq#))
+							   or((org_div = 'd') AND (org_seq = #deptSeq#))
+							   or((org_div = 'm') AND (org_seq = #empSeq#)))
+					 ) C on C.addr_group_seq = B.addr_group_seq and B.addr_group_tp = '20'
+		WHERE 1=1
+			<isNotEmpty property="txtEmpNm">
+				AND nvl(emp_nm,'') LIKE nvl('%$txtEmpNm$%','')
+			</isNotEmpty>
+			<isNotEmpty property="txtCompNm">
+				AND nvl(comp_nm,'') LIKE nvl('%$txtCompNm$%','')
+			</isNotEmpty>
+			<isNotEmpty property="txtPhNum">
+				AND (nvl(emp_hp,'') LIKE nvl('%$txtPhNum$%','')
+				OR  nvl(emp_tel,'') LIKE nvl('%$txtPhNum$%','')
+				OR  nvl(comp_tel,'') LIKE nvl('%$txtPhNum$%',''))
+			</isNotEmpty>
+			<isNotEmpty property="txtFaxNum">
+				AND (nvl(emp_fax,'') LIKE nvl('%$txtFaxNum$%','')
+				OR  nvl(comp_fax,'') LIKE nvl('%$txtFaxNum$%',''))
+			</isNotEmpty>
+			<isEmpty property="adminAuth">
+				AND (A.create_seq = #empSeq# or (A.comp_seq = #compSeq# and A.addr_div = 10) or C.addr_group_seq is not null)
+			</isEmpty>
+			<isNotEmpty property="chkMyGroup">
+		   		AND A.create_seq = #empSeq#  		   
+	   		</isNotEmpty>
+	   		<isNotEmpty property="addrDiv">
+		   		AND A.addr_div = #addrDiv#  		   
+	   		</isNotEmpty>
+	   		<isNotEmpty property="groupSeq">
+		   		<isNotEqual property="groupSeq" compareValue="0">
+		   			AND A.addr_group_seq = #groupSeq#
+		   		</isNotEqual>
+	   		</isNotEmpty>
+	   		<isNotEmpty property="searchTarget">
+	   			<isEqual property="searchTarget" compareValue="all">
+		        	<isNotEmpty property="txtSearch">
+		        		AND (nvl(emp_nm,'') LIKE '%$txtSearch$%' or nvl(comp_nm,'') LIKE '%$txtSearch$%' or nvl(emp_email,'') LIKE '%$txtSearch$%' or nvl(emp_fax,'') LIKE '%$txtSearch$%') 
+		        	</isNotEmpty>
+		        </isEqual>
+		        <isEqual property="searchTarget" compareValue="name">
+		        	<isNotEmpty property="txtSearch">
+		        		AND nvl(emp_nm,'') LIKE '%$txtSearch$%'
+		        	</isNotEmpty>
+		        </isEqual>
+		        <isEqual property="searchTarget" compareValue="comp">
+		        	<isNotEmpty property="txtSearch">
+		        		AND nvl(comp_nm,'') LIKE '%$txtSearch$%'
+		        	</isNotEmpty>
+		        </isEqual>
+		        <isEqual property="searchTarget" compareValue="email">
+		        	<isNotEmpty property="txtSearch">
+		        		AND nvl(emp_email,'') LIKE '%$txtSearch$%'
+		        	</isNotEmpty>
+		        </isEqual>
+		        <isEqual property="searchTarget" compareValue="fax">
+		        	<isNotEmpty property="txtSearch">
+		        		AND nvl(emp_fax,'') LIKE '%$txtSearch$%'
+		        	</isNotEmpty>
+		        </isEqual>
+	   		</isNotEmpty>
+	 )  		
+	<isNotEmpty property="startNum">
+	   		WHERE rnum between $startNum$ and $endNum$
+    </isNotEmpty>
+	</select>
+	
+	
+	<select id="AddrManageService.GetAddrList2" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+
+    <!-- 2018.10.18 maria에서 oracle로 수정. 방영민 -->
+	/* AddrManageService.GetAddrList2 - oracleDB */
+	SELECT
+		addr_seq as "addr_seq"
+		,case when addr_div = 10 then $DB_NEOS$get_code_detail_info('0', 'option0045', '0', #langCode#)
+		when addr_div = 20 then $DB_NEOS$get_code_detail_info('0', 'mp0007', '20', #langCode#) 
+		when addr_div = 30 then $DB_NEOS$get_code_detail_info('0', 'mp0007', '30', #langCode#) 
+		when addr_div = 50 then $DB_NEOS$get_code_detail_info('0', 'option0005', '1', #langCode#)
+		end as "addr_div_nm"
+		,B.addr_group_nm as "addr_group_nm"
+		,emp_nm as "emp_nm"
+		,comp_nm as "comp_nm"
+		,emp_email as "emp_email"
+		,nvl(A.emp_tel, chr(32)) as "emp_tel"
+		,nvl(A.emp_hp, chr(32)) as "emp_hp"
+		,(select emp_name from $DB_NEOS$v_user_info c
+			where A.create_seq = c.emp_seq and c.emp_lang_code=#langCode#
+			and rownum <![CDATA[ >= ]]> 0 and rownum <![CDATA[ <= ]]> 1			
+			) as "create_nm"
+		,A.create_seq as "create_seq"
+		,A.order_num as "order_num"
+		FROM $DB_NEOS$t_tmpg_addr A
+		INNER JOIN $DB_NEOS$t_tmpg_addrGroup B on A.addr_group_seq = B.addr_group_seq
+		left join (select distinct addr_group_seq
+				   from $DB_NEOS$t_tmpg_addrpublic A
+				   where org_div = 'c' and org_seq = #compSeq#
+				      or org_div = 'd' and #deptSeq# in (
+				      	SELECT org2.dept_seq
+				      	FROM $DB_NEOS$v_org_chart org
+				      	INNER JOIN $DB_NEOS$v_org_chart org2
+				      	ON '|' || org2.path || '|' LIKE '%|' || org.path || '|%'
+				      	WHERE org.seq = A.org_seq
+				      ) or org_div = 'm' and org_seq = #empSeq#
+		) C on C.addr_group_seq = B.addr_group_seq and (B.addr_group_tp = '20' or B.addr_group_tp = '50') 
+		WHERE 
+			<isEmpty property="txtEmpNm">
+				nvl(emp_nm,chr(32)) LIKE '%$txtEmpNm$%'
+			</isEmpty>
+			<isEmpty property="txtCompNm">
+				AND nvl(comp_nm,chr(32)) LIKE '%$txtCompNm$%'
+			</isEmpty>
+			<isEmpty property="txtPhNum">
+				AND (nvl(emp_hp,chr(32)) LIKE '%$txtPhNum$%'
+				OR  nvl(emp_tel,chr(32)) LIKE '%$txtPhNum$%'
+				OR  nvl(comp_tel,chr(32)) LIKE '%$txtPhNum$%')
+			</isEmpty>
+			<isEmpty property="txtFaxNu">
+				AND (nvl(emp_fax,chr(32)) LIKE '%$txtFaxNum$%'
+				OR  nvl(comp_fax,chr(32)) LIKE '%$txtFaxNum$%')
+			</isEmpty>
+			
+			<isEmpty property="adminAuth">
+				AND (A.create_seq = #empSeq# or (A.addr_div = '10' and A.comp_seq = #compSeq#) or (A.addr_div = '20' and C.addr_group_seq is not null) or (A.addr_div = '30' and A.create_seq = #empSeq#))
+			</isEmpty>
+			<isNotEmpty property="adminAuth">
+				<isEqual property="adminAuth" compareValue="USER">
+					AND (A.create_seq = #empSeq# or (A.addr_div = '10' and A.comp_seq = #compSeq#) or (A.addr_div = '20' and C.addr_group_seq is not null) or (A.addr_div = '30' and A.create_seq = #empSeq#))
+				</isEqual>
+			</isNotEmpty>
+			<isNotEmpty property="chkMyGroup">
+		   		AND A.create_seq = #empSeq#  		   
+	   		</isNotEmpty>
+	   		<isNotEmpty property="addrDiv">
+		   		AND A.addr_div = #addrDiv#  		   
+	   		</isNotEmpty>
+	   		<isNotEmpty property="addrGroupSeq">
+		   		<isNotEqual property="addrGroupSeq" compareValue="0">
+		   			AND A.addr_group_seq = #addrGroupSeq#
+		   		</isNotEqual>
+	   		</isNotEmpty>
+	   		<isNotEmpty property="searchTarget">
+	   			<isEqual property="searchTarget" compareValue="all">
+		        	<isNotEmpty property="txtSearch">
+		        		AND (nvl(emp_nm,chr(32)) LIKE '%$txtSearch$%' or nvl(emp_email,chr(32)) LIKE '%$txtSearch$%' or nvl(B.addr_group_nm,chr(32)) LIKE '%$txtSearch$%') 
+		        	</isNotEmpty>
+		        </isEqual>
+		        <isEqual property="searchTarget" compareValue="name">
+		        	<isNotEmpty property="txtSearch">
+		        		AND nvl(emp_nm,chr(32)) LIKE '%$txtSearch$%'
+		        	</isNotEmpty>
+		        </isEqual>
+		        <isEqual property="searchTarget" compareValue="comp">
+		        	<isNotEmpty property="txtSearch">
+		        		AND nvl(comp_nm,chr(32)) LIKE '%$txtSearch$%'
+		        	</isNotEmpty>
+		        </isEqual>
+		        <isEqual property="searchTarget" compareValue="email">
+		        	<isNotEmpty property="txtSearch">
+		        		AND nvl(emp_email,chr(32)) LIKE '%$txtSearch$%'
+		        	</isNotEmpty>
+		        </isEqual>
+		        <isEqual property="searchTarget" compareValue="group">
+		        	<isNotEmpty property="txtSearch">
+		        		AND nvl(B.addr_group_nm,chr(32)) LIKE '%$txtSearch$%'
+		        	</isNotEmpty>
+		        </isEqual>
+		        <isEqual property="searchTarget" compareValue="mailReceiver">
+		        	<iterate  prepend="AND" property="txtSearch" open=" ifnull(emp_email,'') IN (" close=")" conjunction="," >
+		        	#txtSearch[]#
+		        	</iterate>
+		        </isEqual>
+	   		</isNotEmpty>
+	   		<isNotEmpty property="startNum">
+	 			AND rownum <![CDATA[ >= ]]> $startNum$ AND rownum <![CDATA[ <= ]]> $endNum$   
+    		</isNotEmpty> 
+	   		order by nvl2(CASE WHEN nvl(A.order_num,chr(32)) = chr(32) THEN chr(32) ELSE A.order_num END, '9999999999', A.order_num), A.create_date desc
+
+	</select>
+	
+	<select id="AddrManageService.GetAddrList_TOTALCOUNT" parameterClass="java.util.HashMap" resultClass="String">
+		/* AddrManageService.GetAddrList_TOTALCOUNT - oracleDB */
+		
+		SELECT
+			COUNT(addr_seq) AS "cnt"
+			FROM $DB_NEOS$t_tmpg_addr A
+			INNER JOIN $DB_NEOS$t_tmpg_addrGroup B on A.addr_group_seq = B.addr_group_seq
+			left join (select distinct addr_group_seq
+					   from $DB_NEOS$t_tmpg_addrpublic A
+					   where org_div = 'c' and org_seq = #compSeq#
+					   or org_div = 'd' and #deptSeq# in (
+					   		SELECT org2.dept_seq
+					   		FROM $DB_NEOS$v_org_chart org
+					   		INNER JOIN $DB_NEOS$v_org_chart org2
+					   		ON CONCAT(CONCAT('|',org2.path),'|') LIKE CONCAT(CONCAT('%|', org.path), '|%')
+					   		WHERE org.seq = A.org_seq
+					   ) or org_div = 'm' and org_seq = #empSeq#				 									  
+			) C on C.addr_group_seq = B.addr_group_seq and (B.addr_group_tp = '20' or B.addr_group_tp = '50')			
+			WHERE 1=1
+			<isNotEmpty property="txtEmpNm">
+				AND nvl(emp_nm,chr(32)) LIKE nvl('%$txtEmpNm$%',chr(32))
+			</isNotEmpty>	
+			<isNotEmpty property="txtCompNm">
+				AND nvl(comp_nm,chr(32)) LIKE nvl('%$txtCompNm$%',chr(32))
+			</isNotEmpty>
+			<isNotEmpty property="txtPhNum">
+				AND (nvl(emp_hp,chr(32)) LIKE nvl('%$txtPhNum$%',chr(32))
+				OR  nvl(emp_tel,chr(32)) LIKE nvl('%$txtPhNum$%',chr(32))
+				OR  nvl(comp_tel,chr(32)) LIKE nvl('%$txtPhNum$%',chr(32)))
+			</isNotEmpty>
+			<isNotEmpty>
+				AND (nvl(emp_fax,chr(32)) LIKE nvl('%$txtFaxNum$%',chr(32))
+				OR  nvl(comp_fax,chr(32)) LIKE nvl('%$txtFaxNum$%',chr(32)))
+			</isNotEmpty>
+			<isNotEmpty property="syncTime">
+				and SUBSTR(TO_CHAR(A.create_date,'YYYY-MM-DD HH24:MI:SS'), 1, 17) <![CDATA[ < ]]> #syncTime#
+			</isNotEmpty>
+			<isEmpty property="adminAuth">
+				AND (A.create_seq = #empSeq# or (A.addr_div = '10' and A.comp_seq = #compSeq#) or (A.addr_div = '20' and C.addr_group_seq is not null) or (A.addr_div = '30' and A.create_seq = #empSeq#))
+			</isEmpty>
+			<isNotEmpty property="adminAuth">
+				<isEqual property="adminAuth" compareValue="USER">
+					AND (A.create_seq = #empSeq# or (A.addr_div = '10' and A.comp_seq = #compSeq#) or (A.addr_div = '20' and C.addr_group_seq is not null) or (A.addr_div = '30' and A.create_seq = #empSeq#))
+				</isEqual>
+			</isNotEmpty>
+			<isNotEmpty property="chkMyGroup">
+		   		AND A.create_seq = #empSeq#  		   
+	   		</isNotEmpty>
+	   		<isNotEmpty property="addrDiv">
+		   		AND A.addr_div = #addrDiv#  		   
+	   		</isNotEmpty>
+	   		<isNotEmpty property="addrGroupSeq">
+		   		<isNotEqual property="addrGroupSeq" compareValue="0">
+		   			AND A.addr_group_seq = #addrGroupSeq#
+		   		</isNotEqual>
+	   		</isNotEmpty>
+	   		<isNotEmpty property="searchTarget">
+	   			<isEqual property="searchTarget" compareValue="all">
+		        	<isNotEmpty property="txtSearch">
+		        		AND (nvl(emp_nm,chr(32)) LIKE '%$txtSearch$%' or nvl(comp_nm,chr(32)) LIKE '%$txtSearch$%' or nvl(emp_email,chr(32)) LIKE '%$txtSearch$%' or nvl(emp_fax,chr(32)) LIKE '%$txtSearch$%' or nvl(comp_fax,chr(32)) LIKE '%$txtSearch$%') 
+		        	</isNotEmpty>
+		        </isEqual>
+		        <isEqual property="searchTarget" compareValue="name">
+		        	<isNotEmpty property="txtSearch">
+		        		AND nvl(emp_nm,chr(32)) LIKE '%$txtSearch$%'
+		        	</isNotEmpty>
+		        </isEqual>
+		        <isEqual property="searchTarget" compareValue="comp">
+		        	<isNotEmpty property="txtSearch">
+		        		AND nvl(comp_nm,chr(32)) LIKE '%$txtSearch$%'
+		        	</isNotEmpty>
+		        </isEqual>
+		        <isEqual property="searchTarget" compareValue="email">
+		        	<isNotEmpty property="txtSearch">
+		        		AND nvl(emp_email,chr(32)) LIKE '%$txtSearch$%'
+		        	</isNotEmpty>
+		        	<isEmpty property="txtSearch">
+		        		AND length(emp_email) > 0
+		        	</isEmpty>
+		        </isEqual>
+		        <isEqual property="searchTarget" compareValue="fax">
+		        	<isNotEmpty property="txtSearch">
+		        		AND (nvl(emp_fax,chr(32)) LIKE '%$txtSearch$%' or nvl(comp_fax,chr(32)) LIKE '%$txtSearch$%') 
+		        	</isNotEmpty>
+		        	<isEmpty property="txtSearch">
+		        		AND (length(emp_fax) > 0 or length(comp_fax) > 0)
+		        	</isEmpty>
+		        </isEqual>
+	   		</isNotEmpty>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	</select>
+	
+	<select id="AddrManageService.GetAddrID" resultClass="String">
+			
+			<!-- 2018.10.19 maria에서 oracle로 수정. 방영민 -->
+			/* AddrManageService.GetAddrID - oracleDB */
+			SELECT $DB_NEOS$f_nextval('addr') from t_seq where rownum = 1
+			
+	</select>
+	
+	<insert id="AddrManageService.InsertAddrInfo" parameterClass="java.util.HashMap">
+		<!--  2018.10.19 기존 쿼리가 변환되어 있었음. 방영민 확인  -->
+		merge into t_tmpg_addr
+		using dual
+		on (addr_seq = #addrSeq#)
+		when matched then
+		update set
+				 addr_group_seq = #addrGroupSeq#
+				 ,group_seq = #groupSeq#
+				 ,comp_seq = #compSeq#
+				 ,addr_Div = #addrDiv#
+				 ,emp_nm = #empNm#
+				 ,emp_email = #empEmail#
+				 ,emp_hp = #empHp#
+				 ,emp_tel = #empTel#
+				 ,emp_fax = #empFax#
+				 ,emp_zip_cd =#empZipCd#
+				 ,emp_zip_addr = #empZipAddr#
+				 ,emp_photo = #empPhoto#
+				 ,addr_comp_seq = #addrCompSeq#
+				 ,comp_nm = #compNm#
+				 ,comp_num = #compNum#
+				 ,comp_tel = #compTel#
+				 ,comp_fax = #compFax#
+				 ,comp_zip_cd = #compZipCd#
+				 ,comp_zip_addr = #compZipAddr#
+				 ,etc = #compEtc#
+				 ,note = #compNote#
+				 ,modify_seq = #empSeq#
+				 ,modify_date = TO_DATE(SYSDATE,'yyyy-mm-dd hh24:mi:ss')
+		when not matched then
+		insert(addr_seq,addr_group_seq,group_seq,comp_seq,addr_Div,emp_nm,emp_email,emp_hp,emp_tel,emp_fax,emp_zip_cd,emp_zip_addr,emp_photo,addr_comp_seq,comp_nm,comp_num,comp_tel,comp_fax,comp_zip_cd,comp_zip_addr,etc,note,create_seq,create_date)
+		values(
+			  #addrSeq#
+			 ,#addrGroupSeq#
+			 ,#groupSeq#
+			 ,#compSeq#
+			 ,#addrDiv#
+			 ,nvl(#empNm#,chr(32))
+			 ,#empEmail#
+			 ,nvl(#empHp#,chr(32))
+			 ,nvl(#empTel#,chr(32))
+			 ,nvl(#empFax#,chr(32))
+			 ,#empZipCd#
+			 ,#empZipAddr#
+			 ,#empPhoto#
+			 ,#addrCompSeq#
+			 ,nvl(#compNm#,chr(32))
+			 ,#compNum#
+			 ,nvl(#compTel#,chr(32))
+			 ,nvl(#compFax#,chr(32))
+			 ,#compZipCd#
+			 ,#compZipAddr#
+			 ,#compEtc#
+			 ,#compNote#
+			 ,#empSeq#
+			 ,TO_DATE(SYSDATE,'yyyy-mm-dd hh24:mi:ss')
+		)
+		
+				
+<!-- 		INSERT INTO t_tmpg_addr -->
+<!-- 			SET -->
+<!-- 				  addr_seq = #addrSeq# -->
+<!-- 				 ,addr_group_seq = #addrGroupSeq# -->
+<!-- 				 ,group_seq = #groupSeq# -->
+<!-- 				 ,comp_seq = #compSeq# -->
+<!-- 				 ,addr_Div = #addrDiv# -->
+<!-- 				 ,emp_nm = nvl(#empNm#,'') -->
+<!-- 				 ,emp_email = #empEmail# -->
+<!-- 				 ,emp_hp = nvl(#empHp#,'') -->
+<!-- 				 ,emp_tel = nvl(#empTel#,'') -->
+<!-- 				 ,emp_fax = nvl(#empFax#,'') -->
+<!-- 				 ,emp_zip_cd =#empZipCd# -->
+<!-- 				 ,emp_zip_addr = #empZipAddr# -->
+<!-- 				 ,emp_photo = #empPhoto# -->
+<!-- 				 ,addr_comp_seq = #addrCompSeq# -->
+<!-- 				 ,comp_nm = nvl(#compNm#,'') -->
+<!-- 				 ,comp_num = #compNum# -->
+<!-- 				 ,comp_tel = nvl(#compTel#,'') -->
+<!-- 				 ,comp_fax = nvl(#compFax#,'') -->
+<!-- 				 ,comp_zip_cd = #compZipCd# -->
+<!-- 				 ,comp_zip_addr = #compZipAddr# -->
+<!-- 				 ,etc = #compEtc# -->
+<!-- 				 ,note = #compNote# -->
+<!-- 				 ,create_seq = #empSeq# -->
+<!-- 				 ,create_date = TO_DATE(SYSDATE,'yyyy-mm-dd hh24:mi:ss') -->
+<!-- 			ON DUPLICATE KEY UPDATE -->
+<!-- 				  addr_group_seq = #addrGroupSeq# -->
+<!-- 				 ,group_seq = #groupSeq# -->
+<!-- 				 ,comp_seq = #compSeq# -->
+<!-- 				 ,addr_Div = #addrDiv# -->
+<!-- 				 ,emp_nm = #empNm# -->
+<!-- 				 ,emp_email = #empEmail# -->
+<!-- 				 ,emp_hp = #empHp# -->
+<!-- 				 ,emp_tel = #empTel# -->
+<!-- 				 ,emp_fax = #empFax# -->
+<!-- 				 ,emp_zip_cd =#empZipCd# -->
+<!-- 				 ,emp_zip_addr = #empZipAddr# -->
+<!-- 				 ,emp_photo = #empPhoto# -->
+<!-- 				 ,addr_comp_seq = #addrCompSeq# -->
+<!-- 				 ,comp_nm = #compNm# -->
+<!-- 				 ,comp_num = #compNum# -->
+<!-- 				 ,comp_tel = #compTel# -->
+<!-- 				 ,comp_fax = #compFax# -->
+<!-- 				 ,comp_zip_cd = #compZipCd# -->
+<!-- 				 ,comp_zip_addr = #compZipAddr# -->
+<!-- 				 ,etc = #compEtc# -->
+<!-- 				 ,note = #compNote# -->
+<!-- 				 ,create_seq = #empSeq# -->
+<!-- 				 ,create_date = TO_DATE(SYSDATE,'yyyy-mm-dd hh24:mi:ss') -->
+	</insert>	
+	
+	
+	<select id="AddrManageService.GetAddrInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		/* AddrManageService.GetAddrInfo  - oracle */
+		SELECT
+			addr_seq as "addr_seq"
+			, addr_group_seq as "addr_group_seq"
+			, addr_div as "addr_div"
+			, emp_nm as "emp_nm"
+			, emp_email as "emp_email"
+			, emp_hp as "emp_hp"
+			, emp_tel as "emp_tel"
+			, emp_fax as "emp_fax"
+			, emp_zip_cd as "emp_zip_cd"
+			, emp_zip_addr as "emp_zip_addr"
+			,emp_photo as "emp_photo"
+			, addr_comp_seq as "addr_comp_seq"
+			, comp_nm as "comp_nm"
+			, comp_num as "comp_num"
+			, comp_tel as "comp_tel"
+			, comp_fax as "comp_fax"
+			, comp_zip_cd as "comp_zip_cd"
+			, comp_zip_addr as "comp_zip_addr"
+			, etc as "etc"
+			, note as "note"
+			, create_seq as "create_seq"
+		FROM t_tmpg_addr
+		WHERE addr_seq = #addrSeq# 
+	</select>
+	
+	<delete id="AddrManageService.DeleteAddrInfo" parameterClass="java.util.HashMap">
+				/* AddrManageService.DeleteAddrInfo - Oracle */
+		DELETE FROM $DB_NEOS$t_tmpg_addr
+		WHERE addr_seq = #addrSeq#
+	</delete>
+	
+	<delete id="AddrManageService.DeleteAddrListInfo" parameterClass="java.util.HashMap">
+		/* AddrManageService.DeleteAddrListInfo - Oracle */
+		DELETE FROM $DB_NEOS$t_tmpg_addr
+		WHERE addr_seq in($arrSeqList$)
+	</delete>
+		
+	<delete id="AddrManageService.DeleteAddrList" parameterClass="java.util.HashMap">
+		/* AddrManageService.DeleteAddrList - Oracle */
+		DELETE FROM $DB_NEOS$t_tmpg_addr
+		WHERE addr_group_seq in($arrGroupSeqList$)
+	</delete>
+	
+	<delete id="AddrManageService.DeleteAddrGroupList" parameterClass="java.util.HashMap">
+		/* AddrManageService.DeleteAddrGroupList - Oracle */
+		DELETE FROM $DB_NEOS$t_tmpg_addrgroup
+		WHERE addr_group_seq in($arrGroupSeqList$)
+	</delete>
+	
+	<select id="AddrManageService.AddrGroupPublicList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap" remapResults="true">
+		/* AddrManageService.AddrGroupPublicList - Oracle */
+		SELECT 
+			addr_public_seq,addr_seq, org_div, org_seq, org_subSeq
+		FROM $DB_NEOS$t_tmpg_addrPublic
+		WHERE addr_group_seq = #addrSeq#
+	</select>
+	
+	
+	<select id="AddrManageService.GetAddrPublic" parameterClass="java.util.HashMap" resultClass="java.util.HashMap" remapResults="true">
+		/* AddrManageService.GetAddrPublic - Oracle */
+			SELECT DISTINCT
+			CASE WHEN A.org_div = 'c' THEN $DB_NEOS$FN_GetMultiLang('kr',D.comp_name_multi)
+				WHEN A.org_div = 'd' THEN $DB_NEOS$FN_GetMultiLang('kr',C.dept_name_multi)
+				WHEN A.org_div = 'm' THEN $DB_NEOS$FN_GetMultiLang('kr',B.emp_name_multi) END as "emp_name"
+			,A.org_div
+			,A.org_seq
+			,NVL(A.dept_seq, '') as "dept_seq"
+			,case when A.org_div = 'c' then #groupSeq# || '|' || A.org_seq || '|||c'
+				  when A.org_div = 'd' then #groupSeq# ||'|'||(select comp_seq from t_co_dept where dept_seq = A.dept_seq)|| '|'|| A.org_seq|| '||d' 
+				  when A.org_div = 'm' then #groupSeq# ||'|'||(select comp_seq from t_co_dept where dept_seq = A.dept_seq)|| '|'|| A.dept_seq|| '|'|| A.org_seq|| '|u' end as "selectedItems"
+		FROM t_tmpg_addrPublic A
+		LEFT JOIN $DB_NEOS$v_user_info B ON A.org_seq = B.emp_seq AND B.group_seq = #groupSeq#
+		left join $DB_NEOS$v_t_co_dept_multi C ON A.org_seq = C.dept_seq AND C.group_seq = #groupSeq#
+		left join $DB_NEOS$v_t_co_comp_multi D on A.org_seq = D.comp_seq AND D.group_seq = #groupSeq#
+		WHERE addr_group_seq = #addr_group_seq#
+	</select>
+	
+	
+	<select id="AddrManageService.GetCompName" resultClass="String" parameterClass="java.util.HashMap" remapResults="true">
+		/* AddrManageService.GetCompName - Oracle */
+		SELECT $DB_NEOS$FN_GetMultiLang(#langCode#,comp_name_multi) as "compName"
+		FROM $DB_NEOS$V_T_CO_COMP_MULTI
+		WHERE comp_seq = #compSeq# and group_seq = #groupSeq#
+	</select>
+	
+	
+	
+	<select id="AddrManageService.GetEmpName" resultClass="String" parameterClass="java.util.HashMap" remapResults="true">
+		/* AddrManageService.GetEmpName - Oracle */
+		select $DB_NEOS$FN_GetMultiLang(#langCode#, emp_name_multi) as "empName"
+		from $DB_NEOS$v_t_co_emp_multi
+		where emp_seq = #empSeq# and group_seq = #groupSeq#
+	</select>
+	
+	
+	<select id="AddrManageService.GetAddrGroupTp" resultClass="String" parameterClass="java.util.HashMap">
+		<!--  2018.10.19 기존 쿼리가 변환되어 있었음. 방영민 확인  -->
+		<!-- select addr_group_tp as "addr_group_tp"
+		from t_tmpg_addrgroup
+		where addr_group_seq = #addr_group_seq# -->
+		
+		<!-- 2018.10.19 maria에서 oracle로 수정. 방영민 -->
+		/* AddrManageService.GetAddrGroupTp - oracleDB */
+		select addr_group_tp
+		from $DB_NEOS$t_tmpg_addrgroup
+		where addr_group_seq = #addr_group_seq#
+	
+	</select>
+	
+	
+	<delete id="AddrManageService.DeleteFileInfo" parameterClass="hashmap">
+		/* AddrManageService.DeleteFileInfo - Oracle */
+		DELETE FROM $DB_NEOS$t_co_atch_file
+		WHERE
+			file_id = #empPhotoOld#	
+	</delete>
+	
+	<delete id="AddrManageService.DeleteFileDetailInfo" parameterClass="hashmap">
+				/* AddrManageService.DeleteFileDetailInfo - Oracle */
+		DELETE FROM $DB_NEOS$t_co_atch_file_detail
+		WHERE
+			file_id = #empPhotoOld#
+			AND file_sn = '0'	
+	</delete>
+	
+	
+	<delete id="AddrManageService.DeleteFileInfo2" parameterClass="hashmap">
+		/* AddrManageService.DeleteFileInfo2 - Oracle */
+		DELETE FROM $DB_NEOS$t_co_atch_file
+		WHERE
+			file_id = #empPhotoOld#	 or file_id = #empPhoto# 
+	</delete>
+	
+	<delete id="AddrManageService.DeleteFileDetailInfo2" parameterClass="hashmap">
+		/* AddrManageService.DeleteFileDetailInfo2 - Oracle */
+		DELETE FROM $DB_NEOS$t_co_atch_file_detail
+		WHERE
+			(file_id = #empPhotoOld# or file_id = #empPhoto#)
+			AND file_sn = '0'	
+	</delete>
+	
+	<select id="AddrManageService.getPartnerList" parameterClass="hashmap" resultClass="egovMap">
+		/* AddrManageService.getPartnerList - Oracle */
+		SELECT
+		a.cd_partner
+		,a.cd_company
+		,a.ln_partner
+		,a.no_company
+		,a.cls_partner
+		,a.nm_ceo
+		,a.tp_job
+		,a.cls_job
+		,a.group_seq
+		,a.comp_seq
+		,a.sv_type
+		,a.erp_cd_partner
+		,a.no_tel1
+		,a.no_fax1
+		,a.no_post1
+		,dbms_lob.substr(a.dc_ads1_h, 4000, 1 ) as dc_ads1_h
+		,dbms_lob.substr(a.dc_ads1_d, 4000, 1 ) as dc_ads1_d
+		,a.use_yn
+		,a.flag_delete
+		,a.create_seq
+		,a.create_date
+		,a.modify_seq
+		,a.modify_date		
+		FROM 
+			$DB_NEOS$t_pr_partner_main a
+		WHERE 
+			a.comp_seq = #compSeq#
+			AND a.group_seq = #groupSeq#
+			AND (cd_partner LIKE '%$seartText$%' OR ln_partner LIKE '%$seartText$%' OR no_company LIKE '%$seartText$%')				
+		ORDER BY a.create_date desc		
+	</select>
+	
+	<select id="AddrManageService.AddrListExcelExport" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+			/* AddrManageService.AddrListExcelExport - Oracle */
+			SELECT * 
+			FROM 
+			(
+			SELECT
+				ROWNUM as "rnum"
+				,case when addr_div = '10' then $DB_NEOS$get_code_detail_info('0', 'option0045', '0', #langCode#) 
+				when addr_div = '20' then $DB_NEOS$get_code_detail_info('0', 'mp0007', '20', #langCode#) 
+				when addr_div = '30' then $DB_NEOS$get_code_detail_info('0', 'mp0007', '30', #langCode#) 
+				when addr_div = '50' then $DB_NEOS$get_code_detail_info('0', 'option0005', '1', #langCode#) 
+				end as "addr_div_nm"
+				,B.addr_group_nm as "addr_group_nm"
+				,(select emp_name from $DB_NEOS$v_user_info c
+					where A.create_seq = c.emp_seq and c.emp_lang_code=#langCode#
+					and rownum = 1			
+					) as "create_nm"
+				,A.*
+			FROM $DB_NEOS$t_tmpg_addr A
+			INNER JOIN $DB_NEOS$t_tmpg_addrGroup B on A.addr_group_seq = B.addr_group_seq
+			left join (select distinct addr_group_seq
+							from $DB_NEOS$t_tmpg_addrpublic A
+							where org_div = 'c' and org_seq = #compSeq#
+										  or org_div = 'd' and #deptSeq# in (
+																			 SELECT org2.dept_seq 
+																				FROM $DB_NEOS$v_org_chart org
+																			 INNER JOIN $DB_NEOS$v_org_chart org2
+																			 	 ON '|' || org2.path || '|' LIKE '%|' || org.path || '|%'																			 
+																			 WHERE org.seq = A.org_seq
+																			   ) or org_div = 'm' and org_seq = #empSeq#) C on C.addr_group_seq = B.addr_group_seq and (B.addr_group_tp = '20' or B.addr_group_tp = '50') 
+				<isNotEmpty property="txtEmpNm">
+					AND nvl(emp_nm,'') LIKE nvl('%$txtEmpNm$%','')
+				</isNotEmpty>
+				<isNotEmpty property="txtCompNm">
+					AND nvl(comp_nm,'') LIKE nvl('%$txtCompNm$%','')
+				</isNotEmpty>
+				<isNotEmpty property="txtPhNum">
+					AND (nvl(emp_hp,'') LIKE nvl('%$txtPhNum$%','')
+					OR  nvl(emp_tel,'') LIKE nvl('%$txtPhNum$%','')
+					OR  nvl(comp_tel,'') LIKE nvl('%$txtPhNum$%',''))
+				</isNotEmpty>
+				<isNotEmpty property="txtFaxNum">
+					AND (nvl(emp_fax,'') LIKE nvl('%$txtFaxNum$%','')
+					OR  nvl(comp_fax,'') LIKE nvl('%$txtFaxNum$%',''))
+				</isNotEmpty>
+				<isEmpty property="adminAuth">
+					AND (A.create_seq = #empSeq# or (A.comp_seq = #compSeq# and A.addr_div = 10) or C.addr_group_seq is not null)
+				</isEmpty>
+				<isNotEmpty property="chkMyGroup">
+			   		AND A.create_seq = #empSeq#  		   
+		   		</isNotEmpty>
+		   		<isNotEmpty property="addrDiv">
+			   		AND A.addr_div = #addrDiv#  		   
+		   		</isNotEmpty>
+		   		<isNotEmpty property="groupSeq">
+			   		<isNotEqual property="groupSeq" compareValue="0">
+			   			AND A.addr_group_seq = #groupSeq#
+			   		</isNotEqual>
+		   		</isNotEmpty>
+		   		<isNotEmpty property="searchTarget">
+		   			<isEqual property="searchTarget" compareValue="all">
+			        	<isNotEmpty property="txtSearch">
+			        		AND (nvl(emp_nm,'') LIKE '%$txtSearch$%' or nvl(comp_nm,'') LIKE '%$txtSearch$%' or nvl(emp_email,'') LIKE '%$txtSearch$%') 
+			        	</isNotEmpty>
+			        </isEqual>
+			        <isEqual property="searchTarget" compareValue="name">
+			        	<isNotEmpty property="txtSearch">
+			        		AND nvl(emp_nm,'') LIKE '%$txtSearch$%'
+			        	</isNotEmpty>
+			        </isEqual>
+			        <isEqual property="searchTarget" compareValue="comp">
+			        	<isNotEmpty property="txtSearch">
+			        		AND nvl(comp_nm,'') LIKE '%$txtSearch$%'
+			        	</isNotEmpty>
+			        </isEqual>
+			        <isEqual property="searchTarget" compareValue="email">
+			        	<isNotEmpty property="txtSearch">
+			        		AND nvl(emp_email,'') LIKE '%$txtSearch$%'
+			        	</isNotEmpty>
+			        </isEqual>
+		   		</isNotEmpty>
+		   		<isNotEmpty>
+		   			<isEqual property="apiFlag" compareValue="fax">
+		   				AND (emp_fax is not null and emp_fax != '')
+		   			</isEqual>	   			
+		   		</isNotEmpty>
+		   		
+				<isNotEmpty property="endNum">
+				   	WHERE rownum <![CDATA[ <= ]]> #endNum#
+		    	</isNotEmpty>
+		   		
+		   		order by DECODE(NVL(A.order_num,' '), ' ', '9999999999', A.order_num), A.create_date desc
+			) RESULT
+			
+			<isNotEmpty property="startNum">
+			WHERE "rnum" <![CDATA[ >= ]]> #startNum#
+	    	</isNotEmpty> 
+	</select>
+	
+	<insert id="AddrManageService.insertAddrBatch" parameterClass="hashmap">
+			<!-- 2018.10.19 기존쿼리 사용. 방영민 -->
+			/* AddrManageService.insertAddrBatch - oracleDB */
+			insert into t_co_addr_batch
+			(batch_seq,seq,addr_div_nm,addr_group_nm,create_nm,emp_nm,emp_email,emp_hp,emp_tel,emp_fax,emp_addr,comp_nm,comp_tel,comp_fax,comp_addr,etc,note,create_seq,create_date)
+			values
+			(
+				#batchSeq# ,
+				#num#, 
+				#C0# ,
+				#C1# , 
+				#C2# , 
+				#C3# , 
+				#C4# , 
+				#C5# , 
+				#C6# , 
+				#C7# , 
+				#C8# , 
+				#C9# , 
+				#C10#, 
+				#C11#, 
+				#C12#, 
+				#C13#,
+				#C14#,
+				#empSeq#,
+				TO_DATE(SYSDATE,'yyyy-mm-dd hh24:mi:ss')
+				)
+		</insert>
+		
+		
+		
+		<select id="AddrManageService.getAddrBatchInfo" parameterClass="hashmap" resultClass="egovMap">
+				
+				<!-- 2018.10.19 maria에서 oracle로 수정. 방영민 -->
+				/* AddrManageService.getAddrBatchInfo - oracleDB */
+				select * from $DB_NEOS$t_co_addr_batch A
+				left join
+				(
+				select distinct a.addr_group_seq, a.addr_group_tp, a.addr_group_nm, a.create_seq from $DB_NEOS$t_tmpg_addrgroup a
+				left join $DB_NEOS$t_tmpg_addrpublic b on a.addr_group_seq = b.addr_group_seq
+				where a.create_seq = #create_seq# or 
+				( a.addr_group_tp = '10' and b.org_seq=#compSeq#
+				  or a.addr_group_tp = '20' and (#deptSeq# in (
+				  		SELECT org2.dept_seq 
+						FROM $DB_NEOS$v_org_chart org
+					 	INNER JOIN $DB_NEOS$v_org_chart org2
+					  	ON '|' || org2.path || '|' LIKE '%|' || org.path || '|%'																		 
+						WHERE org.seq = b.org_seq and org.gbn_org = 'd'
+				  ) or b.org_seq = #empSeq#
+				  or #compSeq# in (
+				  		SELECT org2.comp_seq 
+						FROM $DB_NEOS$v_org_chart org
+					    INNER JOIN $DB_NEOS$v_org_chart org2
+						ON org2.path LIKE CONCAT(org.path, '|%')
+					 	WHERE org.seq = b.org_seq and org.gbn_org = 'c'
+				  )
+				)  
+				or a.addr_group_tp = '30' and a.create_seq=#empSeq#
+				or a.addr_group_tp = '50' and b.org_seq=#compSeq# )  
+				)tbl on A.addr_group_nm = tbl.addr_group_nm and
+				A.addr_div_nm = $DB_NEOS$get_code_detail_info('0', 'mp0007', '30', 'kr') and tbl.addr_group_tp = '30' or
+				A.addr_div_nm = $DB_NEOS$get_code_detail_info('0', 'mp0007', '20', 'kr') and tbl.addr_group_tp = '20' or
+				A.addr_div_nm = $DB_NEOS$get_code_detail_info('0', 'option0045', '0', 'kr') and tbl.addr_group_tp = '10' or
+				A.addr_div_nm = $DB_NEOS$get_code_detail_info('0', 'option0005', '1', 'kr') and tbl.addr_group_tp = '50'
+				
+				where A.batch_seq = #retKey#
+								
+		</select>
+		
+		
+		<delete id="AddrManageService.deleteAddrBatchInfo" parameterClass="hashmap">
+			<!-- 2018.10.19 기존쿼리 사용. 방영민 -->
+			/* AddrManageService.deleteAddrBatchInfo - oracleDB */
+			DELETE FROM t_co_addr_batch
+			WHERE batch_seq = #retKey#		
+		</delete>
+		
+		
+		<insert id="AddrManageService.saveAddrBatch" parameterClass="hashmap">
+			
+		<!-- 2018.10.19 maria에서 oracle로 수정. 방영민 -->
+		/* AddrManageService.saveAddrBatch - oracleDB */
+		insert into $DB_NEOS$t_tmpg_addr
+		select $DB_NEOS$F_NEXTVAL('addr'), #addrGroupSeq#, #groupSeq#, #compSeq#,
+		case when addr_div_nm = $DB_NEOS$get_code_detail_info('0', 'mp0007', '30', #langCode#) then '30'
+			  when addr_div_nm = $DB_NEOS$get_code_detail_info('0', 'mp0007', '20', #langCode#) then '20'
+			  when addr_div_nm = $DB_NEOS$get_code_detail_info('0', 'option0045', '0', #langCode#) then '10'
+			  when addr_div_nm = $DB_NEOS$get_code_detail_info('0', 'option0005', '1', #langCode#) then '50'
+			  else '' end,
+		emp_nm, emp_email, emp_hp, emp_tel, emp_fax, chr(32), emp_addr,
+		chr(32), chr(32), comp_nm, chr(32), comp_tel, comp_fax, chr(32), comp_addr, etc, note, #empSeq#, TO_DATE(SYSDATE,'yyyy-mm-dd hh24:mi:ss'), null, null, order_num
+		from 
+			$DB_NEOS$t_co_addr_batch
+		where batch_seq = #retKey# and seq = #Seq#
+		</insert>
+		
+		<update id="AddrManageService.UpdateAddrInfo" parameterClass="hashmap">
+		/*  AddrManageService.UpdateAddrInfo - Oracle  */
+			update 
+				$DB_NEOS$t_tmpg_addr
+			set
+				addr_div = #addr_group_tp#
+			where
+				addr_group_seq = #addr_group_id#			
+		</update> 
+		
+		<select id="AddrManageService.getGroupInfo" parameterClass="hashMap" resultClass="egovMap" remapResults="true">
+			/* AddrManageService.getGroupInfo - Oracle */
+			SELECT *
+			FROM $DB_NEOS$t_co_group A
+			WHERE use_yn = 'Y'
+			and
+				A.group_seq = #groupSeq#
+	</select>
+	
+	<select id="AddrManageService.getCompanyNames" parameterClass="hashMap" resultClass="egovMap" remapResults="true">
+		 /* AddrManageService.getCompanyNames - Oracle */
+		 
+			select a.comp_seq, 
+			$DB_NEOS$FN_GetMultiLang(#langCode#, a.comp_name_multi) as comp_name
+				from $DB_NEOS$v_t_co_comp_multi a
+				inner join $DB_NEOS$t_co_comp b on a.comp_seq = b.comp_seq
+				 where a.comp_seq in (
+										SELECT	DISTINCT 
+										IGC.comp_seq 
+										FROM 	(
+											SELECT	comp_seq
+											FROM	$DB_NEOS$v_user_info
+											WHERE 	emp_seq = #empSeq#
+											-- AND		orgchart_display_yn	= 'Y'
+											AND 	use_yn			= 'Y'
+											AND     work_status = '999'
+										)	IUC
+										INNER JOIN 	(
+											SELECT	GC.comp_seq as user_comp_seq
+													, GC.groupping_seq as groupping_seq
+													, AG.comp_seq as comp_seq
+												FROM	$DB_NEOS$t_co_groupping_comp GC
+													INNER JOIN	$DB_NEOS$t_co_groupping_comp AG
+													ON 	GC.groupping_seq = AG.groupping_seq	
+												WHERE	GC.use_yn	= 'Y'
+												AND	AG.use_yn	= 'Y'
+											)	IGC
+											ON	IUC.comp_seq = IGC.comp_seq
+										UNION
+					
+										SELECT	comp_seq
+										FROM	$DB_NEOS$v_user_info
+										WHERE 	emp_seq = #empSeq#
+										-- AND		orgchart_display_yn	= 'Y'
+										AND 	use_yn			= 'Y'
+										AND     work_status = '999'						
+				) order by b.order_num;
+	</select>
+	
+	<select id="AddrManageService.selectContactInfo" parameterClass="hashMap" resultClass="egovMap" remapResults="true">
+			/* AddrManageService.selectContactInfo - Oracle */
+			select
+				tce.emp_seq,
+				tce.group_seq,
+				tccm.comp_seq,
+				#langCode# as "lang_code",
+				$DB_NEOS$FN_GetMultiLang(#langCode#,tccm.comp_name) as "comp_name",
+				tcdm.dept_seq,
+				$DB_NEOS$FN_GetMultiLang(#langCode#,tcdm.dept_name) as "dept_name",
+				$DB_NEOS$FN_GetMultiLang(#langCode#,posi.dp_name) as "position_name",
+				$DB_NEOS$FN_GetMultiLang(#langCode#,duty.dp_name) as "duty_name",				
+				$DB_NEOS$FN_GetMultiLang(#langCode#,tcem.emp_name) as "emp_name",
+				tce.email_addr as "email_addr",
+				vtcc.email_domain as "email_domain",
+				TO_CHAR(tce.bday, 'yy/dd/mm') as "b_day",
+				tced.tel_num as "tel_num",
+				tce.home_tel_num as "home_tel_num",
+				tce.mobile_tel_num as "mobile_tel_num",
+				tcec.erp_emp_seq as "erp_emp_seq"
+			from $DB_NEOS$t_co_emp tce
+				join $DB_NEOS$v_t_co_emp_multi tcem on tce.emp_seq = tcem.emp_seq
+				join $DB_NEOS$t_co_emp_dept tced on tced.emp_seq = tce.emp_seq
+				join $DB_NEOS$t_co_emp_comp tcec on tcec.emp_seq = tce.emp_seq and
+				tcec.comp_seq=tced.comp_seq and tced.dept_seq = tcec.dept_seq
+				join $DB_NEOS$v_t_co_comp_multi tccm on tccm.comp_seq = tced.comp_seq
+				join $DB_NEOS$v_t_co_dept_multi tcdm on tcdm.dept_seq = tced.dept_seq
+				left join $DB_NEOS$v_co_comp_duty_position_multi duty on duty.dp_type = 'DUTY' and
+				tced.duty_code = duty.dp_seq
+				left join $DB_NEOS$v_co_comp_duty_position_multi posi on posi.dp_type = 'POSITION'
+				and tced.position_code = posi.dp_seq
+				left join $DB_NEOS$t_co_comp vtcc on vtcc.comp_seq = tced.comp_seq
+			where
+				tce.group_seq = #groupSeq# and tce.use_yn != 'D' 				
+				<isNotEmpty property="compSeq">
+					and tced.comp_seq = #compSeq#
+				</isNotEmpty>				
+				<isEmpty property="compSeq">				
+				 	and tced.comp_seq in(
+				 		select a.comp_seq
+							from $DB_NEOS$v_t_co_comp_multi a
+							inner join $DB_NEOS$t_co_comp b on a.comp_seq = b.comp_seq
+							 where a.comp_seq in
+							(
+							SELECT	DISTINCT 
+									IGC.comp_seq 
+									FROM 	(
+										SELECT	*
+										FROM	$DB_NEOS$v_user_info
+										WHERE 	emp_seq = #empSeq#
+										AND 	use_yn			= 'Y'
+										AND     work_status = '999'
+									)	IUC
+									INNER JOIN 	(
+									SELECT	GC.comp_seq		
+												, GC.groupping_seq as "groupping_seq"
+												, AG.comp_seq as "comp_seq"
+											FROM	$DB_NEOS$t_co_groupping_comp	GC
+												INNER JOIN	$DB_NEOS$t_co_groupping_comp	AG
+												ON 	GC.groupping_seq = AG.groupping_seq	
+											WHERE	GC.use_yn	= 'Y'
+											AND	AG.use_yn	= 'Y'
+										)	IGC
+										ON	IUC.comp_seq = IGC.comp_seq
+									UNION
+				
+									SELECT	comp_seq
+									FROM	$DB_NEOS$v_user_info
+									WHERE 	emp_seq = #empSeq#
+									-- AND		orgchart_display_yn	= 'Y'
+									AND 	use_yn			= 'Y'
+									AND     work_status = '999'						
+							)
+				 	)
+				</isEmpty>
+				and tcec.work_status = '999'
+				<isNotEmpty property="nameAndLoginId">
+					AND ( $DB_NEOS$FN_GetMultiLang(#langCode#,tcem.emp_name) LIKE '%$nameAndLoginId$%' or tce.login_id LIKE '%$nameAndLoginId$%')
+				</isNotEmpty>
+				<isNotEmpty property="deptName">
+					AND ( $DB_NEOS$FN_GetMultiLang(#langCode#,tcdm.dept_name) LIKE '%$deptName$%')
+				</isNotEmpty>
+				<isNotEmpty property="positionName">
+					AND ( $DB_NEOS$FN_GetMultiLang(#langCode#,posi.dp_name) LIKE '%$positionName$%') 
+				</isNotEmpty>
+				<isNotEmpty property="dutyName">
+					AND ( $DB_NEOS$FN_GetMultiLang(#langCode#,duty.dp_name) LIKE '%$dutyName$%')
+				</isNotEmpty>
+				<isNotEmpty property="telNum">
+					AND ( tced.tel_num LIKE '%$telNum$%')
+				</isNotEmpty>
+				<isNotEmpty property="mobileTelNum">
+					AND ( tce.mobile_tel_num LIKE '%$mobileTelNum$%')
+				</isNotEmpty>
+				order by vtcc.comp_seq, tced.order_text
+				<isNotEmpty property="startNum">
+				   		WHERE ROWNUM <![CDATA[ >= ]]>$startNum$ AND ROWNUM <![CDATA[ <= ]]> $endNum$   
+			    </isNotEmpty>
+		</select>
+		
+		<select id="AddrManageService.selectSpecificContactInfo" parameterClass="hashMap" resultClass="egovMap" remapResults="true">
+			/* AddrManageService.selectSpecificContactInfo - Oracle */
+			select
+				tce.emp_seq,
+				tce.group_seq,
+				tccm.comp_seq,
+				#langCode# as "lang_code",
+				$DB_NEOS$FN_GetMultiLang(#langCode#,tccm.comp_name) as "comp_name",
+				tcdm.dept_seq,
+				$DB_NEOS$FN_GetMultiLang(#langCode#,tcdm.dept_name) as "dept_name",
+				$DB_NEOS$FN_GetMultiLang(#langCode#,posi.dp_name) as "position_name",
+				$DB_NEOS$FN_GetMultiLang(#langCode#,duty.dp_name) as "duty_name",				
+				$DB_NEOS$FN_GetMultiLang(#langCode#,tcem.emp_name) as "emp_name",
+				tce.email_addr as "email_addr",
+				vtcc.comp_domain as "comp_domain",
+				TO_CHAR(tce.bday, 'yy/dd/mm') as "b_day",
+				tced.tel_num as "tel_num",
+				tce.home_tel_num as "home_tel_num",
+				vtcc.fax_num as "fax_domain",
+				tce.mobile_tel_num as "mobile_tel_num",
+				tcec.erp_emp_seq as "erp_emp_seq",
+				vui.detail_addr as "detail_addr",
+				vui.main_work as "main_work"
+			from $DB_NEOS$t_co_emp tce
+				join $DB_NEOS$v_t_co_emp_multi tcem on tce.emp_seq = tcem.emp_seq
+				join $DB_NEOS$t_co_emp_dept tced on tced.emp_seq = tce.emp_seq
+				join $DB_NEOS$t_co_emp_comp tcec on tcec.emp_seq = tce.emp_seq and
+				tcec.comp_seq=tced.comp_seq and tced.dept_seq = tcec.dept_seq
+				join $DB_NEOS$v_t_co_comp_multi tccm on tccm.comp_seq = tced.comp_seq
+				join $DB_NEOS$v_t_co_dept_multi tcdm on tcdm.dept_seq = tced.dept_seq
+				left join $DB_NEOS$v_co_comp_duty_position_multi duty on duty.dp_type = 'DUTY' and
+				tced.duty_code = duty.dp_seq
+				left join $DB_NEOS$v_co_comp_duty_position_multi posi on posi.dp_type = 'POSITION'
+				and tced.position_code = posi.dp_seq
+				left join $DB_NEOS$v_user_info vui on vui.emp_seq = tce.emp_seq and vui.dept_seq = tced.dept_seq and vui.comp_seq = tced.comp_seq
+				left join $DB_NEOS$v_t_co_comp vtcc on vtcc.comp_seq = tced.comp_seq 
+			where
+				tce.group_seq = #groupSeq# and tce.use_yn != 'D' and tccm.comp_seq = #compSeq#
+				and tcec.work_status = '999'
+				and tce.emp_seq=#empSeq#;
+		</select>
+		
+		<select id="AddrManageService.selectContactInfoForExcel" parameterClass="hashMap" resultClass="egovMap" remapResults="true">
+			/* AddrManageService.selectContactInfoForExcel - Oracle */
+			select
+				$DB_NEOS$FN_GetMultiLang(#langCode#,tccm.comp_name) as "comp_name",
+				$DB_NEOS$FN_GetMultiLang(#langCode#,tcdm.dept_name) as "dept_name",
+				$DB_NEOS$FN_GetMultiLang(#langCode#,posi.dp_name) as "position_name",
+				$DB_NEOS$FN_GetMultiLang(#langCode#,duty.dp_name) as "duty_name",				
+				$DB_NEOS$FN_GetMultiLang(#langCode#,tcem.emp_name) as "emp_name",
+				tce.email_addr || '@' || vtcc.email_domain as "emailAddr",
+				convert(tce.bday, char(20)) as "b_day",
+				tced.tel_num as "tel_num",
+				tce.home_tel_num as "home_tel_num",
+				tce.mobile_tel_num as "mobile_tel_num",
+				tcec.erp_emp_seq as "erp_emp_seq",
+				tcem.addr || ' ' || tcem.detail_addr as "empAddr"
+			from t_co_emp tce
+				join v_t_co_emp_multi tcem on tce.emp_seq = tcem.emp_seq
+				join t_co_emp_dept tced on tced.emp_seq = tce.emp_seq
+				join t_co_emp_comp tcec on tcec.emp_seq = tce.emp_seq and
+				tcec.comp_seq=tced.comp_seq and tced.dept_seq = tcec.dept_seq
+				join v_t_co_comp_multi tccm on tccm.comp_seq = tced.comp_seq
+				join v_t_co_dept_multi tcdm on tcdm.dept_seq = tced.dept_seq
+				left join v_co_comp_duty_position_multi duty on duty.dp_type = 'DUTY' and
+				tced.duty_code = duty.dp_seq
+				left join v_co_comp_duty_position_multi posi on posi.dp_type = 'POSITION'
+				and tced.position_code = posi.dp_seq
+				left join t_co_comp vtcc on vtcc.comp_seq = tced.comp_seq
+			where
+				tce.group_seq = #groupSeq# and tce.use_yn != 'D' 
+				<isNotEmpty property="compSeq">
+					and tced.comp_seq = #compSeq#
+				</isNotEmpty>
+				<isEmpty property="compSeq">				
+				 	and tced.comp_seq in(
+				 		select a.comp_seq
+							from $DB_NEOS$v_t_co_comp_multi a
+							inner join $DB_NEOS$t_co_comp b on a.comp_seq = b.comp_seq
+							 where a.comp_seq in
+							(
+							SELECT	DISTINCT 
+									IGC.comp_seq 
+									FROM 	(
+										SELECT	*
+										FROM	$DB_NEOS$v_user_info
+										WHERE 	emp_seq = #empSeq#
+										AND 	use_yn			= 'Y'
+										AND     work_status = '999'
+									)	IUC
+									INNER JOIN 	(
+									SELECT	GC.comp_seq		'user_comp_seq'
+												, GC.groupping_seq	'groupping_seq'
+												, AG.comp_seq		'comp_seq'
+											FROM	$DB_NEOS$t_co_groupping_comp	GC
+												INNER JOIN	$DB_NEOS$t_co_groupping_comp	AG
+												ON 	GC.groupping_seq = AG.groupping_seq	
+											WHERE	GC.use_yn	= 'Y'
+											AND	AG.use_yn	= 'Y'
+										)	IGC
+										ON	IUC.comp_seq = IGC.user_comp_seq
+									UNION
+				
+									SELECT	comp_seq
+									FROM	$DB_NEOS$v_user_info
+									WHERE 	emp_seq = #empSeq#
+									-- AND		orgchart_display_yn	= 'Y'
+									AND 	use_yn			= 'Y'
+									AND     work_status = '999'						
+							)
+				 	)
+				</isEmpty>
+				and tcec.work_status = '999'
+				<isNotEmpty property="nameAndLoginId">
+					AND ( $DB_NEOS$FN_GetMultiLang(#langCode#,tcem.emp_name) LIKE '%$nameAndLoginId$%' or tce.login_id LIKE '%$nameAndLoginId$%')
+				</isNotEmpty>
+				<isNotEmpty property="deptName">
+					AND ( $DB_NEOS$FN_GetMultiLang(#langCode#,tcdm.dept_name) LIKE '%$deptName$%')
+				</isNotEmpty>
+				<isNotEmpty property="positionName">
+					AND ( $DB_NEOS$FN_GetMultiLang(#langCode#,posi.dp_name) LIKE '%$positionName$%') 
+				</isNotEmpty>
+				<isNotEmpty property="dutyName">
+					AND ( $DB_NEOS$FN_GetMultiLang(#langCode#,duty.dp_name) LIKE '%$dutyName$%')
+				</isNotEmpty>
+				<isNotEmpty property="telNum">
+					AND ( tced.tel_num LIKE '%$telNum$%')
+				</isNotEmpty>
+				<isNotEmpty property="mobileTelNum">
+					AND ( tce.mobile_tel_num LIKE '%$mobileTelNum$%')
+				</isNotEmpty>
+				order by vtcc.comp_seq, tced.order_text				
+		</select>
+</sqlMap>

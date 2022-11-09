@@ -1,0 +1,69 @@
+<div id="id_setting" class="con" data-height="*" data-role="content" style="position: absolute; top: 56px; left: 0px; right: 0px; z-index: 0; background: #eeeeee;">
+	<div class="con_in" style="width: 100%;">
+		<ul>
+			<li class="menu">
+				<div class="left">
+					<img src="../mobile/images/ico/icon-user.png">
+					<span>계정정보</span>
+				</div>
+				<div class="right">
+					<span id="account_info"></span>
+				</div>
+			</li>
+			<li class="menu toggleBtn" style="display: none;">
+				<div class="left">
+					<img src="../mobile/images/ico/icon-alarm.png">
+					<span>알림</span>
+				</div>
+				<div class="right toggleBG">
+					<input type="button" class="toggleFG">
+				</div>
+			</li>
+			<li class="menu toggleBtn autoSave">
+				<div class="left">
+					<img src="../mobile/images/btn/btn-save-none.png">
+					<span>자동저장</span>
+				</div>
+				<div class="right toggleBG">
+					<input type="button" class="toggleFG">
+				</div>
+			</li>
+			<li class="menu autoSave_sub">
+				<div class="left">
+					<img style="visibility: hidden;">
+					<span>1분</span>
+				</div>
+				<div class="right">
+					<img src="../mobile/images/ico/icon-check.png">
+				</div>
+			</li>
+			<li class="menu autoSave_sub">
+				<div class="left">
+					<img style="visibility: hidden;">
+					<span>5분</span>
+				</div>
+				<div class="right">
+					<img src="../mobile/images/ico/icon-check.png">
+				</div>
+			</li>
+			<li class="menu">
+				<div class="left">
+					<img src="../mobile/images/ico/icon-info.png">
+					<span>버전정보</span>
+				</div>
+				<div class="right">
+					<span id="version_info"></span>
+				</div>
+			</li>
+			<li class="menu logout">
+				<div class="left">
+					<img src="../mobile/images/ico/icon-logout.png">
+					<span>로그아웃</span>
+				</div>
+				<div class="right">
+					<img src="../mobile/images/btn/btn-arrow-none.png">
+				</div>
+			</li>
+		</ul>
+	</div>
+</div>

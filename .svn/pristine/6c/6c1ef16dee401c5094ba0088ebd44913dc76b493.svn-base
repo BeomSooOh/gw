@@ -1,0 +1,195 @@
+<!DOCTYPE html> 
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <title>ONEFFICE</title>
+        <link rel="shortcut icon" type="image/x-icon" href="./image/cloud/oneffice_Site.png" />
+        <script>
+            var pageLocation = "home";
+        </script>
+        <script language="javascript" src="./oneffice_loader.js?ver=3.0.33.0"></script>
+    </head>
+	<!-- 7J2866as7JWE7Lm4 -->
+	
+    <body>
+        <div class="cloud_container" id="dze_idx_cloud_container" style="width:1366px;height:768px;" oncontextmenu="return false" ondragstart="return false" onselectstart="return false">
+            <div class="top_cloud_title">
+                <table width="100%" border="0" cellpadding="0" cellspacing="0" style="border-bottom: 1px solid #d9d9d9">
+                    <tr>
+                        <td width="290px" height="59px" style="text-align: center;">
+                            <img width="110" height="20" src="./image/Oneffice.png" style="vertical-align: middle;cursor:pointer" onclick="dzeJ('#dze_idx_browser_recent').eq(0).click();" />
+                        </td>
+                        <td>
+                            <div id="dze_idx_cloud_search_form" class="cloud_search_form">
+                                <input type="text" id="dze_idx_cloud_search_input" class="cloud_search_input" onselectstart="event.cancelBubble=true;" />
+                                <img id="dze_idx_cloud_search_btn" class="btn_cloud_search_form" onclick="searchCloud()" src="./image/cloud/ico_cloud_search.png" onmouseover="onImageSrcHover(this);" onmouseout="onImageSrcUnover(this);" />
+                                <img id="dze_idx_cloud_search_end_btn" class="btn_cloud_search_end_form" onclick="searchCloudEnd()" src="./image/cloud/icon_cloud_delete.png" onmouseover="onImageSrcHover(this);" onmouseout="onImageSrcUnover(this);" />
+                            </div>
+                            <div id="dze_idx_cloud_user_info">
+                                <a href="#" onclick="openOnlineManualPop('home')" class="tit_help">
+                                    <img width="20" height="20" src="./image/cloud/icon_help.png" style="margin: 18px 18px 0 0; vertical-align: middle;cursor:pointer"/>
+                                </a>
+                                <img id="dze_idx_cloud_user_photo" width="30" height="30" src="./image/ribbon/btn_user_normal.png"/>
+                                <label id="dze_idx_cloud_user_name" class="cloud_user_name"></label>
+                            </div>
+                        </td>
+                        <td width="10"></td>
+                    </tr>
+                </table>
+            </div>
+                
+            <div id="dze_idx_browser_left_container" class="left_cloud_browser">
+                <div id="dze_idx_create_new_item" class="cloud_create_new_item">
+                    <div class="cloud_create_new_item_img">
+                        <div class="cloud_create_new_item_txt"><span id="cloud_plus_txt"></span><span id="newItemTxt"></span></div>
+                    </div>
+                    
+                </div>
+                <div id="dze_idx_browser_list" class="cloud_browser_list"></div>
+            </div>
+
+            <div id="dze_idx_browser_right_container" class="body_cloud_folder_file_list">
+                <!--최근 문서 출력-->
+                <div id="dze_idx_top_panel" class="home_panel_list" style="overflow: hidden;">
+                    <table id="template_top_table" width="100%" height="39px"  border="0" cellpadding="0" cellspacing="0">
+                        <tr style="height: 24px;">
+                            <td style="padding: 0 15px;">
+                                <img width="16" height="16" src="./image/cloud/icon-new.png" style="vertical-align: middle;"/>
+                                <span id="dze_idx_template_text" style="font-size: 14px; vertical-align: middle; font-weight: bold;"></span>
+                                <span id="dze_idx_new_template_more_btn" style="font-size: 14px; float:right; margin-top: 2px; cursor: pointer;">
+                                    <span id="dze_idx_new_template_more_btn_text"></span>
+                                    <img width="14" height="14" id="idx_home_cloud_more_att" src="./image/cloud/icon-more-arr.png" style="vertical-align: middle;margin-bottom: 3px;">
+                                </span>
+                            </td>
+                        </tr>
+                        <tr style="height: 10px;"></tr>
+                    </table>
+                    <div id="dze_idx_cloud_template_list_panel"></div>
+                    <div id="dze_idx_cloud_template_scrollbar"></div>
+                </div>
+                
+                <!--폴더/파일 출력-->
+                <div id="dze_idx_toolbar_menu_list" class="cloud_toolbar_menu_list">
+                    <div id="dze_idx_folderlist" class="cloud_folder_list"></div>
+                </div>
+                <div id="dze_idx_filelist_container" class="cloud_folder_list_container">
+                    <div id="dze_idx_folder_info" class="cloud_folder_info" style="display:none;"></div>
+                    <div id="dze_idx_filelist" class="cloud_file_list"></div>
+                    <div id="dze_idx_filelist_scrollbar"></div>
+                </div>
+                
+                <!--검색 결과 출력-->
+                <div id="dze_idx_search_list_container" class="cloud_search_folder_list_container" style="display: none;">
+                    <div id="dze_idx_search_myoneffice_container">
+                        <div id="dze_idx_search_myoneffice" class="cloud_search_title_area"></div>
+                        <div id="dze_idx_search_myoneffice_list" class="cloud_search_file_list_container"></div>
+                    </div>
+                    <div id="dze_idx_search_shareout_container">
+                        <div id="dze_idx_search_shareout" class="cloud_search_title_area"></div>
+                        <div id="dze_idx_search_shareout_list" class="cloud_search_file_list_container"></div>
+                    </div>
+                    <div id="dze_idx_search_sharein_container">
+                        <div id="dze_idx_search_sharein" class="cloud_search_title_area"></div>
+                        <div id="dze_idx_search_sharein_list" class="cloud_search_file_list_container"></div>
+                    </div>
+                    <div id="dze_idx_search_filelist_scrollbar"></div>
+                </div>
+                <div class="cloud_file_list_search_pos">
+                    <div class="colud_file_list_search_pad">
+                    <div id="dze_idx_filelist_search" class="cloud_file_list_search" style="">
+                        <div id="dze_idx_filelist_search_select_period" class="cloud_file_list_search_select_period">
+                            <div id="dze_idx_filelist_search_select_period_text"></div>
+                            <img class="cloud_file_list_search_arrow" src="./image/cloud/ico_cloud_arrow_bottom.png" />
+                        </div>
+                        <div id="dze_idx_filelist_search_select_type" class="cloud_file_list_search_select_type">
+                            <div id="dze_idx_filelist_search_select_type_text"></div>
+                            <img class="cloud_file_list_search_arrow" src="./image/cloud/ico_cloud_arrow_bottom.png" />
+                        </div>
+                        <div id="dze_idx_filelist_search_input_form" class="cloud_file_list_search_input_form">
+                            <input id="dze_idx_filelist_search_input_text" class="cloud_file_list_search_input_text" type="text" onselectstart="event.cancelBubble=true;" />
+                            <img id="dze_idx_filelist_search_btn" src="./image/cloud/ico_cloud_search.png" />
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer">
+            </div>
+        </div>
+        
+<script>
+var IS_FOCUS = false;
+dzeJ(document).ready(function(){
+    if (g_browserCHK.isWebView() && dzeUiConfig && dzeUiConfig.bUseHybridInterface) {
+        if(document.location.href.indexOf("oneffice.") > 0)
+            document.location.href = document.location.href.replace(/oneffice\.(html|do)/, "mobile/m_one_main.html");
+        else
+            document.location.href = document.location.href.replace("index.html", "mobile/m_one_main.html");
+        return;
+    }
+
+    var nAppEnv = oneffice.getAppEnvType();
+    if(nAppEnv == APPENV.GW)
+    {
+        dzeJ("#dze_idx_cloud_container").removeAttr("style");
+        setInitialize();
+    }
+    var focusEvent = function() {
+        var nAppEnv = oneffice.getAppEnvType();
+        if(nAppEnv == APPENV.GW)// 리스트 로드가 진행중인 경우에는 갱신 예외처리
+        {
+            if(oneffice.onLoadListToServer || duzon_dialog.dialogStatus || duzon_dialog.dialogExtStatus)
+                return ;
+                
+            //임시저장문서 새로고침 (pc)
+            if(g_browserCHK.mobile !== true && dzeUiConfig.bTempSavedDocRecovery === true) {
+                onefficeUtil.loadTempSavedDocumentsInfo();
+            }
+
+            //문서 소유자 변경
+			if(g_browserCHK.mobile !== true && dzeUiConfig.bUseChgOwn) {
+                loadChgOwn();
+            }
+
+            //focus 시 리스트 갱신
+            if ( IS_FOCUS ) {
+                //팝업이 열려 있을 때는 안함.
+                if (cmnDlg.getDlg() === null ) {
+                    focusFuncInitList();
+                    IS_FOCUS = false;
+                };
+            }
+        }
+        else
+            return;
+    };
+
+    var blurEvent = function() {
+        IS_FOCUS = true;
+    }
+    
+    if(window.attachEvent) {
+        window.attachEvent("blur", blurEvent );
+    } else {
+        window.addEventListener('blur', blurEvent, false);
+    }
+
+    if(window.attachEvent) {
+        window.attachEvent("focus", focusEvent);
+    } else {
+        window.addEventListener('focus', focusEvent, false);
+    }
+});
+
+dzeJ(document).keyup(function(e) {
+     if (e.key === "Escape") { 
+    	 resetCheckListFunc(); 
+    }
+});
+
+</script>
+		
+<!-- 		<div id="debugInfo" style="position: absolute; width:100px; height: 50px; bottom:10px; left:10px; color:#ff0000;"></div> -->
+    </body>
+</html>

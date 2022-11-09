@@ -1,0 +1,38 @@
+package api.menuAccess.dao;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import egovframework.com.cmm.service.impl.EgovComAbstractDAO;
+import egovframework.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
+
+@Repository("MenuAccessDAO")
+public class MenuAccessDAO extends EgovComAbstractDAO {
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> menuAccessList(Map<String, Object> params, PaginationInfo paginationInfo){
+        Map<String, Object> list = new HashMap<String, Object>();
+
+        list = (Map<String,Object>)listOfPaging2(params, paginationInfo, "MenuAccess.selectPreMenuAccessList");
+        return list;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> menuAccessExcelList(Map<String, Object> params, PaginationInfo paginationInfo){
+        Map<String, Object> list = new HashMap<String, Object>();
+
+        list = (Map<String,Object>)listOfPaging2(params, paginationInfo, "MenuAccess.selectPreMenuAccessListExcel");
+        return list;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public List<Map<String, Object>> menuAccessSyncList(Map<String, Object> params){
+        
+        List<Map<String, Object>> list = list("MenuAccess.selectMenuAccessSync", params);
+        
+        return list;
+    }
+}

@@ -1,0 +1,381 @@
+package main.service.impl;
+
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.log4j.Logger;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+
+import com.google.common.base.Strings;
+
+import io.searchbox.action.Action;
+import io.searchbox.client.JestClient;
+import io.searchbox.client.JestClientFactory;
+import io.searchbox.client.JestResult;
+import io.searchbox.client.config.HttpClientConfig;
+import io.searchbox.client.config.HttpClientConfig.Builder;
+import io.searchbox.core.Bulk;
+import io.searchbox.core.BulkResult;
+import io.searchbox.core.DocumentResult;
+import io.searchbox.core.Index;
+import io.searchbox.core.Search;
+import io.searchbox.core.SearchResult;
+import io.searchbox.core.Update;
+import io.searchbox.indices.CreateIndex;
+import io.searchbox.indices.DeleteIndex;
+import io.searchbox.indices.IndicesExists;
+import io.searchbox.indices.Refresh;
+import io.searchbox.indices.aliases.GetAliases;
+import io.searchbox.indices.mapping.PutMapping;
+import io.searchbox.indices.type.TypeExist;
+import io.searchbox.params.Parameters;
+import main.constants.CommonConstants;
+import main.constants.FormatConstants;
+import main.constants.SearchConstants;
+import main.web.BizboxAMessage;
+import neos.cmm.vo.Result;
+
+public class CustomSearchClient {
+	private static JestClient client;
+	private Logger logger = Logger.getLogger(CustomSearchClient.class);
+	private static String suffixIndexName;
+	private static String indexName;
+	
+	//접속 client생성
+	public CustomSearchClient(String url, String port, String discoveryDisableYn){
+		
+	    JestClientFactory factory = new JestClientFactory();
+        logger.info("검색엔진 기동 정보 : url=" + url + ", port=" + port);
+        
+        String[] ipArr = url.split(","); 
+        List<String> urlList = new ArrayList<String>();
+        for (String ip : ipArr) {
+            urlList.add("http://" + ip + ":" + port);
+        }
+        
+        Builder builder = new HttpClientConfig
+                .Builder(urlList)
+                .multiThreaded(true)
+                .readTimeout(30000)
+                .connTimeout(10000);
+        
+        if(Strings.isNullOrEmpty(discoveryDisableYn) || "N".equals(discoveryDisableYn)) {
+            builder = builder.discoveryEnabled(true)
+            .discoveryFrequency(5l, TimeUnit.MINUTES);
+        }
+        
+        factory.setHttpClientConfig(builder.build());
+        
+        client = factory.getObject();
+        
+        logger.info("검색엔진 기동 정보 : " + urlList);
+		
+	}
+	
+	/**
+	 * 통합검색 검색어 인덱스 생성
+	 * 매월 1일 00:00시에 호출되어 인덱스를 확인하고 달이 지났으면 바뀐 달의 인덱스를 새로 생성하도록 한다.
+	 */
+	/*@Scheduled(cron="0 0 0 1 * ?")
+	public void checkNewIndex(){
+		init();
+	}
+	*/
+	/**
+	 * 초기화 로직
+	 * 스프링에서 객체가 최초 생성시에도 호출함
+	 * 인덱스를 확인하고 달이 지났으면 바뀐 달의 인덱스를 새로 생성한다.
+	 */
+	public void init(){
+		/*Calendar calendar = Calendar.getInstance();
+		Date today = calendar.getTime();
+		calendar.add(Calendar.MONTH, 1);
+		Date nextMonth = calendar.getTime();
+		
+		String curYearMonth = DateHelper.convertDateToString(today, FormatConstants.FORMAT_YEAR_MONTH);
+		String nextYearMonth = DateHelper.convertDateToString(nextMonth, FormatConstants.FORMAT_YEAR_MONTH);
+		
+		this.suffixIndexName = curYearMonth;
+		indexName = SearchConstants.ALIAS_NAME_TSEARCH_WORD + "_" + suffixIndexName;
+		
+		IndexInitialize(SearchConstants.ALIAS_NAME_TSEARCH_WORD + "_" + curYearMonth);
+		*/
+		indexName = SearchConstants.ALIAS_NAME_TSEARCH_WORD;
+		
+		deleteMonthlyIndex();//추후 삭제 예정 : 월별 인덱스 삭제 로직 (tsearch_word_201906, 07 ....)
+		IndexInitialize(SearchConstants.ALIAS_NAME_TSEARCH_WORD);
+	}
+	//월별 인덱스 삭제
+	private void deleteMonthlyIndex(){
+		try {
+			
+			JestResult indicesResult = client.execute(new GetAliases.Builder().build());
+
+			Map jsonMap = indicesResult.getJsonMap();
+			
+			Iterator<String> keys = jsonMap.keySet().iterator();
+	        while( keys.hasNext() ){
+	            String key = keys.next();
+	            
+	            if(key.contains(SearchConstants.ALIAS_NAME_TSEARCH_WORD + "_")) {
+	            	JestResult result = client.execute(new IndicesExists.Builder(key).build());
+					  if (result.isSucceeded()) {
+					    result = client.execute(new DeleteIndex.Builder(key).build());
+					    if (!result.isSucceeded()) {
+					    	logger.error("tsearch_word 인덱스 삭제 실패. indexName=" + key + ", msg=" + result.getErrorMessage());        
+					    }
+					  }
+	            }
+	            
+	        }
+		}catch(Exception e) {
+			logger.error("tsearch_word_??? 인덱스 삭제 실패");
+		}
+	}
+
+	/**
+	 * 초기화 로직
+	 * 회사 리스트와 생성날짜를 입력받아, 인덱스를 생성하여 별칭에 연결하고 매핑들을 생성한다.
+	 */
+	public synchronized void IndexInitialize(String indexName){		
+		try {
+			this.createIndex(indexName);
+			this.createType(indexName, SearchConstants.TYPE_SEARCH_WORD, this.getSearchWordMapper());
+		} catch (IOException e) {
+			logger.error("tsearch_word 인덱스 생성 실패", e);
+		}
+	}
+	
+	/**
+	 * 종료 로직
+	 * 스프링에서 객체 제거시 호출함
+	 */
+	public void close(){
+		client.shutdownClient();
+	}
+	
+	/**
+	 * Jest Client를 반환한다.
+	 * @return
+	 */
+	public static JestClient getJestInstance(){
+		return client;
+	}
+	
+	/**
+	 * 현재월의 인덱스 구분값을 반환.
+	 * @return
+	 */
+	public static String getIndexSuffixName(){
+		return suffixIndexName;
+	}
+	
+	/**
+	 * 현재월의 인덱스명을 반환
+	 * @return
+	 */
+	public static String getIndexName(){
+		return indexName;
+	}
+	
+	
+	/**
+	 * 뒤의 인덱스 구분값을 입력받아 현재 해당 인덱스가 있는지 확인하고 결과를 반환한다.
+	 * @param suffixIndexName
+	 * @return
+	 * @throws IOException
+	 */
+	public boolean isExistIndex(String indexName) throws IOException{
+		Action indexExistsAction = new IndicesExists.Builder(indexName).build();
+		JestResult indexExistsResult = client.execute(indexExistsAction);
+		return indexExistsResult.isSucceeded();
+	}
+	
+	/**
+	 * 인덱스명을 입력받아 해당 인덱스가 없으면 새로 생성하고 alias에 등록
+	 * @param indexName
+	 * @return
+	 * @throws IOException
+	 */
+	public boolean createIndex(String indexName) throws IOException{		
+		
+		//이미 있는 인덱스인지 확인
+		if(this.isExistIndex(indexName)){
+			return true;
+		}
+		
+		Settings.Builder settings = Settings.builder();
+		settings.put("number_of_shards",5);
+		settings.put("number_of_replicas",1);
+		settings.put("analysis.analyzer.whitespace.tokenizer", "whitespace");
+		settings.put("analysis.analyzer.whitespace.filter", "trim, lowercase");
+		
+		//새 인덱스로 생성 후 별칭에 등록
+		Action indexCreateAction = new CreateIndex.Builder(indexName).settings(settings).build();
+		JestResult createIndexResult = client.execute(indexCreateAction);
+		if(!createIndexResult.isSucceeded()){
+			logger.error("tsearch_word 인덱스 생성 실패. indexName=" + indexName + ", msg=" + createIndexResult.getErrorMessage());
+			return false;
+		}
+		/*
+		Action addIndexToAliases = new ModifyAliases.Builder(
+				new AddAliasMapping.Builder(indexName, SearchConstants.ALIAS_NAME_TSEARCH_WORD).build()
+			).build();
+		
+		JestResult addAliasResult = client.execute(addIndexToAliases);
+		if(!addAliasResult.isSucceeded()){
+			logger.error("tsearch_word Alias에 인덱스 연결 실패. aliasName=" + SearchConstants.ALIAS_NAME_TSEARCH_WORD + ", msg=" + addAliasResult.getErrorMessage());
+			return false;
+		}
+		*/
+		return true;
+	}
+	
+	/**
+	 * 인덱스명과 타입명을 받아 이미 생성되어 있는지 확인후 결과를 반환한다.
+	 * @param indexName
+	 * @param typeName
+	 * @return
+	 * @throws IOException
+	 */
+	public boolean isExistType(String indexName, String typeName) throws IOException{
+		Action typeExist = new TypeExist.Builder(indexName).addType(typeName).build();
+		JestResult typeExistResult = client.execute(typeExist);
+		return typeExistResult.isSucceeded();
+	}
+	
+	/**
+	 * 타입 생성.
+	 * @param indexName
+	 * @param typeName
+	 * @param source
+	 * @return
+	 * @throws IOException
+	 */
+	public boolean createType(String indexName, String typeName, String source) throws IOException{
+		//해당 타입이 이미 있는지 체크 후 있으면 바로 종료
+		if(this.isExistType(indexName, typeName)){
+			return true;
+		}
+		
+		//타입이 없으면 새로 생성 시도
+		Action putMapping = new PutMapping.Builder(indexName, typeName, source).build();
+		JestResult putMappingResult = client.execute(putMapping);
+		if(!putMappingResult.isSucceeded()){
+			logger.error("타입 생성 실패. indexName=" + indexName + ", typeName=" + typeName + ", msg=" + putMappingResult.getErrorMessage() + ", source=" + source);
+			return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * 검색어 데이터가 저장되는 타입을 JSON string으로 작성하여 반환.
+	 * @return
+	 * @throws IOException 
+	 */
+	private String getSearchWordMapper() throws IOException{
+		XContentBuilder builder = jsonBuilder()
+				.startObject()
+				.startObject("properties")
+					.startObject("groupSeq").field("type","string").field("index", "not_analyzed").endObject()
+					.startObject("compSeq").field("type","string").field("index", "not_analyzed").endObject()
+					.startObject("deptSeq").field("type","string").field("index", "not_analyzed").endObject()
+					.startObject("empSeq").field("type", "string").field("index", "not_analyzed").endObject()
+					.startObject("searchWord").field("type", "string").field("index", "analyzed").field("analyzer","whitespace").field("term_vector","yes").field("store",true).endObject()
+					.startObject("createDate").field("type","date").field("format", FormatConstants.FORMAT_DATE_STRICT).endObject()
+					.startObject("useYn").field("type", "string").field("index", "not_analyzed").endObject()
+				.endObject()
+		    .endObject();
+		
+		return builder.string();
+	}
+	
+	
+	/**
+	 * 검색어 정보를 입력받아 검색엔진에 등록하고 _id 값을 반환한다.
+	 * @param source json 형식의 입력값
+	 * @return Result 객체. 결과 Obj 값은 _id:String
+	 * @throws IOException 
+	 */
+	public Result insertSearchWord(String source) throws IOException{
+		Index index = new Index
+				.Builder(source)
+				.index(this.indexName)
+				.type(SearchConstants.TYPE_SEARCH_WORD)
+				.setParameter(Parameters.REFRESH, true)
+				.refresh(true)
+				.build();
+		
+		logger.debug("InsertSearchWord. query=" + index);
+		DocumentResult result = client.execute(index);
+		if(!result.isSucceeded()){
+			logger.error(" InsertSearchWord. Failed to insert searchWord. msg=" + result.getErrorMessage());
+			return new Result("ES001", result.getErrorMessage());
+		}
+		
+		return new Result(CommonConstants.API_RESPONSE_SUCCESS, BizboxAMessage.getMessage("TX000011955","성공하였습니다"), result.getId());
+	}
+	/**
+	 * documentId와 source를 입력 받아 데이터를 수정한다.
+	 * @param source json 형식의 입력값
+	 * @return Result 객체. 결과 Obj 값은 _id:String
+	 * @throws IOException 
+	 */
+	public Result updateSearchWord(String id, String source) throws IOException{
+		Update update = new Update
+				.Builder(source)
+				.index(this.indexName)
+				.type(SearchConstants.TYPE_SEARCH_WORD)
+				.id(id)
+				.setParameter(Parameters.REFRESH, true)
+				.refresh(true)
+				.build();
+		
+		logger.debug("UpdateSearchWord. query=" + update);
+		DocumentResult result = client.execute(update);
+		if(!result.isSucceeded()){
+			logger.error(" UpdateSearchWord. Failed to update searchWord. msg=" + result.getErrorMessage());
+			return new Result("ES001", result.getErrorMessage());
+		}
+		
+		return new Result(CommonConstants.API_RESPONSE_SUCCESS, BizboxAMessage.getMessage("TX000011955","성공하였습니다"), result);
+	}
+	//검색
+	public SearchResult search(String indexName, List<String> typeList, SearchSourceBuilder searchBuilder) throws IOException{
+		Search search = new Search
+				.Builder(searchBuilder.toString())
+				.addIndex(indexName)
+				.addType(typeList).build();
+		SearchResult searchResult = client.execute(search);
+		return searchResult;
+	}
+	
+	public BulkResult bulkExecute(Bulk bulkRequest) throws IOException{
+		BulkResult bulkResult = client.execute(bulkRequest);
+		return bulkResult;
+	}
+	
+	/**
+	 * 각 액션에서 refresh(true)가 제대로 동작하지 않을경우 명시적으로 refresh 하는 API를 생성하여 호출하도록 변경.
+	 * @param key
+	 * @return
+	 * @throws IOException
+	 */
+	public Result refresh(String key) throws IOException{
+		Refresh refresh = new Refresh.Builder().addIndex(SearchConstants.ALIAS_NAME_TSEARCH_WORD).build();
+        JestResult refreshResult = client.execute(refresh);
+        if(!refreshResult.isSucceeded()){
+        	logger.error("refreshKey=" + key + " refresh. msg=" + refreshResult.getErrorMessage());
+        	return new Result(CommonConstants.API_RESPONSE_FAIL, refreshResult.getErrorMessage());
+        }
+        return new Result(CommonConstants.API_RESPONSE_SUCCESS, BizboxAMessage.getMessage("TX000011955","성공하였습니다"));
+	}
+}

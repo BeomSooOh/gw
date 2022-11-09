@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="neos.cmm.erp.sqlmap.icube.oracle">
+
+	<select id="selectIcubeCurrentTime" resultType="hashmap">
+		select TO_CHAR(systimestamp,'YYYY-MM-DD HH24:MI:SS') AS "currentTime" from dual
+	</select>
+	
+	<select id="selectZaCompList" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			c.CO_CD     AS "coCd",
+			c.FR_DT     AS "frDt",
+			c.TO_DT     AS "toDt",
+			c.CO_NM     AS "coNm",
+			c.CO_NMK    AS "coNmk",
+			c.CO_FG     AS "coFg",
+			c.GISU      AS "gisu",
+			c.REG_NB    AS "regNb",
+			c.CO_NB     AS "coNb",
+			c.CEO_NM    AS "ceoNm",
+			c.FOR_YN    AS "forYn",
+			c.HO_ZIP    AS "hoZip",
+			c.HO_ADDR   AS "hoAddr",
+			c.HO_ADDR1  AS "hoAddr1",
+			c.HO_TEL    AS "hoTel",
+			c.HO_FAX    AS "hoFax",
+			c.BUSINESS  AS "business",
+			c.JONGMOK   AS "jongmok",
+			c.EST_DT    AS "estDt",
+			c.OPEN_DT   AS "openDt",
+			c.CLOSE_DT  AS "closeDt",
+			c.CO_ENM    AS "coEnm",
+			c.HOMEPAGE  AS "homepage",
+			c.CO_CD as "id",
+			'c' as "gbnOrg",
+			'c' as "orgDiv",
+			c.CO_CD as "includeDeptCode",
+			c.CO_CD as "compSeq",
+			'' as "bizSeq",
+			'0' as "parentSeq",
+			c.CO_CD as "path",
+			'' as "parentPath",
+			c.CO_NM as "text"
+		FROM ZA_COMPANY_DAIKIN c
+		WHERE c.CO_CD = #{cdCompany}
+	</select>
+	
+	<select id="selectSDeptList" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			d.DEPT_CD                as "deptCd",
+			d.CO_CD                  as "coCd",
+			d.SECT_CD                as "sectCd",
+			d.DIV_CD                 as "divCd",
+			d.DEPT_NM                as "deptNm",
+			d.REG_DT                 as "regDt",
+			d.TO_DT                  as "toDt",
+			d.INSERT_ID              as "insertId",
+			d.INSERT_DT              as "insertDt",
+			d.INSERT_IP              as "insertIp",
+			d.MODIFY_ID              as "modifyId",
+			d.MODIFY_DT              as "modifyDt",
+			d.MODIFY_IP              as "modifyIp",
+			d.DUMMY1                 as "dummy1",
+			d.DUMMY2                 as "dummy2",
+			d.DUMMY3                 as "dummy3",
+			d.DEPT_NMENG             as "deptNmeng",
+			d.DEPT_NMK               as "deptNmk",
+			d.AB_DEPT_NM             as "abDeptNm",
+			-- d.FTE_CNT                as "fteCnt",
+			-- d.TMP_CNT                as "tmpCnt",
+			-- d.DVSN_CD                as "dvsnCd",
+			d.CO_CD||d.DEPT_CD as "id",
+			'd' as "gbnOrg",
+			'd' as "orgDiv",
+			d.CO_CD||d.DEPT_CD as "includeDeptCode",
+			d.CO_CD||d.DEPT_CD as "deptSeq",
+			d.CO_CD as "compSeq",
+			d.CO_CD||d.DIV_CD as "bizSeq",
+			d.CO_CD||d.DIV_CD as "parentSeq",
+			d.CO_CD||'|'||d.CO_CD||d.DIV_CD||'|'||d.CO_CD||d.DEPT_CD as "path",
+			d.CO_CD||'|'||d.CO_CD||d.DIV_CD as "parentPath",
+			d.DEPT_NM as "text",
+			b.DIV_ZIP   as "divZip",
+			b.DIV_ADDR  as "divAddr",
+			b.DIV_ADDR1 as "divAddr1",
+			b.DIV_TEL   as "divTel",
+			b.DIV_FAX   as "divFax",
+			'N' as "team_yn"
+		from 
+			SDEPT d 
+			left outer join ZA_DIV_DAIKIN b on d.CO_CD = b.CO_CD AND d.DIV_CD = b.DIV_CD
+		where
+			d.CO_CD = #{cdCompany}
+			<if test='deptCd != null and deptCd != "" '>
+			and d.DEPT_CD = #{deptCd}
+			</if> 
+	</select>
+	
+	<select id="selectSDeptPathList" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+		  LEVEL as "level", 
+		  A.CO_CD||A.DEPT_CD as "deptSeq", 
+		  A.CO_CD||A.DEPT_CD as "hDept", 
+		  A.DEPT_NM as "nmDept", 
+		  <if test='isCompPath == null or isCompPath == ""'>
+		  substr(sys_connect_by_path(A.DEPT_NM, '|'), 2) as "pathName",
+		  substr(sys_connect_by_path(A.CO_CD||A.DEPT_CD, '|'), 2) as "path",
+		  '0' as "parentPath", 
+		  </if>
+		  <if test='isCompPath != null and isCompPath == "Y"'>
+		  C.CO_NM||'|'||B.DIV_NM||'|'||substr(sys_connect_by_path(A.DEPT_NM, '|'), 2) as "pathName",
+		  A.CO_CD||'|'||A.CO_CD||A.DIV_CD||'|'||substr(sys_connect_by_path(A.CO_CD||A.DEPT_CD, '|'), 2) as "path",
+		  C.CO_CD||'|'||A.CO_CD||A.DIV_CD as "parentPath"
+		  </if>
+		FROM SDEPT A 
+		        LEFT OUTER JOIN ZA_COMPANY_DAIKIN C on A.CO_CD = C.CO_CD
+				LEFT OUTER JOIN ZA_DIV_DAIKIN B on A.DIV_CD = B.DIV_CD
+		WHERE A.CO_CD = #{cdCompany}
+	</select>
+	
+	<select id="selectZaDivList" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			b.CO_CD     as "coCd",
+			b.DIV_CD    as "divCd",
+			b.DIV_NM    as "divNm",
+			b.DIV_NMK   as "divNmk",
+			b.REG_NB    as "regNb",
+			b.CO_NB     as "coNb",
+			b.CEO_NM    as "ceoNm",
+			b.DIV_ZIP   as "divZip",
+			b.DIV_ADDR  as "divAddr",
+			b.DIV_ADDR1 as "divAddr1",
+			b.DIV_TEL   as "divTel",
+			b.DIV_FAX   as "divFax",
+			b.BUSINESS  as "business",
+			b.JONGMOK   as "jongmok",
+			b.OPEN_DT   as "openDt",
+			b.CLOSE_DT  as "closeDt",
+			b.FILL_YN   as "fillYn",
+			b.CO_CD||b.DIV_CD as "id",
+			'b' as "gbnOrg",
+			'b' as "orgDiv",
+			b.CO_CD||b.DIV_CD as "includeDeptCode",
+			b.CO_CD as "compSeq",
+			b.CO_CD||b.DIV_CD as "bizSeq",
+			b.CO_CD as "parentSeq",
+			b.CO_CD||'|'||b.CO_CD||b.DIV_CD as "path",
+			b.CO_CD as "parentPath",
+			b.DIV_NM as "text"
+		from ZA_DIV_DAIKIN b
+		where
+			b.CO_CD = #{cdCompany}
+			<if test='saveYn != null and saveYn == "Y"'>
+			and (b.CLOSE_DT is null or sysdate between b.OPEN_DT and b.CLOSE_DT)
+			</if>
+	</select>
+	
+	<!-- <select id="selectMaUserList" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			mu.id_user as "idUser",
+			mu.cd_company as "cdCompany",
+			mu.nm_user as "nmUser",
+			mu.usr_gbn as "usrGbn",
+			mu.gw_insert_time as "gwInsertTime", 
+			mu.gw_update_time as "gwUpdateTime"
+		from neoe.ma_user mu
+		where
+			mu.cd_company = #{cdCompany}
+			<if test='gwUpdateTime != null and gwUpdateTime != ""'>
+			and (mu.GW_INSERT_TIME is null or mu.GW_INSERT_TIME > #{gwUpdateTime}
+			</if>
+	</select> -->
+	
+	<!-- <select id="selectHrPhotoList" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			hp.cd_company as "cdCompany",
+			hp.no_emp as "noEmp",
+			hp.dc_photo as "dcPhoto",
+			hp.gw_insert_time as "gwInsertTime", 
+			hp.gw_update_time as "gwUpdateTime"
+		from neoe.hr_photo hp
+		where
+			hp.cd_company = #{cdCompany}
+			<if test='gwUpdateTime != null and gwUpdateTime != ""'>
+			and (hp.GW_INSERT_TIME is null or hp.GW_INSERT_TIME > #{gwUpdateTime}
+			</if>
+	</select> -->
+	
+	<select id="selectSEmpList" parameterType="hashmap" resultType="hashmap">
+		SELECT *
+		FROM (
+			SELECT 
+				COUNT(e.EMP_CD) OVER() "TOTAL_COUNT",
+				row_number() over(order by e.EMP_CD) "rownum",
+				to_char(row_number() over(order by me.no_emp) - 1) as "rownum",
+				e.CO_CD       AS "coCd",
+				e.EMP_CD      AS "empCd",
+				'1'		      AS "usrYn",
+				e.KOR_NM      AS "korNm",
+				e.ENLS_NM     AS "enlsNm",
+				e.BRTH_DT     AS "brthDt",
+				e.LSCL_FG     AS "lsclFg",
+				e.ENRL_FG     AS "enrlFg",
+				(select CTD_NM from SCTRL_D where CO_CD = e.CO_CD and CTRL_CD = 'HE' and MODULE_CD = 'H' and CTD_CD = e.ENRL_FG) AS "enrlFgName",
+				e.JOIN_DT     AS "joinDt",
+				e.RTR_DT      AS "rtrDt",
+				e.DEPT_CD     AS "deptCd",
+				(select dept_nm from SDEPT where CO_CD = e.CO_CD AND DEPT_CD = e.DEPT_CD) as "deptCdName",
+				e.PRTY_CD     AS "prtyCd",
+				e.FELD_CD     AS "feldCd",
+				(select CTD_NM from SCTRL_D where CO_CD = e.CO_CD and CTRL_CD = 'EE' and MODULE_CD = 'H' and CTD_CD = e.FELD_CD) AS "feldCdName",
+				e.EMPL_FG     AS "emplFg",
+				e.HRSP_CD     AS "hrspCd",
+				e.HCLS_CD     AS "hclsCd",
+				(select CTD_NM from SCTRL_D where CO_CD = e.CO_CD and CTRL_CD = 'G3' and MODULE_CD = 'H' and CTD_CD = e.HRSP_CD)     AS "hrspCdName",
+				(select CTD_NM from SCTRL_D where CO_CD = e.CO_CD and CTRL_CD = 'G4' and MODULE_CD = 'H' and CTD_CD = e.HCLS_CD)     AS "hclsCdName",
+				e.HTYP_CD 	  AS "htypCd",
+				(select CTD_NM from SCTRL_D where CO_CD = e.CO_CD and CTRL_CD = 'G2' and MODULE_CD = 'H' and CTD_CD = e.HTYP_CD)     AS "htypCdName",
+				e.TEL         AS "tel",
+				e.EMGC_TEL    AS "emgcTel",
+				e.EMAL_ADD    AS "emalAdd",
+				e.RR_ZIP      AS "rrZip",
+				e.RSRG_ADD    AS "rsrgAdd",
+				e.RSRD_ADD    AS "rsrdAdd",
+				e.GRW_ID      AS "grwId",
+				e.HOPR_CD as "hoprCd",
+				(select CTD_NM from SCTRL_D where CO_CD = e.CO_CD and CTRL_CD = 'G5' and MODULE_CD = 'H' and CTD_CD = e.HOPR_CD)     AS "hoprCdName",
+				e.CO_CD||e.DEPT_CD AS "deptSeq",
+				e.CO_CD||e.DIV_CD AS "bizSeq",
+				e.DIV_CD      AS "divCd",
+				(select DESCRIPTION from PICTURE where CO_CD = e.CO_CD and DESCRIPTION = e.EMP_CD) as "erpPicFileId",
+				h.MARRY_YN as "marryYn",
+				e.GENDER_FG as "genderFg"
+			from 
+				SEMP e 
+				left outer join HHMEPAD h on e.CO_CD = h.CO_CD AND e.EMP_CD = h.EMP_CD
+			where
+				e.CO_CD = #{cdCompany}
+				<if test='noEmpList != null and noEmpList != ""'>
+					and e.EMP_CD in (${noEmpList})
+				</if> 
+				
+				<if test='empName != null and empName != ""'>
+				and e.KOR_NM like '%${empName}%'
+				</if>
+				<if test='deptName != null and deptName != ""'>
+				and DEPT_CD IN (select DEPT_CD from SDEPT where DEPT_NM like '%${deptName}%')
+				</if>
+				<if test='deptEmpName != null and deptEmpName != ""'>
+				and (DEPT_CD IN (select DEPT_CD from SDEPT where DEPT_NM like '%${deptEmpName}%') or e.KOR_NM like '%${deptEmpName}%')
+				</if>
+				<if test='workStatus != null and workStatus != ""'>
+					and e.enrlFg = #{workStatus}
+				</if>
+				and
+					(e.MODIFY_DT is null or e.MODIFY_DT between #{startSyncTime} and #{endSyncTime})
+			) pagetable
+		<if test='startNum != null and startNum != ""'>
+		where rownum between ${startNum} and ${endNum}
+		</if>
+	</select>
+	
+	<select id="selectSCtrlList" parameterType="hashmap" resultType="hashmap" useCache="false">
+		SELECT 
+			sd.co_cd as "cdCompany",
+			sd.MODULE_CD as "cdField",
+			sd.CTD_CD <if test='aliasCode !=null and aliasCode != ""'>as "${aliasCode}"</if> <if test='aliasCode ==null or aliasCode == ""'>as "cdSysdef"</if>,
+			-- sd.fg1_syscode as "fg1Syscode",
+			sd.CTD_NM <if test='aliasName !=null and aliasName != ""'>as "${aliasName}"</if> <if test='aliasName ==null or aliasName == ""'>as "nmSysdef"</if>
+		from SCTRL_D sd
+		where
+			sd.CO_CD = #{cdCompany}
+			and sd.CTRL_CD = #{ctrlCd}
+			and sd.MODULE_CD = #{moduleCd}
+		order by sd.CTD_CD
+	</select>
+	
+	<!-- <select id="selectMaDeptGwDelete" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			d.cd_dept as "cdDept",
+			d.cd_company as "cdCompany",
+			convert(varchar, d.gw_delete_time, 120) as  gw_delete_time
+		from neoe.ma_dept_gw_delete d
+		where
+			d.cd_company = #{cdCompany}
+			and (d.gw_delete_time is null or d.gw_delete_time between #{startSyncTime} and #{endSyncTime})
+	</select>
+	
+	<select id="selectMaUserGwDelete" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			d.id_user as "idUser",
+			d.cd_company as "cdCompany",
+			convert(varchar, d.gw_delete_time, 120) as  gw_delete_time
+		from neoe.ma_user_gw_delete d
+		where
+			d.cd_company = #{cdCompany}
+			and (d.gw_delete_time is null or d.gw_delete_time between #{startSyncTime} and #{endSyncTime})
+	</select>
+	
+	<select id="selectHrPhotoGwDelete" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			d.no_emp as "noEmp",
+			d.cd_company as "cdCompany",
+			convert(varchar, d.gw_delete_time, 120) as  gw_delete_time
+		from neoe.hr_photo_gw_delete d
+		where
+			d.cd_company = #{cdCompany}
+			and (d.gw_delete_time is null or d.gw_delete_time between #{startSyncTime} and #{endSyncTime})
+	</select>
+	
+	<select id="selectMaEmpGwDelete" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			d.no_emp as "noEmp",
+			d.cd_company as "cdCompany",
+			convert(varchar, d.gw_delete_time, 120) as  gw_delete_time
+		from neoe.ma_emp_gw_delete d
+		where
+			d.cd_company = #{cdCompany}
+			and (d.gw_delete_time is null or d.gw_delete_time between #{startSyncTime} and #{endSyncTime})
+	</select>
+	
+	<select id="selectMaCodedtlGwDelete" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			d.cd_field as "cdField",
+			d.cd_sysdef as "cdSysdef",
+			d.cd_company as "cdCompany",
+			convert(varchar, d.gw_delete_time, 120) as  gw_delete_time
+		from neoe.ma_codedtl_gw_delete d
+		where
+			d.cd_company = #{cdCompany}
+			and (d.gw_delete_time is null or d.gw_delete_time between #{startSyncTime} and #{endSyncTime})
+	</select> -->
+	
+	<!-- <select id="selectErpEmpWorkCodeList" parameterType="hashmap" resultType="hashmap">
+		select me.cd_incom as "erpCode"
+		from neoe.ma_emp me
+		where
+			me.cd_company = #{cdCompany}
+		group by me.cd_incom	
+	</select> -->
+	
+	<update id="updateSgwLogEmpGwUpdateDate" parameterType="hashmap">
+		update	SEMP
+		set MODIFY_DT = 
+			<if test='timeType == "SS"'>
+				to_date(sysdate+${time}/24/60/60,'YYYY-MM-DD hh24:mi:ss')
+			</if>
+			<if test='timeType == "MI"'>
+				to_date(sysdate-${time}/60/60,'YYYY-MM-DD hh24:mi:ss')
+			</if>
+		where
+			CO_CD = #{erpCompSeq}
+			<if test='erpEmpSeq != null and erpEmpSeq != ""'>
+			and EMP_CD = #{erpEmpSeq}
+			</if>
+			<if test='timeType == "SS"'>
+			and (MODIFY_DT is null or MODIFY_DT between #{startSyncTime} and #{endSyncTime})
+			</if>
+			
+	</update>
+	
+	<update id="updateSgwLogDeptGwUpdateDate" parameterType="hashmap">
+		update	SDEPT
+		set MODIFY_DT = 
+			<if test='timeType == "SS"'>
+				to_date(sysdate+${time}/24/60/60,'YYYY-MM-DD hh24:mi:ss')
+			</if>
+			<if test='timeType == "MI"'>
+				to_date(sysdate-${time}/60/60,'YYYY-MM-DD hh24:mi:ss')
+			</if>
+		where
+			CO_CD = #{erpCompSeq}
+			<if test='erpDeptSeq != null and erpDeptSeq != ""'>
+			and DEPT_CD = #{erpDeptSeq}
+			</if>
+	</update>
+	
+	<select id="selectPictureInfo" parameterType="hashmap" resultType="hashmap">
+		select
+			filename as "fileName",
+			image as "image"
+		from PICTURE
+		where CO_CD = #{erpCompSeq}
+			and DESCRIPTION = #{erpEmpSeq}
+	</select>
+	
+	
+	<select id="selectErpProjectList" parameterType="hashmap" resultType="hashmap">
+		select
+		NVL(PJT_CD,' ') as "noProject",
+		1 as "noSeq",
+		NVL(CO_CD,' ') as "cdCompany",
+		NVL(PJT_NM,' ') as "nmProject",
+		' ' as "tpProject",
+		NVL(TR_CD,'') as "cdPartner",
+		0 as "amContract",
+		' ' as "cdExch",
+		0 as "rtExch",
+		' ' as "fgVat",
+		NVL(ESTI_AM,0) as "amBase",
+		NVL(ORD_AM,0) as "amWonamt",
+		0 as "amWonvat",
+		NVL(FR_DT,' ') as "sdProject",
+		NVL(TO_DT,' ') as "edProject",
+		CASE NVL(PROG_FG,' ') WHEN '' THEN '001' WHEN '1' THEN '100' ELSE '999' END as staProject,
+		NVL(START_DT,' ') as "dtChange",
+		' ' as "noTel",
+		' ' as "noHp",
+		' ' as "noFax",
+		' ' as "eMail",
+		' ' as "lnPartner",
+		' ' as "nmPtr"
+		from SPJT
+		where CO_CD = #{cdCompany}
+		<if test='termTp != null and termTp == "1"'>
+		and (to_char(sysdate, 'YYYYMMDD') BETWEEN NVL(FR_DT,'00000000') AND (CASE WHEN (NVL(TO_DT,'00000000') = '00000000' OR TO_DT = '') THEN '99999999' ELSE TO_DT END))
+		</if>
+		<if test='termTp != null and termTp == "2"'>
+		and TO_DT <![CDATA[<]]> to_char(sysdate, 'YYYYMMDD')
+		</if>
+		<if test='termTp != null and termTp == "3"'>
+		and PROG_FG = '1'
+		</if>
+		<if test='termTp != null and termTp == "4"'>
+		and PROG_FG = '0'
+		</if>				
+		
+	</select>	
+	
+	<select id="selectErpPartnerList" parameterType="hashmap" resultType="hashmap">
+		select
+			 NVL(TR_CD,' ') as "cdPartner"
+			,NVL(CO_CD,' ') as "cdCompany"
+			,NVL(TR_NM,' ') as "lnPartner"
+			,NVL(REG_NB,' ') as "noCompany"
+			-- ,NVL(TR_FG,' ') as "clsPartner"
+			,case TRSO_FG when '1' then '002' when '3' then '004' else '001' end as "clsPartner"
+			,NVL(CEO_NM,' ') as "nmCeo"
+			,NVL(BUSINESS,' ') as "tpJob" 
+			,NVL(JONGMOK,' ') as "clsJob"
+			,NVL(TEL,' ') as "noTel1"
+			,NVL(FAX,' ') as "noFax1"
+			,NVL(ZIP,' ') as "noPost1"
+			,NVL(DIV_ADDR1,' ') as "dcAds1H"
+			,NVL(ADDR2,' ') as "dcAds1D"
+			,NVL(TR_NM,' ') as "nmPtr"
+			,NVL(FAX,' ') as "noFax"
+			,NVL(EMAIL,' ') as "eEail"
+			,NVL(TEL,' ') as "noTel"
+			,' ' as "noHp"
+			,case when NVL(USE_YN,'0') = '1' then 'Y' else 'N' end as "useYn"
+			from STRADE	
+		where CO_CD = #{cdCompany}
+	</select>				
+	
+</mapper>

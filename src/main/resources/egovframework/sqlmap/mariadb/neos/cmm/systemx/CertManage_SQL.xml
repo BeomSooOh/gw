@@ -1,0 +1,734 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CertManageDAO">
+
+    <typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+
+	<select id="CertManageDAO.getCertificateUserList" parameterClass="hashmap" resultClass="hashmap"><![CDATA[
+		/* CertManageDAO.getCertificateUserList - mariadb */
+		
+				/* 증명서 양식 시퀀스 */
+		SELECT DISTINCT  a.form_seq AS formSeq
+				/* 증명서 양식 명칭 */
+		        , IFNULL(CASE
+		                        WHEN #langCode# = 'kr' THEN IFNULL(form_nm, '')
+		                        WHEN #langCode# = 'en' THEN IFNULL(form_nm_en, IFNULL(form_nm, ''))
+		                        WHEN #langCode# = 'jp' THEN IFNULL(form_nm_jp, IFNULL(form_nm, ''))
+		                        WHEN #langCode# = 'cn' THEN IFNULL(form_nm_cn, IFNULL(form_nm, ''))
+		                        ELSE IFNULL(form_nm, '')
+		                END
+		        , '') AS formNm
+	        	/* 증명서 귀속 회사 시퀀스 */
+		        , a.comp_seq AS compSeq
+		FROM    $DB_NEOS$t_co_certificate_form a
+		        INNER JOIN (
+		                SELECT  form_seq
+		                        , MIN(comp_seq) AS comp_seq
+		                FROM    $DB_NEOS$t_co_certificate_form
+		                		/* 검색조건 - 그룹 시퀀스 */
+		                WHERE   group_seq = #groupSeq#
+		                		/* 검색조건 - 회사 시퀀스 ( 소속 회사 or 그룹 ) */
+		                AND     ( comp_seq = #compSeq# OR '0' = #compSeq# )
+		                		/* 검색조건 - 사용여부 ( 사용 : Y / 미사용 : N ) */
+		                AND     use_yn = 'Y'
+		                GROUP   BY form_seq
+		                ORDER   BY create_date
+		        ) b ON a.comp_seq = b.comp_seq AND a.form_seq = b.form_seq;
+	]]></select>
+	
+	<select id="CertManageDAO.getCertificateList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT form_seq,
+		       ifnull((select 
+				 	ifnull(case #langCode#
+			   	when 'kr' then form_nm
+			   	when 'en' then form_nm_en
+			   	when 'cn' then form_nm_cn
+			   	when 'jp' then form_nm_jp
+			   	else form_nm
+		   		end,form_nm) AS form_nm
+				 from $DB_NEOS$t_co_certificate_form 
+				 where tccf.form_seq=form_seq 
+				 AND comp_seq = #compSeq#),
+				 (select 
+				 	ifnull(case #langCode#
+			   	when 'kr' then form_nm
+			   	when 'en' then form_nm_en
+			   	when 'cn' then form_nm_cn
+			   	when 'jp' then form_nm_jp
+			   	else form_nm
+		   		end,form_nm) AS form_nm
+				 from $DB_NEOS$t_co_certificate_form 
+				 where tccf.form_seq=form_seq 
+				 AND comp_seq = #compSeq#)) 
+				 as form_nm,
+		       ifnull((select comp_seq from $DB_NEOS$t_co_certificate_form where tccf.form_seq=form_seq AND comp_seq = #compSeq#),'0') as comp_seq
+		  FROM $DB_NEOS$t_co_certificate_form tccf
+		 WHERE group_seq = #groupSeq#
+		 <isNotEmpty property="manageFlag">
+		 AND (comp_seq = #compSeq# OR comp_seq = '0')
+		 </isNotEmpty>
+		 <isEmpty property="manageFlag">
+		 AND comp_seq = #compSeq#
+		 AND use_yn = 'Y'
+		 </isEmpty>		   
+		 group by form_seq
+ 		 ORDER BY create_date
+	</select>
+	
+	<select id="CertManageDAO.selectCertificateList_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+		SELECT count(tcc.cer_seq) as TOTAL_COUNT
+		  FROM $DB_NEOS$t_co_certificate tcc
+	 LEFT JOIN $DB_NEOS$t_co_emp tce ON tce.emp_seq = tcc.emp_seq
+	 LEFT JOIN $DB_NEOS$t_co_emp_multi tcem ON tcem.emp_seq = tcc.emp_seq AND tcem.lang_code = 'kr'
+		 WHERE tcc.group_seq = #groupSeq#
+		   AND tcc.comp_seq = #compSeq#
+		   <isNotEqual property="mType" compareValue="A"> 
+		   AND tcc.emp_seq = #empSeq#
+		   </isNotEqual>
+		   <isNotEmpty property="sKeyword">
+		   AND (tcem.emp_name LIKE CONCAT('%',ifnull(#sKeyword#,''),'%'))
+		   </isNotEmpty>
+		   <isNotEmpty property="sDate">
+		   AND date_format(tcc.req_dt, '%Y%m%d') BETWEEN #sDate# AND #eDate#   
+		   </isNotEmpty>
+		   <isNotEqual property="formSeq" compareValue="0"> 
+		   AND tcc.form_seq = #formSeq#
+		   </isNotEqual>
+		   <isNotEqual property="apprStat" compareValue="0"> 
+		   AND tcc.appr_stat = #apprStat#
+		   </isNotEqual>
+		    <isNotEmpty property='workStatus'>
+		    -- 999: 재직, 001: 퇴직, 004: 휴직 
+		   AND tce.work_status = #workStatus#
+		   </isNotEmpty>
+	</select>
+	
+	<select id="CertManageDAO.selectCertificateList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT tcc.cer_seq,
+				tcc.cer_no,
+		       date_format(tcc.req_dt, '%Y-%m-%d') as req_dt,
+		       tcc.form_seq,
+    		   ifnull((select 
+			   	ifnull(case #langCode#
+			   	when 'kr' then form_nm
+			   	when 'en' then form_nm_en
+			   	when 'cn' then form_nm_cn
+			   	when 'jp' then form_nm_jp
+			   	else form_nm
+		   		end,form_nm) AS form_nm
+				  from $DB_NEOS$t_co_certificate_form where tcc.form_seq=form_seq AND tcc.comp_seq=comp_seq),
+				  (select 
+				  	ifnull(case #langCode#
+			   	when 'kr' then form_nm
+			   	when 'en' then form_nm_en
+			   	when 'cn' then form_nm_cn
+			   	when 'jp' then form_nm_jp
+			   	else form_nm
+		   		end,form_nm) AS form_nm 
+				  from $DB_NEOS$t_co_certificate_form where tcc.form_seq=form_seq AND comp_seq='0'))
+				  as form_nm,
+		       tcc.emp_seq,
+		       date_format(tcc.report_dt, '%Y-%m-%d') as report_dt,
+		       tcc.appr_stat,
+		       CASE when tcc.appr_stat = '10' then $DB_NEOS$get_code_detail_info('0', 'CERT002', '10', #langCode#)
+				    when tcc.appr_stat = '20' then $DB_NEOS$get_code_detail_info('0', 'CERT002', '20', #langCode#)
+				    when tcc.appr_stat = '30' then $DB_NEOS$get_code_detail_info('0', 'CERT002', '30', #langCode#) else '-' end appr_stat_nm,
+		       IFNULL(date_format(tcc.app_dt, '%Y-%m-%d'), '-') as app_dt,
+		       tcc.app_user_id,
+		       IFNULL($DB_NEOS$FN_GetMultiLang(#langCode#,(select emp_name_multi from $DB_NEOS$v_t_co_emp_multi where emp_seq = tcc.app_user_id AND lang_code = 'kr')),'-') as app_user_name,
+		       tcc.req_cnt,
+		       tcc.print_cnt,
+		       IFNULL(date_format(tcc.print_dt, '%Y-%m-%d'), $DB_NEOS$get_code_detail_info('0', 'TX000003343', '0', #langCode#)) as print_dt,
+		       $DB_NEOS$FN_GetMultiLang(#langCode#,tcem.emp_name_multi) as emp_name,
+		       tce.work_status
+		  FROM $DB_NEOS$t_co_certificate tcc
+	 LEFT JOIN $DB_NEOS$t_co_emp tce ON tce.emp_seq = tcc.emp_seq 	  
+	 LEFT JOIN $DB_NEOS$v_t_co_emp_multi tcem ON tcem.emp_seq = tcc.emp_seq
+		 WHERE tcc.group_seq = #groupSeq#
+		   AND tcc.comp_seq = #compSeq#
+		   <isNotEqual property="mType" compareValue="A"> 
+		   AND tcc.emp_seq = #empSeq#
+		   </isNotEqual>
+		   <isNotEmpty property="sKeyword">
+		   AND (tcem.emp_name LIKE CONCAT('%',ifnull(#sKeyword#,''),'%'))
+		   </isNotEmpty>
+		   <isNotEmpty property="sDate">
+		   AND date_format(tcc.req_dt, '%Y%m%d') BETWEEN #sDate# AND #eDate#
+		   </isNotEmpty>
+		   <isNotEqual property="formSeq" compareValue="0"> 
+		   AND tcc.form_seq = #formSeq#
+		   </isNotEqual>
+		   <isNotEqual property="apprStat" compareValue="0"> 
+		   AND tcc.appr_stat = #apprStat#
+		   </isNotEqual>
+		   <isNotEmpty property='workStatus'>
+		   -- 999: 재직, 001: 퇴직, 004: 휴직 
+		   AND tce.work_status = #workStatus#
+		   </isNotEmpty>
+		 ORDER BY tcc.create_date DESC
+		 LIMIT $startNum$, $endNum$
+	</select>
+	
+	<select id="CertManageDAO.getCertificateCompForm" resultClass="String" parameterClass="hashmap">
+		select form_seq from
+		$DB_NEOS$t_co_certificate_form
+		where comp_seq=#compSeq#
+		and form_seq=#formSeq#
+	</select>
+	
+	<select id="CertManageDAO.getCerSeq" resultClass="String" parameterClass="hashmap">
+		SELECT IFNULL(MAX(CAST(cer_seq AS INT)+1), 1)
+		  FROM $DB_NEOS$t_co_certificate
+	</select>
+	
+	<select id="CertManageDAO.getFormSeq" resultClass="String" parameterClass="hashmap">
+		SELECT IFNULL(MAX(CAST(form_seq AS INT)+1), 1)
+		  FROM $DB_NEOS$t_co_certificate_form
+	</select>
+	
+	<select id="CertManageDAO.getCerNo" parameterClass="hashmap" resultClass="Integer">
+		SELECT IFNULL(MAX(cer_no+1), 1)
+		  FROM $DB_NEOS$t_co_certificate
+		  where comp_seq=#compSeq#
+		  and appr_stat='20'
+	</select>
+	
+	<select id="CertManageDAO.checkPrintCnt" resultClass="String" parameterClass="hashmap">
+		SELECT (req_cnt - print_cnt) as chk
+		  FROM $DB_NEOS$t_co_certificate
+		 WHERE cer_seq = #cerSeq#	
+	</select>
+	
+	
+	<insert id="CertManageDAO.insertCertificateCompForm" parameterClass="hashmap">
+		INSERT IGNORE INTO $DB_NEOS$t_co_certificate_form 
+				(form_seq
+				,group_seq
+				,comp_seq
+				,form_nm
+				,form_nm_en
+				,form_nm_cn
+				,form_nm_jp
+				,form_content
+				,create_seq
+				,create_date
+				,modify_seq
+				,modify_date)
+				
+				select 
+				form_seq
+				,group_seq
+				,#compSeq#
+				,form_nm
+				,form_nm_en
+				,form_nm_cn
+				,form_nm_jp
+				,form_content
+				,#empSeq#
+				,now()
+				,#empSeq#
+				,now() 
+					from
+				$DB_NEOS$t_co_certificate_form 
+				where comp_seq='0' AND form_seq=#formSeq#
+	</insert>
+	
+	<insert id="CertManageDAO.requestCertificate" parameterClass="hashmap">
+		INSERT INTO $DB_NEOS$`t_co_certificate` 
+		SET
+			 cer_seq = #cerSeq#
+			,cer_no = #cerNo#
+			,form_seq = #formSeq#
+			,group_seq = #groupSeq#
+			,comp_seq = #compSeq#
+			,dept_seq = #deptSeq#
+			,emp_seq = #empSeq#
+			,admin_req_yn = #adminReqYn#
+			,req_dt = REPLACE(#reqDt#, '-', '')
+			,enter_dt = REPLACE(#enterDt#, '-', '')
+			,fire_dt = REPLACE(#fireDt#, '-', '')
+			,report_to = #reportTo#
+			,report_dt = REPLACE(#reportDt#, '-', '')
+			,report_purpose = #reportPurpose#
+			,dept_nm = #deptNm#
+			,grade_nm = #gradeNm#
+			,duty_nm = #dutyNm#
+			,erp_emp_no = #erpEmpNo#
+			,tel_no = #telNo#
+			,cha_biz = #chaBiz#
+			,idn_no = #idnNo#
+			,co_nm = #coNm#
+			,co_addr = #coAddr#
+			,co_num = #coNum#
+			,co_nm_disp = #coNmDisp#
+			,work_nm = #workNm#
+			,work_addr = #workAddr#
+			,work_co_num = #workCoNum#
+			,work_nm_disp = #workNmDisp#
+			,use_purpose = #usePurpose#
+			,use_purpose_cd = #usePurposeCd#
+			,appr_stat = '10'
+			,co_sign_yn = 'N'
+			,create_seq = #empSeq#
+			,create_date = NOW()
+			,req_cnt = #reqCnt#
+			,bday1 = #bday1#
+			,bday2 = #bday2#
+		ON DUPLICATE KEY UPDATE
+			 admin_req_yn = #adminReqYn#
+			,req_dt = REPLACE(#reqDt#, '-', '')
+			,enter_dt = REPLACE(#enterDt#, '-', '')
+			,fire_dt = REPLACE(#fireDt#, '-', '')
+			,report_to = #reportTo#
+			,report_dt = REPLACE(#reportDt#, '-', '')
+			,report_purpose = #reportPurpose#
+			,dept_nm = #deptNm#
+			,grade_nm = #gradeNm#
+			,duty_nm = #dutyNm#
+			,erp_emp_no = #erpEmpNo#
+			,tel_no = #telNo#
+			,cha_biz = #chaBiz#
+			,idn_no = #idnNo#
+			,co_nm = #coNm#
+			,co_addr = #coAddr#
+			,co_num = #coNum#
+			,co_nm_disp = #coNmDisp#
+			,work_nm = #workNm#
+			,work_addr = #workAddr#
+			,work_co_num = #workCoNum#
+			,work_nm_disp = #workNmDisp#
+			,use_purpose = #usePurpose#
+			,use_purpose_cd = #usePurposeCd#
+			,appr_stat = '10'
+			,co_sign_yn = 'N'
+			,modify_seq = #empSeq#
+			,modify_date = NOW()
+			,req_cnt = #reqCnt#	
+			,bday1 = #bday1#
+			,bday2 = #bday2#
+	</insert>
+	
+	<insert id="CertManageDAO.apprCertificate" parameterClass="hashmap">
+		UPDATE $DB_NEOS$`t_co_certificate` 
+		   SET app_co_id = #compSeq#,
+		   	   <isEqual property="apprStat" compareValue="30">
+					cer_no = 0,
+				</isEqual>
+				<isEqual property="apprStat" compareValue="20">
+					cer_no = (select * from (SELECT IFNULL(MAX(cer_no+1), 1) FROM $DB_NEOS$t_co_certificate where comp_seq=#compSeq# and appr_stat='20') as a) ,
+				</isEqual>
+			   appr_stat = #apprStat#,
+		       app_dept_id = '0',
+		       app_user_id = #empSeq#,
+		       app_dt = NOW(),
+		       print_cnt = 0
+		 WHERE cer_seq = #cerSeq#	
+	</insert>
+	
+	
+	
+	<insert id="CertManageDAO.setCertificatePrintInfo" parameterClass="hashmap">
+		UPDATE $DB_NEOS$`t_co_certificate` 
+		   SET print_dt = NOW(),
+		       print_cnt = IFNULL(print_cnt, 0) + 1
+		 WHERE cer_seq = #cerSeq#
+	</insert>
+	
+	<insert id="CertManageDAO.insertCertificateForm" parameterClass="hashmap">
+		
+		INSERT INTO $DB_NEOS$t_co_certificate_form(
+		                form_seq,
+		                group_seq,
+		                comp_seq,
+		                form_nm,
+		                form_nm_en,
+		                form_nm_cn,
+		                form_nm_jp,
+		                form_content,
+		                create_seq,
+		                create_date,
+		                use_yn,
+		                form_lang_code,
+		                modify_seq,
+		                modify_date
+		       			)
+		VALUES(
+						#formSeq#
+						,#groupSeq#
+						,#compSeq#
+						,#formNm#
+						,#formNmEn#
+						,#formNmCn#
+						,#formNmJp#
+						,#formContent#
+						,#empSeq#
+						,NOW()
+						,#useYn#
+						,#formLangCode#
+						,#empSeq#
+						,NOW()
+		       			);
+	</insert>	
+	
+	<update id="CertManageDAO.updateCertificateForm" parameterClass="hashmap">
+
+		update $DB_NEOS$t_co_certificate_form
+		set 
+			form_content = #formContent#
+			,use_yn = #useYn#
+			,form_nm = #formNm#
+			,form_nm_en = #formNmEn#
+			,form_nm_cn = #formNmCn#
+			,form_nm_jp = #formNmJp#
+			,form_lang_code = #formLangCode#
+			,modify_seq = #empSeq#
+			,modify_date = NOW()		
+		
+		where form_seq = #formSeq# AND comp_seq = #compSeq#				
+		 
+	</update>
+	
+	<update id="CertManageDAO.updateCertificateFormDefault" parameterClass="hashmap">
+		 UPDATE $DB_NEOS$t_co_certificate_form
+		 SET form_content = #formContent#
+		 ,modify_seq = #empSeq#
+		 ,modify_date = NOW()
+		 WHERE comp_seq = '0'
+		 AND form_seq = #formSeq#
+	</update>
+	
+	<select id="CertManageDAO.getCertificateDefaultInfo" parameterClass="hashmap" resultClass="egovMap"><![CDATA[
+		SELECT  emp_seq /* 사원 시퀀스 */
+		        , comp_seq /* 회사 시퀀스 */
+		        , duty_code_name /* 직책명 */
+		        , duty_code_name AS duty_nm /* 직책명 */
+		        , position_code_name /* 직급명 */
+		        , position_code_name AS grade_nm /* 직급명 */
+		        , join_day /* 입사일 ( yyyy-MM-dd ) */
+		        , join_day AS enter_dt /* 입사일 ( yyyy-MM-dd ) */
+		        , resign_day /* 퇴직일 ( yyyy-MM-dd ) */
+		        , resign_day AS fire_dt /* 퇴직일 ( yyyy-MM-dd ) */
+		        , emp_name /* 사원명 */
+		        , emp_num /* 사원번호 */
+		        , erp_emp_num /* 사원번호 */
+		        , erp_emp_num AS erp_emp_no /* 사원번호 */
+		        , comp_name /* 회사명 */
+		        , comp_name AS co_nm /* 회사명 */
+		        , comp_display_name /* 회사명 ( 표현 명 - 옵션 영향 ) */
+		        , comp_display_name AS co_nm_disp /* 회사약칭 */
+		        , work_nm_disp AS work_nm_disp /* 사업장약칭  */
+		        , co_work /* 회사 주소 */
+		        , co_work AS co_addr /* 회사 주소 */
+		        , dept_seq /* 부서 시퀀스 */
+		        , dept_name /* 부서명 */
+		        , dept_name AS dept_nm /* 부서명 */
+		        , zip_code AS dept_zip_code /* 부서 우편번호 */
+		        , dept_addr /* 부서 주소 */
+		        , dept_detail_addr /* 부서 주소 상세 */
+		        , main_work /* 담당업무 */
+		        , main_work AS cha_biz /* 담당업무 */
+		        , bday1 /* 생년월일 */
+		        , bday2 /* 성별 구분 ( 1 : 남성 / 2 : 여성 / 3 : 남성 (2000생부터) / 4 : 여성 (2000생부터) / 5 : 외국인 ) */
+		FROM    (
+		                SELECT  e.emp_seq
+		                        , e.comp_seq
+		                        , e.dept_seq
+		                        , $DB_NEOS$fn_getmultilang(#langCode#, d.comp_name_multi) AS comp_name
+		                        , d.comp_nickname AS comp_display_name
+		                        , biz.biz_nickname AS work_nm_disp
+		                        , CONCAT(d.addr,' ',d.detail_addr) AS co_work
+		                        , CASE
+		                                WHEN IFNULL(i.option_value, '1') = '0' THEN $DB_NEOS$fn_getmultilang(#langCode#, IFNULL(h.dept_name_multi, a.last_dept_name))
+		                                ELSE $DB_NEOS$fn_getmultilang(#langCode#, IFNULL(f.dept_name_multi, a.last_dept_name))
+		                        END AS dept_name
+		                        , g.zip_code
+		                        , f.addr AS dept_addr
+		                        , f.detail_addr AS dept_detail_addr
+		                        , $DB_NEOS$get_emp_duty_position_name(e.group_seq, e.comp_seq, e.duty_code, 'DUTY', #langCode#) AS duty_code_name
+		                        , $DB_NEOS$get_emp_duty_position_name(e.group_seq, e.comp_seq, e.position_code, 'POSITION', #langCode#) AS position_code_name
+		                        , DATE_FORMAT(a.join_day,'%Y-%m-%d') AS join_day
+		                        , DATE_FORMAT(IFNULL(a.resign_day, a.last_resign_day),'%Y-%m-%d') AS resign_day
+		                        , $DB_NEOS$fn_getmultilang(#langCode#, b.emp_name_multi) AS emp_name
+		                        , a.emp_num AS emp_num
+		                        , a.erp_emp_num AS erp_emp_num
+		                        , b.main_work
+		                        , IFNULL(SUBSTRING(REPLACE(a.bday, '-', ''), 3, 6), '') AS bday1
+		                        , CASE IFNULL(a.gender_code,'')
+		                                WHEN 'M' THEN (CASE WHEN a.bday > '2000-00-00' THEN '3' ELSE '1' END)
+		                                WHEN 'F' THEN (CASE WHEN a.bday > '2000-00-00' THEN '4' ELSE '2' END)
+		                                ELSE ''
+		                        END AS bday2
+		                FROM    $DB_NEOS$t_co_emp a
+		                        INNER JOIN $DB_NEOS$v_t_co_emp_multi b ON a.emp_seq = b.emp_seq
+		                        INNER JOIN $DB_NEOS$v_t_co_comp_multi d ON a.main_comp_seq = d.comp_seq 
+		                        INNER JOIN $DB_NEOS$t_co_emp_dept e ON a.emp_seq = e.emp_seq AND a.main_comp_seq = e.comp_seq AND e.main_dept_yn = 'Y'
+		                        LEFT JOIN $DB_NEOS$v_t_co_dept_multi f ON e.dept_seq = f.dept_seq AND f.lang_code = #langCode#
+		                        LEFT JOIN $DB_NEOS$t_co_dept g ON e.dept_seq = g.dept_seq
+		                        INNER JOIN $DB_NEOS$v_t_co_biz_multi biz ON biz.biz_seq = e.biz_seq
+		                        LEFT OUTER JOIN $DB_NEOS$v_t_co_dept_multi h ON IFNULL(g.display_dept_seq, e.dept_seq) = h.dept_seq
+		                        LEFT OUTER JOIN (
+		                                SELECT  co_id AS comp_seq
+		                                        , option_value
+		                                FROM    $DB_NEOS$tcmg_optionvalue
+		                                WHERE   option_id = 'cm702'
+		                        ) i ON a.main_comp_seq = i.comp_seq
+		                WHERE   a.emp_seq = #empSeq#
+		                AND     e.dept_seq = #deptSeq#
+		                LIMIT   1
+		        ) a
+	]]></select>
+	
+		<select id="CertManageDAO.getCertificateInfo" parameterClass="hashmap" resultClass="egovMap">
+	SELECT 
+		$DB_NEOS$FN_GetMultiLang(#formLangCode#,(select emp_name_multi from $DB_NEOS$v_t_co_emp_multi where emp_seq = tce.emp_seq)) as emp_name,
+		CONCAT(tce.zip_code,' ',em.addr,' ',em.detail_addr) AS addr,
+		IFNULL(tce.join_day,'') AS join_day,
+		IFNULL(ec.resign_day, DATE_FORMAT(NOW(), '%Y-%m-%d')) AS resign_day,
+		IFNULL(CONCAT(tce.join_day,' ~ ',SUBSTRING(tcc.report_dt,1,4),'-',SUBSTRING(tcc.report_dt,5,2),'-',SUBSTRING(tcc.report_dt,7,2)),'') AS work_term,
+		IFNULL(CASE WHEN IFNULL(FLOOR(PERIOD_DIFF(DATE_FORMAT(tcc.report_dt, '%y%m'),DATE_FORMAT(tce.join_day, '%Y%m'))/12),0)=0 
+			THEN CASE WHEN IFNULL(PERIOD_DIFF(DATE_FORMAT(tcc.report_dt, '%y%m'),DATE_FORMAT(tce.join_day, '%Y%m'))%12,0) = 0 THEN $DB_NEOS$get_code_detail_info('0', 'CERT004', '2', #formLangCode#)
+			ELSE CONCAT(IFNULL(PERIOD_DIFF(DATE_FORMAT(tcc.report_dt, '%y%m'),DATE_FORMAT(tce.join_day, '%Y%m'))%12,0), $DB_NEOS$get_code_detail_info('0', 'CERT004', '1', #formLangCode#))
+			END 
+			ELSE IFNULL(CONCAT(FLOOR(PERIOD_DIFF(DATE_FORMAT(tcc.report_dt, '%y%m'),DATE_FORMAT(tce.join_day, '%Y%m'))/12), $DB_NEOS$get_code_detail_info('0', 'It0012', '10', #formLangCode#) ,period_diff(date_format(tcc.report_dt, '%y%m'),date_format(tce.join_day, '%Y%m'))%12, $DB_NEOS$get_code_detail_info('0', 'CERT004', '1', #formLangCode#) ), $DB_NEOS$get_code_detail_info('0', 'CERT004', '2', #formLangCode#))
+			END, $DB_NEOS$get_code_detail_info('0', 'CERT004', '2', #formLangCode#)) AS work_term2,
+		tcomp.comp_regist_num,
+		tcompm.owner_name,
+		CASE WHEN tcc.use_purpose_cd = '10' THEN $DB_NEOS$get_code_detail_info('0', 'CERT003', '10', #formLangCode#)
+		    WHEN tcc.use_purpose_cd = '20' THEN $DB_NEOS$get_code_detail_info('0', 'CERT003', '20', #formLangCode#)
+		    WHEN tcc.use_purpose_cd = '30' THEN $DB_NEOS$get_code_detail_info('0', 'CERT003', '30', #formLangCode#)
+		    WHEN tcc.use_purpose_cd = '40' THEN $DB_NEOS$get_code_detail_info('0', 'CERT003', '40', #formLangCode#)
+		    WHEN tcc.use_purpose_cd = '50' THEN $DB_NEOS$get_code_detail_info('0', 'CERT003', '50', #formLangCode#)
+		    WHEN tcc.use_purpose_cd = '70' THEN $DB_NEOS$get_code_detail_info('0', 'CERT003', '70', #formLangCode#) else tcc.use_purpose end use_purpose2,
+		tcc.cer_seq,
+		CONCAT(tcc.cer_no) AS cer_no,
+		tcc.form_seq,
+		tcc.group_seq,
+		tcc.comp_seq,
+		tcc.dept_seq,
+		tcc.emp_seq,
+		tcc.admin_req_yn, 
+		tcc.req_dt,
+		tcc.enter_dt,
+		tcc.fire_dt,
+		tcc.report_to,
+		$DB_NEOS$fn_getmultilang(#formLangCode#, IFNULL(tcc.dept_nm, vtcdm.dept_name_multi)) as dept_nm,
+		IFNULL(DATE_FORMAT(tcc.report_dt,'%Y-%m-%d'),'') AS report_dt,
+		tcc.report_purpose,
+		$DB_NEOS$get_emp_duty_position_name(tcc.group_seq,tcc.comp_seq,tce.position_code,'POSITION',#formLangCode#) AS grade_nm,
+		$DB_NEOS$get_emp_duty_position_name(tcc.group_seq,tcc.comp_seq,tce.duty_code,'DUTY',#formLangCode#) AS duty_nm,
+		tcc.erp_emp_no, 
+		tcc.tel_no,
+		tcc.cha_biz, 
+		tcompm.comp_name AS co_nm, 
+		tcc.co_addr,
+		tcc.co_num,
+		tcc.co_nm_disp,
+		tcc.work_nm,
+		tcc.work_addr,
+		tcc.work_co_num,
+		tcc.work_nm_disp,
+		tcc.use_purpose,
+		tcc.use_purpose_cd,
+		tcc.appr_stat,
+		tcc.app_co_id, 
+		tcc.app_dept_id,
+		tcc.app_user_id, 
+		tcc.app_dt, 
+		tcc.co_sign_yn,
+		tcc.print_dt,
+		tcc.create_seq,
+		tcc.create_date,
+		tcc.modify_seq,
+		tcc.modify_date,
+		tcc.req_cnt,
+		tcc.print_cnt,
+		tcc.bday1,
+		tcc.bday2,
+		vtcdm.dept_nickname AS dept_Nickname,
+		tcompm.addr AS biz_Addr,
+		DATE_FORMAT(NOW(),'%Y') AS yyyy,
+		IFNULL(DATE_FORMAT(tce.bday, CONCAT('%Y',$DB_NEOS$get_code_detail_info('0', 'It0012', '10', #formLangCode#), ' %m',$DB_NEOS$get_code_detail_info('0', 'ea0003', '1009', #formLangCode#),' %d',$DB_NEOS$get_code_detail_info('0', 'ea0003', '1010', #formLangCode#))), '') as bday,
+		IFNULL(CASE tcc.bday1 WHEN ''
+			THEN CONCAT(SUBSTRING(REPLACE(tce.bday,'-',''),3,6),'-',CASE WHEN IFNULL(tce.gender_code,'M') = 'M' THEN (CASE WHEN tce.bday > '2000-00-00' THEN '3' ELSE '1' END) ELSE (CASE WHEN tce.bday > '2000-00-00' THEN '4' ELSE '2' END) END,'******')
+			ELSE CONCAT(tcc.bday1,'-',IF(tcc.bday2='',CASE WHEN IFNULL(tce.gender_code,'M') = 'M' THEN (CASE WHEN tce.bday > '2000-00-00' THEN '3' ELSE '1' END) ELSE (CASE WHEN tce.bday > '2000-00-00' THEN '4' ELSE '2' END) END,bday2),'******')
+			END,CONCAT('000000-',bday2,'******')) AS idn_no,
+		IFNULL(DATE_FORMAT(tcc.app_dt, CONCAT('%Y',$DB_NEOS$get_code_detail_info('0', 'It0012', '10', #formLangCode#), ' %m',$DB_NEOS$get_code_detail_info('0', 'ea0003', '1009', #formLangCode#),' %d',$DB_NEOS$get_code_detail_info('0', 'ea0003', '1010', #formLangCode#))), '') as app_dt2,
+		IFNULL((SELECT tccf.form_content FROM $DB_NEOS$t_co_certificate_form tccf WHERE tcc.form_seq = tccf.form_seq AND tcc.comp_seq = tccf.comp_seq),(SELECT tccf.form_content FROM $DB_NEOS$t_co_certificate_form tccf WHERE tcc.form_seq = tccf.form_seq AND tccf.comp_seq = '0')) AS form_content,
+		(SELECT dept_name FROM $DB_NEOS$t_co_dept_multi tcdm WHERE tcdm.comp_seq=tcc.comp_seq AND tcdm.dept_seq=LEFT(tcd.path, INSTR(tcd.path,'|')-1) AND lang_code = #formLangCode# ) as top_dept_nm,
+		(SELECT path_name FROM $DB_NEOS$t_co_dept_multi tcdm2 WHERE tcdm2.comp_seq=tcc.comp_seq AND tcdm2.dept_seq=tced.dept_seq AND lang_code = #formLangCode# ) as dept_path,
+		DATE_FORMAT(IFNULL(tce.resign_day, tce.last_resign_day), '%Y-%m-%d') AS resignDay
+	FROM $DB_NEOS$t_co_certificate tcc
+	LEFT JOIN $DB_NEOS$t_co_emp tce ON tce.emp_seq = tcc.emp_seq
+	LEFT JOIN $DB_NEOS$t_co_emp_multi em ON em.emp_seq = tcc.emp_seq AND tcc.group_seq = em.group_seq AND em.lang_code = 'kr'
+	LEFT JOIN $DB_NEOS$t_co_emp_dept tced on tcc.emp_seq = tced.emp_seq and tcc.comp_seq = tced.comp_seq and tced.main_dept_yn = 'Y'
+	LEFT JOIN $DB_NEOS$t_co_emp_comp ec	ON	ec.comp_seq = tcc.comp_seq AND tcc.emp_seq = ec.emp_seq	
+	LEFT JOIN $DB_NEOS$v_t_co_dept_multi vtcdm ON vtcdm.dept_seq = tcc.dept_seq AND vtcdm.comp_seq = tcc.comp_seq	
+	LEFT JOIN $DB_NEOS$t_co_dept tcd ON tcd.comp_seq = tcc.comp_seq AND tced.dept_seq = tcd.dept_seq
+	LEFT JOIN $DB_NEOS$t_co_comp tcomp ON tcomp.comp_seq = tcc.comp_seq
+	LEFT JOIN $DB_NEOS$t_co_comp_multi tcompm ON tcompm.comp_seq = tcc.comp_seq AND tcompm.lang_code = #formLangCode#
+	LEFT JOIN $DB_NEOS$t_co_biz_multi tcbm ON tcbm.comp_seq = tcd.comp_seq AND tcbm.biz_seq = tcd.biz_seq AND tcbm.lang_code = #formLangCode#
+	WHERE tcc.cer_seq = #cerSeq# and tce.use_yn != 'D'
+	LIMIT 1
+	</select>
+	
+	<select id="CertManageDAO.getCertificateFormInfo" parameterClass="hashmap" resultClass="egovMap">
+		select form_seq,
+		       group_seq,
+		       comp_seq,
+		       form_nm,
+		       ifnull(form_nm_en,'') as form_nm_en,
+		       ifnull(form_nm_cn,'') as form_nm_cn,
+		       ifnull(form_nm_jp,'') as form_nm_jp,
+		       form_content,
+		       create_seq,
+		       create_date,
+		       modify_seq,
+		       modify_date,
+		       use_yn,
+		       form_lang_code
+		  from $DB_NEOS$t_co_certificate_form
+		 where form_seq = #formSeq#
+		 and (comp_seq = #compSeq# or comp_seq='0')
+		 order by comp_seq desc
+		 limit 1
+	</select>
+	
+	<select id="CertManageDAO.getCertFormLangCode" parameterClass="hashmap" resultClass="egovMap">
+		select form_seq,
+		       group_seq,
+		       comp_seq,
+		       form_lang_code
+		  from $DB_NEOS$t_co_certificate_form
+		 where form_seq = (SELECT form_seq FROM $DB_NEOS$t_co_certificate WHERE cer_seq = #cerSeq# AND comp_seq = #compSeq#)
+		 and (comp_seq = #compSeq# or comp_seq='0')
+		 order by comp_seq desc
+		 limit 1
+	</select>
+	
+	<select id="CertManageDAO.selectCertificatePresentCondition" parameterClass="hashmap" resultClass="egovMap">
+		 SELECT form_seq,
+		       group_seq,
+		       comp_seq,
+                ifnull(case #langCode#
+			   	when 'kr' then form_nm
+			   	when 'en' then form_nm_en
+			   	when 'cn' then form_nm_cn
+			   	when 'jp' then form_nm_jp
+			   	else form_nm
+		   		end,form_nm) AS form_nm,
+               IFNULL((select count(tcc.cer_seq) from $DB_NEOS$t_co_certificate tcc, $DB_NEOS$t_co_emp_multi tce where tcc.form_seq = tccf.form_seq and tcc.emp_seq = tce.emp_seq and tcc.use_purpose_cd = '10' AND tce.lang_code = #langCode# AND tcc.comp_seq = #compSeq# <isNotEmpty property="sDate">AND date_format(req_dt, '%Y-%m-%d') BETWEEN #sDate# AND #eDate#</isNotEmpty> <isNotEmpty property="sKeyword">AND (tce.emp_name LIKE CONCAT('%',ifnull(#sKeyword#,''),'%'))</isNotEmpty> <isNotEqual property="formSeq" compareValue="0">AND tcc.form_seq = #formSeq#</isNotEqual> <isNotEqual property="apprStat" compareValue="0">AND tcc.appr_stat = #apprStat#</isNotEqual>), 0) as req_cnt_10,
+               IFNULL((select count(tcc.cer_seq) from $DB_NEOS$t_co_certificate tcc, $DB_NEOS$t_co_emp_multi tce where tcc.form_seq = tccf.form_seq and tcc.emp_seq = tce.emp_seq and tcc.use_purpose_cd = '20' AND tce.lang_code = #langCode# AND tcc.comp_seq = #compSeq# <isNotEmpty property="sDate">AND date_format(req_dt, '%Y-%m-%d') BETWEEN #sDate# AND #eDate#</isNotEmpty> <isNotEmpty property="sKeyword">AND (tce.emp_name LIKE CONCAT('%',ifnull(#sKeyword#,''),'%'))</isNotEmpty> <isNotEqual property="formSeq" compareValue="0">AND tcc.form_seq = #formSeq#</isNotEqual> <isNotEqual property="apprStat" compareValue="0">AND tcc.appr_stat = #apprStat#</isNotEqual>), 0) as req_cnt_20,
+               IFNULL((select count(tcc.cer_seq) from $DB_NEOS$t_co_certificate tcc, $DB_NEOS$t_co_emp_multi tce where tcc.form_seq = tccf.form_seq and tcc.emp_seq = tce.emp_seq and tcc.use_purpose_cd = '30' AND tce.lang_code = #langCode# AND tcc.comp_seq = #compSeq# <isNotEmpty property="sDate">AND date_format(req_dt, '%Y-%m-%d') BETWEEN #sDate# AND #eDate#</isNotEmpty> <isNotEmpty property="sKeyword">AND (tce.emp_name LIKE CONCAT('%',ifnull(#sKeyword#,''),'%'))</isNotEmpty> <isNotEqual property="formSeq" compareValue="0">AND tcc.form_seq = #formSeq#</isNotEqual> <isNotEqual property="apprStat" compareValue="0">AND tcc.appr_stat = #apprStat#</isNotEqual>), 0) as req_cnt_30,
+               IFNULL((select count(tcc.cer_seq) from $DB_NEOS$t_co_certificate tcc, $DB_NEOS$t_co_emp_multi tce where tcc.form_seq = tccf.form_seq and tcc.emp_seq = tce.emp_seq and tcc.use_purpose_cd = '40' AND tce.lang_code = #langCode# AND tcc.comp_seq = #compSeq# <isNotEmpty property="sDate">AND date_format(req_dt, '%Y-%m-%d') BETWEEN #sDate# AND #eDate#</isNotEmpty> <isNotEmpty property="sKeyword">AND (tce.emp_name LIKE CONCAT('%',ifnull(#sKeyword#,''),'%'))</isNotEmpty> <isNotEqual property="formSeq" compareValue="0">AND tcc.form_seq = #formSeq#</isNotEqual> <isNotEqual property="apprStat" compareValue="0">AND tcc.appr_stat = #apprStat#</isNotEqual>), 0) as req_cnt_40,
+               IFNULL((select count(tcc.cer_seq) from $DB_NEOS$t_co_certificate tcc, $DB_NEOS$t_co_emp_multi tce where tcc.form_seq = tccf.form_seq and tcc.emp_seq = tce.emp_seq and tcc.use_purpose_cd = '50' AND tce.lang_code = #langCode# AND tcc.comp_seq = #compSeq# <isNotEmpty property="sDate">AND date_format(req_dt, '%Y-%m-%d') BETWEEN #sDate# AND #eDate#</isNotEmpty> <isNotEmpty property="sKeyword">AND (tce.emp_name LIKE CONCAT('%',ifnull(#sKeyword#,''),'%'))</isNotEmpty> <isNotEqual property="formSeq" compareValue="0">AND tcc.form_seq = #formSeq#</isNotEqual> <isNotEqual property="apprStat" compareValue="0">AND tcc.appr_stat = #apprStat#</isNotEqual>), 0) as req_cnt_50,
+               IFNULL((select count(tcc.cer_seq) from $DB_NEOS$t_co_certificate tcc, $DB_NEOS$t_co_emp_multi tce where tcc.form_seq = tccf.form_seq and tcc.emp_seq = tce.emp_seq and tcc.use_purpose_cd = '60' AND tce.lang_code = #langCode# AND tcc.comp_seq = #compSeq# <isNotEmpty property="sDate">AND date_format(req_dt, '%Y-%m-%d') BETWEEN #sDate# AND #eDate#</isNotEmpty> <isNotEmpty property="sKeyword">AND (tce.emp_name LIKE CONCAT('%',ifnull(#sKeyword#,''),'%'))</isNotEmpty> <isNotEqual property="formSeq" compareValue="0">AND tcc.form_seq = #formSeq#</isNotEqual> <isNotEqual property="apprStat" compareValue="0">AND tcc.appr_stat = #apprStat#</isNotEqual>), 0) as req_cnt_60,
+               IFNULL((select count(tcc.cer_seq) from $DB_NEOS$t_co_certificate tcc, $DB_NEOS$t_co_emp_multi tce where tcc.form_seq = tccf.form_seq and tcc.emp_seq = tce.emp_seq and tcc.use_purpose_cd = '70' AND tce.lang_code = #langCode# AND tcc.comp_seq = #compSeq# <isNotEmpty property="sDate">AND date_format(req_dt, '%Y-%m-%d') BETWEEN #sDate# AND #eDate#</isNotEmpty> <isNotEmpty property="sKeyword">AND (tce.emp_name LIKE CONCAT('%',ifnull(#sKeyword#,''),'%'))</isNotEmpty> <isNotEqual property="formSeq" compareValue="0">AND tcc.form_seq = #formSeq#</isNotEqual> <isNotEqual property="apprStat" compareValue="0">AND tcc.appr_stat = #apprStat#</isNotEqual>), 0) as req_cnt_70,
+               IFNULL((select count(tcc.cer_seq) from $DB_NEOS$t_co_certificate tcc, $DB_NEOS$t_co_emp_multi tce where tcc.form_seq = tccf.form_seq and tcc.emp_seq = tce.emp_seq AND tce.lang_code = #langCode# and tcc.comp_seq = #compSeq# <isNotEmpty property="sDate">AND date_format(req_dt, '%Y-%m-%d') BETWEEN #sDate# AND #eDate#</isNotEmpty><isNotEmpty property="sKeyword">AND (tce.emp_name LIKE CONCAT('%',ifnull(#sKeyword#,''),'%'))</isNotEmpty><isNotEqual property="formSeq" compareValue="0">AND tcc.form_seq = #formSeq#</isNotEqual><isNotEqual property="apprStat" compareValue="0">AND tcc.appr_stat = #apprStat#</isNotEqual>), 0) as req_cnt_sum
+		  FROM $DB_NEOS$t_co_certificate_form tccf
+		  WHERE comp_seq = #compSeq#
+		  
+		 ORDER BY req_cnt_sum desc;
+	</select>
+	
+	<select id="CertManageDAO.selectCertificateAdminList" parameterClass="hashmap" resultClass="egovMap">
+		select a.comp_seq, a.dept_seq, a.emp_seq from $DB_NEOS$t_co_certificate cert
+		join $DB_NEOS$t_co_auth_relate a on cert.comp_seq = a.comp_seq and cert.cer_seq = #cerSeq#
+		join $DB_NEOS$t_co_menu_auth b on a.author_code = b.author_code and b.menu_no='934000001'
+	</select>
+	
+	<select id="CertManageDAO.selectCertificateUserInfo" parameterClass="hashmap" resultClass="egovMap">
+		select comp_seq, dept_seq, emp_seq from $DB_NEOS$t_co_certificate where cer_seq = #cerSeq#
+		limit 1
+	</select>	
+	
+	<select id="CertManageDAO.getCertificateStatusList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT detail_code,$DB_NEOS$FN_GetMultiLang(#langCode#,detail_name_multi) as detail_name
+		FROM $DB_NEOS$v_t_co_code_detail_multi 
+		WHERE code='CERT002'
+	</select>
+	
+	<select id="CertManageDAO.getCertificateSubmitList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT detail_code,$DB_NEOS$FN_GetMultiLang(#langCode#,detail_name_multi) as detail_name
+		FROM $DB_NEOS$v_t_co_code_detail_multi 
+		WHERE code='CERT003'
+	</select>
+	
+	<select id="CertManageDAO.getCertificateUseYn" parameterClass="hashmap" resultClass="egovMap">
+		select form_seq,comp_seq,use_yn,
+		ifnull(case #langCode#
+	   	when 'kr' then form_nm
+	   	when 'en' then form_nm_en
+	   	when 'cn' then form_nm_cn
+	   	when 'jp' then form_nm_jp
+	   	else form_nm
+   		end,form_nm) AS form_nm 
+		from $DB_NEOS$t_co_certificate_form
+		where group_seq = #groupSeq#
+		and comp_seq=#compSeq#
+	</select>
+	
+	<select id="CertManageDAO.getCertificateAlarmList" parameterClass="hashmap" resultClass="egovMap">
+	
+		select a.comp_seq
+		,a.emp_seq
+		,ed.dept_seq
+		,concat($DB_NEOS$FN_GetMultiLang('kr', (select emp_name_multi from $DB_NEOS$v_t_co_emp_multi where emp_seq = e.emp_seq)),' ',$DB_NEOS$get_emp_duty_position_name(e.group_seq,a.comp_seq,e.position_code,'POSITION','kr')) as emp_name
+		,concat(e.group_seq,'|',a.comp_seq,'|',ed.dept_seq,'|',a.emp_seq,'|u') as org_seq
+		from $DB_NEOS$t_co_certificate_alarm a
+		inner join $DB_NEOS$t_co_emp e
+			on a.emp_seq = e.emp_seq 
+		LEFT JOIN $DB_NEOS$t_co_emp_dept ed
+			ON	e.emp_seq = ed.emp_seq AND e.group_seq = ed.group_seq
+		LEFT JOIN $DB_NEOS$t_co_comp c
+			ON	e.group_seq = c.group_seq AND ed.comp_seq = c.comp_seq
+		LEFT JOIN $DB_NEOS$t_co_emp_comp ec
+			ON	ec.comp_seq = c.comp_seq AND e.emp_seq = ec.emp_seq
+		where a.emp_seq=e.emp_seq
+		and e.use_yn != 'D'
+		AND a.comp_seq = #compSeq#
+		and a.form_seq = #formSeq#
+		group by emp_seq
+	</select>
+
+	<insert id="CertManageDAO.setCertificateUseYn" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_certificate_form
+		   SET use_yn = #useYn#
+		       ,modify_seq = #empSeq#
+		       ,modify_date = NOW()
+		       ,form_nm = #formNm#
+		 WHERE comp_seq = #compSeq#
+		 AND form_seq = #formSeq#
+	</insert>				
+	
+	<delete id="CertManageDAO.setCertificateAlarmReset" parameterClass="hashmap">
+		DELETE FROM $DB_NEOS$t_co_certificate_alarm
+		WHERE form_seq = #formSeq#
+		AND comp_seq = #compSeq#
+	</delete>    
+	
+	<insert id="CertManageDAO.setCertificateAlarm" parameterClass="hashmap">
+		INSERT INTO $DB_NEOS$t_co_certificate_alarm
+		SET
+			 form_seq = #formSeq#
+			,comp_seq = #compSeq#
+			,emp_seq = #orgEmpSeq#
+			,org_type = #orgType#
+			,create_seq = #empSeq#
+			,create_date = now()
+	</insert>
+	
+	
+	<select id="CertManageDAO.getEmpDutyPosiInfo" parameterClass="hashmap" resultClass="egovMap">
+		select 
+			$DB_NEOS$get_emp_duty_position_name(a.group_seq, a.comp_seq, a.duty_code, 'DUTY', b.native_lang_code) duty_nm,
+			$DB_NEOS$get_emp_duty_position_name(a.group_seq, a.comp_seq, a.position_code, 'POSITION', b.native_lang_code) grade_nm
+		From $DB_NEOS$t_co_emp_dept a
+		inner join $DB_NEOS$t_co_emp b on a.emp_seq = b.emp_seq
+		where a.dept_seq = #deptSeq# and a.emp_seq = #empSeq#
+	</select>
+	
+	
+</sqlMap>

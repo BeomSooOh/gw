@@ -1,0 +1,175 @@
+<header class="head" data-height="56" data-role="header" style="height: 56px; z-index: 1">
+	<div class="left_div">
+		<a class="btn_can" ng-click="cancelSetting()"></a>
+	</div>
+	
+	<h1>사용자 공유</h1>
+	
+	<div class="right_div">
+		<a class="btn_send" ng-class="{disabled: selectList.length === 0}" ng-click="share()"></a>
+	</div>
+</header>
+
+<div class="userSearch" data-height="64" data-role="header" role="banner" style="height: 62px; border-bottom: 2px solid #596677; overflow: hidden;">
+	<div id="id_select_scroll" class="searchbox" style="display: inline-block">
+		<div class="searchField" style="min-width: 100%;">
+			<!-- 선택모드 -->
+			<!-- class명 : 사원=>bg01~bg05 / 그룹=>group bg01~bg05 -->
+			<div class="selectField loading" ng-repeat="user in selectList" ng-click="checkUser($event)">
+				<span class="pic picbg">
+					<img src="./mobile/images/btn/btn-cancel.png" class="del" style="display: none" ng-click="deleteUser(user)"/>
+					<img src="{{user.pic}}" class="pic" alt=""/>
+				</span>
+				<span class="text">{{user.name}}</span>
+			</div>
+			
+			<!-- 작성모드 -->
+			<div class="writeField" style="min-width: 165px;">
+				<input type="search" placeholder="공유할 사용자 검색" data-role="none" ng-model="name" ng-change="searchUser(name)" style="width: 100%;">
+			</div>
+		</div>
+	</div>
+	
+	<!-- 조직도 버튼 -->
+	<p class="btnOrg" ng-click="selectUserInOrgTree()"></p>
+</div>
+
+<section id="id_body_scroll" class="con userShare" data-height="*" data-role="content" style="position: absolute; top:120px; left: 0; right:0; z-index: 0;">
+	<div class="con_in" style="width: 100%;">
+		<!-- 사용자 목록 -->
+		<div id="id_searchlist_scroll" class="listUser" data-height="*" style="display: none;">
+			<table width="100%" cellpadding="0" cellspacing="0">
+				<colgroup>
+					<col width="68">
+					<col width="">
+				</colgroup>
+				
+				<tbody>
+					<tr ng-repeat="user in searchList" ng-click="selectUser(user)">
+						<td class="pic"><img src="{{user.pic}}" alt=""></td>
+						<td>
+							<dl>
+								<dt ng-bind-html="user.em_name"></dt>	<!-- 이름 -->
+								<dd>{{user.path}}</dd>					<!-- 부서 -->
+							</dl>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		
+		<!-- 빈 데이터 화면 -->
+		<div class="nodata" ng-show="selectList.length === 0 && arrViewer.length === 0 && arrEditor.length === 0">
+			<span class="bg"></span>
+		</div>
+		
+		<!-- 권한설정, 메세지입력 -->
+		<div class="authority" ng-show="selectList.length > 0">
+			<dl class="set">
+				<dt>권한설정</dt>
+				<dd>
+					<ul>
+						<li class="checkbg on" perm="R">
+							<span class="check on"></span>
+							<span class="img icon-read"></span>
+						</li>
+						<li class="pt8">보기기능</li>
+					</ul>
+					<ul>
+						<li class="checkbg" perm="W">
+							<span class="check"></span>
+							<span class="img icon-modify"></span>
+						</li>
+						<li class="pt8">편집기능</li>
+					</ul>
+				</dd>
+			</dl>
+			
+			<dl class="message">
+				<dt>메시지</dt>
+				<dd>
+					<ul>
+						<li class="checkbg on" msg_type="1">
+							<span class="check on"></span>
+							<span class="img icon-msg"></span>
+						</li>
+						<li class="pt8">쪽지</li>
+					</ul>
+					<ul>
+						<li class="checkbg" msg_type="2">
+							<span class="check"></span>
+							<span class="img icon-mail"></span>
+						</li>
+						<li class="pt8">메일</li>
+					</ul>
+					<ul style="margin: 0px;">
+						<li class="checkbg" msg_type="0">
+							<span class="check"></span>
+							<span class="img icon-msgnone"></span>
+						</li>
+						<li class="pt8">메시지없음</li>
+					</ul>
+				</dd>
+			</dl>
+			
+			<!-- 메시지 보내기 -->
+			<textarea class="messageSend" placeholder="호날두 보단 메시지"></textarea>
+		</div>
+		
+		<!-- 공유중인 사용자 -->
+		<div class="editShare" ng-class="{line: selectList.length > 0 && (arrViewer.length > 0 || arrEditor.length > 0)}">
+			<div ng-show="arrViewer.length > 0 || arrEditor.length > 0" style="padding-bottom: 25px;">
+				<h2>공유중인 사용자</h2>
+				<dl>
+					<dt>
+						<p class="set"><span class="img icon-read"></span></p>
+						<p class="text">보기가능</p>
+					</dt>
+					<dd>
+						<div id="id_viewer_scroll" data-width="*">
+								<ul>
+									<li class="viewer" ng-repeat="user in arrViewer" on-long-press="onLongPress(user, $event)" ng-mouseup="release($event)">
+										<div class="userBox">
+											<p class="pic"><img src="{{user.pic}}" alt=""></p>
+											<p class="del" ng-click="unShare(user, 'R')" myclick="unShare(user, 'R')">
+												<img src="./mobile/images/btn/btn-del-none.png">
+											</p>
+											<p class="text">{{user.name}}</p>
+										</div>
+									</li>
+								</ul>
+						</div>
+					</dd>
+				</dl>
+				
+				<dl>
+					<dt>
+						<p class="set"><span class="img icon-modify"></span></p>
+						<p class="text">편집가능</p>
+					</dt>
+					<dd>
+						<div id="id_editor_scroll">
+							<div>
+								<ul>
+									<li class="editor" ng-repeat="user in arrEditor" on-long-press="onLongPress(user, $event)" ng-mouseup="release($event)">
+										<div class="userBox">
+											<p class="pic"><img src="{{user.pic}}" alt=""></p>
+											<p class="del" ng-click="unShare(user, 'W')" myclick="unShare(user, 'W')">
+												<img src="./mobile/images/btn/btn-del-none.png">
+											</p>
+											<p class="text">{{user.name}}</p>
+										</div>
+									</li>
+								</ul>
+							</div>
+						</div>
+					</dd>
+				</dl>
+			</div>
+		</div>
+	</div>
+	
+	<div class="cancelmodal" style="position: absolute; top: 3px; z-index: 10;" ng-click="clearSearchList()"></div>
+</section>
+
+<div class="modal" style="position: absolute; z-index: 10; background: #00000070; background-image: url(./mobile/images/ico/icon_loading_oneffice_2.gif); background-repeat: no-repeat; background-position: center center;"></div>

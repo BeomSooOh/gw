@@ -1,0 +1,854 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="faxDAO">
+
+	<select id="faxDAO.getGroupInfo" parameterClass="hashmap" resultClass="egovMap">
+		/* faxDAO.getGroupInfo - oracle */
+		SELECT
+			group_seq,
+			group_name,
+			native_lang_code,
+			multiple_login_yn,
+			group_display_name,
+			max_count,
+			login_type,
+			setup_version,
+			mail_url,
+			messenger_url,
+			mobile_id,
+			mobile_url,
+			edms_url,
+			sms_url,
+			manual_url,
+			sms_use_yn,
+			gw_volume,
+			mail_volume,
+			use_yn,
+			create_seq,
+			create_date,
+			modify_seq,
+			modify_date,
+			mobile_gateway_url,
+			bill36524_url,
+			setup_version_seq,
+			master_passwd,
+			group_email_id,
+			group_email_domain,
+			oneffice_token_api_url,
+			messenger_gateway_url,
+			drm_use_yn,
+			drm_type,
+			drm_option_val1,
+			drm_option_val2
+		FROM $DB_NEOS$t_co_group
+		WHERE 1 = 1	
+		<isNotEmpty property="groupSeq">
+			AND group_seq = #groupSeq#		
+		</isNotEmpty>
+			AND ROWNUM = 1
+	</select>
+	
+	<!-- 마스터 웹 용 -->
+	<select id="faxDAO.getFaxListMaster" parameterClass="hashmap" resultClass="hashmap">
+		/* faxDAO.getFaxListMaster - oracle */
+		SELECT  fax_seq AS "faxSeq"
+		      , bill36524_id AS "bill36524Id"
+		      , agent_id AS "agentId"
+		      , agent_key AS "agentKey"
+		      , point AS "point"
+		      , use_yn AS "useYn"
+		      , UTL_ENCODE.TEXT_ENCODE(agent_id,'UTF8',1) AS "agentIdEncode"
+		FROM $DB_NEOS$t_fx_fax
+		WHERE group_seq = #groupSeq#
+		<isNotNull property="bill36524Id">
+			<isNotEmpty property="bill36524Id">
+			AND bill36524_id like '%' || #bill36524Id# || '%'
+			</isNotEmpty>
+		</isNotNull>
+		<isNotNull property="useYn">
+			<isNotEmpty property="useYn">
+			AND use_yn = #useYn#
+			</isNotEmpty>
+		</isNotNull>
+	</select>
+	
+	<select id="faxDAO.getFaxNoListMaster" parameterClass="hashmap" resultClass="hashmap">
+		/* faxDAO.getFaxNoListMaster - oracle */
+		SELECT  
+			fax_no as "faxNo"
+			,CASE WHEN EXISTS(SELECT 1 FROM t_fx_fax_sync tffs WHERE tffs.fax_seq = tffn.fax_seq AND tffs.fax_no = tffn.fax_no) THEN 'Y' ELSE 'N' END as "syncYn"
+		    ,use_begin_date as "useBeginDate"
+		    , use_end_date as "useEndDate"
+		    , CASE 
+		        WHEN TO_DATE(use_end_date, 'YYYYMMDD') <![CDATA[<]]> SYSDATE THEN 'C'  
+				WHEN TO_DATE(use_end_date)-1 <![CDATA[<]]> SYSDATE THEN 'B'
+				WHEN ADD_MONTHS(TO_DATE(use_end_date), -1) <![CDATA[<]]> SYSDATE THEN 'D'
+				ELSE 'A'
+		      END as "status"
+		FROM $DB_NEOS$t_fx_fax_no tffn
+		WHERE fax_seq = #faxSeq#
+	</select>
+	
+	<select id="faxDAO.getDuplicateYnMaster" parameterClass="hashmap" resultClass="String">
+		/* faxDAO.getDuplicateYnMaster - oracle */
+		SELECT CASE WHEN EXISTS(
+		  SELECT 1 FROM t_fx_fax
+		  WHERE group_seq = #groupSeq#
+		  AND bill36524_id = #bill36524Id#)
+		THEN 'Y' ELSE 'N' END AS "duplicate"
+		FROM dual
+	</select>
+	
+	<insert id="faxDAO.addFaxMaster" parameterClass="hashmap">
+		/* faxDAO.addFaxMaster - oracle */
+		INSERT INTO $DB_NEOS$t_fx_fax(
+		    fax_seq
+		  , group_seq
+		  , bill36524_id
+		  , bill36524_pwd
+		  , agent_id
+		  , agent_key
+		  , point
+		  , use_yn
+		) VALUES (
+		    #faxSeq#
+		  , #groupSeq#
+		  , #bill36524Id#
+		  , #bill36524Pwd#
+		  , #agentId#
+		  , #agentKey#
+		  , #point#
+		  , #useYn#
+		)
+	</insert>
+	
+	<update id="faxDAO.editFaxMaster" parameterClass="hashmap">
+		/* faxDAO.editFaxMaster - oracle */
+		UPDATE $DB_NEOS$t_fx_fax 
+		SET <isNull property="refresh">
+				bill36524_id = #bill36524Id#
+			  , bill36524_pwd = #bill36524Pwd#
+			  , agent_id = #agentId#
+			  , agent_key = #agentKey#
+			  , use_yn = #useYn#
+			  ,
+			</isNull>
+			point = #point#
+		WHERE fax_seq = #faxSeq#
+		<isNull property="refresh">
+		AND group_seq = #groupSeq#
+		</isNull>
+	</update>
+	
+	<insert id="faxDAO.addFaxNoMaster" parameterClass="hashmap">
+		/* faxDAO.addFaxNoMaster - oracle */
+		INSERT INTO $DB_NEOS$t_fx_fax_no (
+		    fax_seq
+		  , fax_no
+		  , use_begin_date
+		  , use_end_date
+		) VALUES (
+		    #faxSeq#
+		  , #FaxNo#
+		  , #UseBeginDate#
+		  , #UseEndDate#
+		)
+	</insert>
+	
+	<delete id="faxDAO.delFaxMaster" parameterClass="hashmap">
+		/* faxDAO.delFaxMaster - oracle */
+		DELETE FROM 
+			$DB_NEOS$t_fx_fax 
+		WHERE 
+			fax_seq = #faxSeq#
+			AND group_seq = #groupSeq#
+	</delete>
+	
+	<delete id="faxDAO.delFaxNoMaster" parameterClass="hashmap">
+		/* faxDAO.delFaxNoMaster - oracle */
+		DELETE FROM 
+			$DB_NEOS$t_fx_fax_no 
+		WHERE 
+			fax_seq = #faxSeq#
+	</delete>
+	
+	<update id="faxDAO.editFaxNoMaster" parameterClass="hashmap">
+		/* faxDAO.editFaxNoMaster - oracle */
+		UPDATE 
+			$DB_NEOS$t_fx_fax_no 
+		SET 
+			use_begin_date = #UseBeginDate#
+			,use_end_date = #UseEndDate#
+		WHERE 
+			fax_seq = #faxSeq#
+			AND fax_no = #FaxNo#
+	</update>
+	
+	<select id="faxDAO.getAgentIdAndAgentKeyMaster" parameterClass="hashmap" resultClass="hashmap">
+		/* faxDAO.getAgentIdAndAgentKeyMaster - oracle */
+	    SELECT 	
+	    	agent_id as "AgentID"
+	    	,agent_key as "AgentKey"
+	    FROM 
+	    	$DB_NEOS$t_fx_fax
+	    WHERE 
+	    	fax_seq = #faxSeq#
+	</select>
+	
+	<select id="faxDAO.getFaxNoCompListMaster" parameterClass="hashmap" resultClass="hashmap">
+		/* faxDAO.getFaxNoCompListMaster - oracle */
+		SELECT tffnc.comp_seq as "compSeq"
+			 , $DB_NEOS$FN_GetMultiLang(#langCode#,tccm.comp_name_multi) as "compName"
+		FROM $DB_NEOS$t_fx_fax_no_comp tffnc
+		JOIN $DB_NEOS$v_t_co_comp_multi tccm
+		ON tffnc.group_seq = tccm.group_seq
+		AND tffnc.comp_seq = tccm.comp_seq
+		WHERE fax_seq = #faxSeq#
+		AND fax_no = #faxNo#
+		AND tffnc.group_seq = #groupSeq#
+	</select>
+	
+	<delete id="faxDAO.delFaxNoCompMaster" parameterClass="hashmap">
+		/* faxDAO.delFaxNoCompMaster - oracle */
+		DELETE FROM 
+			$DB_NEOS$t_fx_fax_no_comp
+		WHERE 
+			fax_seq = #faxSeq#
+		AND 
+			fax_no = #faxNo#
+	</delete>
+	
+	<insert id="faxDAO.addFaxNoCompMaster" parameterClass="hashmap">
+		/* faxDAO.addFaxNoCompMaster - oracle */
+		INSERT INTO $DB_NEOS$t_fx_fax_no_comp (
+		    fax_seq
+		  , fax_no
+		  , group_seq
+		  , comp_seq
+		) VALUES (
+		    #faxSeq#
+		  , #faxNo#
+		  , #groupSeq#
+		  , #compSeq#
+		)
+	</insert>
+	
+	<!-- API 외 추가 (팩스아이디, 팩스비밀번호, 사용여부 가져오기) -->
+	<select id="faxDAO.gefFaxInfo" parameterClass="hashmap" resultClass="hashmap">
+		/* faxDAO.gefFaxInfo - oracle */
+		SELECT 	
+		    A.bill36524_id AS "bill36524_id"
+		    ,MAX(A.bill36524_pwd) AS "bill36524_pwd"
+		    ,MAX(A.use_yn) AS "use_yn"
+		    ,MAX(A.point) AS "point"
+		    ,NVL(LISTAGG(C.comp_seq || '|') WITHIN GROUP (ORDER BY C.comp_seq), '') AS "smsCompSeq"
+		    ,NVL(LISTAGG($DB_NEOS$FN_GetMultiLang('eng', C.comp_name_multi)) WITHIN GROUP (ORDER BY C.comp_name_multi) || ', ' , '') AS "smsComp"
+		FROM   	
+		    $DB_NEOS$t_fx_fax A
+		    LEFT OUTER JOIN $DB_NEOS$t_co_comp B ON A.bill36524_id = B.sms_id
+		    LEFT OUTER JOIN $DB_NEOS$v_t_co_comp_multi C ON B.comp_seq = C.comp_seq
+		GROUP BY 
+		    A.bill36524_id
+	</select>	
+	
+	<!-- 관리자 --> 
+	<select id="faxDAO.getFaxNoListAdmin" parameterClass="hashmap" resultClass="hashmap">
+		/* faxDAO.getFaxNoListAdmin */
+		SELECT tffn.fax_seq AS "faxSeq" 
+			  , tffn.fax_no AS "faxNo"
+			  , CASE WHEN EXISTS(SELECT 1 FROM $DB_NEOS$t_fx_fax_sync tffs WHERE tffs.fax_seq = tffn.fax_seq AND tffs.fax_no = tffn.fax_no) THEN 'Y' ELSE 'N' END AS "syncYn"
+		      , use_begin_date AS "useBeginDate"
+		      , use_end_date AS "useEndDate"
+		      , CASE 
+		          WHEN TO_DATE(use_end_date, 'YYYYMMDD') <![CDATA[<]]> ADD_MONTHS(TO_DATE(SYSDATE), -1) THEN 'D'
+		          WHEN TO_DATE(use_end_date, 'YYYYMMDD') <![CDATA[<]]> TO_DATE(SYSDATE)-1 THEN 'B'
+		          WHEN TO_DATE(use_end_date, 'YYYYMMDD') <![CDATA[<]]> SYSDATE THEN 'C'
+		          ELSE 'A'
+		        END AS "status"
+		      , NVL(tffn.nick_name,chr(32)) as "nickName"
+		FROM $DB_NEOS$t_fx_fax_no tffn
+		JOIN $DB_NEOS$t_fx_fax_no_comp tffnc
+		ON tffn.fax_seq = tffnc.fax_seq
+		AND tffn.fax_no = tffnc.fax_no
+		WHERE tffnc.group_seq = #groupSeq#
+		AND tffnc.comp_seq = #compSeq#
+		<isNotNull property="faxNo">
+			<isNotEmpty property="faxNo">
+			AND tffn.fax_no LIKE '%'||#faxNo#||'%' 
+			</isNotEmpty>
+		</isNotNull>
+		<isNotNull property="syncYn">
+			<isNotEmpty property="syncYn">
+			<isEqual property="syncYn" compareValue="Y">
+			AND EXISTS(SELECT 1 FROM $DB_NEOS$t_fx_fax_sync tffs WHERE tffs.fax_seq = tffn.fax_seq AND tffs.fax_no = tffn.fax_no)
+			</isEqual>
+			<isEqual property="syncYn" compareValue="N">
+			AND NOT EXISTS(SELECT 1 FROM $DB_NEOS$t_fx_fax_sync tffs WHERE tffs.fax_seq = tffn.fax_seq AND tffs.fax_no = tffn.fax_no)
+			</isEqual>
+			</isNotEmpty>
+		</isNotNull>
+	</select>
+	
+	<select id="faxDAO.getFaxSyncList" parameterClass="hashmap" resultClass="hashmap">
+		/* faxDAO.getFaxSyncList - oracle */
+		SELECT  
+			org_type as "orgType"
+		    ,group_seq as "groupSeq"
+		    ,comp_seq as "compSeq"
+		    ,org_seq  as "orgSeq"
+		FROM 
+			$DB_NEOS$t_fx_fax_sync
+		WHERE 
+			fax_seq = #faxSeq#
+			AND fax_no = #faxNo#
+	</select>
+	
+<!-- 	<insert id="faxDAO.addFaxSync" parameterClass="hashmap">
+		INSERT INTO t_fx_fax_sync (
+		    fax_seq
+		  , fax_no
+		  , org_type
+		  , group_seq
+		  , comp_seq
+		  , org_seq
+		) VALUES (
+		    #faxSeq#
+		  , #faxNo#
+		  , #orgType#
+		  , #groupSeq#
+		  , #compSeq#
+		  , #orgSeq#
+		)
+	</insert> -->
+	
+	<insert id="faxDAO.addFaxSync" parameterClass="hashmap">
+		/* faxDAO.addFaxSync - oracle */
+		MERGE INTO $DB_NEOS$t_fx_fax_sync using dual
+		ON (fax_seq = #faxSeq# AND fax_no = #faxNo# AND group_seq = #groupSeq# AND org_seq = #orgSeq#)
+		WHEN MATCHED THEN
+			UPDATE SET
+			  org_type	=	 #orgType#
+			  , comp_seq	=	 #compSeq#
+		WHEN NOT MATCHED THEN
+			INSERT 
+				(fax_seq, fax_no, org_type, group_seq, comp_seq, org_seq)
+			VALUES
+				(#faxSeq#, #faxNo#, #orgType#, #groupSeq#, #compSeq#, #orgSeq#)
+	</insert>
+	
+	<delete id="faxDAO.delFaxSync" parameterClass="hashmap">
+		/* faxDAO.delFaxSync - oracle */
+		DELETE FROM 
+			$DB_NEOS$t_fx_fax_sync 
+		WHERE 
+		fax_seq = #faxSeq#
+		AND fax_no = #faxNo#
+		AND org_type = #orgType#
+		AND group_seq = #groupSeq#
+		AND comp_seq = #compSeq#
+		AND org_seq = #orgSeq#
+	</delete>
+	
+	
+	
+	
+	<!-- 사용자 -->
+	<select id="faxDAO.getFaxNoListUser" parameterClass="hashmap" resultClass="hashmap">
+		/* faxDAO.getFaxNoListUser - oracle */
+		SELECT DISTINCT 
+				tff.fax_seq as "faxSeq" 
+		      , tff.agent_id as "agentId"
+			  , tff.agent_key as "agentKey"
+			  , tffs.fax_no as "faxNo"
+			  , (select option_value from $DB_NEOS$t_fx_fax_nickname_option where ROWNUM = 1 ) "option"
+			  , NVL(tffn.nick_name,chr(32)) as "nickName"
+		FROM ( SELECT group_seq, comp_seq, fax_no, fax_seq, org_seq, org_type FROM $DB_NEOS$t_fx_fax_sync ORDER BY group_seq, comp_seq, fax_no ) tffs
+		  INNER JOIN $DB_NEOS$t_fx_fax tff ON tffs.fax_seq = tff.fax_seq
+		  INNER JOIN $DB_NEOS$t_fx_fax_no tffn ON tffs.fax_seq = tffn.fax_seq AND tffs.fax_no = tffn.fax_no
+		<!-- 1차에서 겸직처리 없이 감 추후 겸직 처리 추가시 아래 WHERE 절 지우고 주석 제거 우선 사용하도록 변경 안하면 하위 주석 부분 사용 -->
+		<isNotNull property="compSeq">
+		  	<isNotEmpty property="compSeq">
+	    WHERE ((tffs.org_type = 'E' AND tffs.group_seq = #groupSeq# AND tffs.comp_seq = #compSeq# AND org_seq = #empSeq#)
+	    <isNotNull property="depts">
+	    	<isNotEmpty property="depts"> 
+			<iterate  prepend="OR" property="depts" open=" org_seq IN (" close=")" conjunction="," >
+				#depts[]#
+			</iterate>
+		  <!-- OR (tffs.org_type = 'D' AND tffs.group_seq = #groupSeq# AND tffs.comp_seq = #compSeq# AND org_seq IN (#depts#)) -->
+		  	</isNotEmpty>
+		</isNotNull>
+	      )
+	    	</isNotEmpty>
+	    </isNotNull>
+	    <!-- 
+	    WHERE ((tffs.org_type = 'E' AND tffs.group_seq = #groupSeq# AND org_seq = #empSeq#)
+	    <isNotNull property="depts">
+	    	<isNotEmpty property="depts"> 
+		  	OR (tffs.org_type = 'D' AND tffs.group_seq = #groupSeq# AND org_seq IN ($depts$))
+		  	</isNotEmpty>
+		</isNotNull>
+	      )
+	      -->
+		ORDER BY tff.agent_id, tff.agent_key, tffs.fax_no
+	</select>
+	
+	
+	
+	<!-- 모바일 용 -->
+	<select id="faxDAO.getDeptPath" parameterClass="hashmap" resultClass="String">
+		/* Fax_SQL.xml - faxDAO.getDeptPath / oracle */	
+		SELECT REPLACE(path, '|', ',') FROM $DB_NEOS$t_co_dept
+		WHERE dept_seq IN (
+		  	SELECT dept_seq
+		  	FROM $DB_NEOS$t_co_emp_dept
+		  	WHERE group_seq = #groupSeq#
+		  	<isNotNull property="compSeq">
+		  		<isNotEmpty property="compSeq">
+		  		AND comp_seq = #compSeq#
+		  		</isNotEmpty>
+		  	</isNotNull>
+	        AND emp_seq = #empSeq#
+	        AND use_yn = 'Y'
+		  	)
+	</select>
+	
+	<select id="faxDAO.getUserCompList" parameterClass="hashmap" resultClass="String">
+		/* Fax_SQL.xml - faxDAO.getUserCompList / oracle */
+		SELECT DISTINCT comp_seq
+		FROM t_co_emp_dept
+		WHERE group_seq = #groupSeq#
+		AND emp_seq = #empSeq#
+		AND use_yn = 'Y'
+	</select>
+	
+	<select id="faxDAO.getFaxNoListForMobile" parameterClass="hashmap" resultClass="hashmap">
+		/* Fax_SQL.xml - faxDAO.getFaxNoListForMobile / oracle */		
+	   	SELECT DISTINCT 
+	    	    tffs.group_seq as "group_seq"
+              , tffs.comp_seq as "comp_seq"
+	          , tff.agent_id as "AgentID"
+	    	  , tff.agent_key as "AgentKey"
+	    	  , tffs.fax_no as "FaxNo"
+	   	FROM $DB_NEOS$t_fx_fax_sync tffs
+        JOIN $DB_NEOS$t_fx_fax tff
+        ON tffs.fax_seq = tff.fax_seq
+        <!-- 1차에서 겸직처리 없이 감 추후 겸직 처리 추가시 아래 WHERE 절 지우고 주석 제거  현재 적용함 제외할 시 하위 주석처리된 구문 사용-->
+        <isNotNull property="compSeq">
+		  	<isNotEmpty property="compSeq">
+	    WHERE ((tffs.org_type = 'E' AND tffs.group_seq = #groupSeq# AND tffs.comp_seq = #compSeq# AND org_seq = #empSeq#)
+	    <isNotNull property="depts">
+	    	<isNotEmpty property="depts"> 
+	    	<iterate  prepend="OR" property="depts" open=" org_seq IN (" close=")" conjunction="," >
+			#depts[]#
+			</iterate>
+		  	</isNotEmpty>
+		</isNotNull>
+	      )
+	    	</isNotEmpty>
+	    </isNotNull>
+	    ORDER BY tffs.group_seq, tffs.comp_seq, tff.agent_id, tff.agent_key, tffs.fax_no
+	</select>
+	
+	<!-- 사용하지 않는 쿼리 주석 처리(getFaxNoInfoUser, getAlarmUserList) -->
+	<!-- 
+	<select id="faxDAO.getAlarmUserList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT DISTINCT groupSeq, compSeq, empSeq
+		FROM (
+		    SELECT  tffs.group_seq as "groupSeq"
+		          , tffs.comp_seq as "compSeq"
+		          , tffs.org_seq as "empSeq"
+		    FROM t_fx_fax tff
+		    JOIN t_fx_fax_sync tffs
+		    ON tff.fax_seq = tffs.fax_seq
+		    WHERE tff.agent_id = #AgentID#
+		    AND tff.agent_key = #AgentKey#
+		    AND tffs.fax_no = #FaxNo#
+		    AND tffs.org_type = 'E'
+		    UNION
+		    SELECT  tced.group_seq as "groupSeq"
+		          , tced.comp_seq as "compSeq"
+		          , tced.emp_seq as "empSeq"
+		    FROM t_fx_fax tff
+		    JOIN t_fx_fax_sync tffs
+		    ON tff.fax_seq = tffs.fax_seq
+		    JOIN t_co_emp_dept tced
+		    ON tffs.org_type = 'D' AND tffs.group_seq = tced.group_seq AND tffs.org_seq = tced.dept_seq
+		    WHERE tff.agent_id = #AgentID#
+		    AND tff.agent_key = #AgentKey#
+		    AND tffs.fax_no = #FaxNo#
+		    AND tffs.org_type = 'D'
+		) A
+	</select>
+	-->
+	
+	
+	<!--  장지훈 추가 -->
+		<!-- 팩스번호 목록 조회 -->
+	<select id="faxDAO.getFaxIDAndNO" parameterClass="hashmap" resultClass="hashmap">
+		/* Fax_SQL.xml - faxDAO.getFzxIDAndNo / oracle */		
+		SELECT	 	tff.fax_seq AS "faxSeq"
+				  	, tff.bill36524_id AS "bill36524ID"
+				  	, tffn.fax_no AS "faxNO"
+				  	, tff.group_seq AS "groupSeq"
+				  	, NVL(tffn.nick_name,chr(32)) AS "nickName"
+		FROM	    $DB_NEOS$t_fx_fax tff 
+		JOIN	    $DB_NEOS$t_fx_fax_no tffn
+		ON		tff.fax_seq = tffn.fax_seq
+		WHERE	use_end_date <![CDATA[>]]> #today#
+        AND	group_seq = #groupSeq#
+        AND use_yn = 'Y'
+		<isEqual property="gubun" compareValue="faxNO">
+			AND tffn.fax_no like '%' || #search# || '%'
+		</isEqual>
+		<isEqual property="gubun" compareValue="faxID">
+			AND tff.bill36524_id like '%' || #search# || '%'
+		</isEqual>
+	</select>
+
+	<select id="faxDAO.getFaxComp" parameterClass="hashmap" resultClass="hashmap">
+			/* Fax_SQL.xml - faxDAO.getFzxIDAndNo / oracle */		
+   			SELECT  
+			     oc.group_seq as "grp_seq"
+			    ,oc.gbn_org as "gbn_org"
+			    ,oc.comp_seq as "comp_seq"
+			    ,$DB_NEOS$FN_GetMultiLang(#langCode#,ccm.comp_name_multi) as "comp_name"
+			    ,oc.biz_seq as "biz_seq"
+			    ,$DB_NEOS$FN_GetMultiLang(#langCode#,cbm.biz_name_multi) as "biz_name"
+			    ,oc.dept_seq as "dept_seq"
+			    ,$DB_NEOS$FN_GetMultiLang(#langCode#,cdm.dept_name_multi) as "dept_name"
+			    ,oc.parent_seq as "parent_seq"
+			    ,"level"
+			    ,oc.order_num as "order"
+			    ,oc.path as "path"
+			    ,(CASE WHEN oc.gbn_org = 'c' AND cb.display_yn = 'Y' THEN ccm.comp_name || '|' || cbm.biz_name || '|' || cdm.path_name
+			        WHEN cb.display_yn = 'N' THEN ccm.comp_name || '|' || cdm.path_name END) as "path_name"
+			    ,a."member" as "member"
+			FROM $DB_NEOS$v_org_chart oc
+			LEFT JOIN
+			(
+			    SELECT A.path, NVL(SUM(B.cnt), 0) AS "member"
+			    FROM $DB_NEOS$v_org_chart A
+			    LEFT JOIN
+			    (
+			        select  CASE WHEN cb.display_yn = 'Y' 
+                            THEN cb.comp_seq || '|' || cb.biz_seq || '|' || cd."PATH"
+                            ELSE cb.comp_seq || '|' || cd."PATH"
+                            END as "PATH",
+                            cd.cnt as cnt
+                    from    (
+                        select  cd."PATH"
+                                , MIN(cd.BIZ_SEQ) as biz_seq
+                                , COUNT(ed.emp_seq) as cnt
+                        from    $DB_NEOS$t_co_dept cd , $DB_NEOS$t_co_emp_dept ed, $DB_NEOS$t_co_biz cb
+                        where   ed.group_seq = #groupSeq#
+                        <isNotEmpty property="compSeqList">
+                                AND ed.comp_seq IN ($compSeqList$)
+                        </isNotEmpty>
+                                AND ed.group_seq = cd.group_seq
+                                AND ed.dept_seq = cd.dept_seq
+                                AND ed.group_seq = cb.group_seq
+                                AND ed.biz_seq = cb.biz_seq     
+                                AND ed.use_yn = 'Y'
+                                AND cd.use_yn = 'Y'
+                                AND cb.use_yn = 'Y'
+                        group by cd."PATH"
+                    ) cd
+                    , $DB_NEOS$t_co_biz cb
+                    where cd.biz_seq = cb.biz_seq
+			    ) B
+			    ON B.path like concat(A.path,'%')
+			    WHERE A.group_seq =  #groupSeq#
+			    <isNotEmpty property="compSeqList">
+			    and A.comp_seq IN ($compSeqList$)
+			    </isNotEmpty>
+			    GROUP BY A.path  
+			) a
+			ON oc.path = a.path
+			LEFT JOIN $DB_NEOS$t_co_biz cb
+			ON      oc.biz_seq = cb.biz_seq
+			LEFT JOIN $DB_NEOS$v_t_co_comp_multi ccm
+			ON      oc.comp_seq = ccm.comp_seq
+			LEFT JOIN $DB_NEOS$v_t_co_biz_multi cbm
+			ON      oc.biz_seq = cbm.biz_seq
+			LEFT JOIN $DB_NEOS$v_t_co_dept_multi cdm
+			ON      oc.dept_seq = cdm.dept_seq           
+			WHERE	oc.group_seq =  #groupSeq#
+			<isNotEmpty property="compSeqList">
+				and oc.comp_seq IN ($compSeqList$)
+			</isNotEmpty>
+			<isNotEmpty property="gbnOrgList">
+				and oc.gbn_org IN ($gbnOrgList$)
+			</isNotEmpty>
+			<isEqual property="gubun" compareValue="compCode">
+				AND oc.comp_seq like '%' || #search# || '%')
+			</isEqual>
+			<isEqual property="gubun" compareValue="compName">
+				AND ccm.comp_name like '%' || #search# || '%'
+			</isEqual>
+			ORDER BY oc.path		
+	</select>
+	
+	<select id="faxDAO.getDeptName" parameterClass="hashmap" resultClass="hashmap">
+		/* Fax_SQL.xml - faxDAO.getDeptName / oracle */	
+		SELECT   comp_name
+				   , dept_name as "dept_name"
+				   , 'D' AS "gubun"
+				   , tcd.dept_seq as "orgSeq"
+				   , tcd.group_seq as "group_seq"
+				   , tcd.comp_seq as "comp_seq"
+				   , chr(32) as "man_grade_name"
+				   , chr(32) as "login_id"
+		FROM $DB_NEOS$t_co_dept tcd 
+			JOIN $DB_NEOS$v_t_co_dept_multi tcdm ON tcd.dept_seq = tcdm.dept_seq 
+			JOIN $DB_NEOS$v_t_co_comp_multi tccm ON tcdm.comp_seq = tccm.comp_seq 
+		WHERE tcd.group_seq = #groupSeq# AND tcd.comp_seq = #compSeq# AND tcd.dept_seq = #orgSeq#
+	</select>
+	
+	<select id="faxDAO.getUserName" parameterClass="hashmap" resultClass="hashmap">
+		/* Fax_SQL.xml - faxDAO.getUserName / oracle */	
+		SELECT			comp_name as "comp_name"
+					  , dept_name as "dept_name"
+					  , emp_name as "emp_name"
+					  , 'E' as "gubun"
+					  , emp_seq as "orgSeq"
+					  , group_seq as "group_seq"
+					  , comp_seq as "comp_seq"
+					  , dept_seq as "dept_seq"
+					  , $DB_NEOS$get_emp_duty_position_name(group_seq, comp_seq, dept_duty_code, 'DUTY', 'kr') AS "man_grade_name"  
+					  , login_id as "login_id"
+		FROM			$DB_NEOS$v_user_info
+		WHERE		    emp_seq = #orgSeq#
+		AND 			group_seq = #groupSeq#
+		AND 			comp_seq = #compSeq#	
+		AND 			emp_lang_code = 'kr'
+		AND 			dept_lang_code = 'kr'
+		AND 			comp_lang_code = 'kr'	
+		AND 			main_dept_yn = 'Y'	
+	</select>
+	
+	<select id="faxDAO.getFaxNoInfoAdmin" parameterClass="hashmap" resultClass="hashmap">
+ 		/* faxDAO.getFaxNoInfoAdmin - oracle */
+ 		SELECT 
+ 			tffn.fax_seq AS "faxSeq"  
+ 			, tffn.fax_no AS "faxNo"
+ 			, CASE WHEN EXISTS(SELECT 1 FROM t_fx_fax_sync tffs WHERE tffs.fax_seq = tffn.fax_seq AND tffs.fax_no = tffn.fax_no) THEN 'Y' ELSE 'N' END AS "syncYn"
+ 		    , use_begin_date AS "useBeginDate"
+ 		    , use_end_date AS "useEndDate"
+ 		    , CASE 
+ 		        WHEN TO_DATE(use_end_date, 'YYYYMMDD') <![CDATA[<]]> ADD_MONTHS(TO_DATE(SYSDATE), -1) THEN 'D'
+ 		        WHEN TO_DATE(use_end_date, 'YYYYMMDD') <![CDATA[<]]> TO_DATE(SYSDATE)-1 THEN 'B'
+ 		        WHEN TO_DATE(use_end_date, 'YYYYMMDD') <![CDATA[<]]> SYSDATE THEN 'C'		        
+ 		        ELSE 'A'
+ 		      END as "status"
+ 	        , tff.agent_id
+ 			, tff.agent_key
+ 		FROM 
+ 			t_fx_fax_no tffn
+ 			INNER JOIN t_fx_fax_no_comp tffnc ON tffn.fax_seq = tffnc.fax_seq
+ 			INNER JOIN t_fx_fax tff ON tffn.fax_seq = tff.fax_seq AND tffn.fax_no = tffnc.fax_no
+ 		WHERE 
+ 			tffnc.group_seq = #groupSeq#
+ 			AND tffnc.comp_seq = #compSeq#
+ 		<isNotNull property="faxNo">
+ 			<isNotEmpty property="faxNo">
+ 			AND tffn.fax_no like '%' || #faxNo# || '%' 
+ 			</isNotEmpty>
+ 		</isNotNull>
+ 		<isNotNull property="syncYn">
+ 			<isNotEmpty property="syncYn">
+ 			<isEqual property="syncYn" compareValue="Y">
+ 			AND EXISTS(SELECT 1 FROM $DB_NEOS$t_fx_fax_sync tffs WHERE tffs.fax_seq = tffn.fax_seq AND tffs.fax_no = tffn.fax_no)
+ 			</isEqual>
+ 			<isEqual property="syncYn" compareValue="N">
+ 			AND NOT EXISTS(SELECT 1 FROM $DB_NEOS$t_fx_fax_sync tffs WHERE tffs.fax_seq = tffn.fax_seq AND tffs.fax_no = tffn.fax_no)
+ 			</isEqual>
+ 			</isNotEmpty>
+ 		</isNotNull>
+ 	</select>
+	
+	<!-- 사용하지 않는 쿼리 주석 처리(getFaxNoInfoUser, getAlarmUserList) -->
+	<!-- <select id="faxDAO.getFaxNoInfoUser" parameterClass="hashmap" resultClass="hashmap">
+		SELECT DISTINCT 
+				tff.fax_seq as "faxSeq"  
+		      , tff.agent_id as "agentId"
+			  , tff.agent_key as "agentKey"
+			  , tffs.fax_no as "faxNo"
+		FROM t_fx_fax_sync tffs
+		  JOIN t_fx_fax tff
+		  ON tffs.fax_seq = tff.fax_seq
+		 1차에서 겸직처리 없이 감 추후 겸직 처리 추가시 아래 WHERE 절 지우고 주석 제거
+		<isNotNull property="compSeq">
+		  	<isNotEmpty property="compSeq">
+	    WHERE ((tffs.org_type = 'E' AND tffs.group_seq = #groupSeq# AND tffs.comp_seq = #compSeq# AND org_seq = #empSeq#)
+	    <isNotNull property="depts">
+	    	<isNotEmpty property="depts"> 
+		  OR (tffs.org_type = 'D' AND tffs.group_seq = #groupSeq# AND tffs.comp_seq = #compSeq# AND org_seq IN ($depts$))
+		  	</isNotEmpty>
+		</isNotNull>
+	      )
+	    	</isNotEmpty>
+	    </isNotNull>
+	    
+	    WHERE ((tffs.org_type = 'E' AND tffs.group_seq = #groupSeq# AND org_seq = #empSeq#)
+	    <isNotNull property="depts">
+	    	<isNotEmpty property="depts"> 
+		  	OR (tffs.org_type = 'D' AND tffs.group_seq = #groupSeq# AND org_seq IN ($depts$))
+		  	</isNotEmpty>
+		</isNotNull>
+	      )
+		ORDER BY tffs.group_seq, tffs.comp_seq, tff.agent_id, tff.agent_key, tffs.fax_no
+	</select> -->
+	
+	<!-- SMS 회사 설정 -->
+	<insert id="faxDAO.addSMSCompany" parameterClass="hashmap">
+		/* Fax_SQL.xml - faxDAO.addSMSCompany / oracle */	
+		UPDATE $DB_NEOS$t_co_comp 
+		SET sms_id = #smsId#
+		WHERE	comp_seq = #compSeq#
+	</insert> 
+	
+	<update id="faxDAO.delSMSCompany" parameterClass="hashmap">
+		/* Fax_SQL.xml - faxDAO.delSMSCompany / oracle */	
+		update $DB_NEOS$t_co_comp SET
+		sms_id = chr(32)
+		WHERE  sms_id = #smsId#
+	</update>
+
+	
+		<!-- SMS 연동 회사 정보 가져오기 -->
+	<select id="faxDAO.getSMSCompany" parameterClass="hashmap"
+		resultClass="hashmap">
+		/* faxDAO.getSMSCompany - oracle */
+
+		SELECT A.comp_seq as "comp_seq"
+		, B.agent_id as "agent_id"
+		, B.agent_key as "agent_key"
+		, NVL(C.mobile_tel_num, chr(32)) as "mobile_tel_num"
+		, G.bill36524_url as "bill36524_url"
+		FROM $DB_NEOS$t_co_comp A
+		INNER JOIN $DB_NEOS$t_fx_fax B
+		ON A.sms_id = B.bill36524_id
+		INNER JOIN $DB_NEOS$t_co_emp C
+		ON A.group_seq =
+		C.group_seq
+		INNER JOIN $DB_NEOS$t_co_group G
+		ON G.group_seq = C.group_seq
+		WHERE A.group_seq = B.group_seq
+		AND A.comp_seq = #compSeq#
+		AND C.emp_seq = #empSeq#
+	</select>
+
+
+	<select id="faxDAO.getPhoneNumber" parameterClass="hashmap"
+		resultClass="hashmap">
+		/* faxDAO.getPhoneNumber - oracle */
+		
+		SELECT comp_seq as "compSeq",
+		comp_name_multi as "compNameMulti",
+		emp_seq as "empSeq",
+		emp_name as "empName",
+		replace(mobile_tel_num, '-', chr(32)) as "mobileTelNum",
+		(select LISTAGG(comp_name,', ') WITHIN GROUP(ORDER BY comp_name) from (select
+		distinct(comp_name) from $DB_NEOS$v_user_info where messenger_display_yn = 'Y'
+		AND main_dept_yn = 'Y'
+		AND work_status = '999'
+		<isNotEmpty property="compList">
+			<iterate prepend="AND" property="compList"
+				open=" comp_seq IN (" close=")" conjunction=",">
+				#compList[]#
+			</iterate>
+		</isNotEmpty>
+		<isNotEmpty property="bizList">
+			<iterate prepend="OR" property="bizList" open=" biz_seq IN ("
+				close=")" conjunction=",">
+				#bizList[]#
+			</iterate>
+		</isNotEmpty>
+		<isNotEmpty property="deptList">
+			<iterate prepend="OR" property="deptList"
+				open=" dept_seq IN (" close=")" conjunction=",">
+				#deptList[]#
+			</iterate>
+		</isNotEmpty>
+		<isNotEmpty property="empList">
+			<iterate prepend="OR" property="empList" open=" emp_seq IN ("
+				close=")" conjunction=",">
+				#empList[]#
+			</iterate>
+		</isNotEmpty>
+		AND mobile_tel_num != chr(32) )) as "compNameList"
+		FROM $DB_NEOS$v_user_info
+		WHERE messenger_display_yn = 'Y'
+		AND main_dept_yn = 'Y'
+		AND
+		work_status = '999'
+		<isNotEmpty property="compList">
+			<iterate prepend="AND" property="compList"
+				open=" comp_seq IN (" close=")" conjunction=",">
+				#compList[]#
+			</iterate>
+		</isNotEmpty>
+		<isNotEmpty property="bizList">
+			<iterate prepend="OR" property="bizList" open=" biz_seq IN ("
+				close=")" conjunction=",">
+				#bizList[]#
+			</iterate>
+		</isNotEmpty>
+		<isNotEmpty property="deptList">
+			<iterate prepend="OR" property="deptList"
+				open=" dept_seq IN (" close=")" conjunction=",">
+				#deptList[]#
+			</iterate>
+		</isNotEmpty>
+		<isNotEmpty property="empList">
+			<iterate prepend="OR" property="empList" open=" emp_seq IN ("
+				close=")" conjunction=",">
+				#empList[]#
+			</iterate>
+		</isNotEmpty>
+		AND mobile_tel_num != chr(32)
+		GROUP BY emp_seq, comp_seq, comp_name_multi, emp_name, replace(mobile_tel_num, '-', chr(32)) 
+
+	</select>
+	
+	<select id="faxDAO.getFaxNickNameOption" parameterClass="hashmap" resultClass="String">
+		/* Fax_SQL.xml - faxDAO.getFaxNickNameOption / oracle */
+		select
+			option_value as "option"
+		from
+			$DB_NEOS$t_fx_fax_nickname_option
+		where
+			group_seq = #groupSeq#		
+	</select>
+	
+	<update id="faxDAO.saveFaxNickNameOption">
+		/* Fax_SQL.xml - faxDAO.saveFaxNickNameOption / oracle */
+		update
+			$DB_NEOS$t_fx_fax_nickname_option
+		set
+			option_value = #value#
+		where
+			group_seq = #groupSeq#		
+	</update>
+	
+	<select id="faxDAO.getFaxNickName" parameterClass="hashmap" resultClass="String">
+		/* Fax_SQL.xml - faxDAO.getFaxNickName / oracle */	
+		select
+			NVL(nick_name,chr(32)) as nickName
+		from
+			$DB_NEOS$t_fx_fax_no
+		where
+			fax_seq = #faxSeq# and fax_no = #faxNo#
+	</select>
+	
+	<update id="faxDAO.saveFaxNickName">
+		/* Fax_SQL.xml - faxDAO.saveFaxNickName / oracle */
+		update
+			$DB_NEOS$t_fx_fax_no
+		set
+			nick_name = #nickName#
+		where
+			fax_seq = #faxSeq# and fax_no = #faxNo#
+	</update>
+	
+</sqlMap>

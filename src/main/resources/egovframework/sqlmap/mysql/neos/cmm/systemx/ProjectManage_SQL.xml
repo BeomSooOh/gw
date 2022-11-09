@@ -1,0 +1,484 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ProjectManageDAO">
+
+    <typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+    
+    <select id="ProjectManageDAO.selectProjectList_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+		SELECT 
+			count(a.no_project) as TOTAL_COUNT
+		FROM 
+			t_pr_project_main a left outer join t_pr_project_detail b on a.no_project = b.no_project
+			AND a.no_seq = b.no_seq
+		WHERE
+			a.comp_seq = #compSeq#
+			
+			<isNotEmpty property="sKeyword">
+				AND (a.no_project LIKE '%$sKeyword$%' OR a.nm_project LIKE '%$sKeyword$%')
+			</isNotEmpty>
+			
+			<isNotEmpty property="sdProject">
+				<isNotEmpty property="edProject">
+					<isNotEmpty property="sDatetype">
+						<isEqual property="sDatetype" compareValue="1">
+						AND (sd_project BETWEEN REPLACE(#sdProject#, '-', '') AND REPLACE(#edProject#, '-', '')
+						OR ed_project BETWEEN REPLACE(#sdProject#, '-', '') AND REPLACE(#edProject#, '-', ''))
+						</isEqual>
+						<isEqual property="sDatetype" compareValue="2">
+						AND dt_change BETWEEN REPLACE(#sdProject#, '-', '') AND REPLACE(#edProject#, '-', '')
+						</isEqual>
+					</isNotEmpty>
+				</isNotEmpty>
+			</isNotEmpty>
+			
+			<isNotEmpty property="lnPartner">
+				AND b.ln_partner LIKE '%$lnPartner$%'
+			</isNotEmpty>
+			<isNotEmpty property="staProject">
+				AND a.sta_project = #staProject#
+			</isNotEmpty>
+			<isNotEmpty property="useYn">
+				AND a.use_yn = #useYn#
+			</isNotEmpty>
+			
+	</select>
+	
+	<select id="ProjectManageDAO.selectProjectList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT 
+			a.no_project, a.no_seq, a.cd_company, a.nm_project, a.tp_project, a.sd_project, a.ed_project, a.sta_project,
+			a.dt_change, a.sv_type, a.use_yn, b.ln_partner, b.cd_partner,
+			CONCAT(DATE_FORMAT(a.sd_project, '%y.%m.%d'), ' ~ ', DATE_FORMAT(a.ed_project, '%y.%m.%d')) AS st_ed_date,
+			get_code_detail_info('0', 'COM513', a.sta_project, #langCode#) AS sta_project_nm,
+			get_code_detail_info('0', 'COM514', a.use_yn, #langCode#) AS use_yn_nm,
+			get_code_detail_info('0', 'COM515', a.sv_type, #langCode#) AS sv_type_nm,
+			a.flag_delete
+		FROM  
+			t_pr_project_main a left outer join t_pr_project_detail b on a.no_project = b.no_project
+			AND a.no_seq = b.no_seq
+		WHERE
+			a.comp_seq = #compSeq#
+			
+			<isNotEmpty property="sKeyword">
+				AND (a.no_project LIKE '%$sKeyword$%' OR a.nm_project LIKE '%$sKeyword$%')
+			</isNotEmpty>
+			
+			<isNotEmpty property="sdProject">
+				<isNotEmpty property="edProject">
+					<isNotEmpty property="sDatetype">
+						<isEqual property="sDatetype" compareValue="1">
+						AND (sd_project BETWEEN REPLACE(#sdProject#, '-', '') AND REPLACE(#edProject#, '-', '')
+						OR ed_project BETWEEN REPLACE(#sdProject#, '-', '') AND REPLACE(#edProject#, '-', ''))
+						</isEqual>
+						<isEqual property="sDatetype" compareValue="2">
+						AND dt_change BETWEEN REPLACE(#sdProject#, '-', '') AND REPLACE(#edProject#, '-', '')
+						</isEqual>
+					</isNotEmpty>
+				</isNotEmpty>
+			</isNotEmpty>
+			
+			<isNotEmpty property="lnPartner">
+				AND b.ln_partner LIKE '%$lnPartner$%'
+			</isNotEmpty>
+			<isNotEmpty property="staProject">
+				AND a.sta_project = #staProject#
+			</isNotEmpty>
+			<isNotEmpty property="useYn">
+				AND a.use_yn = #useYn#
+			</isNotEmpty>
+			
+			ORDER BY b.create_date desc
+			
+			LIMIT $startNum$, $endNum$
+	</select>
+	
+	<select id="ProjectManageDAO.selectProjectInfo" parameterClass="hashmap" resultClass="egovMap">
+		SELECT 
+			a.no_project, a.no_seq, a.cd_company, a.nm_project, a.tp_project, a.sta_project,
+			DATE_FORMAT(a.dt_change, '%Y-%m-%d') as dt_change, a.sv_type, a.use_yn, b.ln_partner, b.cd_partner,
+			DATE_FORMAT(a.sd_project, '%Y-%m-%d') as sd_project, 
+			DATE_FORMAT(a.ed_project, '%Y-%m-%d') as ed_project,
+			get_code_detail_info('0', 'COM513', a.sta_project, #langCode#) AS sta_project_nm,
+			get_code_detail_info('0', 'COM514', a.use_yn, #langCode#) AS use_yn_nm,
+			get_code_detail_info('0', 'COM515', a.sv_type, #langCode#) AS sv_type_nm,
+			b.am_base,
+			b.am_wonvat,
+			b.am_wonamt,
+			b.dc_rmk,
+			b.e_mail,
+			b.no_tel,
+			b.no_fax,
+			b.no_hp,
+			b.cd_exch,
+			b.rt_exch,
+			(
+				select emp_name 
+				from v_user_info 
+				where emp_seq = b.pm_seq 
+				AND comp_seq = b.pm_comp_seq
+				AND emp_lang_code = #langCode#
+				AND dept_lang_code = #langCode#
+				AND comp_lang_code = #langCode# 
+				AND main_dept_yn = 'Y'
+				limit 1
+			) as pm_name,
+			b.pm_seq,
+			f.orignl_file_name,
+			f.file_extsn,
+			b.id_attach,
+			b.nm_ptr,
+			b.pm_comp_seq,
+			b.room_id
+		FROM  
+			t_pr_project_main a 
+			left outer join t_pr_project_detail b on a.no_project = b.no_project	AND a.no_seq = b.no_seq
+			left outer join t_co_atch_file_detail f on b.id_attach = f.file_id and f.file_sn = 0 and f.use_yn = 'Y'
+		WHERE
+			a.no_project = #noProject#
+		LIMIT 1
+	</select>
+	
+	<insert id="ProjectManageDAO.insertProjectMain" parameterClass="hashmap">
+		insert into t_pr_project_main 
+		SET
+			no_project =  #noProject#,                  
+			no_seq =      #noSeq#,                      
+			cd_company =  #cdCompany#,                  
+			nm_project =  #nmProject#,                  
+			tp_project =  #tpProject#,                  
+			sd_project =  REPLACE(#sdProject#, '-', ''),
+			ed_project =  REPLACE(#edProject#, '-', ''),
+			sta_project = #staProject#,                 
+			dt_change =   REPLACE(#dtChange#, '-', ''), 
+			sv_type =     #svType#,                     
+			use_yn =      #useYn#,
+			erp_no_project =  #erpNoProject#,                    
+			create_seq =  #editSeq#,                    
+			create_date = now(),                        
+			modify_seq =  #editSeq#,                    
+			modify_date = now(),                        
+			 comp_seq    =  #compSeq#                     
+		ON DUPLICATE KEY UPDATE
+			nm_project = #nmProject#, 
+			tp_project = #tpProject#, 
+			sd_project = REPLACE(#sdProject#, '-', ''), 
+			ed_project = REPLACE(#edProject#, '-', ''), 
+			sta_project= #staProject#,  
+			dt_change  = REPLACE(#dtChange#, '-', ''), 
+			sv_type    = #svType#, 
+			use_yn =     #useYn#,
+			modify_seq = #editSeq#, 
+			modify_date= now(),
+			comp_seq     = #compSeq#
+	</insert>
+	
+	<insert id="ProjectManageDAO.insertProjectDetail" parameterClass="hashmap">
+		insert into t_pr_project_detail 
+		SET
+				no_project =   #noProject#,  
+				no_seq =       #noSeq#    ,  
+				cd_company =   #cdCompany#,  
+				pm_seq =       #pmSeq#    ,  
+				cd_exch =      #cdExch#   ,  
+				rt_exch =      #rtExch#   ,  
+				am_base =      #amBase#   ,  
+				am_wonvat =    #amWonvat# ,  
+				am_wonamt =    #amWonamt# ,  
+				dc_rmk =       #dcRmk#    ,  
+				id_attach =    #idAttach# ,  
+				cd_partner =   #cdPartner#,  
+				ln_partner =   #lnPartner#,  
+				nm_ptr =       #nmPtr#    ,  
+				e_mail =       #eMail#    ,  
+				no_tel =       #noTel#    ,  
+				no_fax =       #noFax#    ,  
+				no_hp =        #noHp#     ,  
+				pm_comp_seq =  #pmCompSeq#,    
+				create_seq =   #editSeq#  ,  
+				create_date =  now()      ,  
+				modify_seq =   #editSeq#  ,  
+				modify_date =  now()         
+		ON DUPLICATE KEY UPDATE
+				pm_seq    = #pmSeq#    , 
+				cd_exch   = #cdExch#   , 
+				rt_exch   = #rtExch#   , 
+				am_base   = #amBase#   , 
+				am_wonvat = #amWonvat# , 
+				am_wonamt = #amWonamt# , 
+				dc_rmk    = #dcRmk#    , 
+				id_attach = #idAttach# , 
+				cd_partner= #cdPartner#, 
+				ln_partner= #lnPartner#, 
+				pm_comp_seq =  #pmCompSeq#,  
+				nm_ptr    = #nmPtr#    , 
+				e_mail    = #eMail#    , 
+				no_tel    = #noTel#    , 
+				no_fax    = #noFax#    , 
+				no_hp     = #noHp#     ,  
+				modify_seq= #editSeq#  , 
+				modify_date= now() 
+	</insert>
+	
+	<update id="ProjectManageDAO.updateProjectMain" parameterClass="hashmap">
+		update t_pr_project_main
+		set
+			nm_project = #nmProject#, 
+			tp_project = #tpProject#, 
+			sd_project = REPLACE(#sdProject#, '-', ''), 
+			ed_project = REPLACE(#edProject#, '-', ''), 
+			sta_project= #staProject#,  
+			dt_change  = REPLACE(#dtChange#, '-', ''), 
+			sv_type    = #svType#,
+			<isNotEmpty property="useYn">
+			use_yn    = #useYn#,
+			</isNotEmpty> 
+			modify_seq = #editSeq#, 
+			modify_date= now(),
+			comp_seq     = #compSeq#
+		where
+			no_project = #noProject#
+			AND cd_company = #cdCompany#
+	</update>
+	
+	<update id="ProjectManageDAO.updateProjectDetailRoomId" parameterClass="hashmap">
+		update t_pr_project_detail
+		set
+			room_id = #roomId#,
+			modify_seq = #editSeq#, 
+			modify_date= now()
+		where
+			no_project = #noProject#
+			AND cd_company = #cdCompany#
+	</update>
+	
+	<update id="ProjectManageDAO.updateProjectDetail" parameterClass="hashmap">
+		update t_pr_project_detail 
+	    set
+				pm_seq    = #pmSeq#    , 
+				cd_exch   = #cdExch#   , 
+				rt_exch   = #rtExch#   , 
+				am_base   = #amBase#   , 
+				am_wonvat = #amWonvat# , 
+				am_wonamt = #amWonamt# , 
+				dc_rmk    = #dcRmk#    , 
+				id_attach = #idAttach# , 
+				cd_partner= #cdPartner#, 
+				ln_partner= #lnPartner#, 
+				nm_ptr    = #nmPtr#    , 
+				e_mail    = #eMail#    , 
+				no_tel    = #noTel#    , 
+				no_fax    = #noFax#    , 
+				no_hp     = #noHp#     , 
+				pm_comp_seq =  #pmCompSeq#,  
+				modify_seq= #editSeq#  , 
+				modify_date= now()        
+		where
+			no_project = #noProject#	
+			AND cd_company = #cdCompany#
+	</update>
+	
+	
+	<delete id="ProjectManageDAO.deleteProjectMain" parameterClass="hashmap">
+		delete
+		from 
+			t_pr_project_main
+		where
+			1=1
+			<isNotEmpty property="noProjectList">
+				AND no_project IN ($noProjectList$)
+			</isNotEmpty>
+			<isEmpty property="noProjectList">
+				AND no_project = #noProject#
+			</isEmpty>
+	</delete>
+	
+	<delete id="ProjectManageDAO.deleteProjectDetail" parameterClass="hashmap">
+		delete
+		from 
+			t_pr_project_detail
+		where
+			no_project IN (
+				select no_project 
+				from t_pr_project_main 
+				where 
+				<isNotEmpty property="noProjectList">
+					no_project IN ($noProjectList$)
+				</isNotEmpty>
+				<isEmpty property="noProjectList">
+					no_project = #noProject#
+				</isEmpty>
+			)
+	</delete>
+	
+	<select id="ProjectManageDAO.selectErpProject" parameterClass="hashmap" resultClass="egovMap">
+		select 
+			*
+		from t_pr_project_main 
+		where
+			erp_no_project = #erpNoProject#
+			AND cd_company = #cdCompany#
+	</select>
+	
+	<insert id="ProjectManageDAO.insertProjectMainFromErp" parameterClass="egovMap">
+		INSERT INTO t_pr_project_main 
+		(
+			no_project, 
+			no_seq, 
+			cd_company, 
+			comp_seq, 
+			nm_project, 
+			tp_project, 
+			sd_project, 
+			ed_project, 
+			sta_project, 
+			dt_change, 
+			sv_type, 
+			erp_no_project,
+			use_yn, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date
+		)
+		VALUES
+		(
+			#noProject#, 
+			1, 
+			#cdCompany#, 
+			(SELECT comp_seq FROM t_co_erp_comp WHERE erp_comp_seq = #cdCompany#), 
+			#nmProject#, 
+			#tpProject#, 
+			#sdProject#, 
+			#edProject#, 
+			#staProject#, 
+			#dtChange#, 
+			#svType#, 
+			#erpNoProject#, 
+			#useYn#, 
+			#editSeq#, 
+			now(), 
+			#editSeq#, 
+			now()
+		);
+	</insert>
+	
+	<insert id="ProjectManageDAO.insertProjectDetailFromErp" parameterClass="egovMap">
+		
+		INSERT INTO t_pr_project_detail 
+			(
+				no_project, 
+				no_seq, 
+				cd_company, 
+				pm_seq, 
+				pm_comp_seq, 
+				cd_exch, 
+				rt_exch, 
+				am_base, 
+				am_wonvat, 
+				am_wonamt, 
+				dc_rmk, 
+				id_attach, 
+				cd_partner, 
+				ln_partner, 
+				nm_ptr, 
+				e_mail, 
+				no_tel, 
+				no_fax, 
+				no_hp, 
+				prj_group_seq, 
+				process_rate, 
+				prj_attention_yn, 
+				import_degree, 
+				prj_status, 
+				process_auto_yn, 
+				status_auto_yn, 
+				prj_text, 
+				create_seq, 
+				create_date, 
+				modify_seq, 
+				modify_date
+			)
+			VALUES
+			(
+				#noProject#, 
+				1, 
+				#cdCompany#, 
+				#pmSeq#, 
+				#pmCompSeq#, 
+				#cdExch#, 
+				#rtExch#, 
+				#amBase#, 
+				#amWonvat#, 
+				#amWonamt#, 
+				#dcRmk#, 
+				#idAttach#, 
+				#cdPartner#, 
+				#lnPartner#, 
+				#nmPtr#, 
+				#eMail#, 
+				#noTel#, 
+				#noFax#, 
+				#noHp#, 
+				#prjGroupSeq#, 
+				#processRate#, 
+				#prjAttentionYn#, 
+				#importDegree#, 
+				#prjStatus#, 
+				#processAutoYn#, 
+				#statusAutoYn#, 
+				#prjText#, 
+				#editSeq#, 
+				now(), 
+				#editSeq#, 
+				now()
+			)
+
+	</insert>
+	
+	<update id="ProjectManageDAO.updateProjectMainFromErp" parameterClass="egovMap">
+		UPDATE t_pr_project_main 
+		SET
+			cdCompany = #cdCompany#,
+			comp_seq = (SELECT comp_seq FROM t_co_erp_comp WHERE erp_comp_seq = #cdCompany#),
+			nm_project = #nmProject# , 
+			tp_project = #tpProject# , 
+			sd_project = #sdProject# , 
+			ed_project = #edProject# , 
+			sta_project = #staProject# , 
+			dt_change = #dtChange# , 
+			<isNotEmpty property="useYn">
+			use_yn = #useYn# ,
+			</isNotEmpty>
+			modify_seq = #editSeq# , 
+			modify_date = now()
+		WHERE
+			erp_no_project = #erpNoProject#
+			AND cd_company = #cdCompany#
+	</update>
+	
+	<update id="ProjectManageDAO.updateProjectMainStatus" parameterClass="egovMap">
+		UPDATE t_pr_project_main 
+		SET
+			erp_no_project = #erpNoProject#, 
+			flag_delete = #flagDelete# , 
+			modify_seq = #editSeq# , 
+			modify_date = now()
+		WHERE
+			no_project = #noProject#
+			AND cd_company = #cdCompany#
+	</update>
+	
+	<update id="ProjectManageDAO.updateProjectRestore" parameterClass="hashmap">
+		UPDATE t_pr_project_main 
+		SET
+			flag_delete = #flagDelete# , 
+			sv_type = #svType# , 
+			modify_seq = #editSeq# , 
+			modify_date = now()
+		WHERE
+			no_project = #noProject#
+			AND cd_company = #cdCompany#
+	</update>
+	       
+</sqlMap>

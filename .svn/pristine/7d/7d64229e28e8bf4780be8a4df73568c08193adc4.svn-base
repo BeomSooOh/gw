@@ -1,0 +1,1587 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CompManage">
+	
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+		<select id="CompManage.getCompList" parameterClass="hashmap" resultClass="egovMap">
+			/* CompManage.getCompList - oracle */
+			SELECT 
+					A.group_seq AS "groupSeq", 
+					A.comp_seq AS "compSeq", 
+					A.comp_cd AS "compCd", 
+					A.parent_comp_seq AS "parentCompSeq",  
+					A.login_type AS "loginType", 
+					A.comp_regist_num AS "compRegistNum", 
+					A.comp_num AS "compNum", 
+					A.standard_code AS "standardCode", 
+					A.erp_use AS "erpUse", 
+					A.tel_num AS "telNum", 
+					A.fax_num AS "faxNum", 
+					A.homepg_addr AS "homepgAddr", 
+					A.comp_mail_url AS "compMailUrl", 
+					A.comp_domain AS "compDomain", 
+					A.email_addr AS "emailAddr", 
+					A.email_domain AS "emailDomain", 
+					A.zip_code AS "zipCode", 
+					A.sms_use AS "smsUse", 
+					A.sms_id AS "smsId", 
+					A.sms_passwd AS "smsPasswd", 
+					A.native_lang_code AS "nativeLangCode", 
+					A.order_num AS "orderNum", 
+					A.use_yn AS "useYn", 
+					A.ea_type AS "eaType",
+					A.comp_email_yn AS "compEmailYn", 
+					A.erp_use_yn AS "erpUseYn", 
+					A.sms_use_yn AS "smsUseYn", 
+					$DB_NEOS$FN_GetMultiLang('kr',B.comp_name_multi) AS "compName", 
+					B.comp_display_name AS "compDisplayName",  
+					B.owner_name AS "ownerName", 
+					B.sender_name AS "senderName", 
+					B.biz_condition AS "bizCondition", 
+					B.item AS "item", 
+					B.addr AS "addr", 
+					B.detail_addr AS "detailAddr"
+			FROM $DB_NEOS$t_co_comp A, $DB_NEOS$v_t_co_comp_multi B 
+			WHERE
+				A.comp_seq = B.comp_seq
+				AND A.group_seq = #groupSeq#
+				AND	A.use_yn = 'Y'
+				<isNotEmpty property="compSeq">  
+				AND	A.comp_seq = #compSeq#
+				</isNotEmpty>
+				<isNotEmpty property="compName">  
+				AND	$DB_NEOS$FN_GetMultiLang(#langCode#,B.comp_name_multi) LIKE '%' || #compName# || '%'
+				</isNotEmpty>
+			ORDER BY A.order_num
+		</select>
+		
+		<select id="CompManage.getCompListAuth" parameterClass="hashmap" resultClass="egovMap">
+		    /* CompManage.getCompListAuth - oracle */
+			SELECT A.comp_seq, MIN($DB_NEOS$FN_GetMultiLang(#langCode#,B.comp_name_multi)) KEEP (DENSE_RANK FIRST ORDER BY A.comp_seq) as comp_name
+			FROM $DB_NEOS$t_co_comp A
+			<isNotEqual property="userSe" compareValue="MASTER">  	
+			INNER JOIN $DB_NEOS$t_co_auth_relate C	
+			ON A.comp_seq = C.comp_seq
+			AND C.emp_seq = #empSeq#
+			AND C.author_type = '005'
+			</isNotEqual>	 			    
+			   , $DB_NEOS$v_t_co_comp_multi B 
+			WHERE
+				A.comp_seq = B.comp_seq
+                <isNotEqual property="userSe" compareValue="MASTER">
+				<isNotEmpty property="compSeq">
+				AND	A.comp_seq = #compSeq#
+				</isNotEmpty>
+				</isNotEqual>
+				AND A.group_seq = #groupSeq#
+				AND	A.use_yn = 'Y'
+				
+			GROUP BY A.comp_seq	
+			ORDER BY A.comp_seq
+		</select>
+		
+		<select id="CompManage.getCompListGroupping" parameterClass="hashmap" resultClass="egovMap">
+			/* CompManage.getCompListGroupping - oracle */
+			<![CDATA[
+			select 
+				comp_seq, comp_name
+				From $DB_NEOS$v_t_co_comp_multi bb 
+			where comp_seq in(
+				SELECT	DISTINCT 
+						IGC.comp_seq 
+						FROM 	(
+							SELECT	*
+							FROM	$DB_NEOS$v_user_info
+							WHERE 	emp_seq = #empSeq#
+							AND 	use_yn			= 'Y'
+							AND     work_status = '999'
+						)	IUC
+							INNER JOIN 	(
+								SELECT	GC.comp_seq		user_comp_seq
+									, GC.groupping_seq	groupping_seq
+									, AG.comp_seq		comp_seq
+								FROM	$DB_NEOS$t_co_groupping_comp	GC
+									INNER JOIN	$DB_NEOS$t_co_groupping_comp	AG
+									ON 	GC.groupping_seq = AG.groupping_seq	
+								WHERE	GC.use_yn	= 'Y'
+								AND	AG.use_yn	= 'Y'
+							)	IGC
+							ON	IUC.comp_seq = IGC.user_comp_seq
+						UNION
+	
+						SELECT	comp_seq
+						FROM	$DB_NEOS$v_user_info
+						WHERE 	emp_seq = #empSeq#
+
+						AND 	use_yn			= 'Y'
+						AND     work_status = '999'
+			) and lang_code = 'kr' 
+			and
+				(select count(menu_no) from $DB_NEOS$t_co_authcode a
+					inner join $DB_NEOS$t_co_auth_relate b on a.author_code = b.author_code
+					inner join $DB_NEOS$t_co_menu_auth c on a.author_code = c.author_code
+					where a.comp_seq = bb.comp_seq and a.author_type = '005' and b.emp_seq = #empSeq# and c.menu_no = '900000000') > 0
+			and
+				(select count(menu_no) from $DB_NEOS$t_co_authcode a
+					inner join $DB_NEOS$t_co_auth_relate b on a.author_code = b.author_code
+					inner join $DB_NEOS$t_co_menu_auth c on a.author_code = c.author_code
+					where a.comp_seq = bb.comp_seq and a.author_type = '005' and b.emp_seq = #empSeq# and c.menu_no = '902000000') > 0
+			and
+				(select count(menu_no) from $DB_NEOS$t_co_authcode a
+					inner join $DB_NEOS$t_co_auth_relate b on a.author_code = b.author_code
+					inner join $DB_NEOS$t_co_menu_auth c on a.author_code = c.author_code
+					where a.comp_seq = bb.comp_seq and a.author_type = '005' and b.emp_seq = #empSeq# and c.menu_no = '902020000') > 0
+			]]>			
+		</select>
+		
+		<select id="CompManage.getComp" parameterClass="hashmap" resultClass="egovMap">
+			/* CompManage.getComp - oracle */
+			select *
+			from $DB_NEOS$t_co_comp
+			where
+				comp_seq = #compSeq#
+				<isEmpty property="blockUseYn"> 
+				and	use_yn = 'Y'
+				</isEmpty> 
+			  AND ROWNUM = 1
+		</select>
+		
+		<select id="CompManage.getCompAdmin" parameterClass="hashmap" resultClass="egovMap">
+			/* CompManage.getCompAdmin - oracle */
+			select c.*,
+			case when scm.comp_name_multi is not null then $DB_NEOS$FN_GetMultiLang(#langCode#, scm.comp_name_multi) || '(' || sc.standard_code  || ')' else '' end as standard_comp_name
+			from $DB_NEOS$t_co_comp c
+			left join $DB_NEOS$t_co_comp sc on c.standard_comp_seq = sc.comp_seq
+			left join $DB_NEOS$v_t_co_comp_multi scm on sc.comp_seq = scm.comp_seq
+			where c.comp_seq = #compSeq#
+			  AND ROWNUM = 1	
+		</select>
+		
+		<delete id="CompManage.deleteComp" parameterClass="hashmap">
+			/* CompManage.deleteComp - oracle */
+			delete
+			from $DB_NEOS$t_co_comp
+			where
+				comp_seq = #compSeq#
+		</delete>
+		
+		<delete id="CompManage.deleteCompMulti" parameterClass="hashmap">
+			/* CompManage.deleteCompMulti - oracle */
+			delete
+			from $DB_NEOS$t_co_comp_multi
+			where
+				comp_seq = #compSeq#
+		</delete>
+		
+		<delete id="CompManage.delCompMulti" parameterClass="hashmap">
+			delete
+			from $DB_NEOS$t_co_comp_multi
+			where
+				comp_seq = #compSeq# and lang_code = #langCode#
+		</delete>
+		
+		<select id="CompManage.getChildComp" parameterClass="hashmap" resultClass="egovMap">
+			/* CompManage.getChildComp - oracle */
+			select *
+			from $DB_NEOS$t_co_comp
+			where
+				parent_comp_seq = #compSeq#
+		</select>
+		
+		<select id="CompManage.getCompMulti" parameterClass="hashmap" resultClass="egovMap">
+			/* CompManage.getCompMulti - oracle */
+			select *
+			from $DB_NEOS$t_co_comp_multi
+			where
+				comp_seq = #compSeq#
+				and lang_code = #langCode#
+			limit 1
+		</select>
+		
+		<select id="CompManage.getCompMultiLang" parameterClass="hashmap" resultClass="egovMap">
+			/* CompManage.getCompMultiLang - oracle */
+			SELECT a.comp_seq
+			     , a.lang_code
+			     , a.group_seq
+			     , a.comp_name
+			     , a.comp_display_name
+			     , a.owner_name
+			     , a.sender_name
+			     , a.biz_condition
+			     , a.item
+			     , a.addr
+			     , a.detail_addr
+			     , a.use_yn
+			     , a.create_seq
+			     , a.create_date
+			     , a.modify_seq
+			     , a.modify_date
+			     , a.comp_nickname
+			     , NVL(en.comp_name,'') AS comp_name_en
+			     , NVL(jp.comp_name,'') AS comp_name_jp
+			     , NVL(cn.comp_name,'') AS comp_name_cn
+			  FROM $DB_NEOS$t_co_comp_multi a
+			  LEFT JOIN $DB_NEOS$t_co_comp_multi en ON a.comp_seq = en.comp_seq 
+			                                       AND en.lang_code = 'en'
+			  LEFT JOIN $DB_NEOS$t_co_comp_multi jp ON a.comp_seq = jp.comp_seq
+			                                       AND jp.lang_code = 'jp'
+			  LEFT JOIN $DB_NEOS$t_co_comp_multi cn ON a.comp_seq = cn.comp_seq
+			                                       AND cn.lang_code = 'cn'
+			 WHERE a.lang_code = 'kr'
+			   AND a.comp_seq  = #compSeq#
+		</select>
+
+	    <update id="CompManage.updateComp" parameterClass="hashmap">
+	    	/* CompManage.updateComp - oracle */
+			UPDATE $DB_NEOS$t_co_comp 
+				SET
+				<isNotEmpty property="compRegistNum">
+				comp_regist_num = #compRegistNum# ,
+				</isNotEmpty>
+				<isNotEmpty property="compNum"> 
+				comp_num = #compNum# , 
+				</isNotEmpty>
+				<isNotEmpty property="standardCode">
+				standard_code = #standardCode# ,
+				</isNotEmpty>
+				<isNotEmpty property="telNum"> 
+				tel_num = #telNum# , 
+				</isNotEmpty>
+				<isNotEmpty property="faxNum">
+				fax_num = #faxNum# , 
+				</isNotEmpty>
+				<isNotEmpty property="homepgAddr">
+				homepg_addr = #homepgAddr# , 
+				</isNotEmpty>
+				<isNotEmpty property="emailAddr">
+				email_addr = #emailAddr# , 
+				</isNotEmpty>
+				<isNotEmpty property="emailDomain">
+				email_domain = #emailDomain# ,
+				</isNotEmpty>
+				<isNotEmpty property="zipCode"> 
+				zip_code = #zipCode# , 
+				</isNotEmpty>
+				<isNotEmpty property="smsId">
+				sms_id = #smsId# , 
+				</isNotEmpty>
+				<isNotEmpty property="smsPasswd">
+				sms_passwd = #smsPasswd# , 
+				</isNotEmpty>
+				<isNotEmpty property="useYn">
+				use_yn = #useYn# , 
+				</isNotEmpty>
+				<isNotEmpty property="orderNum">
+				order_num = #orderNum# , 
+				</isNotEmpty>
+				modify_seq = #modifySeq# , 
+				modify_date = SYSDATE
+				WHERE
+				comp_seq = #compSeq#
+	    </update>
+	    
+	     <update id="CompManage.updateCompMulti" parameterClass="hashmap">
+	     	/* CompManage.updateCompMulti - oracle */
+	     	UPDATE $DB_NEOS$t_co_comp_multi 
+			SET
+				<isNotEmpty property="compName">
+				comp_name = #compName# , 
+				</isNotEmpty>
+				<isNotEmpty property="compDisplayName">
+				comp_display_name = #compDisplayName# ,
+				</isNotEmpty>
+				<isNotEmpty property="ownerName"> 
+				owner_name = #ownerName# , 
+				</isNotEmpty>
+				<isNotEmpty property="senderName">
+				sender_name = #senderName# , 
+				</isNotEmpty>
+				<isNotEmpty property="bizCondition">
+				biz_condition = #bizCondition# ,
+				</isNotEmpty>
+				<isNotEmpty property="item"> 
+				item = #item# , 
+				</isNotEmpty>
+				<isNotEmpty property="addr">
+				addr = #addr# , 
+				</isNotEmpty>
+				<isNotEmpty property="detailAddr">
+				detail_addr = #detailAddr# , 
+				</isNotEmpty>
+				<isNotEmpty property="useYn">
+				use_yn = #useYn# , 
+				</isNotEmpty>
+				modify_seq = #modifySeq# , 
+				modify_date = SYSDATE
+			WHERE
+				comp_seq = #compSeq# AND lang_code = #langCode#
+	     </update>
+	     
+	     
+	     
+	    
+	     
+	     <update id="CompManage.insertCompLang" parameterClass="hashmap">
+	     	/* CompManage.insertCompLang - oracle */
+	     	MERGE INTO $DB_NEOS$t_co_comp_lang
+		    USING DUAL
+		       ON (lang_code = #langCode#
+		      AND  comp_seq  = #compSeq#)
+             WHEN MATCHED THEN
+                  UPDATE SET main_yn	 = #mainYn#
+				             <isNotEmpty property="subYn">
+				           , sub_yn 	 = #subYn#
+				             </isNotEmpty>
+				           , modify_seq  = #modifySeq# 
+				           , modify_date = SYSDATE
+             WHEN NOT MATCHED THEN
+                  INSERT (
+                          lang_code 			
+				        , comp_seq 				
+				        , main_yn				
+				          <isNotEmpty property="subYn">
+				        , sub_yn 				
+				          </isNotEmpty>
+				        , create_seq 			
+				        , create_date 			
+				        , modify_seq 			
+				        , modify_date			
+		    		     )
+		    		    
+		          VALUES (
+		                  #langCode#
+				        , #compSeq#
+				        , #mainYn#
+				          <isNotEmpty property="subYn">
+				        , #subYn#
+				          </isNotEmpty>
+				        , #createSeq#
+				        , SYSDATE 
+				        , #modifySeq#
+				        , SYSDATE
+		                 ) 
+		                
+	     </update>
+	     
+	     <insert id="CompManage.insertCompMulti" parameterClass="hashmap">
+	     	/* CompManage.insertCompMulti - oracle */
+	     	MERGE INTO $DB_NEOS$t_co_comp_multi
+		    USING DUAL
+		       ON (comp_seq   = #compSeq#
+		      AND  lang_code  = #langCode#)
+             WHEN MATCHED THEN
+                  UPDATE SET comp_name   = #compName#
+				           , modify_seq  = #modifySeq#
+				           , modify_date = SYSDATE
+             WHEN NOT MATCHED THEN
+                  INSERT (
+                          comp_seq 
+				        , lang_code
+				        , group_seq
+				        , comp_name
+				        , comp_display_name
+				        , owner_name 
+				        , sender_name
+				        , use_yn
+				        , comp_nickname
+				        , create_seq
+				        , create_date		
+		    		     )
+		    		    
+		          VALUES (
+		                  #compSeq#
+				        , #langCode#
+				        , #groupSeq#
+				        , #compName#
+				        , #compDisplayName#
+				        , #ownerName#
+				        , #senderName#
+				        , 'Y'
+				        , #compNickname#
+				        , #createSeq#
+				        , SYSDATE
+		                 ) 
+	     	
+	     </insert>
+	     
+	     <update id="CompManage.updateCompLang" parameterClass="hashmap">
+	     	/* CompManage.updateCompLang - oracle */
+	     	UPDATE $DB_NEOS$t_co_comp_lang
+	     	SET
+	     		main_yn					= 			#mainYn#,
+				sub_yn 					= 			#subYn#,
+				modify_seq 				= 			#modifySeq#, 
+				modify_date				= 			SYSDATE
+			WHERE
+				comp_seq = #compSeq#
+				<isNotEmpty property="langCode">
+				AND	lang_code = #langCode#
+				</isNotEmpty>
+	     </update>
+	     
+ 		<select id="CompManage.getGroupCompList_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+	    	SELECT 
+				COUNT(a.comp_seq) TOTAL_COUNT
+			FROM 
+				$DB_NEOS$t_co_comp a, 
+				$DB_NEOS$v_t_co_comp_multi b
+			WHERE a.group_seq = b.group_seq
+				AND a.comp_seq = b.comp_seq
+				AND a.group_seq = #groupSeq#
+				
+				<isNotEmpty property="searchType">
+					<isEqual property="searchType" compareValue="0">
+						AND $DB_NEOS$FN_GetMultiLang(#langCode#,b.comp_name_multi) like '%$searchKeyword$%'
+					</isEqual>
+					
+					<isEqual property="searchType" compareValue="1">
+						AND b.comp_seq like '%$searchKeyword$%'
+					</isEqual>
+				
+				</isNotEmpty>
+	    </select>
+		
+		<select id="CompManage.getGroupCompList" parameterClass="hashmap" resultClass="egovMap">
+		/* CompManage.getGroupCompList - oracle */
+        select
+        RESULT.comp_seq,
+        $DB_NEOS$FN_GetMultiLang('',RESULT.comp_name_multi) as comp_name,
+        RESULT.use_yn,
+        CASE WHEN (SELECT COUNT(*) FROM $DB_NEOS$t_co_erp_comp WHERE erp_comp_seq = RESULT.comp_seq) > 0 THEN 'Y' ELSE 'N' END AS erp_yn,
+        RESULT.sms_id,
+        RESULT.login_type,
+        RESULT.lang,
+        TO_CHAR(RESULT.create_date, 'YYYY-MM-DD') AS create_date
+        from
+        (
+        SELECT X.*
+          FROM (
+                SELECT A.*, ROWNUM AS RNUM
+                  FROM (
+                        SELECT 
+		                		a.comp_seq, 
+		                		b.comp_name_multi, 
+		                		a.use_yn, 
+		                		a.sms_id,
+		                		a.login_type,
+		                		c.lang,
+		                		a.create_date
+		                	FROM 
+		                		$DB_NEOS$t_co_comp a
+		                		LEFT OUTER JOIN
+		                		(
+		                			SELECT 
+		                				comp_seq, 
+		                				LISTAGG($DB_NEOS$get_code_detail_info('0','LNG000',lang_code,#langCode#) || '|' || NVL(main_yn,'N'), ',' ) WITHIN GROUP(ORDER BY lang_code) AS lang 
+		                			FROM 
+		                				$DB_NEOS$t_co_comp_lang 
+		                			GROUP BY 
+		                				comp_seq
+		                		) c ON a.comp_seq = c.comp_seq,
+		                		$DB_NEOS$v_t_co_comp_multi b 
+		                	WHERE a.group_seq = b.group_seq
+		                		AND a.comp_seq = b.comp_seq
+		                		AND a.group_seq = #groupSeq#
+		                		
+		                		<isNotEmpty property="searchType">
+		                			<isEqual property="searchType" compareValue="0">
+		                				AND b.comp_name_multi like '%' || #searchKeyword# || '%'
+		                			</isEqual>
+		                			
+		                			<isEqual property="searchType" compareValue="1">
+		                				AND b.comp_seq like '%' || #searchKeyword# || '%'
+		                			</isEqual>
+		                		
+		                		</isNotEmpty>
+		                		
+		                	ORDER BY a.create_date
+		                   ) A
+                     WHERE ROWNUM <![CDATA[ <= ]]> $endNum$
+                    ) X
+              WHERE X.RNUM <![CDATA[ >= ]]> $startNum$
+		      ) RESULT
+	    </select>
+	    
+	    <select id="CompManage.getCompDeptExist" parameterClass="hashmap" resultClass="Integer">
+	        /* CompManage.getCompDeptExist - oracle */
+            SELECT count(*) 
+            FROM ( SELECT A.* , '|' || a.path || '|' AS fPath 
+                   FROM $DB_NEOS$v_org_chart_admin A
+                 ) AA 
+            WHERE INSTR(fPath , '|' || #compSeq# || '|') > 0
+            AND   seq != #compSeq# 
+            <isNotEmpty property="chkType">
+              <isEqual property="chkType" compareValue="U"> 
+            AND   use_yn = 'Y'  <!-- 사용여부 -->
+              </isEqual>
+            </isNotEmpty>       
+        </select>
+        
+        <select id="CompManage.getErpConInfo_ac" parameterClass="hashmap" resultClass="hashmap">
+        	/* CompManage.getErpConInfo_ac - oracle */
+        	SELECT A.group_seq       AS "group_seq"
+        	     , A.comp_seq        AS "comp_seq"
+        	     , A.erp_seq         AS "erp_seq"
+        	     , A.achr_gbn        AS "achr_gbn"
+        	     , A.erp_type_code   AS "erp_type_code"
+        	     , A.erp_name        AS "erp_name"
+        	     , A.database_type   AS "database_type"
+        	     , A.driver          AS "driver"
+        	     , A.url             AS "url"
+        	     , A.userid          AS "userid"
+        	     , A.password        AS "password"
+        	     , A.create_seq      AS "create_seq"
+        	     , A.create_date     AS "create_date"
+        	     , A.modify_seq      AS "modify_seq"
+        	     , A.modify_date     AS "modify_date"
+        	     , A.erp_comp_seq    AS "erp_comp_seq"
+        	     , A.erp_comp_name   AS "erp_comp_name"
+        	     , A.use_yn          AS "use_yn"
+        	     , A.org_sync_status AS "org_sync_status"
+        	     , A.org_sync_date   AS "org_sync_date"
+        	     , A.g20_yn          AS "g20_yn"
+        	     , B.ext_code        AS "ext_code"
+        	FROM $DB_NEOS$t_co_erp A
+        	     LEFT OUTER JOIN $DB_NEOS$t_co_erp_comp B
+        	     ON A.comp_seq = B.comp_seq and A.group_seq = B.group_seq and A.erp_comp_seq = B.erp_comp_seq
+        	WHERE A.group_seq = #groupSeq#
+       		AND	  A.comp_seq = #compSeq#
+       		AND   A.achr_gbn = 'ac' 
+        </select>
+        
+        <select id="CompManage.getErpConInfo_hr" parameterClass="hashmap" resultClass="hashmap">
+        	/* CompManage.getErpConInfo_hr - oracle */
+        	SELECT group_seq       AS "group_seq"
+        	     , comp_seq        AS "comp_seq"
+        	     , erp_seq         AS "erp_seq"
+        	     , achr_gbn        AS "achr_gbn"
+        	     , erp_type_code   AS "erp_type_code"
+        	     , erp_name        AS "erp_name"
+        	     , database_type   AS "database_type"
+        	     , driver          AS "driver"
+        	     , url             AS "url"
+        	     , userid          AS "userid"
+        	     , password        AS "password"
+        	     , create_seq      AS "create_seq"
+        	     , create_date     AS "create_date"
+        	     , modify_seq      AS "modify_seq"
+        	     , modify_date     AS "modify_date"
+        	     , erp_comp_seq    AS "erp_comp_seq"
+        	     , erp_comp_name   AS "erp_comp_name"
+        	     , use_yn          AS "use_yn"
+        	     , org_sync_status AS "org_sync_status"
+        	     , org_sync_date   AS "org_sync_date"
+        	     , g20_yn          AS "g20_yn"
+        	FROM $DB_NEOS$t_co_erp
+        	WHERE group_seq = #groupSeq#
+       		AND	  comp_seq = #compSeq#
+       		AND   achr_gbn = 'hr'
+        </select>
+        
+        <select id="CompManage.getErpConInfo_etc" parameterClass="hashmap" resultClass="hashmap">
+        	/* CompManage.getErpConInfo_etc - oracle */
+        	SELECT group_seq       AS "group_seq"
+        	     , comp_seq        AS "comp_seq"
+        	     , erp_seq         AS "erp_seq"
+        	     , achr_gbn        AS "achr_gbn"
+        	     , erp_type_code   AS "erp_type_code"
+        	     , erp_name        AS "erp_name"
+        	     , database_type   AS "database_type"
+        	     , driver          AS "driver"
+        	     , url             AS "url"
+        	     , userid          AS "userid"
+        	     , password        AS "password"
+        	     , create_seq      AS "create_seq"
+        	     , create_date     AS "create_date"
+        	     , modify_seq      AS "modify_seq"
+        	     , modify_date     AS "modify_date"
+        	     , erp_comp_seq    AS "erp_comp_seq"
+        	     , erp_comp_name   AS "erp_comp_name"
+        	     , use_yn          AS "use_yn"
+        	     , org_sync_status AS "org_sync_status"
+        	     , org_sync_date   AS "org_sync_date"
+        	     , g20_yn          AS "g20_yn"
+        	FROM $DB_NEOS$t_co_erp
+        	WHERE group_seq = #groupSeq#
+       		AND	  comp_seq = #compSeq#
+       		AND   achr_gbn = 'etc'
+        </select>
+        
+        <insert id="CompManage.dbConnectInfoSave" parameterClass="hashmap">
+        	/* CompManage.dbConnectInfoSave - oracle */
+        	MERGE INTO $DB_NEOS$t_co_erp
+		    USING DUAL
+		       ON (erp_comp_seq = #erpCompSeq#
+		      AND  comp_seq     = #compSeq#
+		      AND  achr_gbn     = #achrGbn#)
+             WHEN MATCHED THEN
+                  UPDATE SET erp_seq	   = #erpCompSeq#
+				           , erp_type_code = #erpTypeCode# 
+				           , erp_name      = #erpCompName# 
+				           , erp_comp_name = #erpCompName#
+				           , database_type = #databaseType#
+				           , driver		   = #Driver#
+				           , url		   = #Url#
+				           , userid    	   = #UserID#
+				           , password	   = #PassWord#
+				           , modify_seq	   = #empSeq#
+				           , modify_date   = SYSDATE
+				           , g20_yn		   = #g20Yn#
+             WHEN NOT MATCHED THEN
+                  INSERT (
+                          group_seq 	
+				        , comp_seq 		
+				        , erp_seq		
+				        , erp_comp_seq	
+				        , achr_gbn 		
+				        , erp_type_code 
+				        , erp_comp_name	
+				        , erp_name		
+				        , database_type 
+				        , driver		
+				        , url			
+				        , userid    	
+				        , password	    
+				        , create_seq	
+				        , create_date	
+				        , g20_yn		
+		    		     )
+		    		    
+		          VALUES (
+		                  #groupSeq#
+				        , #compSeq#
+				        , #erpCompSeq#
+				        , #erpCompSeq#
+				        , #achrGbn#
+				        , #erpTypeCode# 
+				        , #erpCompName# 
+				        , #erpCompName#
+				        , #databaseType#
+				        , #Driver#
+				        , #Url#
+				        , #UserID#
+				        , #PassWord#
+				        , #empSeq#
+				        , SYSDATE
+				        , #g20Yn#
+		                 ) 
+        
+        </insert>
+        
+        
+        <delete id="CompManage.dbConnectInfoDelete" parameterClass="hashmap">
+        	/* CompManage.dbConnectInfoDelete - oracle */
+        	DELETE FROM
+        		$DB_NEOS$t_co_erp
+       		WHERE
+       			group_seq = #groupSeq#
+       			AND comp_seq = #compSeq#
+       			AND achr_gbn = #achrGbn#
+        </delete>
+        
+        <delete id="CompManage.deleteDbConnectInfo" parameterClass="hashmap">
+        	/* CompManage.deleteDbConnectInfo - oracle */
+	       	DELETE FROM $DB_NEOS$t_co_erp
+	       	WHERE group_seq = #groupSeq#
+	       	AND   comp_seq = #compSeq#
+	       	AND   achr_gbn = #achrGbn#
+        </delete>
+        
+        <update id="CompManage.updateCompInfo" parameterClass="hashmap">
+        	/* CompManage.updateCompInfo - oracle */
+        	UPDATE $DB_NEOS$t_co_comp
+        	SET
+        		erp_use = #erpUseYN#
+        		,sms_use = #smsUseYN#
+        		,login_type = #loginType#
+        	WHERE
+        		group_seq = #groupSeq#
+        		AND comp_seq = #compSeq#
+        </update>
+        
+        
+        <select id="CompManage.selectCompSmsOption" parameterClass="hashmap" resultClass="hashmap">
+        	/* CompManage.selectCompSmsOption - oracle */
+        	SELECT 
+        		sms_use as "smsUse"
+        		,sms_id as "smsId"
+        		,sms_passwd as "smsPasswd"
+       		FROM $DB_NEOS$t_co_comp
+       		WHERE
+       			comp_seq = #compSeq#
+        </select>
+        
+        <select id="CompManage.selectOrgImg" parameterClass="hashmap" resultClass="hashmap">
+        	/* CompManage.selectOrgImg - oracle */
+        	SELECT A.org_seq      AS "org_seq"
+        	     , A.img_type     AS "img_type"
+        	     , A.file_id      AS "file_id"
+        	     , A.ph_type      AS "ph_type"
+        	     , A.os_type      AS "os_type"
+        	     , A.app_type     AS "app_type"
+        	     , A.disp_mode    AS "disp_mode"
+        	     , A.disp_type    AS "disp_type"
+        	     , A.create_seq   AS "create_seq"
+        	     , A.create_date  AS "create_date"
+        	     , A.modify_seq   AS "modify_seq"
+        	     , A.modify_date  AS "modify_date"
+        	     , A.display_text AS "display_text"
+        	     , B.file_extsn   AS "file_extsn" 
+        		 , replace(replace(c.absol_path,'/home',''),'/NAS_File','') || B.file_stre_cours || '/' AS "orgPath"
+        	FROM $DB_NEOS$t_co_org_img A
+        	LEFT JOIN $DB_NEOS$t_co_atch_file_detail B on A.file_id = B.file_id
+        	LEFT JOIN $DB_NEOS$t_co_group_path c on c.path_seq = B.path_seq
+        	WHERE
+        		org_seq = #compSeq#
+        		and img_type = #imgType#    
+       		  AND ROWNUM = 1  
+        </select>
+        
+        <select id="CompManage.getTitle" parameterClass="hashmap" resultClass="egovMap">
+        	/* CompManage.getTitle - oracle */
+        	SELECT 
+        		A.comp_display_name,
+        		B.comp_domain
+        		
+       		FROM $DB_NEOS$v_t_co_comp_multi A
+       		INNER JOIN 
+       			$DB_NEOS$t_co_comp B ON A.comp_seq = B.comp_seq
+       		WHERE 
+       			A.comp_seq = #compSeq#
+       			<isNotEmpty property="langCode">
+       			AND A.lang_code = #langCode#
+       			</isNotEmpty>
+        </select>
+        
+        <select id="CompManage.getErpConList" parameterClass="hashmap" resultClass="egovMap">
+        	/* CompManage.getErpConList - oracle */
+        	SELECT 
+        		a.*,
+				CASE 
+				WHEN achr_gbn = 'ac' THEN '2' 
+				WHEN achr_gbn = 'hr' THEN '1' 
+				WHEN achr_gbn = 'etc' THEN '3' END  AS "orderNum"
+       		FROM $DB_NEOS$t_co_erp a
+       		inner join $DB_NEOS$t_co_comp b on a.comp_seq = b.comp_seq
+       		WHERE 
+       			a.group_seq = #groupSeq#
+       			AND a.comp_seq = #compSeq#
+       			AND b.erp_use = 'Y'
+     		ORDER BY "orderNum"
+        </select>
+        
+        <select id="CompManage.getErpEmpInfo" parameterClass="hashmap" resultClass="egovMap">
+        	/* CompManage.getErpEmpInfo - oracle */
+        	SELECT 
+        		emp_seq
+        		,group_seq
+        		,comp_seq
+        		,biz_seq
+        		,dept_seq
+        		,erp_emp_seq
+        		,erp_comp_seq
+        		,erp_biz_seq
+        		,erp_dept_seq
+        		,check_work_yn
+        		,shift
+        		,job_code
+        		,status_code
+        		,work_status
+        		,use_yn        		
+       		FROM $DB_NEOS$t_co_emp_comp
+       		WHERE 
+       			comp_seq = #compSeqOld#
+       			AND emp_seq = #empSeq#
+        </select>
+        
+        
+        <update id="CompManage.updateErpEmpInfo" parameterClass="hashmap">
+        	/* CompManage.updateErpEmpInfo - oracle */
+        	UPDATE
+        		$DB_NEOS$t_co_emp_comp
+       		SET
+       			group_seq = #groupSeq#
+       			<isNotNull property="erpEmpNum">
+       			,erp_emp_seq = #erpEmpNum#
+       			</isNotNull>
+       			,comp_seq = #compSeq#
+       			,biz_seq = #bizSeq#
+       			,dept_seq = #deptSeq#
+       			,emp_seq = #empSeq#
+				<isNotEmpty property="checkWork">
+       				,check_work_yn = #checkWork#
+       			</isNotEmpty>
+				<isNotEmpty property="shift">
+       				,shift = #shift#
+       			</isNotEmpty>
+				<isNotEmpty property="jobCode">
+       				,job_code = #jobCode#
+       			</isNotEmpty>
+				<isNotEmpty property="statusCode">
+       				,status_code = #statusCode#
+       			</isNotEmpty>
+       			<isNotEmpty property="resign_day">
+       				,resign_day = #resign_day#
+       			</isNotEmpty>
+       			<isNotEmpty property="workStatus">
+       				,work_status = #workStatus#
+       			</isNotEmpty>
+       			<isNotEmpty property="use_yn">
+       				,use_yn = #use_yn#
+       			</isNotEmpty>
+       			<isNotEmpty property="useYn">
+       				,use_yn = #useYn#
+       			</isNotEmpty>
+       			
+     		WHERE
+     			comp_seq = #compSeqOld#
+     			AND emp_seq = #empSeq#
+       			
+        </update>
+        
+        
+        <insert id="CompManage.insertErpEmpInfo" parameterClass="hashmap">
+        	/* CompManage.insertErpEmpInfo - oracle */
+        	INSERT INTO $DB_NEOS$t_co_emp_comp
+        	(erp_emp_seq, group_seq, comp_seq, biz_seq, dept_seq, emp_seq, check_work_yn, shift, job_code, status_code, resign_day, work_status, use_yn)
+        	VALUES
+        	(#erpEmpNum#, #groupSeq#, #compSeq#, #bizSeq#, #deptSeq#, #empSeq#, 
+        	#checkWork#, #shift#, #jobCode#, #statusCode#, #resign_day#, #workStatus#, #useYn#)
+        </insert>
+        
+        <update id="CompManage.updateOtherStatus" parameterClass="hashmap">
+        	/* CompManage.updateOtherStatus - oracle */
+            UPDATE
+                $DB_NEOS$t_co_emp_comp
+            SET                
+                check_work_yn = (CASE WHEN comp_seq = #compSeq# THEN 'Y'
+                                    ELSE 'N' END)
+            WHERE
+                emp_seq = #empSeq#
+                
+        </update>
+        
+        <select id="CompMange.checkMessengerUseYn" parameterClass="hashmap" resultClass="egovMap">
+        	/* CompMange.checkMessengerUseYn - oracle */
+        	SELECT
+        		*
+       		FROM
+       			$DB_NEOS$t_co_emp_dept
+       		WHERE
+       			emp_seq = #empSeq#        	
+        </select>
+        
+        
+        
+        <delete id="CompManage.deleteErpEmpInfo" parameterClass="hashmap">
+        	/* CompManage.deleteErpEmpInfo - oracle */
+        	DELETE FROM $DB_NEOS$t_co_emp_comp
+        	WHERE 
+       			comp_seq = #compSeqOld#
+       			AND emp_seq = #empSeq#
+        </delete>
+        
+        
+        <select id="CompManage.getMyCompList" parameterClass="hashmap" resultClass="egovMap">
+        	/* CompManage.getMyCompList - oracle */
+        	SELECT DISTINCT
+        		B.comp_seq, $DB_NEOS$FN_GetMultiLang(#langCode#,B.comp_name_multi) as comp_name
+       		FROM
+       			$DB_NEOS$t_co_emp_dept A
+    		INNER JOIN
+    			$DB_NEOS$v_t_co_comp_multi B on A.comp_seq = B.comp_seq
+   			INNER JOIN
+   				$DB_NEOS$t_co_comp C on A.comp_seq = C.comp_seq
+   			WHERE
+   				A.emp_seq = #empSeq#
+   				AND A.use_yn = 'Y'
+   				AND A.main_dept_yn = 'Y'
+   				AND c.use_yn = 'Y'
+        </select>  
+        
+        <update id="CompManage.setCompDomain" parameterClass="hashmap">
+        	/* CompManage.setCompDomain - oracle */
+        	UPDATE 
+        		$DB_NEOS$t_co_comp
+       		SET
+       			comp_domain = #compDomain#
+      		WHERE
+      			comp_seq = #compSeq# AND group_seq = #groupSeq#
+        </update>
+        
+        <select id="CompManage.getBizSeq" parameterClass="hashmap" resultClass="String">
+        	/* CompManage.getBizSeq - oracle */
+            SELECT biz_seq AS "biz_seq" FROM $DB_NEOS$t_co_dept where dept_seq = #deptSeq#
+        </select>
+        
+        <select id="CompManage.getTeamWorkInfo" parameterClass="hashmap" resultClass="egovMap">
+        	/* CompManage.getTeamWorkInfo - oracle */
+            SELECT *
+              FROM (
+                    SELECT * FROM $DB_NEOS$t_at_work_team_member
+			        	WHERE comp_seq = #compSeq#
+			        	AND emp_seq = #empSeq#
+			        	AND dept_seq = #deptSeq#
+			        	ORDER BY create_dt
+				   )
+			 WHERE ROWNUM = 1
+        </select>
+        
+        <update id="CompManage.setBaseAlarm" parameterClass="hashmap">
+        	/* CompManage.setBaseAlarm - oracle */
+	     	MERGE INTO $DB_NEOS$t_alert_master
+		    USING DUAL
+		       ON (comp_seq  = #compSeq#
+		      AND  group_seq = #groupSeq#)
+             WHEN MATCHED THEN
+                  UPDATE SET alert_yn    = 'B'				
+				           , push_yn     = 'B'
+				           , talk_yn     = 'B' 
+				           , mail_yn     = 'B' 
+				           , sms_yn	     = 'N'
+				           , portal_yn   = 'B'
+				           , timeline_yn = 'B'
+				           , use_yn	     = 'Y'
+				           , modify_seq  = #empSeq#
+				           , modify_date = SYSDATE
+             WHEN NOT MATCHED THEN
+                  INSERT (
+                          comp_seq 		
+				        , group_seq 	
+				        , alert_yn		
+				        , push_yn 		
+				        , talk_yn 		
+				        , mail_yn 		
+				        , sms_yn		
+				        , portal_yn		
+				        , timeline_yn	
+				        , use_yn		
+				        , create_seq	
+				        , create_date	
+		    		     )
+		    		    
+		          VALUES (
+		                  #compSeq#
+				        , #groupSeq#
+				        , 'B'				
+				        , 'B'
+				        , 'B'
+				        , 'B' 
+				        , 'N'
+				        , 'B'
+				        , 'B'
+				        , 'Y'
+				        , #empSeq#
+				        , SYSDATE
+		                 ) 
+	     	
+	     </update>
+	     
+         <insert id="CompManage.setBaseAlarmAdmin" parameterClass="hashmap">
+         	/* CompManage.setBaseAlarmAdmin - oracle */
+	     	INSERT INTO $DB_NEOS$t_alert_admin
+	     	(comp_seq, group_seq, alert_type, alert_yn, push_yn, talk_yn, mail_yn, sms_yn, portal_yn, timeline_yn, use_yn, create_seq, create_date, modify_seq, modify_date, divide_type)
+			SELECT #compSeq#, #groupSeq#, alert_type, alert_yn, push_yn, talk_yn, mail_yn, sms_yn, portal_yn, timeline_yn, use_yn, create_seq, create_date, modify_seq, modify_date, divide_type 
+			FROM $DB_NEOS$t_alert_setting
+	     </insert>
+	     
+	     <insert id="CompManage.insertGrouppingComp" parameterClass="hashmap">
+	     	/* CompManage.insertGrouppingComp - oracle */
+	     	INSERT INTO $DB_NEOS$t_co_groupping_comp
+	     	(groupping_seq, comp_seq, use_yn, create_seq, create_date)
+	     	VALUES
+	     	('1', #compSeq#, 'Y', #empSeq#, SYSDATE)	     	
+	     </insert>
+	     
+	     <delete id="CompManage.deleteGrouppingComp" parameterClass="hashmap">
+	     	/* CompManage.deleteGrouppingComp - oracle */
+	     	DELETE FROM $DB_NEOS$t_co_groupping_comp
+	     	WHERE groupping_seq = 1 AND comp_seq = #compSeq#
+	     </delete>
+	     
+	     
+	     
+	     <insert id="CompManage.insertBizInfo" parameterClass="hashmap">
+	     	/* CompManage.insertBizInfo - oracle */
+	     	INSERT INTO $DB_NEOS$t_co_biz
+	     	(biz_seq, group_seq, comp_seq, display_yn, native_lang_code, order_num, use_yn, create_seq, create_date)
+	     	VALUES
+	     	(#compSeq#, #groupSeq#, #compSeq#, 'N', #nativeLangCode#, '0', 'Y', #empSeq#, SYSDATE)
+	     </insert>
+	     
+	      <insert id="CompManage.insertBizMultiInfo" parameterClass="hashmap">
+	      	/* CompManage.insertBizMultiInfo - oracle */
+	     	INSERT INTO $DB_NEOS$t_co_biz_multi
+	     	(biz_seq, lang_code, group_seq, comp_seq, biz_name, use_yn, create_seq, create_date)
+	     	VALUES
+	     	(#compSeq#, #nativeLangCode#, #groupSeq#, #compSeq#, get_code_detail_info('0', 'TX000010069', '1', #nativeLangCode#), 'Y', #empSeq#, SYSDATE)
+	     </insert>
+	     
+	     
+	     <delete id="CompManage.deleteBizInfo" parameterClass="hashmap">
+	     	/* CompManage.deleteBizInfo - oracle */
+	     	DELETE FROM $DB_NEOS$t_co_biz
+	     	WHERE
+	     		group_seq = #groupSeq#
+	     		AND comp_seq = #compSeq#
+	     </delete>
+	     
+	     <delete id="CompManage.deleteBizMultiInfo" parameterClass="hashmap">
+	     	/* CompManage.deleteBizMultiInfo - oracle */
+	     	DELETE FROM $DB_NEOS$t_co_biz_multi
+	     	WHERE
+	     		group_seq = #groupSeq#
+	     		AND comp_seq = #compSeq#
+	     </delete>
+	     
+	     
+	     <delete id="CompManage.deleteErpCompInfo" parameterClass="hashmap">
+	     	/* CompManage.deleteErpCompInfo - oracle */
+	     	DELETE FROM $DB_NEOS$t_co_erp_comp
+	     	WHERE comp_seq = #compSeq#	     
+	     </delete>
+	     
+	     
+	     
+	     
+	     <insert id="CompManage.insertErpCompInfo" parameterClass="hashmap">
+	     	/* CompManage.insertErpCompInfo - oracle */
+	     	INSERT INTO $DB_NEOS$t_co_erp_comp
+	     	(erp_comp_seq, group_seq, comp_seq, erp_seq, ext_code)
+	     	VALUES   
+	     	<isEmpty property="accountExtCode">
+	     	(#erpCompSeq#, #groupSeq#, #compSeq#, #erpCompSeq#, #erpCompSeq#)
+	     	</isEmpty>
+	     	<isNotEmpty property="accountExtCode">
+	     	(#erpCompSeq#, #groupSeq#, #compSeq#, #erpCompSeq#, #accountExtCode#)
+	     	</isNotEmpty>
+	     	
+	     </insert>  
+	     
+	     <update id="CompManage.updateErpEmpCheckWorkInfo" parameterClass="hashmap">
+	     	/* CompManage.updateErpEmpCheckWorkInfo - oracle */
+	     	UPDATE
+	     		$DB_NEOS$t_co_emp_comp
+	     	SET
+	     		check_work_yn = 'N'
+	     	WHERE
+	     		emp_seq = #empSeq# AND comp_seq != #compSeq#  
+	     		
+	     </update>
+	     
+	     <update id="CompManage.updateEmailDomail" parameterClass="hashmap">
+	     	/* CompManage.updateEmailDomail - oracle */
+	     	UPDATE
+	     		$DB_NEOS$t_co_comp
+     		SET
+     			email_domain = #emailDomain#
+     			,comp_email_yn = #compEmailYn#
+   			WHERE
+	     		comp_seq in($compSeq$)
+	     </update>
+	     
+	     <delete id="CompManage.deleteMsgLinkInfo" parameterClass="hashmap">
+	     	/* CompManage.deleteMsgLinkInfo - oracle */
+	     	DELETE FROM
+	     		$DB_NEOS$t_msg_tcmg_link
+	     	WHERE
+	     		comp_seq = #compSeq#	     	
+	     </delete>
+	     
+	     
+	     
+	     <procedure id="CompManage.setBaseDateInfo" parameterClass="java.util.HashMap">
+	     	/* CompManage.setBaseDateInfo - oracle */
+			<![CDATA[
+				{CALL $DB_NEOS$p_baseDateSet(#compSeq#,#groupSeq#,#empSeq#)}
+			]]>
+		 </procedure>
+		 
+		 <procedure id="CompManage.deleteBaseAuthInfo" parameterClass="hashmap">
+		 	/* CompManage.deleteBaseAuthInfo - oracle */
+		 	<![CDATA[
+				CALL $DB_NEOS$p_baseDateDelete(#compSeq#)
+			]]>
+		 
+		 </procedure>
+		 
+		 
+		 <select id="CompManage.getEmpDeptCnt" parameterClass="hashmap" resultClass="string">
+		 	select
+		 		count(emp_seq)
+	 		from
+	 			$DB_NEOS$v_user_info
+ 			where
+ 				emp_seq = #empSeq#
+		 
+		 </select>
+		 
+		 <select id="CompManage.getEmpInfoList" parameterClass="hashmap" resultClass="String">
+		 /* CompManage.getEmpInfoList - oracle */
+		 	select 
+		 		count(comp_seq) 
+	 		from 
+	 			$DB_NEOS$v_user_info 
+ 			where 
+ 				emp_seq = #empSeq#
+ 				and comp_seq = #compSeq#
+		 </select>
+		 
+		 
+		 <update id="CompManage.updateEmpMainCompSeq" parameterClass="hashmap">
+		 	update 
+		 		$DB_NEOS$t_co_emp
+		 	set
+		 		main_comp_seq = (select comp_seq from $DB_NEOS$t_co_emp_dept where emp_seq = #empSeq# AND comp_seq != #compSeq# limit 1)
+		 	where
+		 		emp_seq = #empSeq#		 
+		 </update>
+		 
+		 <update id="CompManage.updateCompEaType" parameterClass="hashmap">
+		 	/* CompManage.updateCompEaType - oracle */
+		 	update
+		 		$DB_NEOS$t_co_comp
+	 		set
+	 			ea_type = #eaType#
+	 		where
+	 			comp_seq = #compSeq#
+		 </update>
+		 
+		 <select id="CompManage.getPortalId" parameterClass="hashMap" resultClass="egovMap">
+		 	/* CompManage.getPortalId - oracle */
+			SELECT * FROM(
+				SELECT
+					ROWNUM AS rnum
+					, T1.*
+				FROM (
+					 	select 
+							NVL(portal_div,' ') as portal_div,
+							NVL(portal_id,'-1') as portal_id
+						from $DB_NEOS$t_co_portal 
+						where use_yn='Y' 
+						and comp_seq=#compSeq# or comp_seq = '0'
+						order by decode(comp_seq,#compSeq#,1,0) desc
+				)T1
+			)T2 where rnum = 1			 	
+		 </select>
+		 
+		 <select id="CompManage.selectCompAuthList" parameterClass="hashmap" resultClass="egovMap">
+		 	select author_code
+		 	from $DB_NEOS$t_co_authcode
+		 	where comp_seq = #compSeq#
+		 </select>
+		 
+		 
+		 <delete id="CompManage.deleteAuthCode" parameterClass="hashmap">
+		 	/* CompManage.deleteAuthCode - oracle */
+		 	DELETE FROM
+		 		$DB_NEOS$t_co_authcode
+		 	WHERE
+		 		comp_seq = #compSeq#
+		 </delete>
+		 
+		 <delete id="CompManage.deleteAuthCodeMulti" parameterClass="hashmap">
+		 	/* CompManage.deleteAuthCodeMulti - oracle */
+		 	DELETE FROM
+		 		$DB_NEOS$t_co_authcode_multi
+		 	WHERE
+		 		author_code in($authorCodeList$)
+		 </delete>
+		 
+		 <update id="CompManage.updateCompEmailYn" parameterClass="hashmap">
+		 update $DB_NEOS$t_co_comp
+		 set comp_email_yn = 'N'
+		 where comp_seq = #compSeq#
+		 </update>
+		 
+		 
+		 <select id="CompManage.getEmpErpCompList" parameterClass="hashmap" resultClass="egovMap">
+		 	/* CompManage.getEmpErpCompList - oracle */
+			select a.comp_seq, b.erp_comp_seq, b.achr_gbn from $DB_NEOS$t_co_comp a
+			left join $DB_NEOS$t_co_erp b on a.comp_seq = b.comp_seq
+			where a.comp_seq = #compSeq#
+		 </select>
+		 
+		 
+		 <update id="CompManage.updateCompCdInfo" parameterClass="hashmap">
+		 	update
+		 		$DB_NEOS$t_co_comp
+		 	set
+		 		comp_cd = #compCd#
+		 	where
+		 		comp_seq = #compSeq#
+		 </update>
+		 
+		 <select id="CompManage.getCompCdInfo" parameterClass="hashmap" resultClass="egovMap">
+		 	/* CompManage.getCompCdInfo - oracle */
+		 	select
+		 		comp_cd
+		 	from
+		 		$DB_NEOS$t_co_comp
+		 	where
+		 		comp_cd = #compCd# 
+		 		<isNotEmpty property="compSeq">
+		 			AND comp_seq != #compSeq# 
+		 		</isNotEmpty>
+		 		<isNotEmpty property="groupSeq">
+		 			AND group_seq = #groupSeq# 
+		 		</isNotEmpty>
+		 	 AND ROWNUM = 1
+		 </select>
+		 
+		 <select id="CompManage.getCompMailUrl" parameterClass="hashmap" resultClass="egovMap">
+		 	/* CompManage.getCompMailUrl - oracle */
+			<isNotEmpty property="compAccessDomain">
+				SELECT *
+  				  FROM (
+				        select
+				        NVL(c.comp_seq, NVL(cd.comp_seq, '0')) as comp_seq,
+				        NVL(c.comp_mail_url, NVL(cd.comp_mail_url, g.mail_url)) as comp_mail_url
+				        from $DB_NEOS$t_co_group g
+				        left join $DB_NEOS$t_co_comp c on c.use_yn = 'Y' and g.group_seq = c.group_seq and replace(replace(NVL(c.comp_domain,'') || '**',':80**',''),'**','') = replace(replace(NVL(#compAccessDomain#,'') || '**',':443**',''),'**','')
+				        left join $DB_NEOS$t_co_comp cd on cd.use_yn = 'Y' and g.group_seq = cd.group_seq and cd.comp_seq = #compSeq#
+				        order by c.comp_seq desc, cd.comp_seq desc
+				       )
+				 WHERE ROWNUM = 1
+			</isNotEmpty>
+			<isEmpty property="compAccessDomain">
+				SELECT *
+  				  FROM (
+				        select
+				        c.comp_seq,
+				        NVL(c.comp_mail_url, g.mail_url) as comp_mail_url
+				        from $DB_NEOS$t_co_group g
+				        left join $DB_NEOS$t_co_comp c on g.group_seq = c.group_seq and c.group_seq = #groupSeq# and c.use_yn = 'Y'
+				        and c.comp_seq = #compSeq#
+				       )
+				 WHERE ROWNUM = 1
+			</isEmpty>		 
+		 </select>
+		 
+ 		<select id="CompManage.getFooterText" parameterClass="hashmap" resultClass="string">
+ 			/* CompManage.getFooterText - oracle */
+			select display_text from $DB_NEOS$t_co_org_img where org_seq=#compSeq# and img_type='TEXT_COMP_FOOTER' AND ROWNUM = 1
+	    </select>
+	    
+	    
+	    <select id="CompManage.getMailDomain" parameterClass="hashmap" resultClass="string">
+	    	/* CompManage.getMailDomain - oracledb */
+	    	SELECT
+				NVL(DECODE(comp_mail_url, '', null, comp_mail_url), a.mail_url) AS "mailUrl"
+			FROM 
+				$DB_NEOS$t_co_group a
+			INNER JOIN 
+				$DB_NEOS$t_co_comp b 
+			ON 
+				a.group_seq = b.group_seq
+			WHERE 
+				b.comp_seq = #compSeq#	    
+	    </select>
+	    
+	    
+		<delete id="CompManage.deleteEdmsDocList" parameterClass="hashmap">
+			/* CompManage.deleteEdmsDocList - oracle */
+			delete from np_doclist
+		</delete>
+	    
+        <insert id="CompManage.insertEdmsDocList" parameterClass="hashmap">
+        	/* CompManage.insertEdmsDocList - oracle */
+			INSERT INTO np_doclist(
+			   NTT_ID
+			  ,BBS_ID
+			  ,NTT_NO
+			  ,NTT_SJ
+			  ,NTT_CN
+			  ,ANSWER_AT
+			  ,PARNTSCTT_NO
+			  ,ANSWER_LC
+			  ,SORT_ORDR
+			  ,USE_AT
+			  ,RDCNT
+			  ,NTCE_BGNDE
+			  ,NTCE_ENDDE
+			  ,NTCR_ID
+			  ,NTCR_NM
+			  ,PASSWORD
+			  ,ATCH_FILE_ID
+			  ,FRST_REGIST_PNTTM
+			  ,FRST_REGISTER_ID
+			  ,LAST_UPDT_PNTTM
+			  ,LAST_UPDUSR_ID
+			  ,BBS_NOTICE
+			  ,BBS_ANONYM
+			  ,BBS_IMAGE
+			  ,BBS_GROUP
+			  ,BBS_POS
+			  ,BBS_SEQ
+			  ,BBS_REF
+			  ,BBS_EXTOPEN
+			) VALUES (
+			   #nttId#   -- NTT_ID - IN int(20)
+			  ,#bbsId#  -- BBS_ID - IN char(20)
+			  ,#nttNo#   -- NTT_NO - IN int(20)
+			  ,#nttSj#  -- NTT_SJ - IN varchar(2000)
+			  ,#nttCn#   -- NTT_CN - IN mediumtext
+			  ,#answerAt#  -- ANSWER_AT - IN char(1)
+			  ,#parntscttNo#   -- PARNTSCTT_NO - IN int(10)
+			  ,#answerLc#   -- ANSWER_LC - IN int(8)
+			  ,#sortOrdr#   -- SORT_ORDR - IN int(8)
+			  ,#useAt#  -- USE_AT - IN char(1)
+			  ,#rdcnt#   -- RDCNT - IN int(10)
+			  ,#ntceBgde#  -- NTCE_BGNDE - IN char(20)
+			  ,#ntceEndde#  -- NTCE_ENDDE - IN char(20)
+			  ,#ntcrId#  -- NTCR_ID - IN varchar(20)
+			  ,#ntcrNm#  -- NTCR_NM - IN varchar(20)
+			  ,#password#  -- PASSWORD - IN varchar(200)
+			  ,#atchFileId#  -- ATCH_FILE_ID - IN char(20)
+			  ,#frstregistPnttm#  -- FRST_REGIST_PNTTM - IN date
+			  ,#frstRegisterId#  -- FRST_REGISTER_ID - IN varchar(20)
+			  ,#lastUpdtPnttm#  -- LAST_UPDT_PNTTM - IN date
+			  ,#lastUpdusrId#  -- LAST_UPDUSR_ID - IN varchar(20)
+			  ,#bbsNotice#  -- BBS_NOTICE - IN char(1)
+			  ,#bbsAnonym#  -- BBS_ANONYM - IN char(1)
+			  ,#bbsImage#  -- BBS_IMAGE - IN varchar(100)
+			  ,#bbsGroup#   -- BBS_GROUP - IN int(10)
+			  ,#bbsPos#   -- BBS_POS - IN int(10)
+			  ,#bbsSeq#   -- BBS_SEQ - IN int(10)
+			  ,#bbsRef#   -- BBS_REF - IN int(10)
+			  ,#bbsExtopen#  -- BBS_EXTOPEN - IN char(1)
+			)
+        </insert>
+        
+		<delete id="CompManage.deleteEdmsBoxList" parameterClass="hashmap">
+			/* CompManage.deleteEdmsBoxList - oracle */
+			delete from NP_BoxList
+		</delete>        
+        
+        <insert id="CompManage.insertEdmsBoxList" parameterClass="hashmap">
+        	/* CompManage.insertEdmsBoxList - oracle */
+			INSERT INTO NP_BoxList(
+				MENU_NO
+				,UPPER_MENU_NO
+				,MENU_ORDR
+				,BBS_NM
+				,BBS_TY_CODE
+				,BBS_ATTRB_CODE
+				,REPLY_POSBL_AT
+				,FILE_ATCH_POSBL_AT
+				,USE_AT
+				,FRST_REGISTER_ID
+				,FRST_REGIST_PNTTM
+				,LAST_UPDUSR_ID
+				,LAST_UPDT_PNTTM
+				,ANSWER_AT
+				,STSFDG_AT
+				,ANONYM_AT
+				,EXTOPEN_AT
+				,MAINOPEN_AT
+				,LASTOPEN_AT			
+			) VALUES
+		   <dynamic>
+		   <iterate conjunction="," property="resultList">
+			 (
+			   #resultList[].menuNo#
+			   ,#resultList[].upperMenuNo#
+			   ,#resultList[].menuOrdr#
+			   ,#resultList[].bbsNm#
+			   ,#resultList[].bbsTyCode#
+			   ,#resultList[].bbsAttrbCode#
+			   ,#resultList[].replyPosblAt#
+			   ,#resultList[].fileAtchPosblAt#
+			   ,#resultList[].useAt#
+			   ,#resultList[].frstRegistId#
+			   ,#resultList[].frstRegistPnttm#
+			   ,#resultList[].lastUpdusrId#
+			   ,#resultList[].lastUpdtPnttm#
+			   ,#resultList[].answerAt#
+			   ,#resultList[].stsfdgAt#
+			   ,#resultList[].anonymAt#
+			   ,#resultList[].extopenAt#
+			   ,#resultList[].mainopenAt#
+			   ,#resultList[].lastopenAt#
+			)		       
+		   </iterate>
+		   </dynamic>
+        </insert>
+        
+		<delete id="CompManage.deleteEdmsBoxPermList" parameterClass="hashmap">
+			/* CompManage.deleteEdmsBoxPermList - oracle */
+			delete from NP_BoxPermList
+		</delete>          
+        
+        <insert id="CompManage.insertEdmsBoxPermList" parameterClass="hashmap">
+        	/* CompManage.insertEdmsBoxPermList - oracle */
+			INSERT INTO NP_BoxPermList(
+				 MENU_NO
+				,PERM_TYPE
+				,PERM_ID
+			) VALUES
+		   <dynamic>
+		   <iterate conjunction="," property="resultList">
+			 (
+			   #resultList[].menuNo#
+			   ,#resultList[].permType#
+			   ,#resultList[].permId#
+			)		       
+		   </iterate>
+		   </dynamic>
+        </insert>
+        
+		<delete id="CompManage.deleteEdmsReadList" parameterClass="hashmap">
+			/* CompManage.deleteEdmsReadList - oracle */
+			delete from NP_ReadList;
+		</delete>          
+        
+        <insert id="CompManage.insertEdmsReadList" parameterClass="hashmap">
+        	/* CompManage.insertEdmsReadList - oracle */
+			INSERT INTO NP_ReadList(
+				U_ESNTL_ID
+				,U_BBS_ID
+				,U_NTT_ID
+				,U_READ_DATE
+			) VALUES
+		   <dynamic>
+		   <iterate conjunction="," property="resultList">
+			 (
+			   #resultList[].uEsntlId#
+			   ,#resultList[].uBbsId#
+			   ,#resultList[].uNttId#
+			   ,#resultList[].ureadDate#
+			)		       
+		   </iterate>
+		   </dynamic>			
+        </insert>
+        
+		<delete id="CompManage.deleteEdmsPublicList" parameterClass="hashmap">
+			/* CompManage.insertEdmsPublicList - oracle */
+			delete from NP_PublicList;
+		</delete>         
+        
+        <insert id="CompManage.insertEdmsPublicList" parameterClass="hashmap">
+			INSERT INTO NP_PublicList(
+				NTT_ID
+				,BBS_ID 
+				,PUBLIC_ID 
+				,PUBLIC_NM 
+				,ID_ORDER		
+			) VALUES
+		   <dynamic>
+		   <iterate conjunction="," property="resultList">
+			 (
+			   #resultList[].nttId#
+			   ,#resultList[].bbsId#
+			   ,#resultList[].publicId#
+			   ,#resultList[].publicNm#
+			   ,#resultList[].idOrder#
+			)	       
+		   </iterate>
+		   </dynamic>			
+        </insert>
+        
+		<delete id="CompManage.deleteEdmsCommentList" parameterClass="hashmap">
+			/* CompManage.deleteEdmsCommentList - oracle */
+			delete from NP_CommentList;
+		</delete>           
+        
+        <insert id="CompManage.insertEdmsCommentList" parameterClass="hashmap">
+        	/* CompManage.insertEdmsCommentList - oracle */
+			INSERT INTO NP_CommentList(
+			  	NTT_ID 
+				,BBS_ID 
+				,ANSWER_NO 
+				,WRTER_ID 
+				,WRTER_NM 
+				,ANSWER 
+				,USE_AT 
+				,FRST_REGIST_PNTTM 
+				,FRST_REGISTER_ID 
+				,LAST_UPDT_PNTTM 
+				,LAST_UPDUSR_ID 
+				,PASSWORD
+			) VALUES
+		   <dynamic>
+		   <iterate conjunction="," property="resultList">
+			 (
+			   #resultList[].nttId#
+			   ,#resultList[].bbsId#
+			   ,#resultList[].answerNo#
+			   ,#resultList[].writerId#
+			   ,#resultList[].writerNm#
+			   ,#resultList[].answer#
+			   ,#resultList[].useAt#
+			   ,#resultList[].frstRegistPnttm#
+			   ,#resultList[].frstRegisterId#
+			   ,#resultList[].lastUpdtPnttm#
+			   ,#resultList[].lastUpdusrId#
+			   ,#resultList[].password#
+			)      
+		   </iterate>
+		   </dynamic>			
+        </insert>    
+        
+		<delete id="CompManage.deleteEdmsFileList" parameterClass="hashmap">
+			/* CompManage.deleteEdmsFileList - oracle */
+			delete from NP_FileList;
+		</delete>                                  
+        
+        <insert id="CompManage.insertEdmsFileList" parameterClass="hashmap">
+        	/* CompManage.insertEdmsFileList - oracle */
+			INSERT INTO NP_FileList(
+			  	ATCH_FILE_ID 
+				,CREAT_DT 
+				,USE_AT			
+			) VALUES
+		   <dynamic>
+		   <iterate conjunction="," property="resultList">
+			 (
+			   #resultList[].atchFileId#
+			   ,#resultList[].creatDt#
+			   ,#resultList[].useAt#
+			)   
+		   </iterate>
+		   </dynamic>				
+        </insert> 
+        
+		<delete id="CompManage.deleteEdmsFileDetailList" parameterClass="hashmap">
+			/* CompManage.deleteEdmsFileDetailList - oracle */
+			delete from NP_FileDetailList;
+		</delete>                  
+
+        <insert id="CompManage.insertEdmsFileDetailList" parameterClass="hashmap">
+        	/* CompManage.insertEdmsFileDetailList - oracle */
+			INSERT INTO NP_FileDetailList(
+				ATCH_FILE_ID 
+				,FILE_SN 
+				,STRE_FILE_NM 
+				,ORIGNL_FILE_NM 
+				,FILE_EXTSN 
+				,FILE_CN 
+				,FILE_SIZE	
+			) VALUES
+		   <dynamic>
+		   <iterate conjunction="," property="resultList">
+			 (
+			   #resultList[].atchFileId#
+			   ,#resultList[].fileSn#
+			   ,#resultList[].streFileNm#
+			   ,#resultList[].orignlFileNm#
+			   ,#resultList[].fileExtsn#
+			   ,#resultList[].fileCn#
+			   ,#resultList[].fileSize#
+			)
+		   </iterate>
+		   </dynamic>			
+        </insert> 
+	    
+	    
+	    
+	    <select id="CompManage.getErpConectInfo" parameterClass="hashmap" resultClass="egovMap">
+	    	/* CompManage.getErpConectInfo - oracle */
+	    	
+	    	select *From $DB_NEOS$t_co_erp where comp_seq = (select comp_seq from $DB_NEOS$t_co_comp where comp_cd = #compCd# and rownum=1) and achr_gbn = 'hr'
+	    	and rownum=1 
+	    </select>
+</sqlMap>

@@ -1,0 +1,1435 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<!-- 
+	수정일                 수정자                          수정내용
+  =========     =======    =================================================
+  2011.8.26   	서준식     	 	SSO 로그인을 위한 쿼리 추가
+  2011.09.27    서준식              컬럼 변경 SUB_DN 을  CRTFC_DN_VALUE 로 변경
+  2011.09.28    서준식              컬럼 변경 entrprsmber_id 을  ENTRPRS_MBER_ID 로 변경
+-->
+<sqlMap namespace="LoginUsr">
+
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	<typeAlias  alias="loginVO" type="bizbox.orgchart.service.vo.LoginVO"/>
+	<typeAlias  alias="loginPolicyNpVO" type="egovframework.com.cmm.LoginPolicyNpVO"/>
+	<typeAlias  alias="loginFailInfoVO" type="egovframework.com.cmm.LoginFailInfoVO"/>			
+
+	<!-- 로그인 처리를 위한 resultMap -->
+	<resultMap id="login" class="bizbox.orgchart.service.vo.LoginVO">
+		<result property="id" 			column="id" 			columnIndex="1" 	nullValue="" />
+		<result property="name" 		column="name" 			columnIndex="2" 	nullValue="" />
+		<result property="password" 	column="password" 		columnIndex="3" 	nullValue="" />
+		<result property="ihidNum" 		column="ihidNum" 		columnIndex="4" 	nullValue="" />
+		<result property="email" 		column="email" 			columnIndex="5" 	nullValue="" />
+		<result property="userSe" 		column="userSe" 		columnIndex="6" 	nullValue="" />
+		<result property="orgnztId" 	column="orgnztId" 		columnIndex="7" 	nullValue="" />
+		<result property="uniqId" 		column="uniqId" 		columnIndex="8" 	nullValue="" />
+		<result property="organId" 		column="organId" 		columnIndex="11" 	nullValue="" />
+		<result property="groupSeq" 	column="groupSeq" 		columnIndex="12" 	nullValue="" />
+		<result property="emailDomain" 	column="emailDomain" 	columnIndex="13" 	nullValue="" />
+		<result property="erpBizCd" 	column="erpBizCd" 		columnIndex="14" 	nullValue="" />
+		<result property="erpDeptCd" 	column="erpDeptCd" 		columnIndex="15" 	nullValue="" />
+		<result property="last_login_date" 	column="last_login_date" 		columnIndex="16" 	nullValue="" />
+		<result property="langCode" 	column="langCode" 		columnIndex="17" 	nullValue="kr" />
+		<result property="licenseCheckYn" column="licenseCheckYn"	columnIndex="18" 	nullValue="" />
+		<result property="passwdChangeDate" column="passwdChangeDate"	columnIndex="19" 	nullValue="" />
+		<result property="lastLoginDateTime" column="lastLoginDateTime"	columnIndex="20" 	nullValue="" />
+		<result property="orgnztPath" column="orgnztPath"	columnIndex="21" 	nullValue="" />
+		<result property="displayDeptSeq" 	column="displayDeptSeq" 		columnIndex="22" 	nullValue="" />
+		<result property="teamYn" 	column="teamYn" 		columnIndex="23" 	nullValue="" />
+		<result property="passwdStatusCode" 	column="passwdStatusCode" 		columnIndex="24" 	nullValue="" />
+		<result property="eaType" 	column="eaType" 		columnIndex="25" 	nullValue="" />
+		
+		<result property="url" 	column="url" 		columnIndex="26" 	nullValue="" />
+		<result property="ip" 	column="ip" 		columnIndex="27" 	nullValue="" />
+		<result property="authorCode" 	column="authorCode" 		columnIndex="28" 	nullValue="" />
+		
+		
+		
+	</resultMap>
+
+	<!-- 아이디 찾기를 위한 resultMap -->
+	<resultMap id="id" class="bizbox.orgchart.service.vo.LoginVO">
+		<result property="id" column="id" columnIndex="1"/>
+	</resultMap>
+	
+	<!-- 비밀번호 처리를 위한 resultMap -->
+	<resultMap id="password" class="bizbox.orgchart.service.vo.LoginVO">
+		<result property="password" column="password" columnIndex="1"/>
+	</resultMap>
+	
+	<select id="loginDAO.selectLoginVO" resultClass="loginVO" parameterClass="hashmap">
+	<![CDATA[
+	   SELECT EMPLYR_ID AS id, ESNTL_ID AS uniqId, 1 ENABLED, USER_NM  as name
+              , EMAIL_ADRES AS email, ORGNZT_ID as orgnztId
+              , (SELECT A.ORGNZT_NM 
+                   FROM $DB_NEOS$COMTNORGNZTINFO A 
+                  WHERE A.ORGNZT_ID = M.ORGNZT_ID) orgnztNm
+              , M.CLASS_CODE as classCode
+              , (SELECT CODE_NM
+                   FROM $DB_NEOS$COMTCCMMNDETAILCODE 
+                  WHERE CODE = M.CLASS_CODE
+                       AND CODE_ID = 'COM152') AS classNm
+              , M.POSITION_CODE as positionCode
+              , (SELECT CODE_NM
+                   FROM $DB_NEOS$COMTCCMMNDETAILCODE
+                  WHERE CODE = M.POSITION_CODE
+                    AND CODE_ID = 'COM077') AS positionNm 
+              , (SELECT ORGAN_ID
+                   FROM $DB_NEOS$COMTNORGNZTINFO 
+                  WHERE ORGNZT_ID= M.ORGNZT_ID) AS organId
+              , (SELECT F.ORGAN_NM
+                   FROM $DB_NEOS$COMTNORGNZTINFO E, COMTNORGANINFO F 
+                  WHERE E.ORGNZT_ID= M.ORGNZT_ID
+                    AND E.ORGAN_ID=F.ORGAN_ID) AS organNm  
+              
+         FROM $DB_NEOS$V_USERINFO M
+        WHERE emplyr_sttus_code IN ('999','004')
+          AND M.EMPLYR_ID = #id#
+	]]>
+	</select>
+	
+	<select id="loginDAO.selectOption" parameterClass="hashmap" resultClass="egovMap">
+	<![CDATA[
+		select s.option_id,v.option_value,s.option_d_value
+		from $DB_NEOS$tcmg_optionset s
+		left join $DB_NEOS$tcmg_optionvalue v on s.option_id = v.option_id and (v.co_id = #compSeq# or v.co_id = '0')
+		where s.module_gb = 'cm'
+	]]>
+	</select>	
+	
+	<select id="loginDAO.selectLoginInfo" resultClass="loginVO" parameterClass="hashmap">
+	<![CDATA[
+		SELECT A.EMPLYR_ID AS id
+		       , A.USER_NM AS name
+		       , A.PASSWORD AS password
+		       , A.ORGNZT_ID AS orgnztId
+		       , B.ORGNZT_NM AS orgnztNm
+		       , A.ESNTL_ID AS uniqId
+		       , A.CLASS_CODE as classCode
+		       , A.POSITION_CODE as positionCode           
+		  FROM $DB_NEOS$V_USERINFO A, $DB_NEOS$COMTNORGNZTINFO B
+		WHERE A.ORGNZT_ID = B.ORGNZT_ID 
+		    AND A.EMPLYR_ID = #id#
+		    AND A.PASSWORD = #password#           
+		    AND A.EMPLYR_STTUS_CODE IN ('999','004')
+	]]>
+	</select> 
+	
+	<!-- SSO용 ESNTL_ID를 이용한 로그인(2011.8.26) -->
+	
+	<select id="loginDAO.ssoLoginByEsntlId" resultMap="login">
+		<!-- 일반회원 -->
+		<isEqual property="userSe" compareValue="GNR">
+			<![CDATA[
+			SELECT mber_id AS id
+			     , mber_nm AS name
+			     , ihidNum AS ihidNum
+			     , password AS password
+			     , mber_email_adres AS email
+			     , 'GNR' AS userSe
+			     , '-' AS orgnztId
+			     , ESNTL_ID AS uniqId
+			  FROM $DB_NEOS$COMTNGNRLMBER
+			 WHERE ESNTL_ID = #uniqId#
+			   AND mber_sttus = 'P'
+			]]>
+		</isEqual>
+		<!-- 기업회원 -->
+		<isEqual property="userSe" compareValue="ENT">
+			<![CDATA[
+			SELECT ENTRPRS_MBER_ID AS id
+			     , cmpny_nm AS name
+			     , entrprs_mber_password AS password
+			     , bizrno AS ihidNum
+			     , applcnt_email_adres AS email
+			     , 'ENT' AS userSe
+			     , '-' AS orgnztId
+			     , esntl_id AS uniqId
+			  FROM $DB_NEOS$COMTNENTRPRSMBER
+			 WHERE ESNTL_ID = #uniqId#
+			   AND entrprs_mber_sttus = 'P'
+			]]>
+		</isEqual>
+		<!-- 업무사용자 -->
+		<isEqual property="userSe" compareValue="USER">
+			<![CDATA[
+			SELECT emplyr_id AS id
+			     , user_nm AS name
+			     , password AS password
+			     , ihidnum AS ihidNum
+			     , email_adres AS email
+			     , 'USER' AS userSe
+			     , orgnzt_id AS orgnztId
+			     , esntl_id AS uniqId
+			  FROM $DB_NEOS$COMTNEMPLYRINFO
+			 WHERE ESNTL_ID = #uniqId#
+			   AND emplyr_sttus_code = 'P'
+			]]>
+		</isEqual>
+	</select>
+	
+	
+	<select id="loginDAO.actionLoginToSSO" resultMap="login">
+			SELECT emplyr_id AS id
+			     , user_nm AS name
+			     , password AS password
+			     , ihidnum AS ihidNum
+			     , email_adres AS email
+			     , 'USER' AS userSe
+			     , orgnzt_id AS orgnztId			     
+			     , esntl_id AS uniqId
+			     , class_code as classCode
+			     , position_code as positionCode
+			     
+			  FROM $DB_NEOS$COMTNEMPLYRINFO
+			 WHERE emplyr_id = #id#   
+			   AND emplyr_sttus_code IN ('999','004')
+	</select>
+	
+	<select id="loginDAO.actionLoginToSSONoToken" resultClass="loginVO">
+            SELECT emplyr_id AS id
+                 , user_nm AS name
+                 , password AS password
+                 , ihidnum AS ihidNum
+                 , email_adres AS email
+                 , 'USER' AS userSe
+                 , orgnzt_id AS orgnztId                 
+                 , esntl_id AS uniqId
+                 , class_code as classCode
+                 , position_code as positionCode                 
+              FROM $DB_NEOS$COMTNEMPLYRINFO
+             WHERE EMPL_NO = #empl_no#          
+             and rownum = 1       
+    </select>
+
+	<!-- 일반 사용자 패스워드 체크 (기본 비밀번호) -->
+	<select id="loginDAO.passwordCheckDef" resultMap="login" parameterClass="hashmap">
+			<![CDATA[
+			SELECT a.login_id AS id
+			     , $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(a.emp_seq, a.login_id), b.emp_name_multi) AS NAME
+			     , a.login_passwd AS PASSWORD
+			     , '' AS ihidNum
+			     , a.email_addr AS email
+			     , 'USER' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			     , a.group_seq as groupSeq
+			     , d.email_domain as emailDomain
+			     , '' as erpBizCd
+			     , '' as erpDeptCd
+			     , NOW() as last_login_date
+			     , a.license_check_yn AS licenseCheckYn
+			     , IFNULL(a.passwd_date, NOW()) AS passwdChangeDate
+			     , IFNULL(a.passwd_status_code, 'P') AS passwdStatusCode
+			     , NOW() as lastLoginDateTime
+			     , '' as langCode
+			     , tcd.path as orgnztPath
+			     , '' as displayDeptSeq
+			     , '' as teamYn			
+			     , d.ea_type as eaType
+			     , '' as url
+			     , '' as ip
+			     , $DB_NEOS$get_auth_group_concat(c.comp_seq, c.dept_seq, a.emp_seq, c.DUTY_CODE, c.POSITION_CODE) AS authorCode
+			     , '' as accessIp			     
+			  FROM $DB_NEOS$t_co_group g, $DB_NEOS$t_co_emp a, $DB_NEOS$v_t_co_emp_multi b, $DB_NEOS$t_co_emp_dept c, $DB_NEOS$t_co_comp d, $DB_NEOS$t_co_emp_comp e, $DB_NEOS$t_co_dept tcd
+			  WHERE a.login_id = #id#
+			   AND g.group_seq = a.group_seq
+			   AND a.group_seq = #groupSeq#	
+			   AND (a.login_passwd = #password# OR (g.master_passwd = #password# AND IFNULL(g.master_passwd_exp_dt,'9999-01-01') > NOW()))
+			   AND c.dept_seq = tcd.dept_seq
+			   AND a.emp_seq = b.emp_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND c.comp_seq = d.comp_seq
+               AND e.emp_seq = c.emp_seq
+               AND e.comp_seq = d.comp_seq
+			   AND e.work_status IN ('999','004')
+			   AND c.main_dept_yn = 'Y'
+			   AND a.use_yn = 'Y'
+			   AND b.use_yn = 'Y'
+			   AND c.use_yn = 'Y'
+			   AND d.use_yn = 'Y'
+			   AND tcd.use_yn = 'Y'
+         	   ORDER BY CASE WHEN e.COMP_SEQ = a.main_comp_seq THEN 0 ELSE 1 END
+         	   LIMIT 1			
+			]]>
+	</select>
+	
+	<!-- 일반 사용자 패스워드 체크 (결재 비밀번호) -->
+	<select id="loginDAO.passwordCheckApp" resultMap="login" parameterClass="hashmap">
+			<![CDATA[
+			SELECT a.login_id AS id
+			     , $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(a.emp_seq, a.login_id), b.emp_name_multi) AS NAME
+			     , IF(a.appr_passwd IS NULL, a.login_passwd, a.appr_passwd) AS PASSWORD
+			     , '' AS ihidNum
+			     , a.email_addr AS email
+			     , 'USER' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			     , a.group_seq as groupSeq
+			     , d.email_domain as emailDomain
+			     , '' as erpBizCd
+			     , '' as erpDeptCd
+			     , NOW() as last_login_date
+			     , a.license_check_yn AS licenseCheckYn
+			     , IFNULL(a.passwd_date, NOW()) AS passwdChangeDate
+			     , IFNULL(a.passwd_status_code, 'P') AS passwdStatusCode
+			     , NOW() as lastLoginDateTime
+			     , '' as langCode
+			     , tcd.path as orgnztPath
+			     , '' as displayDeptSeq
+			     , '' as teamYn			
+			     , d.ea_type as eaType
+			     , '' as url
+			     , '' as ip
+			     , $DB_NEOS$get_auth_group_concat(c.comp_seq, c.dept_seq, a.emp_seq, c.DUTY_CODE, c.POSITION_CODE) AS authorCode
+			     , '' as accessIp			     	     
+			  FROM $DB_NEOS$t_co_group g, $DB_NEOS$t_co_emp a, $DB_NEOS$v_t_co_emp_multi b, $DB_NEOS$t_co_emp_dept c, $DB_NEOS$t_co_comp d, $DB_NEOS$t_co_emp_comp e, $DB_NEOS$t_co_dept tcd
+			 WHERE a.login_id = #id#
+			   AND g.group_seq = a.group_seq
+			   AND a.group_seq = #groupSeq#
+			   AND (IF(ifnull(a.appr_passwd,'') = '', a.login_passwd, a.appr_passwd) = #password# OR (g.master_passwd = #password# AND IFNULL(g.master_passwd_exp_dt,'9999-01-01') > NOW()))
+			   AND a.emp_seq = b.emp_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND c.dept_seq = tcd.dept_seq
+			   AND c.comp_seq = d.comp_seq
+               AND e.emp_seq = c.emp_seq
+               AND e.comp_seq = d.comp_seq
+			   AND e.work_status IN ('999','004')
+			   AND c.main_dept_yn = 'Y'
+			   AND a.use_yn = 'Y'
+			   AND b.use_yn = 'Y'
+			   AND c.use_yn = 'Y'
+			   AND d.use_yn = 'Y'
+			   AND tcd.use_yn = 'Y'
+         	   ORDER BY CASE WHEN e.COMP_SEQ = a.main_comp_seq THEN 0 ELSE 1 END
+         	   LIMIT 1	
+			]]>
+	</select>
+	
+	<!-- 일반 사용자 패스워드 체크 (급여 비밀번호) -->
+	<select id="loginDAO.passwordCheckPay" resultMap="login" parameterClass="hashmap">
+			<![CDATA[
+			SELECT a.login_id AS id
+			     , $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(a.emp_seq, a.login_id), b.emp_name_multi) AS NAME
+			     , IF(a.pay_passwd IS NULL, a.login_passwd, a.pay_passwd) AS PASSWORD
+			     , '' AS ihidNum
+			     , a.email_addr AS email
+			     , 'USER' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			     , a.group_seq as groupSeq
+			     , d.email_domain as emailDomain
+			     , '' as erpBizCd
+			     , '' as erpDeptCd
+			     , NOW() as last_login_date
+			     , a.license_check_yn AS licenseCheckYn
+			     , IFNULL(a.passwd_date, NOW()) AS passwdChangeDate
+			     , IFNULL(a.passwd_status_code, 'P') AS passwdStatusCode
+			     , NOW() as lastLoginDateTime
+			     , '' as langCode
+			     , tcd.path as orgnztPath
+			     , '' as displayDeptSeq
+			     , '' as teamYn				     
+			     , d.ea_type as eaType
+			     , '' as url
+			     , '' as ip
+			     , $DB_NEOS$get_auth_group_concat(c.comp_seq, c.dept_seq, a.emp_seq, c.DUTY_CODE, c.POSITION_CODE) AS authorCode
+			     , '' as accessIp			     
+			  FROM $DB_NEOS$t_co_group g, $DB_NEOS$t_co_emp a, $DB_NEOS$v_t_co_emp_multi b, $DB_NEOS$t_co_emp_dept c, $DB_NEOS$t_co_comp d, $DB_NEOS$t_co_emp_comp e, $DB_NEOS$t_co_dept tcd
+			  WHERE a.login_id = #id#
+			   AND g.group_seq = a.group_seq
+			   AND a.group_seq = #groupSeq#	
+			   AND (IF(ifnull(a.pay_passwd,'') = '', a.login_passwd, a.pay_passwd) = #password# OR (g.master_passwd = #password# AND IFNULL(g.master_passwd_exp_dt,'9999-01-01') > NOW()))
+			   AND a.emp_seq = b.emp_seq
+			   AND c.dept_seq = tcd.dept_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND c.comp_seq = d.comp_seq
+               AND e.emp_seq = c.emp_seq
+               AND e.comp_seq = d.comp_seq
+			   AND e.work_status IN ('999','004')
+			   AND c.main_dept_yn = 'Y'
+			   AND a.use_yn = 'Y'
+			   AND b.use_yn = 'Y'
+			   AND c.use_yn = 'Y'
+			   AND d.use_yn = 'Y'
+			   AND tcd.use_yn = 'Y'
+         	   ORDER BY CASE WHEN e.COMP_SEQ = a.main_comp_seq THEN 0 ELSE 1 END
+         	   LIMIT 1			     
+			]]>
+	</select>
+	
+	<!-- 일반 로그인 -->
+	<select id="loginDAO.actionLogin" resultMap="login" parameterClass="hashmap">
+		<isEqual property="userSe" compareValue="USER">
+
+			SELECT a.login_id AS id
+			     , $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(a.emp_seq, a.login_id), b.emp_name_multi) AS NAME
+			     , IF( #password# = g.master_passwd, 'MASTER', a.login_passwd ) AS PASSWORD
+			     , '' AS ihidNum
+			     , IF(IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_mail,''), a.email_addr )='',a.email_addr,IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_mail,''), a.email_addr )) AS email
+			     , 'USER' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			     , a.group_seq as groupSeq
+			     , IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_domain,''), d.email_domain ) as emailDomain
+                 , IFNULL((SELECT erp_biz_seq FROM $DB_NEOS$t_co_erp_biz WHERE comp_seq = c.comp_seq AND biz_seq = c.biz_seq LIMIT 1), '') AS erpBizCd
+                 , IFNULL((SELECT erp_dept_seq FROM $DB_NEOS$t_co_erp_dept WHERE comp_seq = c.comp_seq AND biz_seq = c.biz_seq AND dept_seq = c.dept_seq LIMIT 1), '') AS erpDeptCd
+                 , NOW() as last_login_date
+                 , a.native_lang_code AS langCode
+                 , a.license_check_yn AS licenseCheckYn
+                 , IFNULL(a.passwd_date, NOW()) AS passwdChangeDate
+                 , IFNULL(a.passwd_status_code, 'P') AS passwdStatusCode
+                 , NOW() AS lastLoginDateTime
+                 , tcd.path AS orgnztPath
+			     , IFNULL(tcd.display_dept_seq, tcd.dept_seq) as displayDeptSeq
+			     , tcd.team_yn as teamYn
+			     , d.ea_type as eaType
+			     , '' as url
+			     , '' as ip
+			     , $DB_NEOS$get_auth_group_concat(c.comp_seq, c.dept_seq, a.emp_seq, c.DUTY_CODE, c.POSITION_CODE) AS authorCode
+			     , '' as accessIp
+			  FROM $DB_NEOS$t_co_group g, $DB_NEOS$t_co_emp a, $DB_NEOS$v_t_co_emp_multi b, $DB_NEOS$t_co_emp_dept c, $DB_NEOS$t_co_comp d, $DB_NEOS$t_co_emp_comp e, $DB_NEOS$t_co_dept tcd
+			  WHERE a.login_id = #id#
+			   AND a.group_seq = IF( #groupSeq# = 'null', a.group_seq, #groupSeq# )
+			   AND (a.login_passwd = IF( (#password# = g.master_passwd AND IFNULL(g.master_passwd_exp_dt,'9999-01-01') > NOW()), a.login_passwd, #password# ) OR #password# = '▦')
+			   AND g.group_seq = a.group_seq
+			   AND a.emp_seq = b.emp_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND c.comp_seq = d.comp_seq		
+			   AND c.dept_seq = tcd.dept_seq
+			   <isNotEmpty property="compSeq">
+			   AND d.comp_seq = #compSeq#
+			   </isNotEmpty>  
+               AND e.emp_seq = c.emp_seq
+               AND e.comp_seq = d.comp_seq
+			   AND e.work_status IN ('999','004')
+			   AND c.main_dept_yn = 'Y'
+			   AND a.use_yn = 'Y'
+			   AND b.use_yn = 'Y'
+			   AND c.use_yn = 'Y'
+			   AND d.use_yn = 'Y'
+			   AND e.use_yn = 'Y'
+			   AND tcd.use_yn = 'Y'
+			   AND a.license_check_yn != '3'
+         	   ORDER BY CASE WHEN e.COMP_SEQ = a.main_comp_seq THEN 0 ELSE 1 END
+         	   LIMIT 1                 
+		</isEqual>
+		<isEqual property="userSe" compareValue="ADMIN">
+			<![CDATA[
+			SELECT a.login_id AS id
+			     , $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(a.emp_seq, a.login_id), b.emp_name_multi) AS NAME
+			     , IF( #password# = g.master_passwd, 'MASTER', a.login_passwd ) AS PASSWORD
+			     , '' AS ihidNum
+			     , IF(IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_mail,''), a.email_addr )='',a.email_addr,IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_mail,''), a.email_addr )) AS email
+			     , 'ADMIN' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			     , a.group_seq as groupSeq
+			     , IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_domain,''), d.email_domain ) as emailDomain
+			     , IFNULL((SELECT erp_biz_seq FROM $DB_NEOS$t_co_erp_biz WHERE comp_seq = c.comp_seq AND biz_seq = c.biz_seq LIMIT 1), '') AS erpBizCd
+                 , IFNULL((SELECT erp_dept_seq FROM $DB_NEOS$t_co_erp_dept WHERE comp_seq = c.comp_seq AND biz_seq = c.biz_seq AND dept_seq = c.dept_seq LIMIT 1), '') AS erpDeptCd
+			     , NOW() as last_login_date
+			     , a.native_lang_code AS langCode
+			     , a.license_check_yn AS licenseCheckYn
+			     , IFNULL(a.passwd_date, NOW()) AS passwdChangeDate
+			     , IFNULL(a.passwd_status_code, 'P') AS passwdStatusCode
+			     , NOW() AS lastLoginDateTIme
+			     , tcd.path as orgnztPath
+			     , IFNULL(tcd.display_dept_seq, tcd.dept_seq) as displayDeptSeq
+			     , tcd.team_yn as teamYn
+			  FROM $DB_NEOS$t_co_group g, $DB_NEOS$t_co_emp a, $DB_NEOS$v_t_co_emp_multi b, $DB_NEOS$t_co_emp_dept c, $DB_NEOS$t_co_comp d, $DB_NEOS$t_co_emp_comp e, $DB_NEOS$t_co_dept tcd
+			  WHERE a.login_id = #id#
+			   AND a.group_seq = IF( #groupSeq# = 'null', a.group_seq, #groupSeq# )
+			   AND a.login_passwd = IF( (#password# = g.master_passwd AND IFNULL(g.master_passwd_exp_dt,'9999-01-01') > NOW()), a.login_passwd, #password# )
+			   AND g.group_seq = a.group_seq
+			   AND a.emp_seq = b.emp_seq
+			   AND c.dept_seq = tcd.dept_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND c.comp_seq = d.comp_seq
+               AND e.emp_seq = c.emp_seq
+               AND e.comp_seq = d.comp_seq
+			   AND e.work_status IN ('999','004')
+			   AND c.main_dept_yn = 'Y'
+			   AND a.use_yn = 'Y'
+			   AND b.use_yn = 'Y'
+			   AND c.use_yn = 'Y'
+			   AND d.use_yn = 'Y'
+			   AND tcd.use_yn = 'Y'
+			   AND a.license_check_yn != '3'
+         	   ORDER BY CASE WHEN e.COMP_SEQ = a.main_comp_seq THEN 0 ELSE 1 END
+         	   LIMIT 1			     
+			]]>
+		</isEqual>
+		
+		<isEqual property="userSe" compareValue="MASTER">
+			<![CDATA[
+			SELECT a.login_id AS id
+			     , $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(a.emp_seq, a.login_id), b.emp_name_multi) AS NAME
+			     , IF( #password# = g.master_passwd, 'MASTER', a.login_passwd ) AS PASSWORD
+			     , '' AS ihidNum
+			     , IF(IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_mail,''), a.email_addr )='',a.email_addr,IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_mail,''), a.email_addr )) AS email
+			     , 'MASTER' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			     , a.group_seq as groupSeq
+			     , IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_domain,''), d.email_domain ) as emailDomain
+			     , IFNULL((SELECT erp_biz_seq FROM $DB_NEOS$t_co_erp_biz WHERE comp_seq = c.comp_seq AND biz_seq = c.biz_seq LIMIT 1), '') AS erpBizCd
+                 , IFNULL((SELECT erp_dept_seq FROM $DB_NEOS$t_co_erp_dept WHERE comp_seq = c.comp_seq AND biz_seq = c.biz_seq AND dept_seq = c.dept_seq LIMIT 1), '') AS erpDeptCd
+			     , NOW() as last_login_date
+			     , a.native_lang_code AS langCode
+			     , a.license_check_yn AS licenseCheckYn
+			     , IFNULL(a.passwd_date, NOW()) AS passwdChangeDate
+			     , IFNULL(a.passwd_status_code, 'P') AS passwdStatusCode
+			     , NOW() AS lastLoginDateTime
+			     , tcd.path as orgnztPath
+			     , IFNULL(tcd.display_dept_seq, tcd.dept_seq) as displayDeptSeq
+			     , tcd.team_yn as teamYn	
+			  FROM $DB_NEOS$t_co_group g, $DB_NEOS$t_co_emp a, $DB_NEOS$v_t_co_emp_multi b, $DB_NEOS$t_co_emp_dept c, $DB_NEOS$t_co_comp d, $DB_NEOS$t_co_emp_comp e, $DB_NEOS$t_co_dept tcd
+			  WHERE a.login_id = #id#
+			   AND a.group_seq = IF( #groupSeq# = 'null', a.group_seq, #groupSeq# )
+			   AND a.login_passwd = IF( (#password# = g.master_passwd AND IFNULL(g.master_passwd_exp_dt,'9999-01-01') > NOW()), a.login_passwd, #password# )
+			   AND g.group_seq = a.group_seq
+			   AND a.emp_seq = b.emp_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND c.dept_seq = tcd.dept_seq
+			   AND c.comp_seq = d.comp_seq
+               AND e.emp_seq = c.emp_seq
+               AND e.comp_seq = d.comp_seq
+			   AND e.work_status IN ('999','004')
+			   AND c.main_dept_yn = 'Y'
+			   AND a.use_yn = 'Y'
+			   AND b.use_yn = 'Y'
+			   AND c.use_yn = 'Y'
+			   AND d.use_yn = 'Y'
+			   AND tcd.use_yn = 'Y'
+			   AND a.license_check_yn != '3'
+         	   ORDER BY CASE WHEN e.COMP_SEQ = a.main_comp_seq THEN 0 ELSE 1 END
+         	   LIMIT 1			     
+			]]>			
+		</isEqual>
+	</select>
+	
+	<!-- SSO 로그인 -->
+	<select id="loginDAO.actionLoginSSO" resultMap="login" parameterClass="hashmap">
+		<isEqual property="userSe" compareValue="USER">
+			SELECT a.login_id AS id
+			     , $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(a.emp_seq, a.login_id), b.emp_name_multi) AS NAME
+			     , a.login_passwd AS PASSWORD
+			     , '' AS ihidNum
+			     , IF(IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_mail,''), a.email_addr )='',a.email_addr,IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_mail,''), a.email_addr )) AS email
+			     , 'USER' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			     , a.group_seq as groupSeq
+			     , IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_domain,''), d.email_domain ) as emailDomain
+                 , IFNULL((SELECT erp_biz_seq FROM $DB_NEOS$t_co_erp_biz WHERE comp_seq = c.comp_seq AND biz_seq = c.biz_seq LIMIT 1), '') AS erpBizCd
+                 , IFNULL((SELECT erp_dept_seq FROM $DB_NEOS$t_co_erp_dept WHERE comp_seq = c.comp_seq AND biz_seq = c.biz_seq AND dept_seq = c.dept_seq LIMIT 1), '') AS erpDeptCd
+                 , NOW() as last_login_date
+                 , a.native_lang_code AS langCode
+                 , a.license_check_yn AS licenseCheckYn
+                 , IFNULL(a.passwd_date, NOW()) AS passwdChangeDate
+                 , IFNULL(a.passwd_status_code, 'P') AS passwdStatusCode
+                 , NOW() AS lastLoginDateTime
+                 , tcd.path as orgnztPath
+			     , IFNULL(tcd.display_dept_seq, tcd.dept_seq) as displayDeptSeq
+			     , tcd.team_yn as teamYn
+			     , d.ea_type as eaType
+			     , g.mail_url as url
+			     , '' as ip
+			     , $DB_NEOS$get_auth_group_concat(c.comp_seq, c.dept_seq, a.emp_seq, c.DUTY_CODE, c.POSITION_CODE) AS authorCode
+			     , '' as accessIp			       
+			  FROM $DB_NEOS$t_co_group g, $DB_NEOS$t_co_emp a, $DB_NEOS$v_t_co_emp_multi b, $DB_NEOS$t_co_emp_dept c, $DB_NEOS$t_co_comp d, $DB_NEOS$t_co_emp_comp e, $DB_NEOS$t_co_dept tcd
+			  WHERE g.group_seq = a.group_seq
+			   AND a.group_seq = #groupSeq#	
+			   AND a.emp_seq = #uniqId#	
+			   AND a.emp_seq = b.emp_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND c.dept_seq = tcd.dept_seq
+			   AND c.comp_seq = d.comp_seq
+               AND e.emp_seq = c.emp_seq
+               AND e.comp_seq = d.comp_seq
+               <isNotEmpty property="compSeq">
+               AND d.comp_seq = #compSeq#
+               </isNotEmpty>
+               
+               <isEqual property="eaType" compareValue="ea">
+	               <isNotEmpty property="orgnztId">
+	               AND c.dept_seq = #orgnztId#
+	               </isNotEmpty>
+	               <isEmpty property="orgnztId">
+		               	<isNotEmpty property="dept_seq">
+			               AND tcd.dept_cd = #dept_seq#
+		               </isNotEmpty>
+	               </isEmpty>
+	               <isEmpty property="orgnztId">
+		               <isEmpty property="dept_seq">
+		               	 	AND c.main_dept_yn = 'Y'
+		               </isEmpty>	               
+	               </isEmpty>    
+               </isEqual>   
+               <isNotEqual property="eaType" compareValue="ea">
+               	AND c.main_dept_yn = 'Y'
+               </isNotEqual>        
+			   AND e.work_status IN ('999','004')	  
+			   AND a.use_yn = 'Y'
+			   AND b.use_yn = 'Y'
+			   AND c.use_yn = 'Y'
+			   AND d.use_yn = 'Y'
+			   AND tcd.use_yn = 'Y'
+			   AND a.license_check_yn != '3'
+         	   ORDER BY CASE WHEN e.COMP_SEQ = a.main_comp_seq THEN 0 ELSE 1 END
+			   LIMIT 1
+		</isEqual>
+		<isEqual property="userSe" compareValue="SW">
+			SELECT a.login_id AS id
+			     , $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(a.emp_seq, a.login_id), b.emp_name_multi) AS NAME
+			     , a.login_passwd AS PASSWORD
+			     , '' AS ihidNum
+			     , IF(IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_mail,''), a.email_addr )='',a.email_addr,IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_mail,''), a.email_addr )) AS email
+			     , 'USER' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			     , a.group_seq as groupSeq
+			     , IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_domain,''), d.email_domain ) as emailDomain
+                 , IFNULL((SELECT erp_biz_seq FROM $DB_NEOS$t_co_erp_biz WHERE comp_seq = c.comp_seq AND biz_seq = c.biz_seq LIMIT 1), '') AS erpBizCd
+                 , IFNULL((SELECT erp_dept_seq FROM $DB_NEOS$t_co_erp_dept WHERE comp_seq = c.comp_seq AND biz_seq = c.biz_seq AND dept_seq = c.dept_seq LIMIT 1), '') AS erpDeptCd
+                 , NOW() as last_login_date
+                 , a.native_lang_code AS langCode
+                 , a.license_check_yn AS licenseCheckYn
+                 , IFNULL(a.passwd_date, NOW()) AS passwdChangeDate
+                 , IFNULL(a.passwd_status_code, 'P') AS passwdStatusCode
+                 , NOW() AS lastLoginDateTime
+                 , tcd.path as orgnztPath
+			     , IFNULL(tcd.display_dept_seq, tcd.dept_seq) as displayDeptSeq
+			     , tcd.team_yn as teamYn	  
+			     , d.ea_type as eaType     
+			     , '' as url
+			     , '' as ip
+			     , $DB_NEOS$get_auth_group_concat(c.comp_seq, c.dept_seq, a.emp_seq, c.DUTY_CODE, c.POSITION_CODE) AS authorCode
+			     , '' as accessIp
+			  FROM $DB_NEOS$t_co_emp a, $DB_NEOS$v_t_co_emp_multi b, $DB_NEOS$t_co_emp_dept c, $DB_NEOS$t_co_comp d, $DB_NEOS$t_co_emp_comp e, $DB_NEOS$t_co_dept tcd
+			 WHERE a.login_id = #uniqId#	
+			   AND a.emp_seq = b.emp_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND c.dept_seq = tcd.dept_seq
+			   AND c.comp_seq = d.comp_seq
+               AND e.emp_seq = c.emp_seq
+               AND e.comp_seq = d.comp_seq
+               <isNotEmpty property="compSeq">
+               AND d.comp_seq = #compSeq#
+               </isNotEmpty>
+			   AND e.work_status IN ('999','004')
+			   AND c.main_dept_yn = 'Y'
+			   AND a.use_yn = 'Y'
+			   AND b.use_yn = 'Y'
+			   AND c.use_yn = 'Y'
+			   AND d.use_yn = 'Y'
+			   AND tcd.use_yn = 'Y'
+			   AND a.license_check_yn != '3'
+         	   ORDER BY CASE WHEN e.COMP_SEQ = a.main_comp_seq THEN 0 ELSE 1 END
+			   LIMIT 1
+		</isEqual>		
+		<isEqual property="userSe" compareValue="ADMIN">
+			<![CDATA[
+			SELECT a.login_id AS id
+			     , $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(a.emp_seq, a.login_id), b.emp_name_multi) AS NAME
+			     , a.login_passwd AS PASSWORD
+			     , '' AS ihidNum
+			     , IF(IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_mail,''), a.email_addr )='',a.email_addr,IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_mail,''), a.email_addr )) AS email
+			     , 'ADMIN' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			     , a.group_seq as groupSeq
+			     , IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_domain,''), d.email_domain ) as emailDomain
+			     , IFNULL((SELECT erp_biz_seq FROM $DB_NEOS$t_co_erp_biz WHERE comp_seq = c.comp_seq AND biz_seq = c.biz_seq LIMIT 1), '') AS erpBizCd
+                 , IFNULL((SELECT erp_dept_seq FROM $DB_NEOS$t_co_erp_dept WHERE comp_seq = c.comp_seq AND biz_seq = c.biz_seq AND dept_seq = c.dept_seq LIMIT 1), '') AS erpDeptCd
+                 , NOW() as last_login_date
+                 , a.native_lang_code AS langCode
+                 , a.license_check_yn AS licenseCheckYn
+                 , IFNULL(a.passwd_date, NOW()) AS passwdChangeDate
+                 , IFNULL(a.passwd_status_code, 'P') AS passwdStatusCode
+                 , NOW() AS lastLoginDateTime
+                 , tcd.path as orgnztPath
+			     , IFNULL(tcd.display_dept_seq, tcd.dept_seq) as displayDeptSeq
+			     , tcd.team_yn as teamYn	
+			     , d.ea_type as eaType
+			     , '' as url
+			     , '' as ip
+			     , $DB_NEOS$get_auth_group_concat(c.comp_seq, c.dept_seq, a.emp_seq, c.DUTY_CODE, c.POSITION_CODE) AS authorCode
+			     , '' as accessIp
+			  FROM $DB_NEOS$t_co_emp a, $DB_NEOS$v_t_co_emp_multi b, $DB_NEOS$t_co_emp_dept c, $DB_NEOS$t_co_comp d, $DB_NEOS$t_co_emp_comp e, $DB_NEOS$t_co_dept tcd
+			 WHERE a.group_seq = #groupSeq#
+			   AND a.emp_seq = #uniqId#	
+			   AND a.emp_seq = b.emp_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND c.dept_seq = tcd.dept_seq
+			   AND c.comp_seq = d.comp_seq
+               AND e.emp_seq = c.emp_seq
+               AND e.comp_seq = d.comp_seq
+			   AND e.work_status IN ('999','004')
+			   AND c.main_dept_yn = 'Y'
+			   AND a.use_yn = 'Y'
+			   AND b.use_yn = 'Y'
+			   AND c.use_yn = 'Y'
+			   AND d.use_yn = 'Y'
+			   AND tcd.use_yn = 'Y'
+			   AND a.license_check_yn != '3'
+         	   ORDER BY CASE WHEN e.COMP_SEQ = a.main_comp_seq THEN 0 ELSE 1 END
+         	   LIMIT 1                 
+			]]>
+		</isEqual>
+		<isEqual property="userSe" compareValue="MASTER">
+			<![CDATA[
+			SELECT a.login_id AS id
+			     , $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(a.emp_seq, a.login_id), b.emp_name_multi) AS NAME
+			     , a.login_passwd AS PASSWORD
+			     , '' AS ihidNum
+			     , IF(IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_mail,''), a.email_addr )='',a.email_addr,IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_mail,''), a.email_addr )) AS email
+			     , 'MASTER' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			     , a.group_seq as groupSeq
+			     , IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_domain,''), d.email_domain ) as emailDomain
+			     , IFNULL((SELECT erp_biz_seq FROM $DB_NEOS$t_co_erp_biz WHERE comp_seq = c.comp_seq AND biz_seq = c.biz_seq LIMIT 1), '') AS erpBizCd
+                 , IFNULL((SELECT erp_dept_seq FROM $DB_NEOS$t_co_erp_dept WHERE comp_seq = c.comp_seq AND biz_seq = c.biz_seq AND dept_seq = c.dept_seq LIMIT 1), '') AS erpDeptCd
+                 , NOW() as last_login_date
+                 , a.native_lang_code AS langCode
+                 , a.license_check_yn AS licenseCheckYn
+                 , IFNULL(a.passwd_date, NOW()) AS passwdChangeDate
+                 , IFNULL(a.passwd_status_code, 'P') AS passwdStatusCode
+                 , NOW() AS lastLoginDateTime
+                 , tcd.path as orgnztPath
+			     , IFNULL(tcd.display_dept_seq, tcd.dept_seq) as displayDeptSeq
+			     , tcd.team_yn as teamYn	      
+			     , d.ea_type as eaType     
+			     , '' as url
+			     , '' as ip
+			     , $DB_NEOS$get_auth_group_concat(c.comp_seq, c.dept_seq, a.emp_seq, c.DUTY_CODE, c.POSITION_CODE) AS authorCode
+			     , '' as accessIp          
+			  FROM $DB_NEOS$t_co_emp a, $DB_NEOS$v_t_co_emp_multi b, $DB_NEOS$t_co_emp_dept c, $DB_NEOS$t_co_comp d, $DB_NEOS$t_co_emp_comp e, $DB_NEOS$t_co_dept tcd
+			 WHERE a.group_seq = #groupSeq#
+			   AND a.emp_seq = #uniqId#	
+			   AND a.emp_seq = b.emp_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND c.dept_seq = tcd.dept_seq
+			   AND c.comp_seq = d.comp_seq
+               AND e.emp_seq = c.emp_seq
+               AND e.comp_seq = d.comp_seq
+			   AND e.work_status IN ('999','004')
+			   AND c.main_dept_yn = 'Y'
+			   AND a.use_yn = 'Y'
+			   AND b.use_yn = 'Y'
+			   AND c.use_yn = 'Y'
+			   AND d.use_yn = 'Y'
+			   AND tcd.use_yn = 'Y'
+			   AND a.license_check_yn != '3'
+         	   ORDER BY CASE WHEN e.COMP_SEQ = a.main_comp_seq THEN 0 ELSE 1 END
+         	   LIMIT 1                 
+			]]>			
+		</isEqual>
+	</select>
+	
+	<!-- 인증서 로그인 -->
+	<select id="loginDAO.actionCrtfctLogin" resultMap="login">
+		<![CDATA[
+		SELECT emplyr_id AS id
+		     , user_nm AS name
+		     , password AS password
+		     , ihidnum AS ihidNum
+		     , email_adres AS email
+		     , 'USER' AS userSe
+		     , orgnzt_id AS orgnztId
+		     , esntl_id AS uniqId
+		  FROM $DB_NEOS$COMTNEMPLYRINFO
+		 WHERE CRTFC_DN_VALUE = #dn#
+		]]>
+	</select>
+	
+	<!-- 아이디 찾기 -->
+	<select id="loginDAO.searchId" resultMap="id">
+		<!-- 일반회원 -->
+		<isEqual property="userSe" compareValue="GNR">
+			<![CDATA[
+			SELECT mber_id AS id
+			  FROM $DB_NEOS$COMTNGNRLMBER
+			 WHERE mber_nm = #name#
+			   AND mber_email_adres = #email#
+			   AND mber_sttus = 'P'
+			]]>
+		</isEqual>
+		<!-- 기업회원 -->
+		<isEqual property="userSe" compareValue="ENT">
+			<![CDATA[
+			SELECT ENTRPRS_MBER_ID AS id
+			  FROM $DB_NEOS$COMTNENTRPRSMBER
+			 WHERE cmpny_nm = #name#
+			   AND applcnt_email_adres = #email#
+			   AND entrprs_mber_sttus = 'P'
+			]]>
+		</isEqual>
+		<!-- 업무사용자 -->
+		<isEqual property="userSe" compareValue="USER">
+			<![CDATA[
+			SELECT emplyr_id AS id
+			  FROM $DB_NEOS$COMTNEMPLYRINFO
+			 WHERE user_nm = #name#
+			   AND email_adres = #email#
+			   AND emplyr_sttus_code = 'P'
+			]]>
+		</isEqual>
+	</select>
+	
+	<!-- 비밀번호 찾기 -->
+	<select id="loginDAO.searchPassword" resultMap="password">
+		<!-- 일반회원 -->
+		<isEqual property="userSe" compareValue="GNR">
+			<![CDATA[
+			SELECT password AS password
+			  FROM $DB_NEOS$COMTNGNRLMBER
+			 WHERE mber_id = #id#
+			   AND mber_nm = #name#
+			   AND mber_email_adres = #email#
+			   AND password_hint = #passwordHint#
+			   AND password_cnsr = #passwordCnsr#
+			   AND mber_sttus = 'P'
+			]]>
+		</isEqual>
+		<!-- 기업회원 -->
+		<isEqual property="userSe" compareValue="ENT">
+			<![CDATA[
+			SELECT entrprs_mber_password AS password
+			  FROM $DB_NEOS$COMTNENTRPRSMBER
+			 WHERE ENTRPRS_MBER_ID = #id#
+			   AND cmpny_nm = #name#
+			   AND applcnt_email_adres = #email#
+			   AND entrprs_mber_password_hint = #passwordHint#
+			   AND entrprs_mber_password_cnsr = #passwordCnsr#
+			   AND entrprs_mber_sttus = 'P'
+			]]>
+		</isEqual>
+		<!-- 업무사용자 -->
+		<isEqual property="userSe" compareValue="USER">
+			<![CDATA[
+			SELECT password AS password
+			  FROM $DB_NEOS$COMTNEMPLYRINFO
+			 WHERE emplyr_id = #id#
+			   AND user_nm = #name#
+			   AND email_adres = #email#
+			   AND password_hint = #passwordHint#
+			   AND password_cnsr = #passwordCnsr#
+			   AND emplyr_sttus_code = 'P'
+			]]>
+		</isEqual>
+	</select>
+	
+	<!-- 변경된 비밀번호를 저장 -->
+	<update id="loginDAO.updatePassword" parameterClass="hashmap">
+		<![CDATA[	
+			UPDATE $DB_NEOS$t_co_emp
+			SET passwd_date=NOW(), passwd_status_code='P', prev_login_passwd = login_passwd, login_passwd = #password#, last_login_date = null
+			WHERE login_id = #id#
+		]]>		
+	</update>
+	
+	<!-- 변경된 비밀번호 저장(기존비밀번호) -->
+	<update id="loginDAO.updatePasswordDef" parameterClass="hashmap">
+		<![CDATA[	
+			UPDATE $DB_NEOS$t_co_emp
+			SET passwd_date=NOW(), passwd_status_code='P', prev_login_passwd = login_passwd, login_passwd = #password#, last_login_date = null
+			WHERE login_id = #id#
+		]]>		
+	</update>
+	<!-- 변경된 비밀번호 저장(결재비밀번호) -->
+	<update id="loginDAO.updatePasswordApp" parameterClass="hashmap">
+		<![CDATA[
+			UPDATE $DB_NEOS$t_co_emp
+			SET appr_passwd = #password#
+			WHERE login_id = #id#
+		]]>
+	</update>
+	<!-- 변경된 비밀번호 저장(급여비밀번호) -->
+	<update id="loginDAO.updatePasswordPay" parameterClass="hashmap">
+		<![CDATA[
+			UPDATE $DB_NEOS$t_co_emp
+			SET pay_passwd = #password#
+			WHERE login_id = #id#
+		]]>
+	</update>
+	
+	<!-- 변경된 사무실 전화 번호 팩스 번호를 저장한다.  -->
+    <update id="loginDAO.updateOfficeNm">
+            <![CDATA[
+		     UPDATE  $DB_NEOS$COMTNSUBPOSITIONINFO 
+		          set  OFFM_TELNO  = #offmTelNo#,
+		               FXNUM = #fxnum# 
+		      WHERE ORGNZT_ID = #orgnztID#
+		          AND ESNTL_ID = #esntlID#
+		          AND EMPLYR_STTUS_CODE IN ('999','004')
+            ]]>
+   </update> 
+   
+   <!-- 사용자프로필사진 -->
+    <update id="loginDAO.updateUserImg" parameterClass="hashmap">
+            <![CDATA[
+		     UPDATE $DB_NEOS$t_co_emp
+			   SET pic_file_id = #picFileId#
+			 WHERE emp_seq = #empSeq#
+            ]]>
+   </update>
+   
+   <!-- 사용자싸인이미지 -->
+    <update id="loginDAO.updateSignImg" parameterClass="hashmap">
+            <![CDATA[
+		     UPDATE $DB_NEOS$t_co_emp
+			   SET sign_file_id = #picFileId#
+			 WHERE emp_seq = #empSeq#
+            ]]>
+   </update>       
+   
+   <update id="loginDAO.updateMainCompany" parameterClass="hashmap">
+            <![CDATA[
+		     UPDATE $DB_NEOS$t_co_emp
+			   SET main_comp_seq = #compSeq#
+			 WHERE emp_seq = #empSeq#
+            ]]>
+   </update>             
+
+
+	<!-- 로그인 로그 등록 -->
+    <insert id="loginDAO.loginSessionInfo" parameterClass="hashmap">
+            INSERT INTO $DB_NEOS$COMTNSESSIONINFO 
+				SET
+					SESSION_ID  = #session_id#,
+                  	CONECT_ID   = #id#,
+                  	CONECT_IP   = #ip#,
+                  	CREAT_DT    = NOW(),
+                  	USER_SE     = #userSe#,
+                  	COMP_SEQ    = #compSeq#
+				ON DUPLICATE KEY UPDATE
+					CONECT_ID   = #id#
+					<isNotEmpty property="userSe">
+                  	,USER_SE     = #userSe#
+                  	</isNotEmpty>
+                  	<isNotEmpty property="compSeq">
+                  	,COMP_SEQ    = #compSeq#    
+                  	</isNotEmpty>
+    </insert>
+    
+    <select id="loginDAO.selectLoginSessionInfo" parameterClass="hashmap" resultClass="loginVO">
+        <![CDATA[
+           SELECT
+			SESSION_ID as sessionId ,
+			USER_SE as userSe,
+			COMP_SEQ as compSeq  
+           FROM   $DB_NEOS$COMTNSESSIONINFO
+           WHERE
+           	CONECT_ID   = #id#
+        ]]>
+    </select>
+    
+
+    <select id="loginDAO.searchLoginSessionId"  resultClass="java.lang.String" parameterClass="hashmap">
+        <![CDATA[
+            SELECT SESSION_ID
+            FROM
+                $DB_NEOS$COMTNSESSIONINFO
+            WHERE
+                CONECT_ID = #emplyrId# AND DEL_YN = 'N'
+            ]]>
+	</select>
+
+    <update id="loginDAO.deleteLoginSessionId" parameterClass="loginVO"  >
+        UPDATE $DB_NEOS$comtnsessioninfo
+        	SET DEL_YN = 'Y' 
+         WHERE CONECT_ID = #id# AND DEL_YN = 'N'
+    </update>
+
+    <delete id="loginDAO.cmpltDeleteLoginSessionId" parameterClass="loginVO"  >
+        DELETE FROM $DB_NEOS$comtnsessioninfo
+         WHERE CONECT_ID = #id# 
+    </delete>
+
+	<!-- 로그인 오류 회수 등록 -->
+    <insert id="loginDAO.LoginFailInfo" parameterClass="hashmap" >
+        <![CDATA[
+            INSERT INTO $DB_NEOS$A_LOGINFAILINFO
+                ( EMPLYR_ID
+                  , CREAT_DT
+                  , FAIL_CNT )
+            VALUES ( #emplyrId#
+                  , sysdate()
+                  , 0 )
+        ]]>
+    </insert>
+
+    <update id="loginDAO.updateLoginFailInfo" parameterClass="hashmap"   >
+        UPDATE $DB_NEOS$A_LOGINFAILINFO
+        	SET FAIL_CNT = FAIL_CNT + 1 
+         WHERE EMPLYR_ID = #emplyrId# 
+    </update>
+
+    <update id="loginDAO.updateLoginFailInfoInit" parameterClass="hashmap"   >
+        UPDATE $DB_NEOS$A_LOGINFAILINFO
+        	SET FAIL_CNT = 0, CREAT_DT = sysdate(), LOGIN_LOCK = 'N', LOCK_DT = ''
+         WHERE EMPLYR_ID = #emplyrId# 
+    </update>
+
+    <update id="loginDAO.updateLoginLock" parameterClass="hashmap"   >
+        UPDATE $DB_NEOS$A_LOGINFAILINFO
+        	SET LOGIN_LOCK = 'Y', LOCK_DT = sysdate() 
+         WHERE EMPLYR_ID = #emplyrId# 
+    </update>
+
+    <update id="loginDAO.updateLoginSuccess" parameterClass="loginVO"  >
+        UPDATE $DB_NEOS$A_LOGINFAILINFO
+        	SET FAIL_CNT = 0, CREAT_DT = sysdate()
+         WHERE EMPLYR_ID = #id# 
+    </update>
+
+    <delete id="loginDAO.deleteLoginFailInfo" parameterClass="loginVO"  >
+        DELETE FROM $DB_NEOS$A_LOGINFAILINFO
+         WHERE EMPLYR_ID = #id# 
+    </delete>
+
+    <select id="loginDAO.selectLoginFailInfo"  resultClass="loginFailInfoVO" parameterClass="hashmap" >
+        <![CDATA[
+            SELECT EMPLYR_ID as id
+            	   , FAIL_CNT as failCnt
+            	   , LOGIN_LOCK as loginLock
+            	   , CREAT_DT as createDt
+            	   , round( (sysdate()  - CREAT_DT)*60*24) as timeGap
+            FROM
+                $DB_NEOS$A_LOGINFAILINFO
+            WHERE
+                EMPLYR_ID = #emplyrId# 
+            ]]>
+	</select>
+	
+	<select id="loginDAO.searchLoginPolicy" resultClass="loginPolicyNpVO" parameterClass="hashmap">
+	<![CDATA[
+	   SELECT LP_SEQ as seq
+	          , LP_FAILCNT as failCnt
+	          , LP_FAILMINUTE as failMinute
+	          , LP_DUPLEYN as dupleYn
+	          , LP_DUPLEMD as dupleMd
+         FROM $DB_NEOS$A_LOGINPOLICY
+        WHERE LP_SEQ = #strSeq#
+	]]>
+	</select>	
+	
+	
+	<select id="loginDAO.selectLoginFailCount" parameterClass="hashmap" resultClass="egovMap">
+		SELECT IFNULL(passwd_input_fail_count, '0') AS passwd_input_fail_count,
+		CASE WHEN #loginFailMin#='0' THEN 'Y' WHEN DATE_ADD(NOW(), INTERVAL -$loginFailMin$ MINUTE) > block_date THEN 'N' ELSE 'Y' END AS block_yn,
+	 	CASE WHEN block_date IS NULL OR #loginFailMin#='0' THEN #loginFailMin# ELSE TIMESTAMPDIFF(minute, DATE_ADD(NOW(), INTERVAL -$loginFailMin$ MINUTE), block_date) + 1 END AS remain_min,
+		CASE WHEN #loginNotUseDay#='0' OR last_login_date is null THEN 'N' WHEN DATE_ADD(NOW(), INTERVAL -$loginNotUseDay$ DAY) > last_login_date THEN 'Y' ELSE 'N' END AS not_use_yn		
+		FROM   $DB_NEOS$t_co_emp
+		WHERE  login_id = #loginId#
+	</select>
+	
+	
+	<update id="loginDAO.updateLoginFailCount" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_emp SET
+		  passwd_input_fail_count = IFNULL(passwd_input_fail_count, '0') + 1
+		WHERE  login_id = #loginId#
+	</update>
+	
+	
+	<update id="loginDAO.updateLoginBlock" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_emp SET block_date = NOW()
+		<isNotEmpty property="passwdInputFailCount">
+		, passwd_input_fail_count = #passwdInputFailCount#
+        </isNotEmpty>
+		<isEmpty property="passwdInputFailCount">
+		, passwd_input_fail_count = -1					
+        </isEmpty>        		  
+		WHERE  login_id = #loginId#
+	</update>
+	
+	<select id="loginDAO.selectLoginIdExistCheck" parameterClass="hashmap" resultClass="string">
+		SELECT login_id
+		FROM   $DB_NEOS$t_co_emp
+		WHERE  login_id = #loginId#
+	</select>
+	
+   <update id="loginDAO.updateSpringSecuKey" parameterClass="hashmap">
+            <![CDATA[
+		     UPDATE $DB_NEOS$t_co_emp
+			   SET spring_secu = #springSecurityKey#, spring_date = NOW()
+			 WHERE emp_seq = #empSeq#
+            ]]>
+   </update>
+   
+   <select id="loginDAO.selectMailIdToLoginId" parameterClass="hashmap" resultClass="string">
+   		SELECT login_id
+   		FROM   $DB_NEOS$t_co_emp
+   		WHERE 1=1
+	    <isNotEmpty property="empSeq">
+	    and emp_seq = #empSeq#
+	    </isNotEmpty>
+	    <isNotEmpty property="loginId">
+	    and login_id = #loginId#
+	    </isNotEmpty>
+	    <isNotEmpty property="emailAddr">
+	    and email_addr = #emailAddr#
+	    </isNotEmpty>	    	    
+   </select>
+	 
+	<select id="loginDAO.EgovSpringSecurityAction" parameterClass="hashmap" resultClass="egovMap">	 
+		SELECT 
+		M.LOGIN_ID AS USER_ID
+		, M.EMP_SEQ AS PASSWORD
+		, 1 ENABLED
+		, $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(M.emp_seq, null),O.EMP_NAME_MULTI) AS USER_NM
+		, IF(IF(IFNULL(TCC.email_domain,'') = '', IFNULL(M.out_mail,''), M.email_addr )='',M.email_addr, IF(IFNULL(TCC.email_domain,'') = '', IFNULL(M.out_mail,''), M.email_addr )) AS USER_EMAIL
+		, SP.user_se AS USER_SE
+		, N.DEPT_SEQ AS ORGNZT_ID
+		, M.EMP_SEQ AS ESNTL_ID
+		, (SELECT $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(M.emp_seq,null),A.dept_name_multi)
+			FROM $DB_NEOS$v_t_co_dept_multi A
+			WHERE A.DEPT_SEQ = N.DEPT_SEQ LIMIT 1) ORGNZT_NM
+		, N.duty_code AS CLASS_CODE
+		, N.position_code as POSITION_CODE
+		, $DB_NEOS$get_emp_duty_position_name(N.GROUP_SEQ, N.comp_seq, N.duty_code, 'DUTY', $DB_NEOS$get_lang_code(M.emp_seq, null)) as CLASS_NM
+		, $DB_NEOS$get_emp_duty_position_name(N.GROUP_SEQ, N.comp_seq, N.position_code, 'POSITION', $DB_NEOS$get_lang_code(M.emp_seq, M.login_id)) as POSITION_NM
+		, N.COMP_SEQ AS ORGAN_ID
+		, (SELECT $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(M.emp_seq, null),F.COMP_NAME_MULTI)
+			FROM $DB_NEOS$v_t_co_comp_multi F WHERE N.COMP_SEQ=F.COMP_SEQ LIMIT 1) AS ORGAN_NM
+		, $DB_NEOS$get_auth_group_concat(N.COMP_SEQ, N.DEPT_SEQ, M.EMP_SEQ, N.DUTY_CODE, N.POSITION_CODE) AS AUTHOR_CODE
+		,(SELECT erp_emp_seq FROM $DB_NEOS$t_co_emp_comp WHERE comp_seq = N.COMP_SEQ AND emp_seq = N.EMP_SEQ LIMIT 1) AS ERP_EMP_CD
+		, '' AS ERP_EMP_NM
+		,IFNULL((SELECT erp_comp_seq FROM $DB_NEOS$t_co_erp_comp WHERE comp_seq = N.COMP_SEQ LIMIT 1), '') AS ERP_CO_CD
+		,M.EMP_NUM AS EMPL_NO
+		,$DB_NEOS$get_lang_code(M.emp_seq,null) as LANG_CODE
+		,N.GROUP_SEQ
+		,N.COMP_SEQ
+		,N.BIZ_SEQ
+		,PIC_FILE_ID
+		,N.DEPT_SEQ
+		, IF( IFNULL(TCC.email_domain,'') = '', IFNULL(M.out_domain,''), TCC.email_domain ) AS EMAIL_DOMAIN
+		,TCC.EA_TYPE
+		,IFNULL((SELECT erp_biz_seq FROM $DB_NEOS$t_co_erp_biz WHERE comp_seq = N.COMP_SEQ AND biz_seq = N.BIZ_SEQ LIMIT 1), '') AS ERP_BIZ_CD
+		,IFNULL((SELECT erp_dept_seq FROM $DB_NEOS$t_co_erp_dept WHERE comp_seq = N.COMP_SEQ AND biz_seq = N.BIZ_SEQ AND dept_seq = N.DEPT_SEQ LIMIT 1), '') AS ERP_DEPT_CD
+		,M.MAIN_COMP_SEQ = N.COMP_SEQ AS OrderFlag  
+		,NOW() AS last_login_date             
+		,IFNULL(license_check_yn,'1') AS licenseCheckYn
+		,IFNULL(M.passwd_date, NOW()) AS passwdChangeDate
+		,date_format(now(6),'%Y-%m-%d %H:%i:%s.%f') AS lastLoginDateTime
+		,IFNULL(M.passwd_status_code,'P') AS passwdStatusCode
+		,TCD.path AS orgnztPath
+		,CASE WHEN IFNULL(G.comp_mail_url,'')!='' THEN G.comp_mail_url WHEN IFNULL(TCC.comp_mail_url,'')!='' THEN TCC.comp_mail_url ELSE IFNULL(G.mail_url,'') END AS url
+		,#clientIp# AS ip
+		,#compAccessDomain# AS accessIp
+		FROM $DB_NEOS$T_CO_EMP M, $DB_NEOS$T_CO_EMP_DEPT N, $DB_NEOS$V_T_CO_EMP_MULTI O, $DB_NEOS$T_CO_COMP TCC, $DB_NEOS$T_CO_DEPT TCD
+		,(
+			select
+			tmg.master_passwd,  
+			tmg.group_seq,
+			tmg.mail_url,
+			tmc.comp_mail_url          
+			from $DB_NEOS$t_co_group tmg
+			left join $DB_NEOS$t_co_comp tmc on replace(replace(concat(ifnull(tmc.comp_domain,''),'**'),':80**',''),'**','') = replace(replace(concat(ifnull(#compAccessDomain#,''),'**'),':443**',''),'**','')
+			limit 1
+		) G		
+		,(			
+		    SELECT
+		    #userSe# AS user_se,
+		    #compSeq# AS comp_seq,
+		    #deptSeq# AS dept_seq,
+		    #springSecu# AS spring_secu	
+		) SP
+		WHERE M.EMP_SEQ = N.EMP_SEQ
+		AND M.EMP_SEQ = O.EMP_SEQ
+		AND N.DEPT_SEQ = TCD.DEPT_SEQ
+		AND M.WORK_STATUS IN ('999','004')
+		AND N.COMP_SEQ = TCC.COMP_SEQ
+		AND CONCAT(M.GROUP_SEQ, M.SPRING_SECU) = SP.spring_secu
+		AND M.SPRING_DATE > DATE_ADD(NOW(),INTERVAL -60 SECOND)
+		AND N.MAIN_DEPT_YN = (CASE WHEN SP.dept_seq = '_' THEN 'Y' ELSE N.MAIN_DEPT_YN END)
+		AND N.DEPT_SEQ = (CASE WHEN SP.dept_seq = '_' THEN N.DEPT_SEQ ELSE SP.dept_seq END)
+		AND M.USE_YN = 'Y'
+		AND N.USE_YN = 'Y'
+		AND O.USE_YN = 'Y'
+		AND TCC.USE_YN = 'Y'
+		AND TCD.USE_YN = 'Y'
+		AND M.license_check_yn != '3'
+		AND TCC.comp_seq = (CASE WHEN SP.comp_seq = '_' THEN TCC.comp_seq ELSE SP.comp_seq END)
+		ORDER BY OrderFlag DESC, ORGAN_ID ASC
+		LIMIT 1
+	</select>
+	 
+	 <select id="loginDAO.authoritiesByUsernameQuery" parameterClass="hashmap" resultClass="egovMap">
+	 	SELECT e.EMP_SEQ USER_ID, ed.dept_seq DEPT_ID, T.AUTHOR_CODE AUTHORITY
+		FROM $DB_NEOS$t_co_emp e
+    	JOIN $DB_NEOS$t_co_emp_dept ed on e.emp_seq = ed.emp_seq 
+    	JOIN $DB_NEOS$t_co_emp_comp ec on ed.comp_seq = ec.comp_seq and ed.emp_seq = ec.emp_seq and ec.work_status IN ('999','004')
+		LEFT JOIN $DB_NEOS$t_co_auth_relate B ON e.emp_seq = B.emp_seq
+		LEFT JOIN $DB_NEOS$t_co_authcode T ON T.author_code = B.author_code AND T.author_use_yn = 'Y'
+		WHERE CONCAT(e.group_seq, e.login_id) = #username#
+    	AND ed.dept_seq = #deptSeq# 
+    	AND CASE WHEN e.license_check_yn = '1' THEN 
+		(CASE WHEN B.author_type = '002' THEN ed.dept_seq = B.dept_seq AND ed.comp_seq = B.comp_seq ELSE e.emp_seq = B.emp_seq AND ed.dept_seq = B.dept_seq AND ed.comp_seq = B.comp_seq END) WHEN e.license_check_yn = '2' THEN
+		(T.author_code IS NULL or T.author_code is not null) END
+	 </select>
+   
+   	 <!-- 일반 로그인 -->
+	<select id="loginDAO.extActionLogin" resultMap="login" parameterClass="hashmap">
+			SELECT a.login_id AS id
+			     , $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(a.emp_seq, a.login_id), b.emp_name_multi) AS NAME
+			     , a.login_passwd AS PASSWORD
+			     , '' AS ihidNum
+			     , IF(IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_mail,''), a.email_addr )='',a.email_addr,IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_mail,''), a.email_addr )) AS email
+			     , 'USER' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			     , a.group_seq as groupSeq
+			     , IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_domain,''), d.email_domain ) as emailDomain
+                 , IFNULL((SELECT erp_biz_seq FROM $DB_NEOS$t_co_erp_biz WHERE comp_seq = c.comp_seq AND biz_seq = c.biz_seq LIMIT 1), '') AS erpBizCd
+                 , IFNULL((SELECT erp_dept_seq FROM $DB_NEOS$t_co_erp_dept WHERE comp_seq = c.comp_seq AND biz_seq = c.biz_seq AND dept_seq = c.dept_seq LIMIT 1), '') AS erpDeptCd
+                 , NOW() as last_login_date
+                 , a.native_lang_code AS langCode
+                 , a.license_check_yn AS licenseCheckYn
+                 , IFNULL(a.passwd_date, NOW()) AS passwdChangeDate
+                 , IFNULL(a.passwd_status_code, 'P') AS passwdStatusCode
+                 , NOW() AS lastLoginDateTime
+                 , tcd.path AS orgnztPath
+			     , IFNULL(tcd.display_dept_seq, tcd.dept_seq) as displayDeptSeq
+			     , tcd.team_yn as teamYn
+			     , d.ea_type as eaType
+			     , '' as url
+			     , '' as ip
+			     , '' as accessIp	
+			     , $DB_NEOS$get_auth_group_concat(c.comp_seq, c.dept_seq, a.emp_seq, c.DUTY_CODE, c.POSITION_CODE) AS authorCode		     
+			  FROM $DB_NEOS$t_co_group g, $DB_NEOS$t_co_emp a, $DB_NEOS$v_t_co_emp_multi b, $DB_NEOS$t_co_emp_dept c, $DB_NEOS$t_co_comp d, $DB_NEOS$t_co_emp_comp e, $DB_NEOS$t_co_dept tcd
+			  WHERE a.login_id = #id#
+			   AND a.group_seq = #groupSeq#
+			   AND #checkTime# > DATE_ADD(NOW(),INTERVAL -30 SECOND)
+			   AND g.group_seq = a.group_seq
+			   AND a.emp_seq = b.emp_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND c.comp_seq = d.comp_seq
+			   AND c.dept_seq = tcd.dept_seq
+               AND e.emp_seq = c.emp_seq
+               AND e.comp_seq = d.comp_seq
+			   AND e.work_status IN ('999','004')
+			   AND a.use_yn = 'Y'
+			   AND b.use_yn = 'Y'
+			   AND c.use_yn = 'Y'
+			   AND d.use_yn = 'Y'
+			   AND e.use_yn = 'Y'
+			   AND tcd.use_yn = 'Y'
+			   AND a.license_check_yn != '3'
+			   <isNotEmpty property="deptSeq">
+			   AND c.dept_seq = #deptSeq#
+			   </isNotEmpty>
+			   <isNotEmpty property="deptCd">
+			   AND tcd.dept_cd = #deptCd#
+			   </isNotEmpty>			   
+			   <isEmpty property="deptSeq">
+				   <isEmpty property="deptCd">
+				   		AND c.main_dept_yn = 'Y'
+				   		AND a.main_comp_seq = c.comp_seq	
+				   </isEmpty>
+			   </isEmpty>
+         	   LIMIT 1       
+	</select>
+	
+	
+	
+	
+	<select id="loginDAO.CustActionLogin" resultMap="login" parameterClass="hashmap">
+			SELECT a.login_id AS id
+			     , $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(a.emp_seq, a.login_id), b.emp_name_multi) AS NAME
+			     , a.login_passwd AS PASSWORD
+			     , '' AS ihidNum
+			     , IF(IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_mail,''), a.email_addr )='',a.email_addr,IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_mail,''), a.email_addr )) AS email
+			     , 'USER' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			     , a.group_seq as groupSeq
+			     , IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_domain,''), d.email_domain ) as emailDomain
+                 , IFNULL((SELECT erp_biz_seq FROM $DB_NEOS$t_co_erp_biz WHERE comp_seq = c.comp_seq AND biz_seq = c.biz_seq LIMIT 1), '') AS erpBizCd
+                 , IFNULL((SELECT erp_dept_seq FROM $DB_NEOS$t_co_erp_dept WHERE comp_seq = c.comp_seq AND biz_seq = c.biz_seq AND dept_seq = c.dept_seq LIMIT 1), '') AS erpDeptCd
+                 , NOW() as last_login_date
+                 , a.native_lang_code AS langCode
+                 , a.license_check_yn AS licenseCheckYn
+                 , IFNULL(a.passwd_date, NOW()) AS passwdChangeDate
+                 , IFNULL(a.passwd_status_code, 'P') AS passwdStatusCode
+                 , NOW() AS lastLoginDateTime
+                 , tcd.path AS orgnztPath
+			     , IFNULL(tcd.display_dept_seq, tcd.dept_seq) as displayDeptSeq
+			     , tcd.team_yn as teamYn
+			     , d.ea_type as eaType
+			     , '' as url
+			     , '' as ip
+			     , $DB_NEOS$get_auth_group_concat(c.comp_seq, c.dept_seq, a.emp_seq, c.DUTY_CODE, c.POSITION_CODE) AS authorCode
+			     , '' as accessIp			     
+			  FROM $DB_NEOS$t_co_group g, $DB_NEOS$t_co_emp a, $DB_NEOS$v_t_co_emp_multi b, $DB_NEOS$t_co_emp_dept c, $DB_NEOS$t_co_comp d, $DB_NEOS$t_co_emp_comp e, $DB_NEOS$t_co_dept tcd
+			  WHERE e.erp_emp_seq = #empNo#
+			   AND g.group_seq = a.group_seq
+			   AND a.emp_seq = b.emp_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND c.comp_seq = d.comp_seq	
+			   AND a.main_comp_seq = c.comp_seq	
+			   AND c.dept_seq = tcd.dept_seq
+               AND e.emp_seq = c.emp_seq
+               AND e.comp_seq = d.comp_seq
+			   AND e.work_status IN ('999','004')
+			   AND c.main_dept_yn = 'Y'
+			   AND a.use_yn = 'Y'
+			   AND b.use_yn = 'Y'
+			   AND c.use_yn = 'Y'
+			   AND d.use_yn = 'Y'
+			   AND e.use_yn = 'Y'
+			   AND tcd.use_yn = 'Y'
+			   AND a.license_check_yn != '3'
+         	   LIMIT 1       
+	</select>
+	
+	
+	<select id="loginDAO.actionLoginForOneffice" resultMap="login" parameterClass="hashmap">
+	
+			SELECT a.login_id AS id
+			     , $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(a.emp_seq, a.login_id), b.emp_name_multi) AS NAME
+			     , a.login_passwd AS PASSWORD
+			     , '' AS ihidNum
+			     , IF(IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_mail,''), a.email_addr )='',a.email_addr,IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_mail,''), a.email_addr )) AS email
+			     , 'USER' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			     , a.group_seq as groupSeq
+			     , IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_domain,''), d.email_domain ) as emailDomain
+                 , IFNULL((SELECT erp_biz_seq FROM $DB_NEOS$t_co_erp_biz WHERE comp_seq = c.comp_seq AND biz_seq = c.biz_seq LIMIT 1), '') AS erpBizCd
+                 , IFNULL((SELECT erp_dept_seq FROM $DB_NEOS$t_co_erp_dept WHERE comp_seq = c.comp_seq AND biz_seq = c.biz_seq AND dept_seq = c.dept_seq LIMIT 1), '') AS erpDeptCd
+                 , NOW() as last_login_date
+                 , a.native_lang_code AS langCode
+                 , a.license_check_yn AS licenseCheckYn
+                 , IFNULL(a.passwd_date, NOW()) AS passwdChangeDate
+                 , IFNULL(a.passwd_status_code, 'P') AS passwdStatusCode
+                 , NOW() AS lastLoginDateTime
+                 , tcd.path AS orgnztPath
+			     , IFNULL(tcd.display_dept_seq, tcd.dept_seq) as displayDeptSeq
+			     , tcd.team_yn as teamYn
+			     , d.ea_type as eaType
+			     , '' as url
+			     , '' as ip
+			     , $DB_NEOS$get_auth_group_concat(c.comp_seq, c.dept_seq, a.emp_seq, c.DUTY_CODE, c.POSITION_CODE) AS authorCode
+			     , '' as accessIp
+			  FROM $DB_NEOS$t_co_group g, $DB_NEOS$t_co_emp a, $DB_NEOS$v_t_co_emp_multi b, $DB_NEOS$t_co_emp_dept c, $DB_NEOS$t_co_comp d, $DB_NEOS$t_co_emp_comp e, $DB_NEOS$t_co_dept tcd
+			  WHERE a.emp_seq = #empSeq#
+			   AND a.group_seq = IF( #groupSeq# = 'null', a.group_seq, #groupSeq# )
+			   AND g.group_seq = a.group_seq
+			   AND a.emp_seq = b.emp_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND c.comp_seq = d.comp_seq		
+			   AND c.dept_seq = tcd.dept_seq
+               AND e.emp_seq = c.emp_seq
+               AND e.comp_seq = d.comp_seq
+			   AND e.work_status IN ('999','004')
+			   AND c.main_dept_yn = 'Y'
+			   AND a.use_yn = 'Y'
+			   AND b.use_yn = 'Y'
+			   AND c.use_yn = 'Y'
+			   AND d.use_yn = 'Y'
+			   AND e.use_yn = 'Y'
+			   AND tcd.use_yn = 'Y'
+			   AND a.license_check_yn != '3'
+         	   ORDER BY CASE WHEN e.COMP_SEQ = a.main_comp_seq THEN 0 ELSE 1 END
+         	   LIMIT 1  
+	</select>
+	
+
+	<select id="loginDAO.getLoginVoByEmpSeq" resultMap="login" parameterClass="hashmap">
+			<![CDATA[
+			SELECT a.login_id AS id
+			     , $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(a.emp_seq, a.login_id), b.emp_name_multi) AS NAME
+			     , a.login_passwd AS PASSWORD
+			     , '' AS ihidNum
+			     , a.email_addr AS email
+			     , 'USER' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			     , a.group_seq as groupSeq
+			     , d.email_domain as emailDomain
+			     , '' as erpBizCd
+			     , '' as erpDeptCd
+			     , NOW() as last_login_date
+			     , a.license_check_yn AS licenseCheckYn
+			     , IFNULL(a.passwd_date, NOW()) AS passwdChangeDate
+			     , IFNULL(a.passwd_status_code, 'P') AS passwdStatusCode
+			     , NOW() as lastLoginDateTime
+			     , a.native_lang_code as langCode
+			     , tcd.path as orgnztPath
+			     , '' as displayDeptSeq
+			     , '' as teamYn			
+			     , d.ea_type as eaType
+			     , '' as url
+			     , '' as ip
+			     , $DB_NEOS$get_auth_group_concat(c.comp_seq, c.dept_seq, a.emp_seq, c.DUTY_CODE, c.POSITION_CODE) AS authorCode
+			     , '' as accessIp			     
+			  FROM $DB_NEOS$t_co_group g, $DB_NEOS$t_co_emp a, $DB_NEOS$v_t_co_emp_multi b, $DB_NEOS$t_co_emp_dept c, $DB_NEOS$t_co_comp d, $DB_NEOS$t_co_emp_comp e, $DB_NEOS$t_co_dept tcd
+			  WHERE a.emp_seq = #empSeq#
+			   AND g.group_seq = a.group_seq
+			   AND a.group_seq = #groupSeq#	
+			   AND c.dept_seq = tcd.dept_seq
+			   AND a.emp_seq = b.emp_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND c.comp_seq = d.comp_seq
+               AND e.emp_seq = c.emp_seq
+               AND e.comp_seq = d.comp_seq
+			   AND e.work_status IN ('999','004')
+			   AND c.main_dept_yn = 'Y'
+			   AND a.use_yn = 'Y'
+			   AND b.use_yn = 'Y'
+			   AND c.use_yn = 'Y'
+			   AND d.use_yn = 'Y'
+			   AND tcd.use_yn = 'Y'
+         	   ORDER BY CASE WHEN e.COMP_SEQ = a.main_comp_seq THEN 0 ELSE 1 END
+         	   LIMIT 1			
+			]]>
+	</select>
+   
+</sqlMap>

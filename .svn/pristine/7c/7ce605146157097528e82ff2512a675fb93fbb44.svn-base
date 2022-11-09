@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMapConfig PUBLIC "-//iBATIS.com//DTD SQL Map Config 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-config-2.dtd">
+
+<sqlMapConfig>
+    <sqlMap resource="egovframework/sqlmap/mysql/neos/cmm/systemx/OrgChart_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mysql/neos/cmm/systemx/GroupManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mysql/neos/cmm/systemx/CompManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mysql/neos/cmm/systemx/DeptManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mysql/neos/cmm/systemx/EmpManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mysql/neos/cmm/systemx/AttachFileUpload_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mysql/neos/cmm/systemx/EmpDeptManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mysql/neos/cmm/systemx/MainManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mysql/neos/cmm/systemx/ProjectManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mysql/neos/cmm/systemx/PartnerManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mysql/neos/cmm/systemx/AlarmMasterAdmin_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mysql/neos/cmm/systemx/DutyPositionManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mysql/neos/cmm/systemx/OrgAdapterManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mysql/neos/cmm/systemx/LdapManage_SQL.xml"/>
+    
+</sqlMapConfig>

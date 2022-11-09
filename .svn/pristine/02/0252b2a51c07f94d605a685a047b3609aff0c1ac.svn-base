@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMapConfig PUBLIC "-//iBATIS.com//DTD SQL Map Config 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-config-2.dtd">
+
+<sqlMapConfig>						
+	<sqlMap resource="egovframework/sqlmap/mariadb/api/Account_SQL.xml"/>	
+	<sqlMap resource="egovframework/sqlmap/mariadb/api/Orgchart_SQL.xml"/>
+	<sqlMap resource="egovframework/sqlmap/mariadb/api/Task_SQL.xml"/>
+	<sqlMap resource="egovframework/sqlmap/mariadb/api/Fax_SQL.xml"/>
+	<sqlMap resource="egovframework/sqlmap/mariadb/api/ApiMain_SQL.xml"/>
+	<sqlMap resource="egovframework/sqlmap/mariadb/api/AlarmModule_SQL.xml"/>
+	<sqlMap resource="egovframework/sqlmap/mariadb/api/Msg_SQL.xml"/>
+	<sqlMap resource="egovframework/sqlmap/mariadb/api/Ext_SQL.xml"/>
+	<sqlMap resource="egovframework/sqlmap/mariadb/api/Hdcs_SQL.xml"/>
+	<sqlMap resource="egovframework/sqlmap/mariadb/api/HrExtInterlock_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/api/EbpOrgchart_SQL.xml"/>
+	<sqlMap resource="egovframework/sqlmap/mariadb/api/Sms_SQL.xml"/>
+	<sqlMap resource="egovframework/sqlmap/mariadb/api/Comment_SQL_Mariadb.xml"/>
+	<sqlMap resource="egovframework/sqlmap/mariadb/api/Oneffice_SQL_Mariadb.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/api/MenuAccess_SQL.xml"/>
+	
+	<sqlMap resource="egovframework/sqlmap/mariadb/api/Mullen_SQL.xml"/>
+</sqlMapConfig>

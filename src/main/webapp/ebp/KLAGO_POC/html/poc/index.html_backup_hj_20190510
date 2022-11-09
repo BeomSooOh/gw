@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <meta name="viewport" content="user-scalable=no, initial-scale=1.0 , maximum-scale=1.0 , minimum-scale=1.0 ,target-densitydpi=medium-dpi" />
+    <link rel="stylesheet" href="../../css/pudd.css" />
+    <link rel="stylesheet" href="../../css/comm/common.css" />
+    <link rel="stylesheet" href="../../css/animate.css" />
+    <link rel="stylesheet" href="../../css/expenses.css" />
+    <script type="text/javascript" src="../../Scripts/comm/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="../../Scripts/pudd/pudd-1.1.151.min.js"></script>
+    <script>
+    function scOpen(){
+    	$("#searchWrap").css("transform","translateY(0%)");
+    	scInit();
+    }
+    
+    function scClose(){
+    	$("#searchWrap").css("transform","translateY(-100%)");
+    	scInit();
+    }
+    
+    function scInit(){
+    	$(".searchBox").attr("style","top:30%;");
+		$( ".timeLine" ).hide();
+		$( ".userApp" ).hide();
+    }
+
+    function aniInit(){
+    	$(".searchBox").attr("style","top:0;");
+    	$( ".timeLine" ).show().addClass("animated1s fadeInUp");
+		$( ".userApp" ).show().addClass("animated15s fadeInUp");
+		
+		setTimeout(function(){$( ".timeLine" ).removeClass("animated1s fadeInUp")},1000);
+		setTimeout(function(){$( ".userApp" ).removeClass("animated1s fadeInUp")},1000);		
+    }
+
+	function aniPointer(){
+		$( ".t:after" ).addClass("animated1s float infinite");
+
+		var selecter =  ".portalView,"
+			selecter += ".expenses .srCon02 > a,"
+			selecter += ".card .srCon02 > a,"
+			selecter += ".exp_bg1 > a,"
+			selecter += ".expenses .srCon03 .keyword li:nth-child(6),"
+			selecter += ".expenses .srCon03 .keyword li:nth-child(7),"
+			selecter += ".card .srCon03 .keyword li:nth-child(1),"
+			selecter += ".card .srCon03 .keyword li:nth-child(4),"
+			selecter += ".crm .srCon03 .keyword li:nth-child(4),"
+			selecter += ".crm .srCon03 .keyword li:nth-child(6),"
+			selecter += ".crm .srCon03 .keyword li:nth-child(9),"
+			selecter += ".seen1 .header_bot_btn,"
+			selecter += ".seen3 .header_bot_btn,"
+			selecter += ".seen3 .exp_btn,"
+			selecter += ".seen4 .exp_btn,"
+			selecter += ".seen6 .header_bot_btn2,"
+			selecter += ".seen7 .header_bot_btn"
+
+		$( selecter ).addClass("t");
+	}
+
+    
+    function action1(){
+    	scClose();
+    	$(".seen1").show(function(){
+			aniPointer();
+		});//경비헤더
+    	$(".seen2").hide();//전표헤더
+    	$(".seen3").hide();//자금헤더
+    	$(".seen4").hide();//카드헤더
+		$(".seen5").hide();//crm헤더
+		$(".seen6").hide();//crm헤더
+		$(".seen7").hide();//crm헤더
+    }
+    
+    function action2(){
+    	scClose();
+    	$(".seen1").hide();//경비헤더
+    	$(".seen2").show(function(){
+			aniPointer();
+		});//전표헤더
+    	$(".seen3").hide();//자금헤더
+    	$(".seen4").hide();//카드헤더
+		$(".seen5").hide();//crm헤더
+		$(".seen6").hide();//crm헤더
+		$(".seen7").hide();//crm헤더
+    }
+    
+    function action3(){
+    	scClose();
+    	$(".seen1").hide();//경비헤더
+    	$(".seen2").hide();//전표헤더
+    	$(".seen3").show(function(){
+			aniPointer();
+		});//자금헤더
+    	$(".seen4").hide();//카드헤더
+		$(".seen5").hide();//crm헤더
+		$(".seen6").hide();//crm헤더
+		$(".seen7").hide();//crm헤더
+    }
+    
+    function action4(){
+    	scClose();
+    	$(".seen1").hide();//경비헤더
+    	$(".seen2").hide();//전표헤더
+    	$(".seen3").hide();//자금헤더
+    	$(".seen4").show(function(){
+			aniPointer();
+		});//카드헤더
+		$(".seen5").hide();//crm헤더
+		$(".seen6").hide();//crm헤더
+		$(".seen7").hide();//crm헤더
+    }
+
+	function action5(){
+    	scClose();
+    	$(".seen1").hide();//경비헤더
+    	$(".seen2").hide();//전표헤더
+    	$(".seen3").hide();//자금헤더
+		$(".seen4").hide();//카드헤더
+    	$(".seen5").show(function(){
+			aniPointer();
+		});//crm헤더
+		$(".seen6").hide();//crm헤더
+		$(".seen7").hide();//crm헤더
+    }
+
+	function action6(){
+    	scClose();
+    	$(".seen1").hide();//경비헤더
+    	$(".seen2").hide();//전표헤더
+    	$(".seen3").hide();//자금헤더
+		$(".seen4").hide();//카드헤더
+    	$(".seen5").hide();//crm헤더
+		$(".seen6").show(function(){
+			aniPointer();
+		});//crm헤더
+		$(".seen7").hide();//crm헤더
+    }
+
+	function action7(){
+    	scClose();		
+    	$(".seen1").hide();//경비헤더
+    	$(".seen2").hide();//전표헤더
+    	$(".seen3").hide();//자금헤더
+		$(".seen4").hide();//카드헤더
+    	$(".seen5").hide();//crm헤더
+		$(".seen6").hide();//crm헤더
+		$(".seen7").show(function(){
+			aniPointer();
+		});//crm헤더
+    }
+
+    $(function() {
+		scInit();
+
+		$( ".portalView" ).on("click",function(){
+			scOpen();
+			$("#searchText").focus();
+		});
+		
+		$( "#searchText" ).focusin(function(){
+			aniInit();
+		});
+		
+		$( "#searchText" ).blur(function(){
+			var inpVal = $( "#searchText" ).val();
+			if( inpVal == "" ) {
+				scInit();
+			}
+		});
+		
+		$("#searchWrap").on("click",function(e){
+			$( "#searchText" ).blur(function(){
+				var inpVal = $( "#searchText" ).val();
+				if( inpVal == "" ) {
+					scInit();
+				}
+			});
+		});
+
+		var exData = [
+		//정산
+			{ exDt : "회사기준관리(2)", exText : [
+				"모듈별환경설정 > 설정관리 > 정산프로파일마스터"
+			,	"모듈별환경설정 > 정산설정관리 > 정산출처수신관리"	
+			]}
+		,	{ exDt : "관리회계(1)", exText : [
+				"제조원가관리 > 오더별제조원가 > 오더별연산품예비정산"
+			]}
+		,	{ exDt : "세무관리(9)", exText : [
+				"원천세관리 > 근로소득연말정산 > 연말정산항목관리(근로소득)"
+			,	"원천세관리 > 근로소득연말정산 > 연말정산자료입력(관리자)"
+			,	"원천세관리 > 근로소득연말정산 > 연말정산자료입력(사용자)"
+			,	"원천세관리 > 근로소득연말정산 > 국세청연말정산간소화입력"
+			,	"원천세관리 > 근로소득연말정산 > 국세청편리한연말정산입력"
+			,	"원천세관리 > 근로소득연말정산 > 연말정산납부세액분납입력"
+			,	"원천세관리 > 근로소득연말정산 > 연말정산현황"
+			,	"원천세관리 > 근로소득연말정산 > 연말정산자료엑셀업로드"
+			,	"원천세관리 > 근로소득연말정산 > 연말정산항목관리(사업소득)"
+			]}
+			
+		//경비청구	
+		,	{ exDt : "예산관리(2)", exText : [
+				"비영리예산 > 일상경비 > 일상경비지출원인행위부"
+			,	"비영리예산 > 일상경비 > 일상경비출납계산서"	
+			]}
+		,	{ exDt : "세무관리(1)", exText : [
+				"법인세 > 영수증수취경비송금명세서 > 경비등송금명세서"
+			]}
+		,	{ exDt : "프로젝트관리(2)", exText : [
+				"프로젝트관리 > 경비관리 > 프로젝트경비등록"
+			,	"프로젝트관리 > 경비관리 > 프로젝트경비전표처리"
+			]}
+		,	{ exDt : "재무관리(2)", exText : [
+				"총계정원장 > 장부관리 > 부서별경비청구집계표"
+			,	"총계정원장 > 장부관리 > 경비현황분석"
+			]}
+		,	{ exDt : "대사우서비스(2)", exText : [
+				"회계 > 경비 > 개인별경비청구신청"
+			,	"회계 > 경비 > 개인별경비청구현황"
+			]}
+			
+		//법인카드
+		,	{ exDt : "법인카드관리(4)", exText : [
+				"법인카드관리 > 법인카드 청구내역"
+			,	"법인카드관리 > 법인카드 지출관리"	
+			,	"법인카드관리 > 법인카드 사용현황"
+			,	"법인카드관리 > 법인카드 부서별/월별현황"
+			]}
+		,	{ exDt : "자금관리(4)", exText : [
+				"자금기초설정 > 자금기준설정 > 신용카드등록"
+			,	"자금기초설정 > 금융연동설정 > 카드부서등록"
+			,	"자금기초설정 > 금융연동설정 > 카드사용자등록"
+			,	"자금기초설정 > 자료수집 > 법인카드거래내역"
+			]}
+		//crm
+		,	{ exDt : "CRM(14)", exText : [
+				"영업활동 > 영업이슈 > 영업이슈등록"
+			,	"영업활동 > 영업이슈 > 영업이슈처리"
+			,	"영업활동 > 영업이슈 > 영업이슈현황"
+			,	"기회/수주 > 영업기회 > 영업기회등록"
+			,	"기회/수주 > 영업기회 > 영업기회현황"
+			,	"기회/수주 > 영업기회 > 영업실패현황"
+			,	"종합Report > 활동분석 > 영업활동분석"
+			,	"종합Report > 활동분석 > 영업활동보고"
+			,	"종합Report > 활동분석 > 영업활동현황"
+			,	"종합Report > 활동분석 > 기간별영업활동"
+			,	"종합Report > 활동분석 > 제품별영업활동"
+			,	"종합Report > 활동분석 > 사원별영업활동"
+			,	"종합Report > 활동분석 > 월별영업현황"
+			,	"기준정보 > 영업단계 > 영업단계등록"
+			]}
+		,	{ exDt : "회사기준관리(3)", exText : [
+				"마스터기본정보 > 조직정보설정 > 영업조직정보조회"
+			,	"마스터기본정보 > 품목관리 > 영업품목정보조회"
+			,	"영업활동 > 영업이슈 > 영업이슈처리"
+			]}
+		];
+
+		function checkSpecialCharacter( str ) {
+	
+			var special_pattern = /[`~!#$%^*|\\\'\"\/?\[\]]/gi;
+			if( special_pattern.test( str ) ) return true;
+	
+			return false;
+		}
+	
+		function replaceTextMarking( valStr, textStr ) {
+	
+			var reg = new RegExp( valStr, "g" );
+			textStr = textStr.replace( reg, function( s ) {
+	
+				return '<span class="match">' + s + '</span>';
+			});
+	
+			return textStr;
+		}
+	
+		function replaceResultTextSet( $box, exData, valStr ) {
+	
+			$box.html( null );
+	
+			exData.forEach( function( item, idx ) {
+
+				var dlTag = document.createElement( "dl" );
+				$box.append( dlTag );
+
+				var dtTag = document.createElement( "dt" );
+				dtTag.innerHTML = item.exDt;
+				dlTag.appendChild( dtTag );
+
+				item.exText.forEach( function( itm, ix ) {
+
+					var textStr = itm;
+					textStr = textStr.replace( /</gi, "&lt;" );
+					textStr = textStr.replace( />/gi, "&gt;" );
+		
+					if( valStr ) {
+		
+						if( ! checkSpecialCharacter( valStr ) ) {
+								
+							textStr = replaceTextMarking( valStr, textStr );
+						}
+					}
+
+					var ddTag = document.createElement( "dd" );
+					ddTag.innerHTML = textStr;
+					dlTag.appendChild( ddTag );
+				});
+
+				if( 0 == $( dlTag ).find( ".match" ).length ) {
+
+					$( dlTag ).hide();
+				}
+			});
+		}
+
+		function showResultTextSet() {
+			$( "#autoText" ).attr("style","")
+			$( ".timeLine" ).attr("style","height:0px;margin:0 auto;");
+		}
+
+		function hideResultTextSet() {
+			$( "#autoText" ).attr("style","height:0px")
+			$( ".timeLine" ).attr("style","");
+		}
+
+		// 입력박스 키보드 입력 발생시에 호출되는 함수
+		function autoCompleteCall( valStr ) {
+
+			if( "" == valStr ) {
+
+				hideResultTextSet();
+
+			} else {
+
+				// autoText content 설정
+				replaceResultTextSet( $( "#autoText" ), exData, valStr );
+
+				if( 0 == $( "#autoText" ).find( ".match" ).length ) {// 일치하는 항목이 없는 경우
+
+					// animation 구현에 따라 적용
+
+				} else {// 일치하는 항목이 있는 경우
+
+					var height = $( "#autoText" ).css( "height" );
+					height = parseInt( height );
+
+					if( ! isNaN(height) ) {
+
+						if( 0 == height ) {
+
+							showResultTextSet();
+
+						} else {
+							// skip - 이미 표시되고 있는 경우
+						}
+
+					} else {
+						// skip - height 설정이 숫자형태가 아닌 경우 : 비정상적인 경우
+					}
+				}
+			}
+		};
+
+		$( "#searchText" ).on( "input", function( e ) {
+	
+			if( 38 == e.keyCode || 40 == e.keyCode || 13 == e.keyCode || 27 == e.keyCode || 37 == e.keyCode || 39 == e.keyCode ) return;
+	
+			var valStr = $( "#searchText" ).val().trim();
+			autoCompleteCall( valStr );
+		});
+
+		function showSearchResultBox() {
+			$( "#autoText" ).hide();
+			$( ".timeLine" ).attr("style","height:0px;margin:0 auto;");
+			$( ".userApp" ).attr("style","height:0px;margin:0 auto;");
+			$( ".copy" ).addClass("animated05s fadeOutDown");
+			setTimeout(function(){$( ".copy" ).removeClass("animated05s fadeOutDown").hide()},500);
+			
+			var valStr = $( "#searchText" ).val();
+			
+			$( ".searchResult" ).css("bottom","").removeClass("animated05s fadeOutDown").hide();
+			
+			if( -1 != valStr.indexOf("정산") ) {
+				
+				$(".searchResult.calculate").show().css("bottom","0").addClass("animated05s fadeInUp");
+				
+			}else if( -1 != valStr.indexOf("경비") ){
+				
+				$(".searchResult.expenses").show().css("bottom","0").addClass("animated05s fadeInUp");
+								
+			}else if( -1 != valStr.indexOf("카드") ){
+				
+				$(".searchResult.card").show().css("bottom","0").addClass("animated05s fadeInUp");
+				
+			}else if(valStr == "영업"){
+				
+				$(".searchResult.crm").show().css("bottom","0").addClass("animated05s fadeInUp");
+				
+			}
+			
+			setTimeout(function(){$( ".searchResult" ).removeClass("animated05s fadeInUp")},500);
+		}
+
+		function hideSearchResultBox() {
+			$( ".timeLine" ).attr("style","");
+			$( ".userApp" ).attr("style","");
+			$( ".copy" ).addClass("animated05s fadeInUp");
+			setTimeout(function(){$( ".copy" ).show().removeClass("animated05s fadeInUp")},500);
+			
+			$(".searchResult").addClass("animated05s fadeOutDown");
+			setTimeout(function(){$( ".searchResult" ).css("bottom","").removeClass("animated05s fadeOutDown").hide()},500);
+		}
+
+		$( "#searchText" ).on( "keyup", function( e ) {			
+			var inpVal = $( this ).val();
+			//엔터키 쳤을때
+			if( 13 == e.keyCode || e.key === "Enter") {
+				if( ! inpVal == "") {
+					replaceResultTextSet( $( ".searchResult.calculate .srCon01" ), exData, inpVal );
+					replaceResultTextSet( $( ".searchResult.expenses .srCon01" ), exData, inpVal );
+					replaceResultTextSet( $( ".searchResult.card .srCon01" ), exData, inpVal );
+					replaceResultTextSet( $( ".searchResult.crm .srCon01" ), exData, inpVal );
+					showSearchResultBox();
+					aniPointer();
+				}
+			}
+			
+			//input에 값이 없을때 초기화
+			if( inpVal === "" ) {
+
+				var bottom = $(".searchResult").css("bottom");
+				bottom = parseInt( bottom );
+
+				if( ! isNaN( bottom ) ) {
+
+					if( 0 == bottom ) {
+
+						hideSearchResultBox();
+					}
+				}
+			}
+		});
+
+		$( ".search_btn" ).on( "click", function( e ) {
+
+			var inpVal = $( "#searchText" ).val();
+			if( ! inpVal == "") {
+				replaceResultTextSet( $( ".searchResult.calculate .srCon01" ), exData, inpVal );
+				replaceResultTextSet( $( ".searchResult.expenses .srCon01" ), exData, inpVal );
+				replaceResultTextSet( $( ".searchResult.card .srCon01" ), exData, inpVal );
+				replaceResultTextSet( $( ".searchResult.crm .srCon01" ), exData, inpVal );
+				showSearchResultBox();
+			}
+		});
+
+		// autoText content 초기화
+		//replaceResultTextSet( $( "#autoText" ), exData, null );
+		
+		$( ".search_menu_btn" ).on("click",function(){			
+			window.parent.dews.app.overlay.hide();			
+		});
+		
+		
+		
+		
+		
+		
+		
+		/*****************************************/
+		// 다이얼로그 팝업 호출
+		
+		$(".seen1 .header_bot_btn").on("click",function(){
+			Pudd.puddDialog({
+				width : 1120
+			,	height : 800
+			,	header : {
+					title : "ONEFFICE"
+				,	align : "center"	// left, center, right
+				}
+			,	body : {
+					content : expContent1
+				}
+			,	footer : {
+					buttons : [
+						{
+						attributes : {}// control 부모 객체 속성 설정
+					,	controlAttributes : { id : "btnConfirm", class : "submit" }// control 자체 객체 속성 설정
+						,	value : "저장"
+						,	clickCallback : function( puddDlg ) {
+								puddDlg.showDialog( false );
+								// 추가적인 작업 내용이 있는 경우 이곳에서 처리
+								var puddDialog = Pudd.puddDialog({
+										width : 400
+									,	height : 100
+									,	message : {
+											type : "success"
+										,	content : "저장되었습니다."
+										}
+								});
+							}
+						}
+					,	{
+						attributes : { style : "margin-left:5px;" }// control 부모 객체 속성 설정
+					,	controlAttributes : { id : "btnCancel" }// control 자체 객체 속성 설정
+						,	value : "취소"
+						,	clickCallback : function( puddDlg ) {
+								puddDlg.showDialog( false );
+								// 추가적인 작업 내용이 있는 경우 이곳에서 처리
+							}
+						}
+					]
+				}
+			});	
+		})
+		
+		$(".seen1 .exp_btn").on("click",function(){
+			Pudd.puddDialog({
+				width : 950
+			,	height : 800
+			,	header : {
+					title : "전자결재"
+				,	align : "center"	// left, center, right
+				}
+			,	body : {
+					content : expContent2
+				}
+			,	footer : {
+					buttons : [
+						{
+						attributes : {}// control 부모 객체 속성 설정
+					,	controlAttributes : { id : "btnConfirm", class : "submit" }// control 자체 객체 속성 설정
+						,	value : "상신"
+						,	clickCallback : function( puddDlg ) {
+								puddDlg.showDialog( false );
+								// 추가적인 작업 내용이 있는 경우 이곳에서 처리
+								var puddDialog = Pudd.puddDialog({
+										width : 400
+									,	height : 100
+									,	message : {
+											type : "success"
+										,	content : "상신되었습니다."
+										}
+								});
+							}
+						}
+					,	{
+						attributes : { style : "margin-left:5px;" }// control 부모 객체 속성 설정
+					,	controlAttributes : { id : "btnCancel" }// control 자체 객체 속성 설정
+						,	value : "취소"
+						,	clickCallback : function( puddDlg ) {
+								puddDlg.showDialog( false );
+								// 추가적인 작업 내용이 있는 경우 이곳에서 처리
+							}
+						}
+					]
+				}
+			});	
+		})
+		
+		$(".seen2 .exp_btn").on("click",function(){
+			Pudd.puddDialog({
+				width : 950
+			,	height : 800
+			,	header : {
+					title : "전자결재"
+				,	align : "center"	// left, center, right
+				}
+			,	body : {
+					content : cardContent3
+				}
+			,	footer : {
+					buttons : [
+						{
+						attributes : {}// control 부모 객체 속성 설정
+					,	controlAttributes : { id : "btnConfirm", class : "submit" }// control 자체 객체 속성 설정
+						,	value : "상신"
+						,	clickCallback : function( puddDlg ) {
+								puddDlg.showDialog( false );
+								// 추가적인 작업 내용이 있는 경우 이곳에서 처리
+								var puddDialog = Pudd.puddDialog({
+										width : 400
+									,	height : 100
+									,	message : {
+											type : "success"
+										,	content : "상신되었습니다."
+										}
+								});
+							}
+						}
+					,	{
+						attributes : { style : "margin-left:5px;" }// control 부모 객체 속성 설정
+					,	controlAttributes : { id : "btnCancel" }// control 자체 객체 속성 설정
+						,	value : "취소"
+						,	clickCallback : function( puddDlg ) {
+								puddDlg.showDialog( false );
+								// 추가적인 작업 내용이 있는 경우 이곳에서 처리
+							}
+						}
+					]
+				}
+			});	
+		})
+		
+		$(".seen3 .header_bot_btn").on("click",function(){
+			Pudd.puddDialog({
+				width : 1010
+			,	height : 800
+			,	header : {
+					title : "ONEFFICE"
+				,	align : "center"	// left, center, right
+				}
+			,	body : {
+					content : dftContent4
+				}
+			,	footer : {
+					buttons : [
+						{
+						attributes : {}// control 부모 객체 속성 설정
+					,	controlAttributes : { id : "btnConfirm", class : "submit" }// control 자체 객체 속성 설정
+						,	value : "저장"
+						,	clickCallback : function( puddDlg ) {
+								puddDlg.showDialog( false );
+								// 추가적인 작업 내용이 있는 경우 이곳에서 처리
+								var puddDialog = Pudd.puddDialog({
+										width : 400
+									,	height : 100
+									,	message : {
+											type : "success"
+										,	content : "저장되었습니다."
+										}
+								});
+							}
+						}
+					,	{
+						attributes : { style : "margin-left:5px;" }// control 부모 객체 속성 설정
+					,	controlAttributes : { id : "btnCancel" }// control 자체 객체 속성 설정
+						,	value : "취소"
+						,	clickCallback : function( puddDlg ) {
+								puddDlg.showDialog( false );
+								// 추가적인 작업 내용이 있는 경우 이곳에서 처리
+							}
+						}
+					]
+				}
+			});	
+		})
+		
+		$(".seen3 .exp_btn").on("click",function(){
+			Pudd.puddDialog({
+				width : 950
+			,	height : 800
+			,	header : {
+					title : "전자결재"
+				,	align : "center"	// left, center, right
+				}
+			,	body : {
+					content : dftContent5
+				}
+			,	footer : {
+					buttons : [
+						{
+						attributes : {}// control 부모 객체 속성 설정
+					,	controlAttributes : { id : "btnConfirm", class : "submit" }// control 자체 객체 속성 설정
+						,	value : "상신"
+						,	clickCallback : function( puddDlg ) {
+								puddDlg.showDialog( false );
+								// 추가적인 작업 내용이 있는 경우 이곳에서 처리
+								var puddDialog = Pudd.puddDialog({
+										width : 400
+									,	height : 100
+									,	message : {
+											type : "success"
+										,	content : "상신되었습니다."
+										}
+								});
+							}
+						}
+					,	{
+						attributes : { style : "margin-left:5px;" }// control 부모 객체 속성 설정
+					,	controlAttributes : { id : "btnCancel" }// control 자체 객체 속성 설정
+						,	value : "취소"
+						,	clickCallback : function( puddDlg ) {
+								puddDlg.showDialog( false );
+								// 추가적인 작업 내용이 있는 경우 이곳에서 처리
+							}
+						}
+					]
+				}
+			});	
+		})
+		
+		$(".seen4 .exp_btn").on("click",function(){
+			Pudd.puddDialog({
+				width : 950
+			,	height : 800
+			,	header : {
+					title : "전자결재"
+				,	align : "center"	// left, center, right
+				}
+			,	body : {
+					content : cardContent3
+				}
+			,	footer : {
+					buttons : [
+						{
+						attributes : {}// control 부모 객체 속성 설정
+					,	controlAttributes : { id : "btnConfirm", class : "submit" }// control 자체 객체 속성 설정
+						,	value : "상신"
+						,	clickCallback : function( puddDlg ) {
+								puddDlg.showDialog( false );
+								// 추가적인 작업 내용이 있는 경우 이곳에서 처리
+								var puddDialog = Pudd.puddDialog({
+										width : 400
+									,	height : 100
+									,	message : {
+											type : "success"
+										,	content : "상신되었습니다."
+										}
+								});
+							}
+						}
+					,	{
+						attributes : { style : "margin-left:5px;" }// control 부모 객체 속성 설정
+					,	controlAttributes : { id : "btnCancel" }// control 자체 객체 속성 설정
+						,	value : "취소"
+						,	clickCallback : function( puddDlg ) {
+								puddDlg.showDialog( false );
+								// 추가적인 작업 내용이 있는 경우 이곳에서 처리
+							}
+						}
+					]
+				}
+			});	
+		})
+
+		$(".seen6 .header_bot_btn2").on("click",function(){
+			Pudd.puddDialog({
+				width : 950
+			,	height : 800
+			,	header : {
+					title : "전자결재"
+				,	align : "center"	// left, center, right
+				}
+			,	body : {
+					content : crmContent1
+				}
+			,	footer : {
+					buttons : [
+						{
+						attributes : {}// control 부모 객체 속성 설정
+					,	controlAttributes : { id : "btnConfirm", class : "submit" }// control 자체 객체 속성 설정
+						,	value : "상신"
+						,	clickCallback : function( puddDlg ) {
+								puddDlg.showDialog( false );
+								// 추가적인 작업 내용이 있는 경우 이곳에서 처리
+								var puddDialog = Pudd.puddDialog({
+										width : 400
+									,	height : 100
+									,	message : {
+											type : "success"
+										,	content : "상신되었습니다."
+										}
+								});
+							}
+						}
+					,	{
+						attributes : { style : "margin-left:5px;" }// control 부모 객체 속성 설정
+					,	controlAttributes : { id : "btnCancel" }// control 자체 객체 속성 설정
+						,	value : "취소"
+						,	clickCallback : function( puddDlg ) {
+								puddDlg.showDialog( false );
+								// 추가적인 작업 내용이 있는 경우 이곳에서 처리
+							}
+						}
+					]
+				}
+			});
+		})
+
+		$(".seen7 .header_bot_btn").on("click",function(){
+			Pudd.puddDialog({
+				width : 1120
+			,	height : 800
+			,	header : {
+					title : "ONEFFICE"
+				,	align : "center"	// left, center, right
+				}
+			,	body : {
+					content : crmContent2
+				}
+			,	footer : {
+					buttons : [
+						{
+						attributes : {}// control 부모 객체 속성 설정
+					,	controlAttributes : { id : "btnConfirm1", class : "submit" }// control 자체 객체 속성 설정
+						,	value : "업무보고"
+						,	clickCallback : function( puddDlg ) {
+								puddDlg.showDialog( false );
+								// 추가적인 작업 내용이 있는 경우 이곳에서 처리
+
+								var puddDialog = Pudd.puddDialog({
+										width : 1100
+									,	height : 800
+									,	header : {
+											title : "업무보고"
+										,	align : "center"	// left, center, right
+										}
+									,	body : {
+											content : crmContent3
+										}
+									,	footer : {
+											buttons : [
+												{
+												attributes : {}// control 부모 객체 속성 설정
+											,	controlAttributes : { id : "btnConfirm3", class : "submit" }// control 자체 객체 속성 설정
+												,	value : "보고"
+												,	clickCallback : function( puddDlg ) {
+														puddDlg.showDialog( false );
+														// 추가적인 작업 내용이 있는 경우 이곳에서 처리
+														var puddDialog = Pudd.puddDialog({
+																width : 400
+															,	height : 100
+															,	message : {
+																	type : "success"
+																,	content : "업무보고가 완료되었습니다."
+																}
+														});
+													}
+												}
+											,	{
+												attributes : { style : "margin-left:5px;" }// control 부모 객체 속성 설정
+											,	controlAttributes : { id : "btnCancel" }// control 자체 객체 속성 설정
+												,	value : "취소"
+												,	clickCallback : function( puddDlg ) {
+														puddDlg.showDialog( false );
+														// 추가적인 작업 내용이 있는 경우 이곳에서 처리
+												}
+											}
+										]
+									}
+								});
+							}
+						}
+					,	{
+						attributes : { style : "margin-left:5px;" }// control 부모 객체 속성 설정
+					,	controlAttributes : { id : "btnConfirm2", class : "submit" }// control 자체 객체 속성 설정
+						,	value : "저장"
+						,	clickCallback : function( puddDlg ) {
+								puddDlg.showDialog( false );
+								// 추가적인 작업 내용이 있는 경우 이곳에서 처리
+								var puddDialog = Pudd.puddDialog({
+										width : 400
+									,	height : 100
+									,	message : {
+											type : "success"
+										,	content : "저장되었습니다."
+										}
+								});
+							}
+						}
+					,	{
+						attributes : { style : "margin-left:5px;" }// control 부모 객체 속성 설정
+					,	controlAttributes : { id : "btnCancel" }// control 자체 객체 속성 설정
+						,	value : "취소"
+						,	clickCallback : function( puddDlg ) {
+								puddDlg.showDialog( false );
+								// 추가적인 작업 내용이 있는 경우 이곳에서 처리
+							}
+						}
+					]
+				}
+			});	
+		})
+
+
+		/*****************************************/
+		
+		
+	});
+    </script>
+    <title>KLAGO</title>
+</head>
+<body>
+	<div id="wrap">
+		<div id="side"></div>
+		<div id="container">
+			<!-- 경비헤더 -->
+			<div class="seen1">
+				<div class="header">
+					<div class="header_top">
+						<div class="header_util">
+							<a href="main.html" class="header_menu_btn"></a>
+						</div>
+						<a href="javascript:void(0)" class="portalView"></a>
+					</div>
+					<div class="header_bot">
+						<div class="menu_search"></div>
+						<a href="javascript:void(0)" class="header_bot_btn"></a>
+					</div>
+				</div>
+				<div class="contents">
+					<div class="exp_bg1">
+						<a href="javascript:void(0)" class="exp_btn"></a>
+					</div>
+				</div>
+			</div>
+			
+			<!-- 전표헤더 -->
+			<div class="seen2" style="display:none">
+				<div class="header">
+					<div class="header_top">
+						<div class="header_util">
+							<a href="main.html" class="header_menu_btn"></a>
+						</div>
+						<a href="javascript:void(0)" class="portalView"></a>
+					</div>
+					<div class="header_bot">
+						<div class="menu_search"></div>
+					</div>
+				</div>
+				<div class="contents">
+					<div class="exp_bg2"></div>
+				</div>
+			</div>
+			
+			<!-- 자금헤더 -->
+			<div class="seen3" style="display:none">
+				<div class="header">
+					<div class="header_top">
+						<div class="header_util">
+							<a href="main.html" class="header_menu_btn"></a>
+						</div>
+						<a href="javascript:void(0)" class="portalView"></a>
+					</div>
+					<div class="header_bot">
+						<div class="menu_search"></div>
+						<a href="javascript:void(0)" class="header_bot_btn"></a>
+					</div>
+				</div>
+				<div class="contents">
+					<div class="exp_bg3">
+						<a href="javascript:void(0)" class="exp_btn"></a>
+					</div>
+				</div>
+			</div>
+			
+			<!-- 카드헤더 -->
+			<div class="seen4" style="display:none">
+				<div class="header">
+					<div class="header_top">
+						<div class="header_util">
+							<a href="main.html" class="header_menu_btn"></a>
+						</div>
+						<a href="javascript:void(0)" class="portalView"></a>
+					</div>
+					<div class="header_bot">
+						<div class="menu_search"></div>
+						<a href="javascript:void(0)" class="header_bot_btn"></a>
+					</div>
+				</div>
+				<div class="contents">
+					<div class="card_bg4">
+						<a href="javascript:void(0)" class="exp_btn"></a>
+					</div>
+				</div>
+			</div>
+
+			<!-- crm헤더 -->
+			<div class="seen5" style="display:none">
+				<div class="header">
+					<div class="header_top">
+						<div class="header_util">
+							<a href="main.html" class="header_menu_btn"></a>
+						</div>
+						<a href="javascript:void(0)" class="portalView"></a>
+					</div>
+					<div class="header_bot">
+						<div class="menu_search"></div>
+						<a href="javascript:void(0)" class="header_bot_btn"></a>
+					</div>
+				</div>
+				<div class="contents">
+					<div class="crm_bg1"></div>
+				</div>
+			</div>
+
+			<div class="seen6" style="display:none">
+				<div class="header">
+					<div class="header_top">
+						<div class="header_util">
+							<a href="main.html" class="header_menu_btn"></a>
+						</div>
+						<a href="javascript:void(0)" class="portalView"></a>
+					</div>
+					<div class="header_bot">
+						<div class="menu_search"></div>
+						<a href="javascript:void(0)" class="header_bot_btn"></a>
+						<a href="javascript:void(0)" class="header_bot_btn2"></a>
+					</div>
+				</div>
+				<div class="contents">
+					<div class="crm_bg2"></div>
+				</div>
+			</div>
+
+			<div class="seen7" style="display:none">
+				<div class="header">
+					<div class="header_top">
+						<div class="header_util">
+							<a href="main.html" class="header_menu_btn"></a>
+						</div>
+						<a href="javascript:void(0)" class="portalView"></a>
+					</div>
+					<div class="header_bot">
+						<div class="menu_search"></div>
+						<a href="javascript:void(0)" class="header_bot_btn"></a>
+					</div>
+				</div>
+				<div class="contents">
+					<div class="crm_bg3"></div>
+				</div>
+			</div>			
+		</div>
+	</div>
+	
+	<div id="searchWrap" style="transform:translateY(0%);">
+		<div class="searchHeader">
+			<div class="logo">
+				<img src="../../Images/klago_sc_logo.png">
+			</div>
+			<div class="search_util">
+				<a href="#n" class="search_menu_btn"></a>
+			</div>
+		</div>
+		<div class="searchBox animated1s fadeInUp">
+			<input id="searchText" type="text" pudd-style="position:relative;width: 500px;height: 56px;z-index:1;" style="color: #000000; font-size: 16px; font-weight: bold; padding: 0 60px 0 22px; border: none; border-radius: 56px; outline: none;box-shadow:0px 5px 10px rgba(0,0,0,0.2);-webkit-box-shadow:0px 5px 10px rgba(0,0,0,0.2);-moz-box-shadow:0px 5px 10px rgba(0,0,0,0.2)" class="puddSetup inpBox" placeholder="통합검색" />
+			<a href="javascript:void(0)" class="search_btn"></a>
+			<div id="autoText" class="autoText" style="height:0;"></div>
+		</div>
+		
+		<!-- 정산 결과 -->
+		<div class="searchResult calculate">
+			<div class="srWrap">
+				<div class="unitbox1">
+					<div class="tit">
+						<b>메뉴</b>
+						<span class="line">|</span>
+						총 <span class="cnt">12</span>건이 검색되었습니다.
+					</div>
+					<div class="srCon01"></div>
+				</div>
+				<div class="unitbox2">
+					<div class="tit">
+						<b>연관컨텐츠</b>
+						<span class="line">|</span>
+						총 <span class="cnt">5</span>건이 검색되었습니다.
+					</div>
+					<div class="srCon02">
+						<img src="../../Images/klago_sc_srCon02.png">
+					</div>
+				</div>
+				<div class="unitbox3">
+					<div class="srCon03">
+						<div class="tit">
+							<b>최근검색어</b>
+						</div>
+						<ul class="list">
+							<li><a href="javascript:void(0)">경비지출</a></li>
+							<li><a href="javascript:void(0)">법인카드</a></li>
+							<li><a href="javascript:void(0)">지출결의</a></li>
+							<li><a href="javascript:void(0)">결재</a></li>
+							<li><a href="javascript:void(0)">개인연말정산</a></li>
+							<li><a href="javascript:void(0)">품의서</a></li>
+							<li><a href="javascript:void(0)">전표입력</a></li>
+							<li><a href="javascript:void(0)">회계</a></li>
+							<li><a href="javascript:void(0)">연말정산</a></li>
+							<li><a href="javascript:void(0)">개인경비</a></li>
+							<li><a href="javascript:void(0)">업무협조전</a></li>
+							<li><a href="javascript:void(0)">카드</a></li>
+							<li><a href="javascript:void(0)">원천세</a></li>
+							<li><a href="javascript:void(0)">환경설정</a></li>
+							<li><a href="javascript:void(0)">품의서</a></li>
+						</ul>
+						<div class="tit">
+							<b>연관검색어</b>
+						</div>
+						<ul class="keyword">
+							<li><a href="javascript:void(0)">전자결재</a></li>
+							<li><a href="javascript:void(0)">연말정산</a></li>
+							<li><a href="javascript:void(0)">지출</a></li>
+							<li><a href="javascript:void(0)">품의서</a></li>
+							<li><a href="javascript:void(0)">관리자설정</a></li>
+							<li><a href="javascript:void(0)">정산요청</a></li>
+							<li><a href="javascript:void(0)">재무제표</a></li>
+							<li><a href="javascript:void(0)">회계</a></li>
+							<li><a href="javascript:void(0)">연말정산기간</a></li>
+							<li><a href="javascript:void(0)">환율</a></li>
+							<li><a href="javascript:void(0)">영업관리</a></li>
+							<li><a href="javascript:void(0)">인증서</a></li>
+							<li><a href="javascript:void(0)">연말정산 소득공제</a></li>
+							<li><a href="javascript:void(0)">원천세 관리</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<!-- 경비청구 결과 -->
+		<div class="searchResult expenses">
+			<div class="srWrap">
+				<div class="unitbox1">
+					<div class="tit">
+						<b>메뉴</b>
+						<span class="line">|</span>
+						총 <span class="cnt">9</span>건이 검색되었습니다.
+					</div>
+					<div class="srCon01"></div>
+				</div>
+				<div class="unitbox2">
+					<div class="tit">
+						<b>연관컨텐츠</b>
+						<span class="line">|</span>
+						총 <span class="cnt">5</span>건이 검색되었습니다.
+					</div>
+					<div class="srCon02">
+						<a href="javascript:void(0)" onClick="action1()"><img src="../../Images/expenses/exp_sc_srCon01.png" class="mb10"></a>
+						<img src="../../Images/expenses/exp_sc_srCon02.png">
+					</div>
+				</div>
+				<div class="unitbox3">
+					<div class="srCon03">
+						<div class="tit">
+							<b>최근검색어</b>
+						</div>
+						<ul class="list">
+							<li><a href="javascript:void(0)">경비지출</a></li>
+							<li><a href="javascript:void(0)">법인카드</a></li>
+							<li><a href="javascript:void(0)">지출결의</a></li>
+							<li><a href="javascript:void(0)">결재</a></li>
+							<li><a href="javascript:void(0)">개인연말정산</a></li>
+							<li><a href="javascript:void(0)">품의서</a></li>
+							<li><a href="javascript:void(0)">전표입력</a></li>
+							<li><a href="javascript:void(0)">회계</a></li>
+							<li><a href="javascript:void(0)">연말정산</a></li>
+							<li><a href="javascript:void(0)">개인경비</a></li>
+							<li><a href="javascript:void(0)">업무협조전</a></li>
+							<li><a href="javascript:void(0)">카드</a></li>
+							<li><a href="javascript:void(0)">원천세</a></li>
+							<li><a href="javascript:void(0)">환경설정</a></li>
+							<li><a href="javascript:void(0)">품의서</a></li>
+						</ul>
+						<div class="tit">
+							<b>연관검색어</b>
+						</div>
+						<ul class="keyword">
+							<li><a href="javascript:void(0)">전자결재</a></li>
+							<li><a href="javascript:void(0)">연말정산</a></li>
+							<li><a href="javascript:void(0)">지출</a></li>
+							<li><a href="javascript:void(0)">경비현황분석</a></li>
+							<li><a href="javascript:void(0)">지출결의서</a></li>
+							<li><a href="javascript:void(0)" onClick="action2()">전표입력</a></li>
+							<li><a href="javascript:void(0)" onClick="action3()">자금계획등록</a></li>
+							<li><a href="javascript:void(0)">경비청구내역집계표</a></li>
+							<li><a href="javascript:void(0)">지급이체처리</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<!-- 법인카드 결과 -->
+		<div class="searchResult card">
+			<div class="srWrap">
+				<div class="unitbox1">
+					<div class="tit">
+						<b>메뉴</b>
+						<span class="line">|</span>
+						총 <span class="cnt">8</span>건이 검색되었습니다.
+					</div>
+					<div class="srCon01"></div>
+				</div>
+				<div class="unitbox2">
+					<div class="tit">
+						<b>연관컨텐츠</b>
+						<span class="line">|</span>
+						총 <span class="cnt">5</span>건이 검색되었습니다.
+					</div>
+					<div class="srCon02">
+						<img src="../../Images/card/card_sc_srCon01.png" class="mb10">
+						<a href="javascript:void(0)" onClick="action4()"><img src="../../Images/card/card_sc_srCon02.png" class="mb10"></a>
+						<img src="../../Images/card/card_sc_srCon03.png">
+					</div>
+				</div>
+				<div class="unitbox3">
+					<div class="srCon03">
+						<div class="tit">
+							<b>최근검색어</b>
+						</div>
+						<ul class="list">
+							<li><a href="javascript:void(0)">경비지출</a></li>
+							<li><a href="javascript:void(0)">법인카드</a></li>
+							<li><a href="javascript:void(0)">지출결의</a></li>
+							<li><a href="javascript:void(0)">결재</a></li>
+							<li><a href="javascript:void(0)">개인연말정산</a></li>
+							<li><a href="javascript:void(0)">품의서</a></li>
+							<li><a href="javascript:void(0)">전표입력</a></li>
+							<li><a href="javascript:void(0)">회계</a></li>
+							<li><a href="javascript:void(0)">연말정산</a></li>
+							<li><a href="javascript:void(0)">개인경비</a></li>
+							<li><a href="javascript:void(0)">업무협조전</a></li>
+							<li><a href="javascript:void(0)">카드</a></li>
+							<li><a href="javascript:void(0)">원천세</a></li>
+							<li><a href="javascript:void(0)">환경설정</a></li>
+							<li><a href="javascript:void(0)">품의서</a></li>
+						</ul>
+						<div class="tit">
+							<b>연관검색어</b>
+						</div>
+						<ul class="keyword">
+							<li><a href="javascript:void(0)" onClick="action2()">전표입력</a></li>
+							<li><a href="javascript:void(0)">전자결재</a></li>
+							<li><a href="javascript:void(0)">지출</a></li>
+							<li><a href="javascript:void(0)" onClick="action3()">자금계획</a></li>
+							<li><a href="javascript:void(0)">총계정원장</a></li>
+							<li><a href="javascript:void(0)">법인카드 등록</a></li>
+							<li><a href="javascript:void(0)">거래처 등록</a></li>
+							<li><a href="javascript:void(0)">ONEFFICE</a></li>
+							<li><a href="javascript:void(0)">쪽지</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- CRM(영업) 결과 -->
+		<div class="searchResult crm">
+			<div class="srWrap">
+				<div class="unitbox1">
+					<div class="tit">
+						<b>메뉴</b>
+						<span class="line">|</span>
+						총 <span class="cnt">17</span>건이 검색되었습니다.
+					</div>
+					<div class="srCon01"></div>
+				</div>
+				<div class="unitbox2">
+					<div class="tit">
+						<b>연관컨텐츠</b>
+						<span class="line">|</span>
+						총 <span class="cnt">5</span>건이 검색되었습니다.
+					</div>
+					<div class="srCon02">
+						<img src="../../Images/crm/crm_sc_srCon01.png" class="mb10">						
+					</div>
+				</div>
+				<div class="unitbox3">
+					<div class="srCon03">
+						<div class="tit">
+							<b>최근검색어</b>
+						</div>
+						<ul class="list">
+							<li><a href="javascript:void(0)">고객사등록</a></li>
+							<li><a href="javascript:void(0)">영업기회등록</a></li>
+							<li><a href="javascript:void(0)">DM계획</a></li>
+							<li><a href="javascript:void(0)">DM실행</a></li>
+							<li><a href="javascript:void(0)">수주등록</a></li>
+							<li><a href="javascript:void(0)">활동실적등록</a></li>
+							<li><a href="javascript:void(0)">수주등록</a></li>
+							<li><a href="javascript:void(0)">일일업무보고</a></li>
+							<li><a href="javascript:void(0)">개인경비</a></li>
+							<li><a href="javascript:void(0)">주문등록</a></li>
+							<li><a href="javascript:void(0)">계약</a></li>
+						</ul>
+						<div class="tit">
+							<b>연관검색어</b>
+						</div>
+						<ul class="keyword">
+							<li><a href="javascript:void(0)">고객사등록</a></li>
+							<li><a href="javascript:void(0)">ONEFFICE</a></li>
+							<li><a href="javascript:void(0)">전자결재</a></li>
+							<li><a href="javascript:void(0)" onClick="action5()">Sales Calendar</a></li>
+							<li><a href="javascript:void(0)">업무보고</a></li>
+							<li><a href="javascript:void(0)" onClick="action6()">영업기회등록</a></li>
+							<li><a href="javascript:void(0)">영업활동분석</a></li>
+							<li><a href="javascript:void(0)">주문등록</a></li>
+							<li><a href="javascript:void(0)" onClick="action7()">목표VS수주실적</a></li>
+							<li><a href="javascript:void(0)">목표VS매출실적</a></li>
+							<li><a href="javascript:void(0)">미수금현황</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="timeLine"></div>
+		<div class="userApp"></div>
+		<div class="copy"></div>
+	</div>
+
+	
+	<!-- Dialog Content 영역 -->
+	<div id="expContent1" style="display:none;"></div><!-- 경비1 -->
+	<div id="expContent2" style="display:none;"></div><!-- 경비2 -->
+	
+	<div id="cardContent3" style="display:none;"></div><!-- 카드3 -->
+	
+	<div id="dftContent4" style="display:none;"></div><!-- 전표4 -->
+	<div id="dftContent5" style="display:none;"></div><!-- 자금5 -->
+
+	<div id="crmContent1" style="display:none;"></div><!-- 영엉1 -->
+	<div id="crmContent2" style="display:none;"></div><!-- 영업2 -->
+	<div id="crmContent3" style="display:none;"></div><!-- 영업3 -->
+	
+</body>
+</html> 

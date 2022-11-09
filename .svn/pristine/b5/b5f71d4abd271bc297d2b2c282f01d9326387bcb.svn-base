@@ -1,0 +1,857 @@
+@charset "utf-8";
+
+.dze_ribbon_menu_tb_container {
+	background-color:#FFFFFF;
+        position:relative;
+}
+
+.dze_ribbon_menu_title_bg {
+	background-color:#1c90fb;
+}
+
+#TB_MENU_EMPTY_AREA_0 {
+	padding-right: 9%;
+}
+
+/* IE10+ */
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+	#TB_MENU_EMPTY_AREA_0 {
+		padding-left: 27%;
+	}
+}
+
+.dze_ribbon_menu_title_bg > input {
+	padding: 1px 5px 2px 5px;
+	margin: 0 20px;
+	font-family: "[더존] 본문체 30";
+	font-size: 14px;
+	font-weight: bold;
+	text-align: center;
+	color: white;
+	background-color: transparent;
+	border: 1px solid #6ea3f9;
+}
+
+.dze_ribbon_menu_title_bg > input[readonly] {
+	cursor: default;
+	border: none;
+}
+
+.dze_ribbon_menu_title_bg > input:not([readonly]):not(:active):not(:focus):hover {
+	cursor: pointer;
+}
+.dze_ribbon_menu_title_bg > input:not([readonly]):hover {
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.dze_ribbon_menu_title_bg > input:not([readonly]):active,
+.dze_ribbon_menu_title_bg > input:not([readonly]):focus {
+	box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.2);
+	background-color: #0476e0;
+	border: 2px solid #6ea3f9;
+}
+
+.dze_ribbon_menu_title_bg > input::selection {
+	color: black;
+    background: #FFFFFF;
+}
+
+.dze_ribbon_menu_title_bg > input::-ms-clear {
+	display: none;
+}
+
+.dze_ribbon_menu_left {
+	width:10px;
+	height:30px;
+}
+.dze_ribbon_menu_off {
+	font-size:12px;
+	font-family: Gulim;
+	min-width:60px;
+	height:24px;
+	text-align:center;
+	cursor:default;
+	color:#ffffff;
+}
+.dze_ribbon_menu_off_over {
+	font-size:12px;
+	font-family: Gulim;
+	min-width:60px;
+	height:24px;
+	text-align:center;
+	cursor:default;
+	color:#b9d5f4;
+}
+.dze_ribbon_menu_on {
+	font-size:12px;
+	font-family: Gulim;
+	min-width: 60px;
+	height:24px;
+	text-align:center;
+	background-color:#FFFFFF;
+	cursor:default;
+	color:#4f4f4f;
+}
+
+.dze_ribbon_d_menu_hide {
+	min-width:60px;
+	height:24px;
+	display:none;
+}
+.dze_ribbon_d_menu_off {
+	font-size:12px;
+	font-family: Gulim;
+	min-width:60px;
+	height:24px;
+	text-align:center;
+	cursor:default;
+	color:#ffffff;
+}
+.dze_ribbon_d_menu_on {
+	font-size:12px;
+	font-family: Gulim;
+	min-width:60px;
+	height:24px;
+	text-align:center;
+	background-color:#FFFFFF;
+	cursor:default;
+}
+
+
+.dze_ribbon_menu_text_gray {
+	opacity: 0.3;
+	line-height: 1.2;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+.dze_ribbon_menu_text_normal {
+	opacity: 1;
+	line-height: 1.2;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+.dze_ribbon_menu_right {
+	position: relative;
+	width: 100%;
+	z-index: 20008;
+}
+.dze_ribbon_tb_content {
+	width: auto;
+	background-color:#FFFFFF;
+	display:none;
+	height:62px;
+	padding: 3px 0 3px 0;
+}
+.dze_ribbon_tb_item_box {
+	text-align:left;
+	vertical-align: top;
+}
+
+.dze_ribbon_tb_item_box .dze_color_picker_result_line {
+	margin-top:-6px;
+	margin-left:2px;
+	width:22px;
+	height:3px;
+	position:relative;
+	display:block;
+	border-width:1px;
+	border-color:#d9d9d9;
+	border-style:solid;
+}
+
+.dze_ribbon_tb_item_text {
+	min-width:46px;
+	height:26px;
+	font-size:11px;
+	overflow:hidden;
+	/*text-overflow: ellipsis;*/
+	/*white-space: nowrap;*/
+	line-height:1.1;
+	text-align:center;
+	/*background-color:#ffffff;*/
+	padding:0;
+	cursor:default;
+	margin:6px 1px 0 1px;
+	word-break: break-all;
+}
+.dze_ribbon_tb_item_text_dropbox {
+	min-width:46px;
+	height:26px;
+	font-size:11px;
+	overflow:hidden;
+	/*text-overflow: ellipsis;
+	white-space: nowrap;*/
+	line-height:1.1;
+	text-align:center;
+	/*background-color:#ffffff;*/
+/*	border-width:0 1px 1px 1px;
+	border-color:#ffffff;
+	border-style:solid;*/
+	padding:0;
+	cursor:default;
+	margin:4px 1px 0 1px;
+	word-break: break-all;
+}
+.dze_ribbon_tb_spinner_icon_box {
+	padding : 0px 2px 0px 2px;
+	width: 16px;
+
+}
+.dze_ribbon_tb_spinner_input_form_container {	
+	width: auto;
+	height: 18px;
+	border-width:1px;
+	border-style:solid;
+	border-color:#c8c8c8;
+}
+.dze_ribbon_tb_spinner_input_form_container:hover {	
+	width: auto;
+	height: 18px;
+	border-width:1px;
+	border-style:solid;
+	border-color:orange;
+}
+
+.dze_ribbon_tb_spinner_item_text {
+	font-size:11px;
+	overflow:hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	line-height:1.2;
+	text-align:left;
+	padding-left: 2px;
+	padding-right: 2px;
+}
+.dze_ribbon_tb_spinner_unit_text {
+	font-size:11px;
+	overflow:hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	line-height:1.2;
+	text-align:center;
+	color:#a0a0a0;
+
+	border-width:0px 1px 0px 0px;
+	border-style:solid;
+	border-color:#c8c8c8;
+	padding-right: 1px;
+}
+.dze_ribbon_tb_spinner_btns {
+	width:11px;
+	height:19px;
+	border-width: 0;
+}
+
+
+.dze_ribbon_tb_spinner_input_form {
+	width:32px !important;
+	height:16px !important;
+	border:0 solid #a0a0a0 !important;
+	color:#000000 !important;
+	padding:2px 0px 0px 1px !important;
+	font-size:12px !important;
+	text-align:right !important;
+	background-color:#FFFFFF !important;
+	margin:0 !important;
+}
+.dze_ribbon_tb_spinner_input_form:focus {
+    outline: none;
+}
+.dze_ribbon_tb_content_left {
+	width:auto;
+	height:62px;
+	padding: 3px 0 3px 0;
+}
+.dze_ribbon_tb_content_left_td {
+    border-width: 0 1px 0 0;
+	border-color: #dedede;
+	border-style:solid;
+}
+.dze_ribbon_tb_content_right {
+	width:auto;
+	height:62px;
+	padding: 3px 0 3px 0;
+}
+.dze_ribbon_tb_content_right_td {
+    border-width: 0;
+	border-color: #dedede;
+	border-style:solid;
+}
+.dze_ribbon_tb_content_bottom {
+	width:auto;
+	height:28px;
+	border-width:0;
+	border-color:#d9d9d9;
+	border-style:solid;
+	
+}
+.dze_ribbon_tb_content_bottom_td {
+	border-width:1px 0 0 0;
+	border-color:#d8dfe6;
+	border-style:solid;
+}
+.dze_ribbon_tb_item_box_left {
+	height:20px;
+	overflow:hidden;
+}
+.dze_ribbon_tb_item_box_bottom {
+	height:28px;
+	overflow:hidden;
+}
+.dze_ribbon_tb_left_separator {
+    background-color: #dcdcdc;
+    width: 1px;
+    height: 58px;
+}
+
+/* ui toggle btn layer */
+.dze_ui_toggle_btn_container {
+	width: 160px;
+	height: auto;
+	background-color:#ffffff;
+	position: absolute;
+    left:-144px;
+	display: none;
+	z-index: 20302;
+	padding:0px;
+	font-size: 12px;
+	font-family: Gulim;
+	border-width:1px;
+	border-color:#8598ab;	
+	border-style:solid;
+	border-radius: 3px;	
+}
+.dze_ui_toggle_btn_unit {
+	height:24px;
+	background-color:#FFFFFF;
+	padding:4px 0 4px 0;
+	font-size: 12px;
+	cursor:default;	
+}
+.dze_ui_toggle_btn_over {
+	height:24px;
+	background-color:#deeefa;
+	padding:4px 0 4px 0;
+	font-size: 12px;
+	cursor:default;
+}
+.dze_ui_toggle_btn_down {
+	height:24px;
+	background-color:#deeefa;
+	padding:4px 0 4px 0;
+	font-size: 12px;
+	cursor:default;
+}
+.dze_ui_toggle_btn_underline {
+	height:0px;
+	border-width: 0 0 1px 0;
+	border-color:#ebebeb;
+	border-style:solid;
+	background-color:#FFFFFF;
+}
+.dze_help_btn_container {
+	width: 170px;
+	height: auto;
+	background-color:#ffffff;
+	position: absolute;
+        left:-113px;
+	display: none;
+	z-index: 20302;
+	padding:0px;
+	border-width: 1px;
+	border-color:#8598ab;
+	border-style:solid;
+        border-radius:3px;
+	font-size: 12px;
+	font-family: Gulim;
+}
+
+
+
+
+
+
+
+/* 기존 Basic스타일버튼을 리본스타일 버튼으로  */
+.duzon_tb_button_image_ribbon {
+    overflow: hidden;
+    width: 24px;
+    height: 24px;
+	margin:auto;
+    margin-top: 5px;
+	margin-bottom: 1px;
+    background-repeat: no-repeat;	
+}
+.duzon_tb_button_image_ribbon img {
+    width: 24px;
+    height: 24px;
+    border: 0;
+}
+.duzon_tb_button_gallery_item_ribbon {	/* UCDOC-2039 */
+    width: 55px;
+    height: 40px;
+    border: 1px solid #A9A9A9;
+    margin: 3px 3px 0px 3px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    cursor: default;
+    line-height: normal;
+}
+.duzon_tb_button_gallery_item_ribbon:hover {
+   background-color: #e8f5ff;
+}
+.duzon_tb_button_ribbon {
+	position:relative;
+    margin: 2px;
+    background-color: #FFFFFF;
+    min-width: 48px;
+    height: 60px;
+	border-width:1px;
+	border-color:#FFFFFF;
+	border-style:solid;
+	z-index: 20008;
+}
+.duzon_tb_button_over_ribbon {
+	position:relative;
+    margin: 2px;
+    background-color: #e8f5ff;
+    min-width: 48px;
+    height: 60px;
+	border-width:1px;
+	border-color:#d1e3f6;	
+	border-style:solid;
+	border-radius: 3px;
+	z-index: 20008;
+}
+.duzon_tb_button_down_ribbon {
+	position:relative;
+    margin: 2px;
+    background-color: #cfeaff;
+    min-width: 48px;
+    height: 60px;
+	border-width:1px;
+	border-color:#b9d5f4;
+	border-style:solid;
+	border-radius: 3px;
+	z-index: 20008;
+}
+.duzon_tb_button_up_ribbon {
+	position:relative;
+    margin: 2px;
+    background-color: #e8f5ff;
+    min-width: 48px;
+    height: 60px;
+	border-width:1px;
+	border-color:#d1e3f6;	
+	border-style:solid;
+	border-radius: 3px;
+	z-index: 20008;
+}
+.duzon_tb_button_file_form {
+	position:absolute;
+	left: 0px;
+	top: 0px;
+    width: 48px;
+    height: 60px;
+	z-index: 20031;
+	opacity: 0;
+}
+
+
+
+.duzon_tb_dropdown_ribbon {
+    margin: 2px;
+    background-color: #ffffff;
+    min-width: 48px;
+    height: 60px;
+	border-width:1px;
+	border-color:#FFFFFF;
+	border-style:solid;
+}
+.duzon_tb_dropdown_over_ribbon {
+    margin: 2px;
+    background-color: #e8f5ff;
+    min-width: 48px;
+    height: 60px;
+	border-width:1px;
+	border-color:#d1e3f6;	
+	border-style:solid;
+	border-radius: 3px;
+}
+.duzon_tb_dropdown_down_ribbon {
+    margin: 2px;
+    background-color: #cfeaff;
+    min-width: 48px;
+    height: 60px;
+	border-width:1px;
+	border-color:#b9d5f4;
+	border-style:solid;
+	border-radius: 3px;
+}
+.duzon_tb_dropdown_up_ribbon {
+    margin: 2px;
+    background-color: #e8f5ff;
+    min-width: 48px;
+    height: 60px;
+	border-width:1px;
+	border-color:#d1e3f6;	
+	border-style:solid;
+	border-radius: 3px;
+}
+.tb_DropDown_Button_Image_ribbon {
+    overflow: hidden;
+    width: 24px;
+    height: 24px;
+    margin: 5px 0 1px 2px;
+    background-repeat: no-repeat;	
+}
+.tb_DropDown_Button_Image_ribbon img{
+    width: 24px;
+    height: 24px;
+	border: 0;
+}
+.tbDropDown_AreaButton_ribbon {
+    white-space: nowrap;
+    width: 26px;
+    height: 30px;
+    cursor: default;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+.duzon_tb_dropdown_arrow_ribbon {
+	background-position: center center;
+    background-image: url(../image/toolbar/toolbar_btn_dropdown_arrow.png);
+    width: 13px;
+    height: 24px;
+    background-repeat: no-repeat;	
+	margin: 5px 0px 1px 0px;
+}
+.duzon_tb_dropdown_arrow_over_ribbon {
+	background-position: center center;
+    background-image: url(../image/toolbar/toolbar_btn_dropdown_arrow.png);
+    width: 13px;
+    height: 24px;
+    background-repeat: no-repeat;
+	background-color: #e8f5ff;
+	margin: 5px 0px 1px 0px;	
+}
+.duzon_tb_dropdown_arrow_down_ribbon {
+	background-position: center center;
+    background-image: url(../image/toolbar/toolbar_btn_dropdown_arrow.png);
+    width: 13px;
+    height: 24px;
+    background-repeat: no-repeat;
+	margin: 5px 0px 1px 0px;
+	background-color: #cfeaff;
+}
+.duzon_tb_dropdown_arrow_up_ribbon {
+	background-position: center center;
+    background-image: url(../image/toolbar/toolbar_btn_dropdown_arrow.png);
+    width: 13px;
+    height: 24px;
+    background-repeat: no-repeat;
+	margin: 5px 0px 1px 0px;	
+}
+
+
+
+.duzon_btn_view_hidden_ribbon_toolbar_next {
+	border-width:0 0 0 1px ;
+	border-style:solid;
+	border-color:#dedede;
+	width:12px;
+	height:54px;
+	background-color: #f2f2f2;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_next.png);
+	background-repeat: no-repeat;
+}
+.duzon_btn_view_hidden_ribbon_toolbar_next_over{
+	border-width:0 0 0 1px ;
+	border-style:solid;
+	border-color:#dedede;
+	width:12px;
+	height:54px;
+	background-color: #dedede;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_next.png);
+	background-repeat: no-repeat;
+}
+.duzon_btn_view_hidden_ribbon_toolbar_next_down{
+	border-width:0 0 0 1px ;
+	border-style:solid;
+	border-color:#d9d9d9;
+	width:12px;
+	height:54px;
+	background-color: #d9d9d9;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_next.png);
+	background-repeat: no-repeat;
+}
+.duzon_btn_view_hidden_ribbon_toolbar_prev {
+	border-width:0 1px 0 0;
+	border-style:solid;
+	border-color:#dedede;
+	width:12px;
+	height:54px;
+	background-color: #f2f2f2;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_prev.png);
+	background-repeat: no-repeat;
+}
+.duzon_btn_view_hidden_ribbon_toolbar_prev_over{
+	border-width:0 1px 0 0;
+	border-style:solid;
+	border-color:#d9d9d9;
+	width:12px;
+	height:54px;
+	background-color: #d9d9d9;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_prev.png);
+	background-repeat: no-repeat;
+}
+.duzon_btn_view_hidden_ribbon_toolbar_prev_down{
+	border-width:0 1px 0 0;
+	border-style:solid;
+	border-color:#dedede;
+	width:12px;
+	height:54px;
+	background-color: #dedede;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_prev.png);
+	background-repeat: no-repeat;
+}
+
+
+
+.duzon_btn_view_hidden_ribbon_toolbar_next_bottom {
+	border-width:0 0 0 1px ;
+	border-style:solid;
+	border-color:#dedede;
+	width:12px;
+	height:28px;
+	background-color: #f2f2f2;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_next.png);
+	background-repeat: no-repeat;
+}
+.duzon_btn_view_hidden_ribbon_toolbar_next_over_bottom{
+	border-width:0 0 0 1px ;
+	border-style:solid;
+	border-color:#dedede;
+	width:12px;
+	height:28px;
+	background-color: #dedede;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_next.png);
+	background-repeat: no-repeat;
+}
+.duzon_btn_view_hidden_ribbon_toolbar_next_down_bottom{
+	border-width:0 0 0 1px ;
+	border-style:solid;
+	border-color:#d9d9d9;
+	width:12px;
+	height:28px;
+	background-color: #d9d9d9;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_next.png);
+	background-repeat: no-repeat;
+}
+.duzon_btn_view_hidden_ribbon_toolbar_prev_bottom {
+	border-width:0 1px 0 0;
+	border-style:solid;
+	border-color:#dedede;
+	width:12px;
+	height:28px;
+	background-color: #f2f2f2;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_prev.png);
+	background-repeat: no-repeat;
+}
+.duzon_btn_view_hidden_ribbon_toolbar_prev_over_bottom{
+	border-width:0 1px 0 0;
+	border-style:solid;
+	border-color:#d9d9d9;
+	width:12px;
+	height:28px;
+	background-color: #d9d9d9;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_prev.png);
+	background-repeat: no-repeat;
+}
+.duzon_btn_view_hidden_ribbon_toolbar_prev_down_bottom{
+	border-width:0 1px 0 0;
+	border-style:solid;
+	border-color:#dedede;
+	width:12px;
+	height:28px;
+	background-color: #dedede;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_prev.png);
+	background-repeat: no-repeat;
+}
+
+/* Table - Style in Drop&Down */
+.dze_table_style_container {
+	position: relative;
+}
+.dze_table_style_container > div {
+	position: absolute;
+	cursor:default;
+	border: 1px solid #dedede;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+.dze_table_style_container > div:hover {
+	background-color:#deeefa;
+}
+.dze_table_style_container > div[selected] {
+	background-color:#cdeaff;
+}
+.dze_table_style_container table {
+	border-collapse: collapse;
+	background-color: white;
+}
+.dze_table_style_container td {
+	text-align: center;
+	vertical-align: middle;
+}
+
+/* table style (UCDOC-4172) */
+table.dze_table_style_2 tr:nth-child(2n) {
+	background-color: #F2F2F2;
+}
+
+table.dze_table_style_3 tr:first-child {
+	background-color: #D9D9D9;
+}
+
+table.dze_table_style_4 tr:nth-child(2n) {
+	background-color: #BFBFBF;
+}
+table.dze_table_style_4 tr:nth-child(2n+1) {
+	background-color: #D9D9D9;
+}
+table.dze_table_style_4 tr:first-child {
+	background-color: #808080;
+	color: #FFFFFF;
+}
+
+table.dze_table_style_5 tr:first-child {
+	background-color: #808080;
+	color: #FFFFFF;
+}
+
+table.dze_table_style_6 tr:first-child {
+	background-color: #404040;
+	color: #FFFFFF;
+}
+table.dze_table_style_6 tr:nth-child(2n) {
+	background-color: #BFBFBF;
+}
+
+table.dze_table_style_7 tr:nth-child(2n) {
+	background-color: #D9D9D9;
+}
+table.dze_table_style_7 tr:nth-child(2n+1) {
+	background-color: #BFBFBF;
+}
+table.dze_table_style_7 tr:first-child {
+	background-color: #404040;
+	color: #FFFFFF;
+}
+
+table.dze_table_style_8 tr {
+	background-color: #000000;
+	color: #FFFFFF;
+}
+
+/* 표 - 셀 정렬 Ext 팝업 */
+.dze_table_cell_align_ext_container {
+	width:108px;
+	height:108px;
+	clear:both;
+	background-color:#FFFFFF;
+}
+.dze_table_cell_align_ext_unit {
+	float:left;
+	width:24px;
+	height:24px;
+	margin:1px;
+	background-color:#FFFFFF;
+	padding:5px;
+	cursor:default;
+	display: table-cell; 
+	vertical-align: middle;
+}
+.dze_table_cell_align_ext_unit_over {
+	float:left;
+	width:24px;
+	height:24px;
+	margin:1px;
+	background-color:#EBEBEB;
+	padding:5px;
+	cursor:default;
+	display: table-cell; 
+	vertical-align: middle;
+}
+.dze_table_cell_align_ext_unit_down {
+	float:left;
+	width:24px;
+	height:24px;
+	margin:1px;
+	background-color:#d9d9d9;
+	padding:5px;
+	cursor:default;
+	display: table-cell; 
+	vertical-align: middle;
+}
+.dze_style_ribbon_content_dynamic_container {
+    position: relative;
+    z-index: 20008;
+}
+.dze_style_btn_ribbon_hide,
+.dze_style_btn_ribbon_hide_over,
+.dze_style_btn_ribbon_hide_down {
+    width:14px;
+    height: 14px;
+    padding: 3px 5px;
+    position:absolute;
+    right: 0px;
+    bottom: 0px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.dze_style_btn_ribbon_hide_over {
+	background-color:rgba(255, 255, 255, 0.3);
+}
+
+.dze_style_btn_ribbon_hide_down {
+    background-color:#b9d5f4;
+}
+
+p.bw_quote:before { /* bizwatch, UCDOC-2116 */
+	background: url(../image/icon_quote_start.png) no-repeat;
+	background-size: 12px;
+	margin-top: 5px;
+	margin-bottom: 3px;
+	width: 12px;
+}
+p.bw_quote:after { /* bizwatch, UCDOC-2116 */
+	background: url(../image/icon_quote_end.png) no-repeat;
+	background-size: 12px;
+	margin-top: 9px;
+	width: 12px;
+}
+p.bw_quote { /* bizwatch, UCDOC-2116 */
+	padding: 0;
+	margin-left: -1px;
+	text-align: center;
+	font-style: italic;
+	font-size: 14px;
+	font-family: 'Nanum Myeongjo', serif;
+}

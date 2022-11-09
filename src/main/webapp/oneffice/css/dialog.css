@@ -1,0 +1,3666 @@
+@charset "utf-8";
+
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/*
+    Created on : 2019. 1. 7, 오후 3:39:25
+    Author     : hss
+*/
+
+
+
+/* dialog박스 */
+
+/* 입력 및 별도 선택항목이 없는 버튼만 있는 박스 */
+.duzon_dialog {
+	z-index: 20030;
+	width:auto;
+	height:auto;
+	position:absolute;
+	border-width:1px;
+	border-color:#a0a0a0;
+	border-style:solid;
+	background-color:#FFFFFF;
+	display: none;
+	font-size:12px !important;
+	color:#000000 !important;
+	display: block;
+}
+.duzon_dialog input[type=button] {
+	cursor:default;
+}
+.duzon_dialog input {
+	padding: 3px 9px 4px 8px;
+	line-height : 1.2;
+	font-size: 12px !important;
+	color:#000000;
+	outline: none;
+}
+.duzon_dialog input[type=radio] {
+	position:relative;
+	opacity: 0;
+}
+.duzon_dialog input[type="radio"] + label {
+    margin-left: -18px !important;
+    display: inline-block;
+    min-height: 11px;
+    height: auto;
+    background: url(../image/dialog/btn_radio_off.png) no-repeat left center;
+    padding: 3px 0 2px 16px !important;
+    overflow: hidden;
+    vertical-align: middle;
+    text-indent: 4px;
+}
+.duzon_dialog input[type="radio"]:checked + label {
+    background: url(../image/dialog/btn_radio_on.png) no-repeat left center;
+}
+.duzon_dialog input[type="radio"]:disabled + label {
+    background: url(../image/dialog/btn_radio_disable.png) no-repeat left center;
+}
+
+.duzon_dialog input[type="radio"] + table {
+	width: 100%;
+	text-align: center;
+	border-collapse: collapse;
+}
+
+.duzon_dialog input[type="radio"]:checked + table {
+	width: 100%;
+	text-align: center;
+	border-collapse: collapse;
+}
+
+.duzon_dialog_img_radio_button_on {
+	width: 38px;
+	height: 38px;
+	padding: 2px;
+	background: #FFFFFF;
+	border: solid;
+	border-width: 3px;
+	border-color: #1c90fb;
+}
+
+.duzon_dialog_img_radio_button_off {
+	width: 40px;
+	height: 40px;
+	padding: 3px;
+	background: #FFFFFF;
+	border: solid;
+	border-width: 2px;
+	border-color: #dedede;
+}
+
+.duzon_dialog_slider_container {
+	/* @alternate */width: -moz-fit-content;
+    /* @alternate */width: -webkit-fit-content;
+    /* @alternate */width: -ms-fit-content;
+    /* @alternate */width: -o-fit-content;
+    width: fit-content;
+	padding-right: 15px;
+}
+
+.duzon_dialog_slider {
+  -webkit-appearance: none;
+  width: 200px;
+}
+
+.duzon_dialog_slider::-webkit-slider-runnable-track {
+	width: 100%;
+	height: 7px;
+	background: #d4ebff;
+	border: 1px solid #009cff;
+	border-radius: 3.5px;
+	cursor: pointer;
+}
+
+.duzon_dialog_slider_disabled::-webkit-slider-runnable-track {
+	cursor: default;
+	background: #f0f0f0;
+	border: 1px solid #c5c5c5;
+}
+
+.duzon_dialog_slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	width: 16px;
+	height: 16px;
+	border: 1px solid #1c90fb;
+	border-radius: 8px;
+	background: #ffffff;
+	/*background: url('../image/slider_indicator.png') no-repeat center center;*/
+	margin-top: -6px;
+	cursor: pointer;
+}
+
+.duzon_dialog_slider:focus {
+	outline: none; /* input range에 포커스 되었을 경우 기본 블러처리 제거 */
+  }
+
+.duzon_dialog_slider_disabled::-webkit-slider-thumb {
+	border: 1px solid #dedede;
+	cursor: default;
+}
+
+
+.duzon_dialog_slider::-moz-range-track {
+	width: 100%;
+	height: 7px;
+	background: #d4ebff;
+	border: 1px solid #009cff;
+	border-radius: 3.5px;
+	cursor: pointer;
+}
+
+.duzon_dialog_slider_disabled::-moz-range-track {
+	cursor: default;
+	background: #f0f0f0;
+	border: 1px solid #c5c5c5;
+}
+
+.duzon_dialog_slider::-moz-range-thumb {
+	-webkit-appearance: none;
+	width: 16px;
+	height: 16px;
+	border: 1px solid #1c90fb;
+	border-radius: 8px;
+	background: #ffffff;
+/*	background: url('../image/slider_indicator.png') no-repeat center center;
+	margin-top: -6px;*/
+	cursor: pointer;
+}
+
+.duzon_dialog_slider_disabled::-moz-range-thumb {
+	border: 1px solid #dedede;
+	cursor: default;
+}
+
+.duzon_dialog_slider::-ms-track {
+	width: 100%;
+	height: 7px;
+	background: transparent;
+	border-color: transparent;
+	color: transparent;
+	cursor: pointer;
+	margin-top: 12px;
+}
+
+.duzon_dialog_slider_disabled::-ms-track {
+	cursor: default;
+	background: #f0f0f0;
+	border: 1px solid #c5c5c5;
+}
+
+.duzon_dialog_slider::-ms-fill-lower {
+	background: #d4ebff;
+	border: 1px solid #009cff;
+	border-radius: 3.5px;
+}
+
+.duzon_dialog_slider::-ms-fill-upper {
+	background: #d4ebff;
+	border: 1px solid #009cff;
+	border-radius: 3.5px;
+}
+
+.duzon_dialog_slider::-ms-thumb {
+	-webkit-appearance: none;
+	width: 16px;
+	height: 6px;
+	border: 1px solid #1c90fb;
+	border-radius: 8px;
+	background: #ffffff;
+	/*background: url('../image/slider_indicator.png') no-repeat center center;*/
+	cursor: pointer;
+}
+
+.duzon_dialog_slider_disabled::-ms-thumb {
+	border: 1px solid #dedede;
+	cursor: default;
+}
+
+.duzon_dialog input[type=checkbox] {
+	position:relative;
+	visibility:hidden;
+}
+
+.duzon_dialog input[type="checkbox"] + label {
+    margin-left: -18px !important;
+    display: inline-block;
+    min-height: 11px;
+    height: auto;
+    background: url(../image/dialog/btn-check-off.png) no-repeat left center;
+    padding: 3px 0 2px 16px !important;
+    overflow: hidden;
+    vertical-align: middle;
+    text-indent: 8px;
+}
+
+.duzon_dialog input[disabled] + label {
+	opacity: 0.3;
+}
+
+.duzon_dialog input[type="checkbox"]+label:hover{
+    background: url(../image/dialog/btn-check-hover.png) no-repeat left center;
+}
+
+.duzon_dialog input[disabled] + label:hover {
+    background: url(../image/dialog/btn-check-off.png) no-repeat left center;
+}
+
+.duzon_dialog input[type="checkbox"]:checked+label {
+    background: url(../image/dialog/btn-check-on.png) no-repeat left center;
+}
+
+.duzon_dialog input[type=date]::-webkit-inner-spin-button {
+	display: none;
+}
+
+.duzon_dialog select {
+    -webkit-appearance: menulist;
+    -moz-appearance: menulist;
+    background: #FFFFFF;
+    height: 25px;
+}
+.duzon_dialog select::-ms-expand {
+	display: block;
+	background: #FFFFFF;
+}
+.duzon_dialog p:not(.dze_preview) {
+	margin-top:2px !important;
+	margin-bottom:2px !important;
+}
+.duzon_dialog_move {
+	-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+	-moz-opacity:0.5;
+	-khtml-opacity: 0.5;
+	filter: alpha(opacity=50);
+	opacity: 0.5;
+}
+#tableCopyView input[type=radio] {
+	position:relative;
+	visibility:visible;
+}
+#tableCopyView input[type=checkbox] {
+	position:relative;
+	visibility:visible;
+}
+.duzon_backscreen {
+	z-index: 20028;
+	position:absolute;
+	top:0;
+	left:0;
+	background-color:#000000;
+	-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+	-moz-opacity:0.35;
+	-khtml-opacity: 0.35;
+	filter: alpha(opacity=35);
+	opacity: 0.35;
+	display: none;
+}
+.duzon_backscreen_transparent {
+	z-index: 20028;
+	position:absolute;
+	top:0;
+	left:0;
+	display: none;
+}
+
+
+
+.duzon_dialog_body {
+	width:auto;
+	height:auto;
+	background-color:#FFFFFF;
+	font-size:12px;
+	padding:0;
+}
+
+.duzon_dialog_body_content {
+	width:auto;
+	height:auto;
+	background-color:#FFFFFF;
+	font-size:12px;
+	padding:20px 30px 20px 30px;
+	overflow-y: auto;
+}
+
+.duzon_dialog_body_content,
+.duzon_dialog_tab_body_container,
+.duzon_dialog_title_container,
+.duzon_dialog_tab_title_container,
+.duzon_dialog_tab_default_container,
+.duzon_dialog_buttonbox,
+.duzon_backscreen,
+.compatibility_main_popup,
+.unselectable {
+	-webkit-user-select: none; /* Safari 3.1+ */
+    -moz-user-select: none; /* Firefox 2+ */
+    -ms-user-select: none; /* IE 10+ */
+    user-select: none; /* Standard syntax */
+}
+
+/*
+.duzon_dialog_body {
+	font-size:12px;
+	color:black;
+	padding:3px;
+	border-width:1px;
+	border-color:gray;
+	border-style:solid;
+	background-color:#FFFFFF;
+}
+*/
+.duzon_dialog_body_textform {
+	width:62px !important;
+	height: 25px !important;
+	border-width:1px !important;
+	border-color:#a0a0a0 !important;
+	border-style:solid !important;
+	color:#000000 !important;
+	padding:0 !important;
+	font-size:12px !important;
+}
+.duzon_dialog_body_selectform {
+	width:112px !important;
+	height: 25px !important;
+	border-width:1px !important;
+	border-color:#a0a0a0 !important;
+	border-style:solid !important;
+	color:#000000 !important;
+	padding:0 !important;
+	font-size:12px !important;
+}
+.duzon_dialog_body_align_selectform {
+	width:62px !important;
+	height: 25px !important;
+	border-width:1px !important;
+	border-color: #a0a0a0 !important;
+	border-style:solid !important;
+	color:#000000 !important;
+	padding:0 !important;
+	font-size:12px !important;
+}
+.duzon_dialog_body_txbx_combo_selectform {
+	width:100px !important;
+	height:20px !important;
+	border-width:1px !important;
+	border-color:#a0a0a0 !important;
+	border-style:solid !important;
+	color:#000000 !important;
+	padding:0 !important;
+	font-size:12px !important;
+}
+.duzon_dialog_body_fileform {
+	width:265px !important;
+	height: 25px !important;
+	background-color:#FFFFFF !important;
+}
+.duzon_dialog_body_fileform_hide {
+	z-index: 20031;
+	position:absolute;
+	left: -65px;
+	top: 0px;
+	width: 150px;
+	min-height: 25px;
+	cursor:pointer;
+	opacity: 0;
+	filter: alpha(opacity=0);
+	MozOpacity: 0;
+	KhtmlOpacity: 0;
+
+}
+.duzon_dialog_body_fileform_hide_td {
+	position:relative;
+	overflow:hidden;
+	border-width:0px;
+	border-color:#a0a0a0;
+	border-style:solid;
+	text-align:center;
+}
+.duzon_dialog_body_urlform {
+	width: 250px !important;
+	height: 25px !important;
+	padding:0px 3px !important;
+	line-height: 0 !important;
+	border-width:1px !important;
+	border-color:#a0a0a0 !important;
+	border-style:solid !important;
+	background-color:#FFFFFF !important;
+}
+.duzon_dialog_body_fileTextForm {
+	width:265px !important;
+	background-color:#FFFFFF !important;
+}
+
+.duzon_dialog_buttonbox {
+	width:auto;
+	clear:both;
+	height:auto;
+	font-size:12px;
+	text-align:center;
+	padding:12px;
+	margin: 0;
+	border-width:1px 0 0 0;
+	border-color:#dedede;
+	border-style:solid;
+}
+.duzon_dialog_btn_normal {
+	width:64px  !important;
+	height:32px !important;
+	padding:0 !important;
+	text-align:center !important;
+	border-width:1px !important;
+	border-color:#a3a3a3 !important;
+	border-style:solid !important;
+	background-color:#FFFFFF !important;
+	margin: 0 3px 0 3px !important;
+	cursor:pointer !important;
+/*	outline: 1px !important; */
+
+}
+.duzon_dialog_btn_normal:focus {
+	outline: #A5C7FE solid 2px !important;
+}
+.duzon_dialog_btn_up {
+	width:64px !important;
+	height:32px !important;
+	padding:0 !important;
+	text-align:center !important;
+	border-width:1px !important;
+	border-color:#828282 !important;
+	border-style:solid !important;
+	background-color:#FFFFFF !important;
+	margin: 0 3px 0 3px !important;
+	cursor:pointer !important;
+}
+.duzon_dialog_btn_down {
+	width:64px !important;
+	height:32px !important;
+	padding:0 !important;
+	text-align:center !important;
+	border-width:1px !important;
+	border-color:#565656 !important;
+	border-style:solid !important;
+	background-color:#FFFFFF !important;
+	margin: 0 3px 0 3px !important;
+	cursor:pointer;
+}
+.duzon_dialog_btn_ok_normal {
+	min-width:64px !important;
+	height:32px !important;
+	padding:0 15px !important;
+	text-align:center !important;
+	border-width:0px !important;
+	border-color:#a0a0a0 !important;
+	border-style:solid !important;
+	background-color:#1c90fb !important;
+	margin: 0 3px 0 3px !important;
+	cursor:pointer !important;
+	color: #FFFFFF !important;
+/*	font-size:12px;*/
+}
+.duzon_dialog_btn_ok_normal:focus {
+	outline: #A5C7FE solid 2px !important;
+}
+.duzon_dialog_btn_ok_up {
+	min-width:64px !important;
+	height:32px !important;
+	padding:0 15px !important;
+	text-align:center !important;
+	border-width:0px !important;
+	border-color:#a0a0a0 !important;
+	border-style:solid !important;
+	background-color:#1083ed !important;
+	margin: 0 3px 0 3px !important;
+	cursor:pointer !important;
+	color: #FFFFFF !important;
+}
+.duzon_dialog_btn_ok_down {
+	min-width:64px !important;
+	height:32px !important;
+	padding:0 15px !important;
+	text-align:center !important;
+	border-width:0px !important;
+	border-color:#a0a0a0 !important;
+	border-style:solid !important;
+	background-color:#0476e0 !important;
+	margin: 0 3px 0 3px !important;
+	cursor:pointer;
+	color: #FFFFFF !important;
+}
+.duzon_dialog_btn_disabled {
+	width:64px;
+	height:32px;
+	padding:0;
+	text-align:center;
+	border-width:1px;
+	border-color:#d9d9d9;
+	border-style:solid;
+	background-color:#FFFFFF;
+	margin: 0 3px 0 3px;
+	cursor:default;
+}
+.duzon_dialog_btn_upload {
+	width:64px  !important;
+	height: 27px !important;
+	padding:0px 2px 0px 2px !important;
+	margin: 0px !important;
+	line-height:0 !important;
+	text-align:center !important;
+	border-width:1px !important;
+	border-color:#a3a3a3 !important;
+	border-style:solid !important;
+	cursor:pointer !important;
+	background-color: #FFFFFF;
+}
+
+.duzon_dialog_btn_upload_disabled {
+	width: 64px !important;
+	height: 27px !important;
+	padding: 0px 2px 0px 2px !important;
+	margin: 0px !important;
+	line-height: 0 !important;
+	text-align: center !important;
+	border-width: 1px !important;
+	border-color: #a3a3a3 !important;
+	border-style: solid !important;
+	cursor: pointer !important;
+	background-color: #FAFAFA;
+}
+
+.duzon_dialog_upload_fileview_container {
+	width:auto;
+	height: 23px;
+	padding:2px 2px 0 2px;
+	border-width:1px;
+	border-color:#a0a0a0;
+	border-style:solid;
+	overflow:hidden;
+	text-align: left;
+}
+
+.duzon_dialog_upload_fileview_container_disabled {
+	width: auto;
+	height: 23px;
+	padding: 2px 2px 0 2px;
+	border-width: 1px;
+	border-color: #a0a0a0;
+	border-style: solid;
+	overflow: hidden;
+	text-align: left;
+	background-color: #FAFAFA;
+}
+
+.duzon_dialog_label_separator {
+	clear:both;
+	width:auto;
+	height:12px;
+	margin-bottom:12px;
+	border-width:0 0 1px 0;
+	border-color:#eeeeee;
+	border-style:solid;
+}
+.duzon_dialog_label_vseparator {
+	clear:both;
+	width:12px;
+	height:auto;
+	margin-left:12px;
+	border-width:0 0 0 1px;
+	border-color: #eeeeee;
+	border-style:solid;
+}
+.duzon_dialog_label_title {
+	clear:both;
+	width:auto;
+	height:20px;
+	font-weight:bold;
+	font-size:14px;
+	margin-bottom:3px;
+}
+.duzon_dialog_string_divline {
+	clear:both;
+	width:auto;
+	height:auto;
+	margin-bottom: 5px;
+}
+.duzon_toastmsg_box {
+    position: fixed;
+    left:50%;
+    top: 50%;
+    padding: 7px 14px 7px 14px;
+    font-size:13px;
+    width:auto;
+    min-width:160px;
+    height:auto;
+    line-height:21px;
+    background-color:#1c90fb;
+    color:#ffffff;
+    text-align:center;
+    border-radius: 19px;
+    box-shadow: 0px 5px 20px 0 rgba(0, 0, 0, 0.15);
+    z-index:20031;
+    display: flex;
+    justify-content: center;
+    -webkit-user-select: none; /* Safari 3.1+ */
+	-moz-user-select: none; /* Firefox 2+ */
+	-ms-user-select: none; /* IE 10+ */
+	user-select: none; /* Standard syntax */
+	pointer-events: none;
+}
+
+.toast_ok{
+	background-color:#1fc47c;
+}
+
+.toast_info{
+	background-color:#1c90fb;
+}
+
+.toast_warn{
+	background-color:#febc2c;
+}
+
+.toast_error{
+	background-color:#f95c3c;
+}
+
+
+.duzon_msg_box {
+    width:auto;
+    height:auto;
+    min-width:320px;
+    min-height:142px;
+    font-size:14px;
+    padding:30px 30px 20px 30px;
+    z-index:20032;
+    position: fixed;
+    left:50%;
+    top: 50%;
+    border-width:1px;
+    border-color:#a0a0a0;
+    border-style:solid;
+    background-color:#FFFFFF;
+    -webkit-user-select: none; /* Safari 3.1+ */
+    -moz-user-select: none; /* Firefox 2+ */
+    -ms-user-select: none; /* IE 10+ */
+    user-select: none; /* Standard syntax */
+}
+
+.duzon_msg_box_message {
+	width:100%; 
+	min-height: 36px; 
+	height:auto;
+	line-height:1.43;
+  	letter-spacing: -0.4px; 
+	text-align:center; 
+	vertical-align:middle; 
+	margin-top:16px; 
+	margin-bottom:20px;
+	font-weight: bold;
+	font-size:14px;
+	white-space: pre-line;
+}
+
+.duzon_msg_box_title_msg {
+	width:100%; 
+	height:auto;
+	line-height:1.43;
+  	letter-spacing: -0.4px; 
+	text-align:center; 
+	vertical-align:middle; 
+	margin-top:16px; 
+	margin-bottom:20px;
+	font-weight: bold;
+	font-size:14px;
+}
+
+.duzon_msg_box_title {
+	width:100%; 
+	min-height: 20px; 
+	height:auto;
+	line-height:20px;
+  	letter-spacing: -0.4px; 
+	text-align:center; 
+	vertical-align:middle; 
+	margin-top:16px;
+	font-weight: bold;
+	font-size:18px;
+}
+
+
+.duzon_msg_buttonbox {
+	width:auto;
+	clear:both;
+	height:auto;
+	font-size:12px;
+	text-align:center;
+	margin: 0;
+}
+
+/* ONEFFICE 3.0 spinner */
+.duzon_spinner_input_form_container {
+	display:inline-flex;
+	align-items:center;
+	width:58px;
+	height:25px;
+	border:1px solid #c8c8c8;
+}
+.duzon_spinner_input_form_container[disabled] {
+	background-color:#dedede;
+}
+.duzon_spinner_input_form {
+	display: inline-flex;
+	align-items: center;
+	flex:1;
+	min-width:0;
+	height:100%;
+	padding:1px 0 0 1px !important;
+	border-style: none !important;
+	text-align:right;
+	background-color:transparent;
+	letter-spacing: -0.5px;
+	outline: none;
+	margin: 0px !important;
+}
+.duzon_spinner_btn_arrow_up {
+	background-image:url(../image/dialog/btn_arrow_up.png);
+	background-position:top calc(50% + 1px) left 50%;
+	background-repeat: no-repeat;
+	background-color:transparent;
+	width:18px;
+	height:50%;
+	padding:0;
+}
+.duzon_spinner_btn_arrow_up:hover {
+	background-color:#e2e2e2;
+}
+.duzon_spinner_btn_arrow_down {
+	background-image:url(../image/dialog/btn_arrow_down.png);
+	background-position:top calc(50% - 1px) left 50%;
+	background-repeat:no-repeat;
+	background-color:transparent;
+	width:18px;
+	height:50%;
+	padding:0;
+}
+.duzon_spinner_btn_arrow_down:hover {
+	background-color:#e2e2e2;
+}
+
+/* 다이알로그박스 기본사이즈 : 소 : 선/공백포함 300*/
+.duzon_dialog_content_small {
+	clear:both;
+	width:270px;
+	height:auto;
+	padding:0;
+	margin:0;
+}
+/* 다이알로그박스 기본사이즈 : 중 : 선/공백포함 440*/
+.duzon_dialog_content_medium {
+	clear:both;
+	width:410px;
+	height:auto;
+	padding:0;
+	margin:0;
+}
+/* 다이알로그박스 기본사이즈 : 대 : 선/공백포함 530*/
+.duzon_dialog_content_big {
+	clear:both;
+	width:500px;
+	height:auto;
+	padding:0;
+	margin:0;
+}
+.duzon_dialog_content_large_map {
+	clear:both;
+	width:800px;
+	height:600px;
+	padding:0;
+	margin:0;
+}
+
+/* 탭이 있는 다이알로그 */
+.duzon_dialog_tab_dialog_container {
+	width:auto;
+	clear:both;
+}
+.duzon_dialog_tab_top_container {
+	clear:both;
+	width:auto;
+	height:auto;
+	padding: 0;
+	background-color:#FFFFFF;
+}
+.duzon_dialog_tab_title_container {
+	width:auto;
+	clear:both;
+	height:25px;
+	margin-top:10px;
+}
+
+.duzon_dialog_tab_title_blank_left {
+	width:14px;
+	height:25px;
+	float:left;
+	border-width:0 0 1px 0;
+	border-style:solid;
+	border-color:#A0A0A0;
+}
+.duzon_dialog_tab_title_blank_right {
+	width:auto;
+	height:25px;
+	border-width:0 0 1px 0;
+	border-style:solid;
+	border-color:#A0A0A0;
+}
+
+.duzon_dialog_tab_titles {
+	/*width:80px;*/
+
+	width:auto;
+	min-width:60px;
+	height:19px;
+	float:left;
+	border-style:solid;
+	border-color:#A0A0A0;
+	text-align:center;
+	padding:6px;
+	padding-bottom : 0;
+	user-select: none;
+	-ms-user-select: none;
+	-moz-user-select: none;
+}
+
+.duzon_dialog_tab_titles.on {
+	border-width:1px 1px 0 1px;
+	color:#000000;
+	font-weight:bold;
+	padding-top:5px;
+	border-bottom:1px solid #fff;
+}
+
+.duzon_dialog_tab_titles.off {
+	border-width:0 0 1px 0;
+	color:#8c8c8c;
+	cursor:pointer;
+}
+
+.duzon_dialog_tab_body_container {
+	clear:both;
+	width:auto;
+	height:auto;
+	padding: 20px 30px 20px 30px;
+	background-color:#FFFFFF;
+}
+
+.duzon_dialog_tab_body_container_on {
+	clear:both;
+	width:auto;
+	height:auto;
+	background-color:#FFFFFF;
+
+}
+.duzon_dialog_tab_body_container_off {
+
+	clear:both;
+	width:auto;
+	height:auto;
+	background-color:#FFFFFF;
+	display:none;
+}
+.duzon_dialog_tab_default_container {
+	clear:both;
+	width:auto;
+	height:auto;
+	padding: 0 14px 0 14px;
+	background-color:#FFFFFF;
+}
+.duzon_dialog_tab_bottom_container {
+	clear:both;
+	width:auto;
+	height:16px;
+	background-color:#FFFFFF;
+}
+
+
+/* ===================================================== 각 기능별 팝업 ===================================================== */
+
+/* 파일 - 레이아웃 - 각 레이아웃 유닛들 */
+.duzon_file_layout_unit {
+	width:98px;
+	height:98px;
+	margin:0;
+	cursor:default;
+	border-width: 1px;
+	border-color:#c5c5c5;
+	border-style:solid;
+	background-color:#ffffff;
+}
+.duzon_file_layout_unit_over {
+	width:98px;
+	height:98px;
+	margin:0;
+	cursor:default;
+	border-width: 1px;
+	border-color:#c5c5c5;
+	border-style:solid;
+	background-color:#F2F2F2;
+}
+.duzon_file_layout_unit_select {
+	width:98px;
+	height:98px;
+	margin:0;
+	cursor:default;
+	border-width: 1px;
+	border-color:#c5c5c5;
+	border-style:solid;
+	background-color:#EBEBEB;
+}
+
+
+
+
+
+/* 편집 - 찾기/바꾸기 */
+.duzon_dialog_find_form_container {
+	width:auto;
+	height:auto;
+	margin: 5px 0 2px 0;
+}
+.duzon_findtext_frm {
+	width:300px;
+	border-width:1px;
+	border-color:#a0a0a0;
+	border-style:solid;
+}
+.duzon_replacetext_frm {
+	width:300px;
+	border-width:1px;
+	border-color:#a0a0a0;
+	border-style:solid;
+}
+
+
+
+
+/*파일 - 서식양식 */
+.duzon_dialog_docform_container {
+	width:450px;
+	height:auto;
+	background-color: #FFFFFF;
+}
+.duzon_dialog_docform_left {
+	float:left;
+	width:160px;
+	height:auto;
+	background-color:#d9d9d9;
+}
+.duzon_dialog_docform_left_title {
+	width:auto;
+	height:23px;
+	background-color:#ffffff;
+}
+.duzon_dialog_docform_left_content {
+	width:auto;
+	height: 380px;
+	background-color:#ffffff;
+	border-width:1px;
+	border-color:gray;
+	border-style:solid;
+	overflow:auto;
+}
+.duzon_dialog_docform_right {
+	width:auto;
+	height:auto;
+	margin-left:170px;
+	background-color:#d9d9d9;
+}
+.duzon_dialog_docform_right_title {
+	width:auto;
+	height:23px;
+	background-color:#ffffff;
+}
+.duzon_dialog_docform_right_content {
+	display: flex;
+	flex-wrap: wrap;
+	width: 280px;
+	height: 380px;
+	background-color:#ffffff;
+	border-width:1px;
+	border-color:gray;
+	border-style:solid;
+	overflow:auto;
+	padding: 0px 3px;
+}
+.duzon_dialog_docform_category_list {
+	width:auto;
+	height:auto;
+	padding:5px 5px 5px 7px;
+	font-size:12px;
+	background-color:#FFFFFF;
+	cursor:default;
+
+}
+.duzon_dialog_docform_category_list_select {
+	width:auto;
+	height:auto;
+	padding:5px 5px 5px 7px;
+	font-size:12px;
+	background-color:#d1e3f6;
+	cursor:default;
+}
+.duzon_dialog_docform_category_data {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 105px;
+        height: 160px;
+        padding:7px;
+        margin:5px;
+        font-size:12px;
+        background-color:#FFFFFF;
+        cursor:default;
+        box-shadow: rgba(0, 0, 0, 0.13) 0px 2px 3px 0.4px;
+}
+.duzon_dialog_docform_category_data_select {
+        background-color:#d1e3f6;
+}
+
+.duzon_dialog_docform_category_data_subject {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* 외부동영상 삽입 */
+.dze_ext_movie_source_form {
+	width:404px;
+	height:74px;
+
+	border-width:1px;
+	border-style:solid;
+	border-color:#c5c5c5;
+	resize: none; 
+}
+.dze_ext_movie_source_form:focus {
+    outline: none;
+}
+::-webkit-input-placeholder { /* WebKit, Blink, Edge */
+	text-align:center;
+	padding-top:28px;
+	color:#8c8c8c;
+
+}
+:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+	text-align:center;
+	padding-top:28px;
+	color:#8c8c8c;
+
+}
+::-moz-placeholder { /* Mozilla Firefox 19+ */
+	text-align:center;
+	padding-top:28px;
+	color:#8c8c8c;
+
+}
+:-ms-input-placeholder { /* Internet Explorer 10-11 */
+	text-align:center;
+	color:#8c8c8c;
+
+	/*padding-top:28px; */
+}
+
+
+
+
+/* 삽입 - 문자표, 이모티콘 */
+.dze_emoticons_left_container{
+	float:left;
+	width:87px;
+	height:180px;
+	background-color:#ffffff;
+}
+.dze_specialchars_left_container {
+	float:left;
+	width:87px;
+	height:200px;
+	background-color:#ffffff;
+}
+.dze_dlg_left_title {
+	width:auto;
+	height:auto;
+	margin-bottom:8px;/*margin:8px 0 8px 0;*/
+	background-color:#ffffff;
+}
+.dze_emoticons_left_content {
+	clear:both;
+	width:auto;
+	height:70px;
+	border-width:1px;
+	border-color:#a0a0a0;
+	border-style:solid;
+	background-color:#ffffff;
+    overflow-x:hidden;
+	overflow-y:auto;
+    margin-bottom:3px;
+}
+.dze_specialchars_left_content {
+	clear:both;
+	width:auto;
+	height:180px;
+	border-width:1px;
+	border-color:#a0a0a0;
+	border-style:solid;
+	background-color:#ffffff;
+	overflow:auto;
+}
+.dze_dlg_left_content_unit {
+	width:100px;
+	height:13px;
+	padding:5px 5px 5px 7px;
+	font-size:12px;
+	background-color:#FFFFFF;
+	cursor:default;
+
+	overflow:hidden;
+}
+.dze_dlg_left_content_unit_select {
+	width:100px;
+	height:13px;
+	padding:5px 5px 5px 7px;
+	font-size:12px;
+	background-color:#dedede;
+	cursor:default;
+
+	overflow:hidden;
+}
+.dze_emoticons_top_container{
+	width:auto;
+	height:94px;
+	/*height:84px;height:180px;84*/
+	/*margin-left:97px;*/
+	background-color:#ffffff;
+}
+.dze_emoticons_right_container{
+	width:auto;
+	height:220px;
+	/*margin-left:97px;*/
+	background-color:#ffffff;
+}
+.dze_specialchars_right_container {
+	width:auto;
+	height:200px;
+	margin-left:97px;
+	background-color:#ffffff;
+}
+.dze_dlg_top_title {/*dze_dlg_recent_title*/
+	width:auto;
+	height:auto;
+	margin-bottom:8px;/*margin-bottom:3px;*/
+	background-color:#ffffff;
+}
+
+.dze_dlg_right_title {
+	width:auto;
+	height:auto;
+	margin:8px 0 8px 0;/*margin-bottom:3px;*/
+	background-color:#ffffff;
+}
+
+.dze_emoticons_top_content{/*dze_emoticons_recent_content*/
+	float:left;
+	width:auto;
+	height:76px;
+/*	border-width:1px;
+	border-color:#a0a0a0;
+	border-style:solid;*/
+	background-color:#ffffff;
+	overflow:hidden;
+	/*overflow-y:scroll;
+	-ms-overflow-y:  scroll;*/
+}
+.dze_emoticons_right_content{
+	float:left;
+	width:410px;
+	height:194px;
+	overflow:auto;
+	border-width:1px;
+	border-color:#a0a0a0;
+	border-style:solid;
+	background-color:#ffffff;
+	overflow-y:scroll;
+	-ms-overflow-y:  scroll;
+}
+.dze_specialchars_right_content {
+	width:auto;
+	height:106px;
+	padding:3px;
+	overflow:auto;
+	border-width:1px;
+	border-color:#a0a0a0;
+	border-style:solid;
+	background-color:#ffffff;
+	overflow-y:scroll;
+	-ms-overflow-y:  scroll;
+}
+.dze_dlg_top_content_unit {
+	float:left;
+	/*width:68px;
+	height:68px;*/
+	text-align:center;
+	vertical-align:middle;
+	margin:2px 1px 2px 1px;/*1px*/
+	/*padding-top:8px;*/
+	border-width:1px;
+	border-color:#dedede;
+	border-style:solid;
+	background-color:#ffffff;
+	/*font-size:12px;*/
+
+	cursor:default;
+}
+.dze_emoticons_right_content_unit {
+	float:left;
+	width:68px;
+	height:68px;
+	text-align:center;
+	vertical-align:middle;
+	margin:6px 0 0 6px;
+	/*padding : 1px;*/
+	/*padding-top:8px;*/
+	border-width:1px;
+	border-color:#dedede;
+	border-style:solid;
+	background-color:#ffffff;
+	font-size:12px;
+
+	cursor:default;
+}
+.dze_specialchars_right_content_unit {
+	float:left;
+	width:28px;
+	height:20px;
+	text-align:center;
+	vertical-align:middle;
+	margin:1px;
+	padding-top:8px;
+	border-width:1px;
+	border-color:#dedede;
+	border-style:solid;
+	background-color:#ffffff;
+	font-size:12px;
+
+	cursor:default;
+}
+.dze_specialchars_right_content_unit:hover {
+	float:left;
+	width:28px;
+	height:20px;
+	text-align:center;
+	vertical-align:middle;
+	margin:1px;
+	padding-top:8px;
+	border-width:1px;
+	border-color:#dedede;
+	border-style:solid;
+	background-color:#EBEBEB;
+	font-size:12px;
+
+	cursor:default;
+}
+.dze_emoticons_right_content_unit_down {
+	float:left;
+	width:68px;
+	height:68px;
+	text-align:center;
+	vertical-align:middle;
+        margin:6px 0 0 6px;
+	/*padding:1px;*/
+	/*padding-top:8px;*/
+	border-width:1px;
+	border-color:#dedede;
+	border-style:solid;
+	background-color:#d9d9d9;
+	font-size:12px;
+
+	cursor:default;
+}
+.dze_specialchars_right_content_unit_down {
+	float:left;
+	width:28px;
+	height:20px;
+	text-align:center;
+	vertical-align:middle;
+	margin:1px;
+	padding-top:8px;
+	border-width:1px;
+	border-color:#dedede;
+	border-style:solid;
+	background-color:#d9d9d9;
+	font-size:12px;
+
+	cursor:default;
+}
+.dze_dlg_right_content_unit_separator {
+	float:left;
+	width:1px;
+	padding: 0 2px 0 2px;
+	height:20px;
+	padding-top:8px;
+}
+.dze_dlg_recent_title {
+	width:auto;
+	height:auto;
+	margin:8px 0 8px 0;
+	background-color:#ffffff;
+}
+.dze_emoticons_recent_content {
+	width:auto;
+	height:82px;
+	border-width:1px;
+	border-color:#a0a0a0;
+	border-style:solid;
+	background-color:#ffffff;
+	overflow:hidden;
+
+}
+.dze_specialchars_recent_content {
+	width:auto;
+	height:36px;
+	border-width:1px;
+	border-color:#a0a0a0;
+	border-style:solid;
+	background-color:#ffffff;
+	overflow:hidden;
+
+}
+.dze_emoticons_recent_btn_pre{
+	width:12px;
+	height:82px;
+	background-position: center center;
+	background-repeat: no-repeat;
+	background-image: url(../image/dialog/btn_pre.png);
+	cursor:pointer;
+}
+.dze_specialchars_recent_btn_pre {
+	width:12px;
+	height:36px;
+	background-position: center center;
+	background-repeat: no-repeat;
+	background-image: url(../image/dialog/btn_pre.png);
+	cursor:pointer;
+}
+.dze_emoticons_recent_btn_next {
+	width:12px;
+	height:82px;
+	background-position: center center;
+	background-repeat: no-repeat;
+	background-image: url(../image/dialog/btn_next.png);
+	cursor:pointer;
+}
+.dze_specialchars_recent_btn_next {
+	width:12px;
+	height:36px;
+	background-position: center center;
+	background-repeat: no-repeat;
+	background-image: url(../image/dialog/btn_next.png);
+	cursor:pointer;
+}
+.dze_emoticons_recent_data_container {
+	width:377px;
+	height:auto;
+	border-width: 0 1px 0 1px;
+	border-color:#a0a0a0;
+	border-style:solid;
+	overflow:hidden;
+}
+.dze_specialchars_recent_data_container {
+	width:283px;
+	height:32px;
+	padding: 2px;
+	border-width: 0 1px 0 1px;
+	border-color:#a0a0a0;
+	border-style:solid;
+	overflow:hidden;
+}
+.dze_emoticons_recent_data_area {
+	width:394px;
+	height:82px;
+	overflow:hidden;
+}
+.dze_specialchars_recent_data_area {
+	width:300px;
+	height:32px;
+	overflow:hidden;
+}
+
+
+/* 툴바 - 글자(배경) 색 다이알로그 */
+.dze_ext_dialog_container {
+	z-index: 20031;
+	position:absolute;
+	/*width:160px;*/
+	width:auto;
+	height:auto;
+	border-width:1px;
+	border-color:#a0a0a0;
+	border-style:solid;
+	padding: 0;
+/*	padding:8px 6px 8px 6px; */
+	background-color:#FFFFFF;
+}
+.dze_color_picker_btn_container {
+	width:auto;
+	height:20px;
+	background-color:#FFFFFF;
+}
+.dze_color_picker_btn {
+	width:auto;
+	height:18px;
+	color:#000000;
+	text-align:left;
+
+	border-width:1px !important;
+	border-color:#a0a0a0 !important;
+	border-style:solid !important;
+	background-color:#FFFFFF !important;
+}
+.dze_color_picker_btn_over {
+	width:154px;
+	height:18px;
+	padding-top:2px;
+	margin:0 2px 0 2px;
+	color:#000000;
+	text-align:center;
+
+	border-width:1px !important;
+	border-color:#a0a0a0 !important;
+	border-style:solid !important;
+	background-color:#EBEBEB !important;
+	box-sizing:border-box;
+}
+.dze_color_picker_btn_down {
+	width:154px;
+	height:18px;
+	padding-top:2px;
+	margin:0 2px 0 2px;
+	color:#000000;
+	text-align:center;
+
+	border-width:1px !important;
+	border-color:#a0a0a0 !important;
+	border-style:solid !important;
+	background-color:#D9D9D9 !important;
+	box-sizing:border-box;
+}
+.dze_color_picker_separator_line {
+	clear:both;
+	width:auto;
+	height:1px;
+	border-width:0 0 1px 0;
+	border-color:#eeeeee;
+	border-style:solid;
+}
+.dze_color_picker_separator_blank {
+	clear:both;
+	width:auto;
+	height:8px;
+	background-color:#FFFFFF;
+}
+.dze_color_picker_palettes_container {
+	width:164px;
+	height:auto;
+	/*padding:0 2px 0 2px;*/
+	/*padding:8px 6px 8px 6px;*/
+	padding:0;
+	background-color:#ffffff;
+}
+.dze_emoticons_unit_item {
+/*	width:10px;
+	height:10px;*/
+	border-width:0px;
+	border-color:#dedede;
+	border-style:solid;
+}
+.dze_color_picker_unit_item {
+	width:10px;
+	height:10px;
+	border-width:1px;
+	border-color:#dedede;
+	border-style:solid;
+}
+.dze_color_picker_palettes_coloritem_over {
+	width:10px;
+	height:10px;
+	border-width:1px;
+	border-color:#dedede;
+	border-style:solid;
+}
+
+.dze_ext_item_over_layer {
+	z-index: 20032;
+	position:absolute;
+	border-width:1px;
+	border-color:#547ecf;
+	border-style:solid;
+}
+.dze_ext_item_over_layer_innerbox {
+	z-index: 20032;
+	position:absolute;
+	border-width:1px;
+	border-color:#ffffff;
+	border-style:solid;
+}
+
+.dze_color_picker_result_line {
+	margin-top:-3px;
+	margin-left:0px;
+	width:14px;
+	height:1px;
+	display:block;
+	border-width:1px;
+	border-color:#a0a0a0;
+	border-style:solid;
+        position: inherit;
+}
+
+
+/* 삽입 - 책갈피 */
+
+.dze_bookmark_list_container {
+	width: 100%;
+	min-height:140px;
+	flex-grow: 1;
+	background-color:#FFFFFF;
+	border-width:1px;
+	border-color:#c5c5c5;
+	border-style:solid;
+	overflow-y:scroll;
+	overflow-x:hidden;
+	-ms-overflow-y:  scroll;
+	-ms-overflow-x:  hidden;
+	outline:none;
+}
+.dze_bookmark_list_container option {
+	width: 100%;
+	height:auto;
+	padding:3px;
+	/* overflow:auto; */
+	background-color:#ffffff;
+	cursor:default;
+}
+.dze_bookmark_list_container option:checked {
+	background-color:#d9d9d9;
+}
+.dze_bookmark_name_formbox {
+	flex-grow: 1;
+	height:18px;
+	background-color:#FFFFFF;
+	border-width:1px;
+	border-color:#c5c5c5;
+	border-style:solid;
+	padding:0;
+	margin-right: 10px;
+}
+.dze_bookmark_name_formbox:focus {
+    outline: none;
+}
+.dze_bookmark_button {
+	width:60px !important;
+	height: 27px !important;
+	background-color:#FFFFFF !important;
+	border-width:1px !important;
+	border-color:#a0a0a0 !important;
+	border-style:solid !important;
+}
+.dze_bookmark_button:hover,
+.dze_bookmark_button:focus {
+	background-color:#EBEBEB !important;
+}
+
+/* 삽입 - 하이퍼링크 */
+.dze_hyperlink_name_formbox {
+	width: 250px;
+	height:18px;
+	background-color:#FFFFFF;
+	border-width:1px;
+	border-color:#c5c5c5;
+	border-style:solid;
+	padding:0;
+	font-size:12px;
+}
+.dze_hyperlink_name_formbox:focus {
+    outline: none;
+}
+.dze_hyperlink_bookmark_form {
+	width:267px;
+	height:20px;
+	background-color:#FFFFFF;
+	border-width:1px;
+	border-color:#c5c5c5;
+	border-style:solid;
+	padding:0;
+	font-size:12px;
+
+}
+
+
+
+/* 서식 - 글자모양 */
+.dze_style_font_preview {
+	width:410px;
+	height:80px;
+	text-align:center;
+	display: table-cell;
+	vertical-align: middle;
+}
+.dze_style_font_preview_container {
+	width:410px;
+	height:80px;
+	border-width:1px;
+	border-color:#c5c5c5;
+	border-style:solid;
+	overflow:hidden;
+}
+.dze_style_font_propery_set {
+	float:left;
+	margin-right:3px;
+	width:28px;
+	height:28px;
+	border-width:1px;
+	border-color:#c5c5c5;
+	border-style:solid;
+	background-color:#FFFFFF;
+	cursor:default;
+}
+.dze_style_font_propery_set_over {
+	float:left;
+	margin-right:3px;
+	width:28px;
+	height:28px;
+	border-width:1px;
+	border-color:#c5c5c5;
+	border-style:solid;
+	cursor:default;
+	background-color: #dedede;
+}
+.dze_style_font_propery_set_down {
+	float:left;
+	margin-right:3px;
+	width:28px;
+	height:28px;
+	border-width:1px;
+	border-color:#c5c5c5;
+	border-style:solid;
+	cursor:default;
+	background-color: #d9d9d9;
+}
+.dze_style_font_propery_set[disabled]
+{
+    background-color: #dedede;
+}
+.dze_style_paragraph_align_title {
+	float:left;
+	margin-right:10px;
+	width:auto;
+	height:20px;
+	margin-top:8px;
+}
+#colorComboBoxLabel_Sub_dze_font_forecolor {
+	background-color: #000000;
+}
+#dze_style_font_family{
+	width: 126px;
+	overflow: hidden;
+	white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* 서식 - 글머리표 모양 */
+.dze_orderedlist_container {
+	width:auto;
+	border-width:1px;
+	border-color:#a0a0a0;
+	border-style:solid;
+	padding:2px;
+	position: relative;
+}
+.dze_orderedlist_unit_img {
+	display: block;
+	margin:1px;
+	border-width:1px;
+	border-color:#a0a0a0;
+	border-style:solid;
+	cursor:default;
+	line-height: 80px;
+	width:97px;
+	height: 97px;
+	background-position: center center;
+	background-repeat: no-repeat;
+	text-align:center;
+	position: absolute;
+}
+.dze_orderedlist_unit_img:hover {
+	background-color: #EBEBEB;
+}
+.dze_orderedlist_unit_img:active {
+	background-color: #d9d9d9;
+}
+.dze_orderedlist_unit_img[selected] {
+	background-color: #dedede;
+}
+
+/* 도움말 - 제품정보 */
+.dze_logo_container {
+	clear:both;
+	width:410px;
+	height:66px;
+	margin: 14px 0 34px 0;
+	text-align:center;
+	background-position: center center;
+	background-repeat: no-repeat;
+	background-image: url(../image/Oneffice.png);
+}
+.dze_editor_url_info {
+	width:auto;
+	margin:0 0 8px 16px;
+	color:#000000;
+}
+.dze_editor_url_info a:link, a:visited, a:hover, a:active {
+	color:#000000;
+	text-decoration:none;
+}
+.dze_editor_copyright_info {
+	width:auto;
+	margin:0 0 8px 16px;
+	color:#000000;
+}
+.dze_editor_license_info {
+	width:100px;
+	margin:0 0 8px 16px;
+	color:gray;
+	cursor:pointer;
+}
+.dze_editor_license_info_contentbox{
+	width:355px;
+        height:150px;
+        overflow:auto;
+	margin:0 0 8px 16px;
+	padding:10px;
+	color:#000000;
+	background-color:#f2f2f2;
+}
+.dze_editor_license_info_contentbox a:link, a:visited, a:hover, a:active {
+	color:gray;
+	text-decoration:none;
+}
+
+.dze_editor_license_info_contentbox ul {
+	padding-left: 20px;
+	margin: 0;
+	font-size: 8pt;
+}
+.dze_editor_license_info_contentbox li {
+	font-size: 8pt;
+	color:gray;
+	margin: 5px 0;
+}
+.dze_editor_agent_info {
+	width:auto;
+	margin:0 0 8px 16px;
+	color:gray;
+	font-size:9pt;
+}
+
+/* 도움말 - 단축키 정보 */
+.dze_shortcuts_content {
+	width:auto;
+	overflow:auto;
+}
+.dze_shortcuts_table {
+	border-collapse: collapse;
+    border-spacing: 0;
+	border-width:1px;
+	border-color: #c5c5c5;
+}
+.dze_shortcuts_table_head {
+	background: #ececec;
+	color: #000000;
+	font-size:12px;
+
+	padding:3px !important;
+	text-align:center;
+	font-weight:bold;
+	height:18px;
+
+	border-collapse:collapse;
+	border:1px solid #c5c5c5 !important;
+}
+.dze_shortcuts_table_title {
+	background: #FFFFFF;
+	color: #000000;
+	font-size:12px;
+
+	padding:3px !important;
+	text-align:left;
+	font-weight:bold;
+	height:18px;
+
+	border-collapse:collapse;
+	border:1px solid #c5c5c5 !important;
+}
+.dze_shortcuts_table_body {
+	background: #FFFFFF;
+	color: #000000;
+	font-size:12px;
+
+	padding:3px !important;
+	text-align:left;
+	height:18px;
+
+	border-collapse:collapse;
+	border:1px solid #c5c5c5 !important;
+
+}
+.dze_shortcuts_table_body_over {
+	background: #EBEBEB;
+	color: #000000;
+	font-size:12px;
+
+	padding:3px !important;
+	text-align:left;
+}
+
+
+
+
+
+/* 표 - 셀 가로정렬 팝업 */
+.dze_table_cell_align_container {
+	width:360px;
+	height:102px;
+	clear:both;
+	background-color:#FFFFFF;
+}
+.dze_table_cell_align_unit {
+	float:left;
+	width:100px;
+	height:14px;
+	margin:2px;
+	background-color:#FFFFFF;
+	border-width:1px;
+	border-color:#a0a0a0;
+	border-style:solid;
+	padding:7px;
+	cursor:default;
+	display: table-cell;
+	vertical-align: middle;
+}
+.dze_table_cell_align_unit_over {
+	float:left;
+	width:100px;
+	height:14px;
+	margin:2px;
+	background-color:#EBEBEB;
+	border-width:1px;
+	border-color:#a0a0a0;
+	border-style:solid;
+	padding:7px;
+	cursor:default;
+	display: table-cell;
+	vertical-align: middle;
+}
+.dze_table_cell_align_unit_down {
+	float:left;
+	width:100px;
+	height:14px;
+	margin:2px;
+	background-color:#d9d9d9;
+	border-width:1px;
+	border-color:#a0a0a0;
+	border-style:solid;
+	padding:7px;
+	cursor:default;
+	display: table-cell;
+	vertical-align: middle;
+}
+
+
+/* editor 드래그&드롭 배경색 변경 */
+.dze_editor_dnd_bg {
+	background-color: #f3f7ff;
+}
+
+
+.duzon_dialog_btn_replace_case_item {
+	width:auto;
+	height:30px;
+	background-color:#FFFFFF;
+}
+.duzon_dialog_btn_replace_case_item:hover {
+	background-color:#deeefa;
+}
+.duzon_dialog_btn_replace_case_item[selected] {
+	background-color:#cdeaff;
+}
+.duzon_dialog_btn_replace_case_item_image {
+	width:28px;
+	height:28px;
+	border-width:1px;
+	border-color:#a0a0a0;
+	border-style:solid;
+	cursor:pointer;
+}
+
+/* ----- detail color pallets   */
+
+/* 메인 컬러 팔렛트 */
+.dze_color_pallet_container {
+	position: relative;
+	width:309px;
+	padding:10px;
+	border-width:0px;
+	border-color:#d9d9d9;
+	border-style:solid;
+	background-color:#ffffff;
+	font-size:12px;
+	color:#000000;
+}
+
+.dze_color_pallet_table {
+	position:relative;
+	width:196px;
+	height:132px;
+	border-width:0px;
+	border-color:red;
+	border-style:solid;
+	cursor:default;
+}
+.dze_color_pallet_bg {
+	width: 196px;
+	height: 132px;
+	cursor:default;
+	background-position: center center;
+    background-image: url(../image/dialog/dze_color_pallet.png);
+    background-repeat: no-repeat;
+}
+.dze_color_pallet_table_selector_black {
+	position: absolute;
+	width: 19px;
+	height: 19px;
+	display: none;
+	cursor:default;
+
+    background-position: center center;
+    background-image: url(../image/dialog/color_picker_black.png);
+    background-repeat: no-repeat;
+}
+.dze_color_pallet_table_selector_white {
+	position: absolute;
+	width: 19px;
+	height: 19px;
+	display: none;
+	cursor:default;
+    background-position: center center;
+    background-image: url(../image/dialog/color_picker_white.png);
+    background-repeat: no-repeat;
+}
+
+/* 우측 서브 컬러 바 */
+.dze_color_pallet_table_sub {
+	position:relative;
+	cursor:default;
+	width:27px;
+}
+.dze_color_pallet_table_sub_selector {
+	position: absolute;
+	left: 15px;
+	top: 59px;
+	width: 9px;
+	height: 10px;
+	cursor:default;
+    background-position: center center;
+    background-image: url(../image/dialog/color_picker_arrow_horizontal.png);
+    background-repeat: no-repeat;
+}
+
+/* 우측 최근사용 컬러 테이블 */
+.dze_color_pallet_table_recent {
+	width:auto;
+	height:114px;
+	border-width:0px;
+	border-style:solid;
+	border-color:#FFFFFF;
+}
+.dze_color_pallet_table_recent_color_label {
+	text-align:center;
+	margin: 0 0 3px 0;
+	height:15px;
+	font-size:11px;
+}
+.dze_color_pallet_table_recent_color_unit {
+	width:17px;
+	height:17px;
+	position: absolute;
+	border-width:1px;
+	border-style:solid;
+	border-color:#ffffff;
+	cursor:default;
+	background-color:#f2f2f2;
+}
+.dze_color_pallet_table_recent_color_delete {
+	width:36px;
+	height:36px;
+	position: absolute;
+	border-width:1px;
+	border-style:solid;
+	border-color:#ffffff;
+	cursor:pointer;
+    background-position: center center;
+    background-image: url(../image/dialog/btn_color_delete.png);
+    background-repeat: no-repeat;
+	background-color:#f2f2f2;
+}
+.dze_color_pallet_table_user_color_add {
+	width:36px;
+	height:36px;
+	position: absolute;
+	border-width:1px;
+	border-style:solid;
+	border-color:#ffffff;
+	cursor:pointer;
+	background-position: center center;
+    background-image: url(../image/dialog/btn_color_add.png);
+    background-repeat: no-repeat;
+	background-color:#f2f2f2;
+}
+.dze_color_pallet_table_recent_color_box {
+	margin:auto;
+	width:76px;
+	height:114px;
+	position: relative;
+}
+
+/* 하단 무채색 컬러 바 */
+.dze_color_pallet_table_achromatic {
+	position:relative;
+	float:right;
+	cursor:default;
+	width:189px;
+	height:35px;
+	border-width:0px;
+	border-color:red;
+	border-style:solid;
+}
+.dze_color_pallet_table_achromatic_selector {
+	position: absolute;
+	left: 97px;
+	top: 20px;
+	width: 10px;
+	height: 9px;
+    background-position: center center;
+    background-image: url(../image/dialog/color_picker_arrow_vertical.png);
+    background-repeat: no-repeat;
+}
+
+/* 최 하단 사용자정의 컬러 테이블 */
+.dze_color_pallet_table_user {
+	margin:auto;
+	padding:0;
+	width:auto;
+	height:auto;
+/*	background-color:yellow; */
+}
+.dze_color_pallet_table_user_label {
+	text-align:center;
+	margin-bottom:3px;
+	line-height: 16px;
+}
+.dze_color_pallet_table_user_color_box {
+	padding-left:1px;
+	width:304px;
+	height:38px;
+	padding:0px;
+	position: relative;
+}
+.dze_color_pallet_table_user_color_unit {
+	width:17px;
+	height:17px;
+	position: absolute;
+	border-width:1px;
+	border-style:solid;
+	border-color:#ffffff;
+	cursor:default;
+	background-color:#f2f2f2;
+}
+.dze_color_pallet_table_user_color_delete {
+	width:17px;
+	height:17px;
+	float:left;
+	border-width:1px;
+	border-style:solid;
+	border-color:#ffffff;
+	cursor:pointer;
+}
+
+/* 우측하단 새색,현재색 박스*/
+.dze_color_pallet_table_new_color_box_label {
+	width:74px;
+	margin-bottom:5px;
+	line-height: 16px;
+}
+.dze_color_pallet_table_new_color_box {
+	width:74px;
+	height:25px;
+	border-width:1px 1px 0 1px;
+	border-style:solid;
+	border-color:#000000;
+}
+.dze_color_pallet_table_old_color_box {
+	width:74px;
+	height:25px;
+	border-width:0 1px 1px 1px;
+	border-style:solid;
+	border-color:#000000;
+}
+.dze_color_pallet_table_old_color_box_label {
+	width:74px;
+	margin-top:5px;
+	line-height: 16px;
+}
+
+/* 하단 폼 및 버튼 */
+.dze_color_pallet_table_htmlcode_form {
+	width:80px !important;
+	height:15px !important;
+	padding:1px !important;
+	background-color:#FFFFFF !important;
+	color:#000000 !important;
+	font-size:12px !important;
+	border-width:1px !important;
+	border-color:#a0a0a0 !important;
+	border-style:solid !important;
+	margin-left:3px;
+}
+.dze_color_pallet_table_btn_add_usercolor {
+	width:158px !important;
+	height:21px !important;
+	padding:1px !important;
+	background-color:#FFFFFF !important;
+	border-width:1px !important;
+	border-color:#a0a0a0 !important;
+	border-style:solid !important;
+	color:#000000 !important;
+	font-size:12px !important;
+}
+.dze_color_pallet_table_btn_add_usercolor_over {
+	width:158px !important;
+	height:21px !important;
+	padding:1px !important;
+	background-color:#EBEBEB !important;
+	border-width:1px !important;
+	border-color:#a0a0a0 !important;
+	border-style:solid !important;
+	color:#000000 !important;
+	font-size:12px !important;
+}
+.dze_color_pallet_table_btn_add_usercolor_down {
+	width:158px !important;
+	height:21px !important;
+	padding:1px !important;
+	background-color:#d9d9d9 !important;
+	border-width:1px !important;
+	border-color:#a0a0a0 !important;
+	border-style:solid !important;
+	color:#000000 !important;
+	font-size:12px !important;
+}
+
+
+.dze_color_pallet_table_hr_separator {
+	width:309px;
+	height:1px;
+	margin:5px 0 5px 0;
+	border-width:0 0 1px 0;
+	border-color:#eeeeee;
+	border-style:solid;
+}
+
+.dze_bottom_resize_guideline {
+	position:absolute;
+	z-index: 20030;
+	left:0px;
+	top: 0px;
+	border-width: 0 1px 1px 1px;
+	border-style: dotted;
+	border-color:#0000FF;
+}
+.dze_bottom_resize_guidevalue {
+	position:absolute;
+	z-index: 20030;
+	overflow:hidden;
+	text-align:center;
+	width: 45px;
+	height:auto;
+	padding:2px;
+	background-color:#FFFFFF;
+	border-width:1px;
+	border-color:#d9d9d9;
+	border-style:solid;
+	font-size:12px;
+}
+
+/* multi level list*/
+.dze_level_list_container {
+	width: 215px;
+	padding: 5px;
+}
+
+.dze_level_list_row {
+	display: flex;
+	flex-wrap: wrap;
+	margin-bottom: 5px;
+}
+
+.dze_level_list_row:last-child {
+	margin-bottom: 0px;
+}
+
+.dze_level_list_item {
+	width: 55px;
+	height: 65px;
+	padding: 0 7px 0 3px;
+	margin-right: 7px;
+	border: 1px solid #dedede;
+	position: relative;
+	font-size: 11px;
+}
+
+.dze_level_list_item * {
+	line-height: normal !important;
+}
+
+.dze_level_list_item:nth-child(3n) {
+	margin-right: 0px;
+}
+
+.dze_level_list_item:hover {
+	border: 1px solid #a0a0a0;
+	z-index: 20010;	
+}
+
+.dze_level_list_item:hover > .dze_level_list_preview {
+	display: flex;
+}
+
+.dze_level_list_btn {
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	display: flex;
+	align-items: center;
+}
+
+.dze_level_list_preview {
+	width: 172px;
+	height: 166px;
+	position: absolute;
+	left: -1px;
+	top: 65px;
+	overflow: hidden;
+	display: none;
+	align-items: center;
+	justify-content: center;
+	background-color: white;
+	border: 1px solid #a0a0a0;
+	font-size: 16px;
+}
+
+.dze_level_list_preview:hover {
+	visibility:hidden;
+}
+
+.dze_level_list_btn ol,
+.dze_level_list_btn ul {
+	padding-left: 10px;
+}
+
+.dze_level_list_btn > ol,
+.dze_level_list_btn > ul {
+	padding-left: 18px;
+}
+
+.dze_level_list_preview ol,
+.dze_level_list_preview ul {
+	padding-left: 13px;
+}
+
+.dze_level_list_preview > ol,
+.dze_level_list_preview > ul {
+    padding-left: 20px;	
+}
+
+.dze_level_list_container li {
+	line-height: initial;
+}
+
+.dze_level_list_container span {
+	color: #a9a9a9
+}
+
+/* custom ul style */
+ul.dzeExtListStyleTriangle {list-style-type:none;margin-top: 0em;margin-bottom: 0em;margin-left: 0;margin-right: 0;padding-left: 20px;}
+ul.dzeExtListStyleTriangle > li:not([style*="list-style-type"]):before{content: '\25B6';margin-left:-20px; padding-right: 5px;}
+ul.dzeExtListStyleInnerCircle {list-style-type:none;margin-top: 0em;margin-bottom: 0em;margin-left: 0;margin-right: 0;padding-left: 20px;}
+ul.dzeExtListStyleInnerCircle > li:not([style*="list-style-type"]):before{content: '\25CE';margin-left:-20px; padding-right: 5px;}
+ul.dzeExtListStyleFillCircle {list-style-type:none;margin-top: 0em;margin-bottom: 0em;margin-left: 0;margin-right: 0;padding-left: 20px;}
+ul.dzeExtListStyleFillCircle > li:not([style*="list-style-type"]):before{content: '\25CF';margin-left:-20px; padding-right: 5px;}
+ul.dzeExtListStyleDiamond {list-style-type:none;margin-top: 0em;margin-bottom: 0em;margin-left: 0;margin-right: 0;padding-left: 20px;}
+ul.dzeExtListStyleDiamond > li:not([style*="list-style-type"]):before{content: '\25C6';margin-left:-20px; padding-right: 5px;}
+ul.dzeExtListStyleHypon {list-style-type:none;margin-top: 0em;margin-bottom: 0em;margin-left: 0;margin-right: 0;padding-left: 20px;}
+ul.dzeExtListStyleHypon > li:not([style*="list-style-type"]):before {content: '\2574';margin-left:-20px; padding-right: 5px;}
+
+.dze_extdlg_general_command_container {
+	min-width: 132px;/*160px*/
+	height:auto;
+}
+.dze_extdlg_general_command_short_container {
+	width: 110px;/*100px*/
+	height:auto;
+}
+.dze_extdlg_general_btn_unit {
+	height:20px;
+	background-color:#FFFFFF;
+	padding-left: 5px;
+	font-size: 12px;
+	cursor:default;
+}
+.dze_extdlg_general_btn_over {
+	height:20px;
+	background-color:#deeefa;
+	padding-left:5px;
+	font-size: 12px;
+	cursor:default;
+}
+.dze_extdlg_general_btn_down {
+	height:20px;
+	background-color:#cdeaff;
+	padding-left:5px;
+	font-size: 12px;
+	cursor:default;
+}
+.dze_extdlg_general_btn_underline {
+	height:0px;
+	border-width: 0 0 1px 0;
+	border-color:#dedede;
+	border-style:solid;
+	background-color:#FFFFFF;
+}
+
+
+
+.duzon_dialog_title_container {
+	width:auto;
+	height:46px;
+	padding:0;
+	background-color:#ffffff;
+    border-bottom: solid 1px #bfbfbf;
+	cursor:move;
+}
+.duzon_dialog_title {
+	color:#000000;
+	text-align:left;
+	font-weight:bold;
+	font-size:16px;
+	vertical-align: middle;
+}
+.dze_extdlg_title_container {
+	width:auto;
+	height:20px;
+	color:#000000;
+	background-color:#F3F7FF;
+	font-size:12px;
+	padding-left:5px;
+	border-width: 1px 0 1px 0;
+    border-color: #DEDEDE;
+    border-style: solid;
+}
+
+.dze_extdlg_table_create_table {
+	margin: 7px 7px 0 7px;
+}
+.dze_extdlg_table_create_td_basic {
+	width: 14px;
+	height: 14px;
+	border-width: 1px;
+	border-color: #dedede;
+	border-style: solid;
+	background-color: #FFFFFF;
+}
+.dze_extdlg_table_create_td_over {
+	width: 14px;
+	height: 14px;
+	border-width: 1px;
+	border-color: #dedede;
+	border-style: solid;
+	background-color: #e8f5ff;
+}
+
+.dze_dic_search_btn_container {
+	width: auto;
+	height: 27px;
+	position: absolute;
+	z-index:20031;
+	display:none;
+	cursor:pointer;
+}
+.dze_dic_search_btn_td_text {
+	color:#FFFFFF;
+	font-size:12px;
+	font-weight: bold;
+	text-align:center;
+	background: url(../image/dialog/btn_mid_search.png) repeat;
+	padding: 0;
+}
+.dze_dic_search_btn_td_left {
+	width: 4px;
+	background: url(../image/dialog/btn_left_search.png) no-repeat left center;
+	padding: 0;
+}
+.dze_dic_search_btn_td_mid {
+	width: 4px;
+	background: url(../image/dialog/btn_mid_search.png) repeat;
+	padding: 0;
+}
+.dze_dic_search_btn_td_searchimg {
+	width: 13px;
+	background: url(../image/dialog/btn_mid_search.png) repeat;
+	padding: 0;
+}
+.dze_dic_search_btn_td_right {
+	width: 4px;
+	background: url(../image/dialog/btn_right_search.png) no-repeat left center;
+	padding: 0;
+}
+
+.dze_context_btn_item {     /* UCDOC-4480 */
+	display: inline-flex;
+	height:100%;
+	opacity: 0.3;
+}
+
+.dze_context_btn_text {
+	display: inline-flex;
+	align-items: center;
+	height: 100%;
+	color: #FFFFFF;
+	font-size: 12px;
+	font-weight: bold;
+	text-align: center;
+	background: url(../image/dialog/btn_mid_search.png) repeat;
+	padding: 0 4px;
+}
+
+.dze_context_btn_sep {
+	display:inline-block;
+	width: 1px;
+	background: url(../image/dialog/btn_sep_search.png) repeat;
+	padding: 0;
+}
+
+.dze_context_btn_item:first-child .dze_context_btn_sep:first-child {    /* left round */
+	width: 4px;
+	background: url(../image/dialog/btn_left_search.png) no-repeat left center;
+}
+.dze_context_btn_item:last-child .dze_context_btn_sep:last-child {    /* right round */
+	width: 4px;
+	background: url(../image/dialog/btn_right_search.png) no-repeat left center;
+}
+
+.dze_context_btn_item:first-child:not(:last-child) .dze_context_btn_text {    /* first item text */
+	padding-right: 6px;
+}
+.dze_context_btn_item:not(:first-child):last-child .dze_context_btn_text {    /* last item text */
+	padding-left: 6px;
+}
+.dze_context_btn_item:not(:first-child):not(:last-child) .dze_context_btn_text {    /* middle item text */
+	padding-left: 6px;
+	padding-right: 6px;
+}
+
+.dze_search_content_container {
+	width: auto;
+	height:300px;
+	padding:5px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	word-break: break-all;
+}
+.dze_search_content_result_line {
+	width: 100%;
+	height: auto;
+	padding: 5px;
+	clear:both;
+	margin: 10px 0 10px 0;
+}
+.dze_search_content_result_title {
+	width:auto;
+	font-weight:bold;
+	color:black;
+	font-size:13px;
+	margin-bottom:5px;
+}
+.dze_search_content_result_description {
+	width:auto;
+	color:#444;
+	font-size:12px;
+	line-height:1.4;
+}
+.dze_search_content_result_description img {
+	 margin:0px 5px 5px 0px;
+}
+.dze_search_btn_more_container {
+	margin:10px 0 0 0;
+	width:auto;
+	height:auto;
+	clear:both;
+	text-align:center;
+}
+.dze_web_search_form_container {
+	width:auto;
+	height:auto;
+	text-align:center;
+	padding:10px;
+	background-color:#FFFFFF;
+	border-width:0 0 1px 0;
+	border-color:#dedede;
+	border-style:solid;
+}
+.dze_web_search_form {
+	width:280px !important;
+	height:24px !important;
+	border-width:1px !important;
+	border-color:#a0a0a0 !important;
+	border-style:solid !important;
+	color:#000000 !important;
+	padding:0 5px 0 5px !important;
+	font-size:12px !important;
+}
+.dze_web_search_form:focus {
+    outline: none;
+}
+
+
+.dzeFileList {
+	padding: 3px;
+	height:25px;
+	border-width: 0 0 1px 0;
+	border-color:#d9d9d9;
+	border-style:solid;
+}
+.dzeFolderList {
+	padding: 3px;
+	height:25px;
+	border-width: 0 0 1px 0;
+	border-color:#d9d9d9;
+	border-style:solid;
+	font-weight:bold;
+}
+
+.dze_paper_out_view {
+	width: 90px;
+	height:130px;
+	padding: 10px;
+	margin:0px;
+	border-width: 1px;
+	border-color:gray;
+	border-style:solid;
+}
+.dze_paper_margin_view {
+	width: 88px;
+	height:128px;
+	padding: 0px;
+	margin:0px;
+	border-width: 1px;
+	border-color:#b2b2b2;
+	border-style:dashed;
+	background: url(../image/dialog/print_margin_sample_content.png) no-repeat 1px 1px;
+}
+.dze_paper_direction_view {
+	width: 90px;
+	height:130px;
+	padding: 10px;
+	margin:0px;
+	border-width: 1px;
+	border-color:gray;
+	border-style:solid;
+        z-index: 20029;
+        position:relative;
+        background-color: #FFFFFF;
+        /*background: url(../image/dialog/print_margin_sample_content.png) no-repeat 5px 5px;*/
+}
+
+.dze_dialog_get_remote_content_box {
+    width:auto;
+    height: 282px;
+    padding: 10px;
+    border: 1px solid #c8c8c8;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+.dze_dialog_get_remote_content_initialize {
+    background-image: url(../image/dialog/popup_dataopen.png);
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+.dze_dialog_get_remote_content_nodata {
+    background-image: url(../image/dialog/popup_nodata.png);
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+.dze_paper_watermark_view_1 {
+    margin-top: 5px;
+    width: 100px;
+    height:140px;
+    background: url(../image/dialog/secure_1.png);
+    background-size: 80%;
+    background-repeat: no-repeat;
+    background-position: center center;
+    border: #d9d9d9 1px solid;
+}
+.dze_paper_watermark_view_2 {
+    margin-top: 5px;
+    width: 100px;
+    height:140px;
+    background: url(../image/dialog/secure_2.png);
+    background-size: 80%;
+    background-repeat: no-repeat;
+    background-position: center center;
+    border: #d9d9d9 1px solid;
+}
+.dze_paper_watermark_view_3 {
+    margin-top: 5px;
+    width: 100px;
+    height:140px;
+    background: url(../image/dialog/secure_3.png);
+    background-size: 80%;
+    background-repeat: no-repeat;
+    background-position: center center;
+    border: #d9d9d9 1px solid;
+}
+
+/* 이미지, 동영상 본문 정렬 */
+.dze_image_align_propery_set {
+	min-width: 38px;
+	height: 48px;
+	padding: 1px;
+	margin-right: 3px;
+	cursor:pointer;
+	display: inline-flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+.dze_image_align_propery_set div:first-child {
+	padding: 2px;
+	border: transparent 1px solid;
+	margin-bottom: 1px;
+}
+
+.dze_image_align_propery_set_selected div:first-child {
+	border-color: #009CFF;
+}
+
+.style_dze_orderedlist_preview_num_ol {
+    list-style-type: decimal;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 3px;
+}
+.style_dze_orderedlist_preview_num_ol li {
+    list-style-position: inside;
+    font-size:12px;
+}
+.dze_style_status_page_no_text {
+    padding: 0 5px;
+    background-color: transparent;
+}
+.dze_style_status_page_no_text:hover {
+    background-color: #e5e5e5;
+}
+.oneffice_chart_preview {
+    width:auto;
+    height:240px;
+    background-color:#ffffff;
+    text-align:center;
+    padding:10px;
+    overflow:auto;
+    border: 1px solid #d9d9d9;
+    margin-top: 20px;
+    margin-bottom: 12px;
+}
+
+.websearch_license_view{
+    width:auto;
+    height:10px;
+    font-size:8pt;
+    float:right;
+    color:#a0a0a0;
+}
+
+[draggable] {
+	-moz-user-select: none;
+	-khtml-user-select: none;
+	-webkit-user-select: none;
+	user-select: none;
+	-khtml-user-drag: element;
+	-webkit-user-drag: element;
+}
+
+.merge_doc_item {
+	list-style-position: inside;
+	cursor: move;
+	background-color: #dbf2fb;
+	padding: 1px 10px;
+	border-radius: 5px;
+	border: 1px solid #ffffff;
+}
+
+.merge_doc_item.selected {
+	background-color: #b9e4f6;
+	border: 1px solid #1c90fb
+}
+
+.merge_doc_placeholder {
+	list-style-position: inside;
+	list-style-type: none;
+	padding: 1px 10px;
+}
+
+.bizbox_report_item {
+	padding: 3px 0px;
+	cursor: default;
+	user-select: none;
+}
+
+.bizbox_report_item.over {
+	background-color: #f2f2f2;
+}
+
+.bizbox_report_item.select {
+	background-color: #dbf2fb;
+}
+
+
+.oneffice_chart_table {
+    position: relative;
+    width: auto;
+    height: auto;
+    background-color:#ffffff;
+    text-align:center;
+    margin: 14px;
+    overflow:auto;
+    font-size:12px;
+    outline: none;
+	border: 1px solid #d9d9d9;
+	max-width: 530px;
+	max-height: 232px;
+	min-width: 530px;
+	min-height: 232px;
+}
+.oneffice_chart_table_input_div {
+    outline: none;
+}
+
+.dze_table {
+	table-layout: fixed; /* UCDOC-463 */
+	word-wrap: break-word;
+	word-break: normal;
+}
+
+.dze_table td {
+	word-wrap: break-word; /* UCDOC-463 */
+	word-break: normal;
+}
+
+.dze_oneffice_chart_table_context_container {
+    z-index: 20031;
+    position:absolute;
+    left: 0;
+    top: 0;
+    width:150px;
+    height:auto;
+    padding:2px 0;
+    border: 1px solid #a0a0a0;
+    background-color:#ffffff;
+}
+.dze_oneffice_chart_table_context_unit {
+    width:auto;
+    height:24px;
+    background-color:#ffffff;
+    margin: 0;
+    cursor: default;
+    text-align:left;
+    padding: 0;
+}
+.dze_oneffice_chart_table_context_unit:hover {
+    width:auto;
+    height:24px;
+    background-color:#e8f5ff;
+    margin: 0;
+    cursor: default;
+    text-align:left;
+    padding: 0;
+}
+.oneffice_chart_table_insert_label {
+    width:auto;
+	text-align:left;
+	padding-top: 10px;
+	padding-bottom: 10px;
+}
+.backslash {
+	background: url('data:image/png;base64,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');
+	background-size: 100% 100%;
+}
+
+.users_guide_container {
+    width : 380px;
+    padding : 10px 15px;
+    background-color : #f2f2f2;
+    border-radius : 10px;
+}
+.users_guide_container p {
+    line-height: 180%;
+}
+.user_agree_check_container {
+    margin : 10px 0 0 0;
+}
+.users_guide_buttom_container {
+    width:auto;
+    font-size: 8pt;
+    padding: 5px 0 5px 10px;
+}
+
+.qrcode_preview_button {
+	float: right;
+	cursor: default;
+	height: 27px;
+	border: 1px solid #8898a0;
+	border-radius: 1px;
+	box-shadow: 0px 1px 1px 0 rgba(0, 0, 0, 0.1);
+	background: #f0f6f9;
+	display: flex;
+	align-items: center;
+	padding: 0px 5px;
+}
+.qrcode_preview_button:hover {
+	border: solid 1px #1c90fb;
+	background-color: #e2f7ff;
+}
+.qrcode_firstpage_control {
+	float: right;
+	margin-right: 10px;
+	width: 122px;
+	height: 163px;
+	border: 1px solid #c6c6c6;
+}
+.qrcode_lastpage_control {
+	float: left;
+	margin-left: 10px;
+	width: 122px;
+	height: 163px;
+	border: 1px solid #c6c6c6;
+}
+.qrcode_firstpage_control:hover, .qrcode_lastpage_control:hover {
+	border: 1px solid #1c90fb;
+}
+.qrcode_firstpage_info {
+	float: right;
+	width: 122px;
+	margin: 10px 10px 0 0;
+	text-align: center;
+	color: #4a4a4a;
+}
+.qrcode_lastpage_info {
+	float: left;
+	width: 122px;
+	margin: 10px 0 0 10px;
+	text-align: center;
+	color: #4a4a4a;
+}
+
+.doc_info_top_div {
+	border-bottom: 1px solid #dddddd;
+	padding: 70px 0 53px;
+	text-align: center;
+}
+#dze_idx_doc_info_thumb {
+	width: 252px;
+    height: 357px;
+    display: block;
+    text-align: center;
+	margin: 0 auto 14px;
+	border-radius: 6px;
+	box-shadow: 0px 10px 20px 0 rgba(0, 0, 0, 0.1);
+	border: solid 1px #afafaf;
+	background-color: #ffffff;
+}
+.doc_alert_icon {
+	width: 72px;
+	height: 72px;
+	display: inline-block;
+	margin-bottom: 36px;
+}
+.doc_alert_title {
+	min-width: 648px;
+	height: 29px;
+	font-family: AppleSDGothicNeo;
+	font-size: 32px;
+	font-weight: 600;
+	font-style: normal;
+	font-stretch: normal;
+	line-height: 1.25;
+	letter-spacing: -1.6px;
+	text-align: center;
+	color: #000000;
+	margin-bottom: 20px;
+}
+.doc_alert_title_detail {
+	height: 25px;
+	font-family: AppleSDGothicNeo;
+	font-size: 28px;
+	font-weight: normal;
+	font-style: normal;
+	font-stretch: normal;
+	line-height: 1.43;
+	letter-spacing: -1.4px;
+	text-align: center;
+	color: #666666;
+}
+.doc_info_icon {
+	width: 64px;
+	height: 64px;
+	border-radius: 32px;
+	display: inline-block;
+	margin: 0 10px;
+}
+.doc_info_title {
+	width: 178px;
+	font-size: 28px;
+	line-height: 72px;
+	letter-spacing: -1.4px;
+	color: #666666;
+}
+.doc_info_detail {
+	text-overflow: ellipsis;
+    overflow: hidden;
+	white-space: nowrap;
+	max-width: 386px;
+	font-size: 32px;
+	line-height: 72px;
+	letter-spacing: -1.6px;
+	color: #000000;
+}
+.doc_info_title_pad {
+	width: 130px;
+	font-size: 22px;
+	line-height: 50px;
+	color: #666666;
+}
+.doc_info_detail_pad {
+	text-overflow: ellipsis;
+    overflow: hidden;
+	white-space: nowrap;
+	max-width: 300px;
+	font-size: 24px;
+	line-height: 50px;
+	color: #000000;
+}
+.dze_doc_form_report_type_box {
+    clear:both;
+    width:450px;
+    height:450px;
+    padding:0;
+    margin:0;
+}
+#dze_idx_report_type_form_container {
+    display: flex;
+    flex-wrap: wrap;
+}
+.dze_doc_form_image_box {
+    width:auto;
+    border-radius: 6px;
+    border: solid 1px #afafaf;
+    background-color: #ffffff;
+    padding: 12px 11px;
+    position: relative;
+    cursor: pointer;
+}
+.dze_doc_form_image_box:hover {
+    border-color: #25b6ec;
+}
+.dze_doc_form_image_box_selected {
+    width:auto;
+    border-radius: 6px;
+    border: solid 1px #25b6ec;
+    background-color: #ffffff;    
+    padding: 12px 11px;
+    position: relative;
+}
+.dze_doc_form_subject_box{
+    width:auto;
+    padding: 0;
+    margin: 10px 0;
+    text-align:center;
+    font-size: 11pt;
+}
+.dze_doc_form_image_selection_ico {
+    position: absolute;
+    width:64px;
+    height: 64px;
+    left: 29px;
+    top: 52px;
+    display:none;
+    background: url(../image/dialog/icon-selec-check.png) no-repeat center center;
+    background-color: #25b6ec;
+    border-radius: 32px;
+}
+.duzon_dialog_pgnum_preview_page {
+	width: 100%;
+	height: 100%;
+	background: url("../image/dialog/icon_preview_doc.png") no-repeat center;
+}
+.duzon_dialog_row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 4px;
+}
+
+.chart_icon_01 {
+	width: 53px;
+	height: 53px;
+	border: 1px solid #bfbfbf;
+	background: url(../image/chart/btn-chart-01-off.png) no-repeat center center;
+	display: inline-block;
+	margin-right: 8px;
+}
+.chart_icon_01:hover{
+	background-color: #f9f9f9;
+}
+.chart_icon_01:active{
+	background-color: #ddefff;
+	border: 1px solid #0d7de4;
+	background: url(../image/chart/btn-chart-01-on.png) no-repeat center center;
+}
+.chart_icon_01.selected {
+	border: 1px solid #0d7de4;
+	background: url(../image/chart/btn-chart-01-on.png) no-repeat center center;
+}
+
+.chart_icon_02 {
+	width: 53px;
+	height: 53px;
+	border: 1px solid #bfbfbf;
+	background: url(../image/chart/btn-chart-02-off.png) no-repeat center center;
+	display: inline-block;
+	margin-right: 8px;
+}
+.chart_icon_02:active{
+	background-color: #ddefff;
+	border: 1px solid #0d7de4;
+	background: url(../image/chart/btn-chart-02-on.png) no-repeat center center;
+}
+.chart_icon_02.selected {
+	border: 1px solid #0d7de4;
+	background: url(../image/chart/btn-chart-02-on.png) no-repeat center center;
+}
+
+.chart_icon_03 {
+	width: 53px;
+	height: 53px;
+	border: 1px solid #bfbfbf;
+	background: url(../image/chart/btn-chart-03-off.png) no-repeat center center;
+	display: inline-block;
+	margin-right: 8px;
+}
+.chart_icon_03:hover{
+	background-color: #f9f9f9;
+}
+.chart_icon_03:active{
+	border: 1px solid #0d7de4;
+	background: url(../image/chart/btn-chart-03-on.png) no-repeat center center;
+	background-color: #ddefff;
+}
+.chart_icon_03.selected {
+	border: 1px solid #0d7de4;
+	background: url(../image/chart/btn-chart-03-on.png) no-repeat center center;
+}
+
+.chart_icon_04 {
+	width: 53px;
+	height: 53px;
+	border: 1px solid #bfbfbf;
+	background: url(../image/chart/btn-chart-04-off.png) no-repeat center center;
+	display: inline-block;
+	margin-right: 9px;
+}
+.chart_icon_04:hover{
+	background-color: #f9f9f9;
+}
+.chart_icon_04:active{
+	border: 1px solid #0d7de4;
+	background: url(../image/chart/btn-chart-04-on.png) no-repeat center center;
+	background-color: #ddefff;
+}
+.chart_icon_04.selected {
+	border: 1px solid #0d7de4;
+	background: url(../image/chart/btn-chart-04-on.png) no-repeat center center;
+}
+
+.chart_icon_05 {
+	width: 53px;
+	height: 53px;
+	border: 1px solid #bfbfbf;
+	background: url(../image/chart/btn-chart-05-off.png) no-repeat center center;
+	display: inline-block;
+	margin-right: 9px;
+}
+.chart_icon_05:hover{
+	background-color: #f9f9f9;
+}
+.chart_icon_05:active{
+	border: 1px solid #0d7de4;
+	background: url(../image/chart/btn-chart-05-on.png) no-repeat center center;
+	background-color: #ddefff;
+}
+.chart_icon_05.selected {
+	border: 1px solid #0d7de4;
+	background: url(../image/chart/btn-chart-05-on.png) no-repeat center center;
+}
+
+.chart_icon_06 {
+	width: 53px;
+	height: 53px;
+	border: 1px solid #bfbfbf;
+	background: url(../image/chart/btn-chart-06-off.png) no-repeat center center;
+	display: inline-block;
+	margin-right: 9px;
+}
+.chart_icon_06:hover{
+	background-color: #f9f9f9;
+}
+.chart_icon_06:active{
+	border: 1px solid #0d7de4;
+	background: url(../image/chart/btn-chart-06-on.png) no-repeat center center;
+	background-color: #ddefff;
+}
+.chart_icon_06.selected {
+	border: 1px solid #0d7de4;
+	background: url(../image/chart/btn-chart-06-on.png) no-repeat center center;
+}
+
+.chart_icon_07 {
+	width: 53px;
+	height: 53px;
+	border: 1px solid #bfbfbf;
+	background: url(../image/chart/btn-chart-07-off.png) no-repeat center center;
+	display: inline-block;
+	margin-right: 9px;
+}
+.chart_icon_07:hover{
+	background-color: #f9f9f9;
+}
+.chart_icon_07:active{
+	border: 1px solid #0d7de4;
+	background: url(../image/chart/btn-chart-07-on.png) no-repeat center center;
+	background-color: #ddefff;
+}
+.chart_icon_07.selected {
+	border: 1px solid #0d7de4;
+	background: url(../image/chart/btn-chart-07-on.png) no-repeat center center;
+}
+
+.chart_icon_08 {
+	width: 53px;
+	height: 53px;
+	border: 1px solid #bfbfbf;
+	background: url(../image/chart/btn-chart-08-off.png) no-repeat center center;
+	display: inline-block;
+}
+.chart_icon_08:hover{
+	background-color: #f9f9f9;
+}
+.chart_icon_08:active{
+	border: 1px solid #0d7de4;
+	background: url(../image/chart/btn-chart-08-on.png) no-repeat center center;
+	background-color: #ddefff;
+}
+.chart_icon_08.selected {
+	border: 1px solid #0d7de4;
+	background: url(../image/chart/btn-chart-08-on.png) no-repeat center center;
+}
+
+
+.toolTipDiv {
+	position: relative;
+	display: inline-block;
+}
+
+.toolTipDiv .toolTip-text {
+	visibility: hidden;
+	width: 267px;
+	font-size: 13px;
+	background-color: #FFFFFF;
+	color: #000000;
+	text-align: left;
+	border-radius: 10px;
+	padding: 20px 20px;
+	position: absolute;
+	z-index: 1;
+	top: 200%;
+	left: 50%;
+	margin-left: -50px;
+	box-shadow: 0px 0px 9px 1px rgba(0, 0, 0, 0.15);
+}
+
+.toolTipDiv:hover .toolTip-text {
+	 visibility: visible;
+}
+
+.pgnum_template_preview {
+	width: 155px;
+	height: 43px;
+	border: 1px solid #c5c5c5;
+	margin: 2px 0 1px 0;
+}
+
+.pgnum_template_preview:hover {
+	background-color: #e8f5ff;
+}
+
+
+.duzon_dialog_org_document_title {
+    width: auto;
+    height: 18px;
+    font-size: 15px;
+    text-align: left;
+    background: url(../image/dialog/icon-doc.png) no-repeat left center;
+    padding: 0 0 0 22px;
+    line-height: 1.2;
+    margin:7px 0 0 0;
+    font-weight:bold;
+}
+.duzon_dialog_org_document_info_box {
+    width: 333px;
+    height: auto;
+    border: 1px solid #dedede;
+    color: #666666;
+    font-size: 14px;
+    margin: auto;
+    padding: 14px 17px;
+    margin-top: 7px;
+}
+.duzon_dialog_org_document_info_box_txt1 {
+    width: 105px;
+    float:left;
+    color: #666666;
+}
+.duzon_dialog_org_document_info_box_txt2 {
+    margin-left: 135px;
+    width: auto;
+    color:#000000;
+}
+.duzon_dialog_org_document_info_box_txt_space {
+    width: auto;
+    height: 16px;
+    display: block;
+}
+
+.duzon_dialog_org_document_info_desc {
+    width: auto;
+    height: 35px;
+    margin: 21px auto 0px auto;
+    font-size: 15px;
+    color: #000000;
+    font-weight: bold;
+    text-align: center;
+    line-height: 1.33;
+    letter-spacing: -0.75px;
+}
+
+.watermark_table {
+	display: table;
+	width: 265px;
+	position: relative;
+}
+
+.watermark_table_row {
+	display: table-row;
+	height: 36px;
+	/* border: 1px; */
+	border-color: black;
+	/* margin-bottom: 6px; */
+	/* border-spacing: 6px; */
+}
+
+.watermark_text_cell_left {
+    display: table-cell;
+    width: 65px;
+    /* height: 20px; */
+    font-family: MalgunGothic;
+    font-size: 13px;
+    font-weight: normal;
+    font-style: normal;
+    font-stretch: normal;
+    line-height: normal;
+    letter-spacing: -1.3px;
+    text-align: left;
+    padding-left: 8px;
+    vertical-align: middle;
+    color: black;
+}
+
+.watermark_text_cell_middle {
+    display: table-cell;
+    width: auto;
+    /* height: 20px; */
+    font-family: MalgunGothic;
+    font-size: 13px;
+    font-weight: normal;
+    font-style: normal;
+    font-stretch: normal;
+    line-height: normal;
+    letter-spacing: -1.3px;
+    text-align: right;
+    vertical-align: middle;
+    color: black;
+}
+
+.watermark_text_cell_right {
+    display: table-cell;
+    width: auto;
+    /* height: 20px; */
+    font-family: MalgunGothic;
+    font-size: 13px;
+    font-weight: normal;
+    font-style: normal;
+    font-stretch: normal;
+    line-height: normal;
+    letter-spacing: -1.3px;
+    text-align: right;
+    vertical-align: middle;
+    color: black;
+}
+
+.bg_watermark_preview {
+	width: 90px;
+	height: 118px;
+	border: solid 1px #c5c5c5;
+	background-color: #ffffff;
+	text-align: right;
+	margin-left: 115px;
+	}
+
+.watermark_base_img {
+	position: absolute;
+	z-index: 0;
+	left: 195px;
+	bottom:5px;
+	width: 40px;
+	height: 8px;
+	/* pointer-events: none; */
+	background: url('data:image/png;base64,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');
+	background-position :center;
+	background-size: cover;
+}
+
+.setting_subtitle {
+	text-align: left;
+	font-size: 13px;
+    font-weight: bold;
+}
+.setting_menu_style {
+	display: flex;
+	min-width: 37px;
+	margin: 9px 15px 0px 4px;
+	align-items: center;
+	flex-direction: column;
+}
+.setting_menu_style > div {
+	width: 27px;
+	margin-bottom: 4px;
+	padding: 5px;
+	border: 1px solid #c6c6c6;
+	cursor: pointer;	
+}
+.setting_menu_style > div:hover {
+	border: 1px solid #1c90fb;
+}
+.setting_line_dash {
+	height: 1px;
+	background-color: lightblue;
+}
+
+#id_news_list_container ul {list-style-type: none; padding-left: 0px;}
+#id_news_list_container li {border: 1px solid #dedede; border-radius: 3px; margin-bottom: 5px; padding: 8px; box-shadow: 2px 2px 5px 0px #dedede;}
+#id_news_list_container li.selected {background-color: #ddefff; border: 1px solid #1c90fb;}
+#id_news_list_container .news_title_container {width: 100%; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;}
+#id_news_list_container .news_subject {font-weight: bold; font-size: 11pt; color: #1c90fb; white-space: nowrap;}
+#id_news_list_container .news_subinfo_container div {display: inline-block;}
+#id_news_list_container .news_subinfo_container span {font-size: 9pt;}
+
+#id_news_option_window .news_move_page_btn {width: 23px !important; margin: 1px; padding: 0px; font-size: 10pt !important; border: none; background: none;}
+#id_news_option_window .news_move_page_btn.current {color: #1c90fb; font-weight: bold;}
+#id_news_option_window .news_move_page_btn:hover {color: blue;}
+#id_news_option_window .news_move_page_btn:active {color: blue;}
+#id_news_option_window .news_move_page_btn[disabled] {opacity: 0.3;}
+#id_news_option_window .news_move_page_btn.current[disabled] {color: unset; font-weight: normal;}
+#id_news_option_window .news_move_page_btn[disabled]:hover, #id_news_option_window .news_move_page_btn.current[disabled]:hover {color: unset;}
+#id_news_option_window .news_move_page_btn[disabled]:active, #id_news_option_window .news_move_page_btn.current[disabled]:active {color: unset;}
+
+#id_image_list_container .dlg_grid_row {width: 100%; height: 115px; margin-bottom: 10px;}
+#id_image_list_container .dlg_grid_item {width: 33%; height: 100%; display: inline-block; padding-top: 5px;}
+#id_image_list_container .dlg_grid_item.selected {background-color: #ddefff;}
+#id_image_list_container .dlg_grid_item .image_container {width: 100%; height: 80px; text-align: center; overflow: hidden;}
+#id_image_list_container .dlg_grid_item .image_container img {max-width: 90%; /*maxHeight: 100%;*/ position: relative; top: 50%; transform: translateY(-50%);}
+#id_image_list_container .dlg_grid_item .info_container {width: 100%; text-align: left;}
+#id_image_list_container .dlg_grid_item .info_container p {margin: 0px 0px 0px 7px !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+#id_cloud_image_preview {max-width: 100%; max-height: 100%; position: relative; top: 50%; transform: translateY(-50%);}
+
+.dialog_voc_left_title {
+	width: 100px;
+	height: 34px;
+	font-size: 14px;
+	letter-spacing: -0.7px;
+	color: #666666;
+}
+.dialog_voc_user_info_detail {
+	max-width: 270px;
+	text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+	font-size: 14px;
+	letter-spacing: -0.28px;
+	color: #000000;
+}
+.dialog_voc_comment {
+    width: 358px;
+    height: 178px;
+    border: 1px lightgray solid;
+    padding: 5px;
+    overflow: auto;
+    resize: none;
+	outline: none;
+	margin: 10px 0;
+	font-size: 12px;
+}
+.dialog_voc_comment::-webkit-input-placeholder {
+    color:#A7A7A7;
+    text-align: left;
+    padding: 0px;
+}
+.dialog_voc_comment::-moz-placeholder {
+    color:#A7A7A7;
+    text-align: left;
+    padding: 0px;
+}
+.dialog_voc_comment:-ms-input-placeholder {
+    color:#A7A7A7;
+    text-align: left;
+}
+.duzon_dialog_extends_toggle_btn {
+	position: absolute;
+	top: 50%;
+	right: 0px;
+	transform: translate(0%, -50%);
+}
+.duzon_dialog_extends {
+	width: 305px; position: absolute; top: -1px; right: -307px; background: white;
+	border: 1px solid #a0a0a0;
+	background-image: linear-gradient(to top, #5fc7e0, #67d3ee);
+}
+.dialog_oneffice_news_title_bg {
+	width: 305px;
+	height: 47px;
+	background: url('../image/dialog/bg-help-title.png');
+}
+.dialog_oneffice_news_title {
+	color: white;
+	text-align: center;
+    height: 48px;
+	font-size: 14px;
+	display: inline;
+	position:absolute;
+  	top:0;right:0;bottom:0;left:0;
+  	display:flex;
+  	align-items:center;
+  	justify-content:center;
+
+  	display:-webkit-flex;
+  	-webkit-align-item:center;
+  	-webkit-justify-content:center;
+}
+.dialog_oneffice_news_list_container {
+	width: 305px;
+	float:left;
+	background:#e6eef3;
+	overflow-y: auto;
+}
+
+.dialog_oneffice_news_list_container::-webkit-scrollbar {
+	width: 6px;
+}
+
+.dialog_oneffice_news_list_container::-webkit-scrollbar-track {
+	background-color: transparent;
+}
+
+.dialog_oneffice_news_list_container::-webkit-scrollbar-thumb {
+	border-radius: 3px;
+	background-color: #a0a0a0;
+}
+
+.dialog_oneffice_news_list_container::-webkit-scrollbar-button {
+	width: 0px;
+	height: 0px;
+}
+
+.dialog_oneffice_news_item {
+	position: relative;
+    width:auto;
+    display:block;
+    padding: 18px;
+    margin-top: 6px;
+    border-radius: 10px;
+  	box-shadow: 0 0 9px 1px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff;
+    cursor:pointer;
+}
+.dialog_oneffice_news_item_title {
+	letter-spacing: -0.28px;
+	text-align: left;
+	font-size: 14px;
+    color: #009cff;
+}
+.dialog_oneffice_news_item_body {
+	font-size: 12px;
+	text-align: left;
+	letter-spacing: -0.24px;
+	color: #666666;
+}
+.dialog_oneffice_news_item_body.fold {
+	letter-spacing: -0.5px;
+	text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    display: inline-block;
+	width: 249px;
+	height: 15px;
+}
+.dialog_open_status_icon {
+	position: absolute;
+	top: 17px;
+	right: 17px;
+}
+
+/** 업무보고 가져오기 다이얼로그 **/
+
+.duzon_dialog_tab_body_container_on #dze_idx_bizbox_report_search_title {
+	width: 352px;
+}
+.duzon_dialog_tab_body_container_on #dze_idx_bizbox_report_search_title::-ms-clear {
+	display:none;
+}
+
+.duzon_dialog_tab_body_container_on .bizbox_report_search_title_btn {
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	width: 18px;
+	height: 18px;
+	background: url(../image/bizcube/icon-search.png) no-repeat center center;
+	cursor: pointer;
+}
+
+.duzon_dialog_tab_body_container_on #dze_idx_bizbox_report_list_container>[id^=dze_idx_bizbox_report_list_container_] {
+	display: none;
+}
+
+.duzon_dialog_tab_body_container_on #dze_idx_bizbox_report_list_container>[id^=dze_idx_bizbox_report_list_container_].showbox {
+	display: block;
+}
+
+.duzon_dialog_tab_body_container_on #dze_idx_bizbox_report_list_container>.nodata, div.dze_search_content_container > div.nodata, #dze_panel_datas_idx_content_etc_memo> div.nodata, #dze_panel_datas_idx_content_etc_todo > div.nodata, .duzon_dialog_tab_body_container_on .selected_report_table #dze_merge_doc_container+.nodata {
+	display: none;
+	width: 100%;
+	text-align: center;
+	padding-top: 10px;
+}
+
+.duzon_dialog_tab_body_container_on #dze_idx_bizbox_report_list_container>.nodata.showbox, div.dze_search_content_container > div.nodata.showbox , #dze_panel_datas_idx_content_etc_memo> div.nodata.showbox, #dze_panel_datas_idx_content_etc_todo> div.nodata.showbox, .duzon_dialog_tab_body_container_on .selected_report_table #dze_merge_doc_container+.nodata.showbox {
+	display: block;
+}
+
+.duzon_dialog_tab_body_container_on #dze_idx_bizbox_report_list_container>.nodata>div, div.dze_search_content_container > div.nodata > div, #dze_panel_datas_idx_content_etc_memo> div.nodata.showbox, #dze_panel_datas_idx_content_etc_todo> div.nodata.showbox, .duzon_dialog_tab_body_container_on .selected_report_table #dze_merge_doc_container+.nodata>div {
+	font-size: 14px;
+	color: #C4C4C4;
+	padding-top: 10px;
+}
+
+.duzon_dialog_tab_body_container_on #dze_idx_bizbox_report_list_container .onefficeSearchTxt {
+    color: #1c90fb;
+}
+
+.duzon_dialog_share_noti_type {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.duzon_dialog_share_noti_type > div {
+	margin-right: 7px;
+}

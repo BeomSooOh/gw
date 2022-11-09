@@ -1,0 +1,952 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="bizCarManage">
+	
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+	<select id="BizCarManageDAO.getBizCarDataList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+        /* BizCarManageDAO.getBizCarDataList - mariadb */
+        SELECT
+        	A.seq_number AS seqNum
+        	, A.car_code AS carCode
+        	, A.car_number AS carNum
+           , A.car_name AS carName
+           , A.USE_FLAG AS driveFlag
+           , DATE_FORMAT(A.USE_DATE, '%Y-%m-%d') AS driveDate
+           , CONCAT(SUBSTR(A.START_TIME,1,2),':',SUBSTR(A.START_TIME,3,4)) AS startTime
+           , CONCAT(SUBSTR(A.END_TIME,1,2),':',SUBSTR(A.END_TIME,3,4)) AS endTime
+           , A.START_FLAG AS startFlag
+           , A.START_ADDR AS startAddr
+           , A.START_ADDR_DETAIL AS startAddrDetail
+           , A.END_FLAG AS endFlag
+           , A.END_ADDR AS endAddr
+           , A.END_ADDR_DETAIL AS endAddrDetail
+           , A.BEFORE_KM AS beforeKm
+           , A.AFTER_KM AS afterKm
+           , A.MILEAGE_KM AS mileageKm
+           , A.RMK_DC AS rmkDc
+           , A.ERP_SEND_YN AS erpSendYn
+           , A.close_yn AS closeYn
+           , IFNULL((A.oil_amt+A.toll_amt+A.parking_amt+A.repair_amt+A.etc_amt),0)AS totalAmt
+           , B.bookmark_code AS bookMarkCode
+        FROM $DB_NEOS$T_EX_BIZ_CAR_PERSON A
+        LEFT JOIN $DB_NEOS$T_EX_BIZ_CAR_BOOKMARK B
+        ON A.BOOKMARK_CODE=B.BOOKMARK_CODE
+        WHERE A.COMP_SEQ  = #compSeq#
+        AND   A.EMP_SEQ = #empSeq#
+        <isNotEmpty property="carNum">
+        	AND   A.CAR_NUMBER = #carNum#
+		</isNotEmpty>
+		<isNotEmpty property="sendType">
+        	AND   A.ERP_SEND_YN = #sendType#
+		</isNotEmpty>
+		<isNotEmpty property="getRecalYn">
+        	AND   A.ERP_SEND_YN != '1'
+		</isNotEmpty>
+        AND   (DATE_FORMAT(A.USE_DATE, '%Y-%m-%d') BETWEEN #frDt# AND #toDt#)
+        ORDER BY A.USE_DATE, A.START_TIME, A.CREATE_DATE
+    </select>
+    
+    <select id="BizCarManageDAO.getDetailRowData" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+        /* BizCarManageDAO.getDetailRowData - mariadb */
+        SELECT
+        	seq_number AS seqNum
+        	, car_code AS carCode
+        	, DATE_FORMAT(USE_DATE, '%Y-%m-%d') AS driveDate
+        	, car_number AS carNum
+           , oil_amt_type AS oilAmtType 
+           , oil_amt AS oilAmt
+           , toll_amt_type AS tollAmtType
+           , toll_amt AS tollAmt
+           , parking_amt_type AS parkingAmtType
+           , parking_amt AS parkingAmt
+           , repair_amt_type AS repairAmtType
+           , repair_amt AS repairAmt
+           , etc_amt_type AS etcAmtType
+           , etc_amt AS etcAmt
+           , SUM(oil_amt)+SUM(toll_amt)+SUM(parking_amt)+SUM(repair_amt)+SUM(etc_amt) AS totalAmt
+           , erp_send_yn AS erpSendYn
+        FROM $DB_NEOS$T_EX_BIZ_CAR_PERSON 
+        WHERE COMP_SEQ  = #compSeq#
+        AND   EMP_SEQ = #empSeq#
+        AND   CAR_CODE = #carCode#
+        AND   SEQ_NUMBER = #seqNum#
+        <isNotEmpty property="useDate">
+        	AND   USE_DATE = DATE_FORMAT(#useDate#, '%Y%m%d')
+		</isNotEmpty>
+    </select>
+    
+    <select id="BizCarManageDAO.maxSeq" resultClass="int">
+        /* BizCarManageDAO.maxSeq - mariadb */
+        SELECT IFNULL(MAX(SEQ_NUMBER),0)+1 AS maxSeq
+        FROM $DB_NEOS$T_EX_BIZ_CAR_PERSON
+    </select>
+    
+    <select id="BizCarManageDAO.maxBmSeq" resultClass="int">
+        /* BizCarManageDAO.maxBmSeq - mariadb */
+        SELECT IFNULL(MAX(BOOKMARK_CODE),0)+1 AS maxBmSeq
+        FROM $DB_NEOS$T_EX_BIZ_CAR_BOOKMARK
+    </select>
+    
+    <insert id="BizCarManageDAO.insertBizCarData" parameterClass="java.util.HashMap">
+		/* BizCarManageDAO.insertBizCarData - mariadb */
+		INSERT INTO $DB_NEOS$T_EX_BIZ_CAR_PERSON
+		SET
+			`comp_seq` = #compSeq# ,
+			`seq_number` = #seqNum# ,
+			`erp_comp_seq` = #erpCompSeq# ,
+			`emp_seq` = #empSeq# ,
+			`dept_seq` = #deptSeq# ,
+			`car_number` = #carNum# , 
+			`car_code` = #carCode# ,
+			<isNotEmpty property="carName">
+			`car_name` = #carName# ,
+			</isNotEmpty> 
+			<isNotEmpty property="driveDate">
+			`use_date` = DATE_FORMAT(#driveDate#, '%Y%m%d'),
+			</isNotEmpty>
+			<isNotEmpty property="driveFlag">
+			`use_flag` = #driveFlag# ,
+			</isNotEmpty>
+			<isNotEmpty property="startTime">
+			`start_time` = #startTime# ,
+			</isNotEmpty>
+			<isNotEmpty property="endTime">
+			`end_time` = #endTime# ,
+			</isNotEmpty>
+			<isNotEmpty property="startFlag">
+			`start_flag` = #startFlag# ,
+			</isNotEmpty>
+			<isNotEmpty property="startAddr">
+			`start_addr` = #startAddr# ,
+			</isNotEmpty>
+			<isNotEmpty property="startAddrDetail">
+			`start_addr_detail` = #startAddrDetail# ,
+			</isNotEmpty>
+			<isNotEmpty property="endFlag">
+			`end_flag` = #endFlag# ,
+			</isNotEmpty>
+			<isNotEmpty property="endAddr">
+			`end_addr` = #endAddr# ,
+			</isNotEmpty>
+			<isNotEmpty property="endAddrDetail">
+			`end_addr_detail` = #endAddrDetail# ,
+			</isNotEmpty>
+			<isNotEmpty property="beforeKm">
+			`before_km` = #beforeKm# ,
+			</isNotEmpty>
+			<isNotEmpty property="afterKm">
+			`after_km` = #afterKm# ,
+			</isNotEmpty>
+			<isNotEmpty property="mileageKm">
+			`mileage_km` = #mileageKm#,
+			</isNotEmpty>
+			<isNotEmpty property="note">
+			`rmk_dc` = #note#,
+			</isNotEmpty>
+			`erp_emp_seq` = #erpEmpSeq#,
+			`erp_send_yn` = '0',
+			`create_seq` = #empSeq#,
+			`create_ip` = #ipAddress#,
+			`create_date` = NOW(),
+			`insert_type` = #insertType#
+		ON DUPLICATE KEY UPDATE
+			`car_code` = #carCode# ,
+			`car_number` = #carNum# ,
+			<isNotEmpty property="carName">
+			`car_name` = #carName# ,
+			</isNotEmpty> 
+			<isNotEmpty property="driveDate">
+			`use_date` = DATE_FORMAT(#driveDate#, '%Y%m%d'),
+			</isNotEmpty>
+			<isNotEmpty property="driveFlag">
+			`use_flag` = #driveFlag# ,
+			</isNotEmpty>
+			<isNotEmpty property="startTime">
+			`start_time` = #startTime# ,
+			</isNotEmpty>
+			<isNotEmpty property="endTime">
+			`end_time` = #endTime# ,
+			</isNotEmpty>
+			<isNotEmpty property="startFlag">
+			`start_flag` = #startFlag# ,
+			</isNotEmpty>
+			`start_addr` = #startAddr# ,
+			`start_addr_detail` = #startAddrDetail# ,
+			<isNotEmpty property="endFlag">
+			`end_flag` = #endFlag# ,
+			</isNotEmpty>
+			`end_addr` = #endAddr# ,
+			`end_addr_detail` = #endAddrDetail# ,
+			`before_km` = #beforeKm# ,
+			`after_km` = #afterKm# ,
+			`mileage_km` = #mileageKm#,
+			`rmk_dc` = #note#,
+			`modify_seq` = #empSeq#,
+			`modify_ip` = #ipAddress#,
+			`modify_date` = NOW()
+				 
+ 	</insert>
+    
+    <delete id="BizCarManageDAO.deleteBizCarData" parameterClass="java.util.HashMap">
+		/* BizCarManageDAO.deleteBizCarData - mariadb */
+		DELETE FROM $DB_NEOS$T_EX_BIZ_CAR_PERSON
+		WHERE COMP_SEQ = #compSeq#
+		 AND EMP_SEQ = #empSeq#
+		 AND ERP_SEND_YN = '0'
+		<iterate property="delList" prepend="AND SEQ_NUMBER IN" open="(" close=")" conjunction="," >
+			#delList[]#
+		</iterate>
+				 
+	</delete>
+    
+	<select id="BizCarManageDAO.getBizCarBookMarkList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+        /* BizCarManageDAO.getBizCarBookMarkList - mariadb */
+        SELECT
+        	BOOKMARK_CODE 
+           , EMP_SEQ
+           , USE_FLAG
+           , CONCAT(SUBSTR(START_TIME,1,2),':',SUBSTR(START_TIME,3,4)) AS START_TIME
+           , CONCAT(SUBSTR(END_TIME,1,2),':',SUBSTR(END_TIME,3,4)) AS END_TIME
+           , START_FLAG
+           , START_ADDR
+           , START_ADDR_DETAIL
+           , END_FLAG
+           , END_ADDR
+           , END_ADDR_DETAIL
+           , RMK_DC
+        FROM $DB_NEOS$T_EX_BIZ_CAR_BOOKMARK 
+        WHERE COMP_SEQ  = #compSeq#
+        AND   EMP_SEQ = #empSeq#
+    </select>
+    
+    <delete id="BizCarManageDAO.deleteBookMarkData" parameterClass="java.util.HashMap">
+		/* BizCarManageDAO.deleteBookMarkData - mariadb */
+		DELETE FROM $DB_NEOS$T_EX_BIZ_CAR_BOOKMARK
+		WHERE COMP_SEQ = #compSeq#
+		 AND EMP_SEQ = #empSeq#
+		 AND BOOKMARK_CODE = #bmCode#
+	</delete>
+	
+	<select id="BizCarManageDAO.getBizCarUserAddress" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+        /* BizCarManageDAO.getBizCarUserAddress - mariadb */
+        SELECT
+           COMP_SEQ
+           , EMP_SEQ
+           , USE_FLAG
+           , IFNULL(COMP_NAME, "") AS COMP_NAME
+           , IFNULL(COMP_ADDR, "") AS COMP_ADDR
+           , IFNULL(HOUSE_NAME, "") AS HOUSE_NAME
+           , IFNULL(HOUSE_ADDR, "") AS HOUSE_ADDR
+        FROM $DB_NEOS$T_EX_BIZ_CAR_ADDRESS 
+        WHERE COMP_SEQ  = #compSeq#
+        AND   EMP_SEQ = #empSeq#
+    </select>
+	
+	<insert id="BizCarManageDAO.setBizCarUserAddress" parameterClass="java.util.HashMap">
+		/* BizCarManageDAO.setBizCarUserAddress - mariadb */
+		INSERT INTO $DB_NEOS$T_EX_BIZ_CAR_ADDRESS
+		SET
+			`comp_seq` = #compSeq# ,
+			`emp_seq` = #empSeq# ,
+			`dept_seq` = #deptSeq# ,
+			<isNotEmpty property="compName">
+			`comp_name` = #compName# ,
+			</isNotEmpty> 
+			<isNotEmpty property="compAddr">
+			`comp_addr` = #compAddr# ,
+			</isNotEmpty>
+			<isNotEmpty property="houseName">
+			`house_name` = #houseName# ,
+			</isNotEmpty> 
+			<isNotEmpty property="houseAddr">
+			`house_addr` = #houseAddr# ,
+			</isNotEmpty>
+			`create_seq` = #empSeq#,
+			`create_date` = NOW()
+		ON DUPLICATE KEY UPDATE
+			<isNotEmpty property="compName">
+			`comp_name` = #compName# ,
+			</isNotEmpty> 
+			<isNotEmpty property="compAddr">
+			`comp_addr` = #compAddr# ,
+			</isNotEmpty>
+			<isNotEmpty property="houseName">
+			`house_name` = #houseName# ,
+			</isNotEmpty> 
+			<isNotEmpty property="houseAddr">
+			`house_addr` = #houseAddr# ,
+			</isNotEmpty>
+			`modify_seq` = #empSeq#,
+			`modify_date` = NOW()
+				 
+ 	</insert>
+	
+	<insert id="BizCarManageDAO.insertBizCarBatch" parameterClass="java.util.HashMap">
+		/* BizCarManageDAO.insertBizCarBatch - mariadb */
+		INSERT INTO $DB_NEOS$T_EX_BIZ_CAR_BATCH
+		SET
+			`batch_seq` = #batchSeq#
+			, `seq` = #seq# 
+			, `comp_seq` = #compSeq#
+			, `dept_seq` = #deptSeq#
+			, `emp_seq` = #empSeq#
+			, `car_num` = #carNum# 
+			, `car_code` = #carCode#
+			<isNotEmpty property="driveDate">
+			, `drive_date` = DATE_FORMAT(#driveDate#, '%Y%m%d')
+			</isNotEmpty>
+			<isNotEmpty property="useFlag">
+			, `use_flag` = #useFlag#
+			</isNotEmpty>
+			<isNotEmpty property="startTime">
+			, `start_time` = #startTime#
+			</isNotEmpty>
+			<isNotEmpty property="endTime">
+			, `end_time` = #endTime#
+			</isNotEmpty>
+			<isNotEmpty property="startFlag">
+			, `start_flag` = #startFlag#
+			</isNotEmpty>
+			<isNotEmpty property="startAddr">
+			, `start_addr` = #startAddr#
+			</isNotEmpty>
+			<isNotEmpty property="startAddrDetail">
+			, `start_addr_detail` = #startAddrDetail#
+			</isNotEmpty>
+			<isNotEmpty property="endFlag">
+			, `end_flag` = #endFlag#
+			</isNotEmpty>
+			<isNotEmpty property="endAddr">
+			, `end_addr` = #endAddr#
+			</isNotEmpty>
+			<isNotEmpty property="endAddrDetail">
+			, `end_addr_detail` = #endAddrDetail#
+			</isNotEmpty>
+			<isNotEmpty property="beforeKm">
+			, `before_km` = #beforeKm#
+			</isNotEmpty>
+			<isNotEmpty property="afterKm">
+			, `after_km` = #afterKm#
+			</isNotEmpty>
+			<isNotEmpty property="mileageKm">
+			, `mileage_km` = #mileageKm#
+			</isNotEmpty>
+			<isNotEmpty property="rmkDc">
+			, `rmk_dc` = #rmkDc#
+			</isNotEmpty>
+			<isNotEmpty property="oilAmtType">
+			, `oil_amt_type` = #oilAmtType#
+			</isNotEmpty>
+			<isNotEmpty property="oilAmt">
+			, `oil_amt` = #oilAmt#
+			</isNotEmpty>
+			<isNotEmpty property="tollAmtType">
+			, `toll_amt_type` = #tollAmtType#
+			</isNotEmpty>
+			<isNotEmpty property="tollAmt">
+			, `toll_amt` = #tollAmt#
+			</isNotEmpty>
+			<isNotEmpty property="parkingAmtType">
+			, `parking_amt_type` = #parkingAmtType#
+			</isNotEmpty>
+			<isNotEmpty property="parkingAmt">
+			, `parking_amt` = #parkingAmt#
+			</isNotEmpty>
+			<isNotEmpty property="repairAmtType">
+			, `repair_amt_type` = #repairAmtType#
+			</isNotEmpty>
+			<isNotEmpty property="repairAmt">
+			, `repair_amt` = #repairAmt#
+			</isNotEmpty>
+			<isNotEmpty property="etcAmtType">
+			, `etc_amt_type` = #etcAmtType#
+			</isNotEmpty>
+			<isNotEmpty property="etcAmt">
+			, `etc_amt` = #etcAmt#
+			</isNotEmpty>
+				 
+ 	</insert>
+ 	
+ 	<select id="BizCarManageDAO.checkBizCarBatchInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		/* BizCarManageDAO.checkBizCarBatchInfo - mariadb */
+		select
+			a.batch_seq,
+			a.seq,
+			a.comp_seq,
+			a.car_num,
+			a.car_code,
+			DATE_FORMAT(a.drive_date, '%Y-%m-%d') as drive_date,
+			a.use_flag,
+			a.start_time,
+            a.end_time,
+			a.start_flag,
+			a.start_addr,
+			a.start_addr_detail,
+			a.end_flag,
+			a.end_addr,
+			a.end_addr_detail,
+			a.before_km,
+			a.after_km,
+			a.mileage_km,
+			a.rmk_dc,
+			a.oil_amt_type,
+			a.oil_amt,
+			a.toll_amt_type,
+			a.toll_amt,
+			a.parking_amt_type,
+			a.parking_amt,
+			a.repair_amt_type,
+			a.repair_amt,
+			a.etc_amt_type,
+			a.etc_amt
+			from $DB_NEOS$t_ex_biz_car_batch a
+		where a.batch_seq = #batchKey#
+	</select>
+	
+	
+	<delete id="BizCarManageDAO.deleteBizCarBatchData" parameterClass="java.util.HashMap">
+		/* BizCarManageDAO.deleteBizCarBatchData - mariadb */
+		DELETE FROM $DB_NEOS$t_ex_biz_car_batch
+		WHERE batch_seq = #batchKey#
+		<isNotEmpty property="delList">
+			<iterate property="delList" prepend="AND seq IN" open="(" close=")" conjunction="," >
+	        	#delList[]#
+	        </iterate>
+        </isNotEmpty>
+	</delete>
+	
+	
+	<insert id="BizCarManageDAO.saveBizCarBatchData" parameterClass="java.util.HashMap">
+		/* BizCarManageDAO.saveBizCarBatchData - mariadb */
+		INSERT INTO $DB_NEOS$T_EX_BIZ_CAR_PERSON (`comp_seq`,`seq_number`,`car_code`,`use_date`,`car_number` ,`car_name`,`use_flag`,`start_time`,`end_time` ,`start_flag` ,`start_addr`,`start_addr_detail` ,`end_flag` ,`end_addr`,`end_addr_detail`,`before_km`,`after_km`,`mileage_km` ,`rmk_dc` , `oil_amt_type`,`oil_amt`, `toll_amt_type`,`toll_amt`, `parking_amt_type`,`parking_amt`, `repair_amt_type`,`repair_amt`,`etc_amt_type`,`etc_amt`,`dept_seq` ,`emp_seq` ,`erp_comp_seq` ,`erp_biz_seq` ,`erp_dept_seq` ,`erp_emp_seq`, `erp_send_yn` ,`create_seq` ,`create_ip`,`create_date`,`insert_type`)
+			SELECT
+				#compSeq#
+				, (select MAX(IFNULL(SEQ_NUMBER,0)) from $DB_NEOS$T_EX_BIZ_CAR_PERSON)+(@rownum:=@rownum+1) AS seq_number
+				, car_code
+				, drive_date
+				, car_num
+				, '' AS car_name
+				, use_flag
+				, start_time
+				, end_time
+				, start_flag
+				, start_addr
+				, start_addr_detail
+				, end_flag
+				, end_addr
+				, end_addr_detail
+				, before_km
+				, after_km
+				, mileage_km
+				, rmk_dc
+				, oil_amt_type
+				, oil_amt
+				, toll_amt_type
+				, toll_amt
+				, parking_amt_type
+				, parking_amt
+				, repair_amt_type
+				, repair_amt
+				, etc_amt_type
+				, etc_amt
+				, #deptSeq#
+				, #empSeq#
+				, #erpCompSeq#
+				, #erpBizSeq#
+				, #erpDeptSeq#
+				, #erpEmpSeq#
+				, '0'
+				, #empSeq#
+				, #ipAddress#
+				, NOW()
+				, #insertType#
+			FROM $DB_NEOS$T_EX_BIZ_CAR_BATCH
+			,(SELECT @rownum:=0) TMP
+			WHERE batch_seq = #batchKey#
+		<isNotEmpty property="saveList">
+			<iterate property="saveList" prepend="AND seq IN" open="(" close=")" conjunction="," >
+	        	#saveList[]#
+	        </iterate>
+	    </isNotEmpty>
+	</insert>
+ 	
+ 	<select id="BizCarManageDAO.getBizCarDetailList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		/* BizCarManageDAO.getBizCarDetailList - mariadb */
+		SELECT 
+			COMP_SEQ
+		  , CAR_CODE
+		  , CAR_NUMBER
+		  , CAR_NAME
+		  , SUM(MILEAGE_KM) AS TOTAL_KM
+		  , WORK_KM
+		  , NOWORK_KM
+		  , truncate((WORK_KM/SUM(MILEAGE_KM) * 100),0) AS WORK_RATIO
+		  , SUM(TOTAL_AMT) AS TOTAL_AMT
+		  , SUM(OIL_AMT) AS OIL_AMT
+		  , SUM(TOLL_AMT) AS TOLL_AMT
+		  , SUM(PARKING_AMT) AS PARKING_AMT
+		  , SUM(REPAIR_AMT) AS REPAIR_AMT
+		  , SUM(ETC_AMT) AS ETC_AMT
+		  , DEPT_NAME
+		  , EMP_NAME
+        FROM (
+			  SELECT 
+			  A.COMP_SEQ
+			  , A.CAR_CODE
+			  , A.CAR_NUMBER
+			  , USE_DATE
+			  , USE_FLAG
+			  , SEQ_NUMBER
+			  , A.CAR_NAME
+			  , A.MILEAGE_KM
+			  , IFNULL(B.WORK_KM,'0') AS WORK_KM
+			  , IFNULL(C.NOWORK_KM,'0') AS NOWORK_KM
+			  ,(A.OIL_AMT+A.TOLL_AMT+A.PARKING_AMT+A.REPAIR_AMT+A.ETC_AMT) AS TOTAL_AMT
+			  , A.OIL_AMT
+			  , A.TOLL_AMT
+			  , A.PARKING_AMT
+			  , A.REPAIR_AMT
+			  , A.ETC_AMT
+			  , $DB_NEOS$FN_GetMultiLang('kr', DM.dept_name_multi) as DEPT_NAME
+			  , $DB_NEOS$FN_GetMultiLang('kr', EM.emp_name_multi) as EMP_NAME
+			  FROM
+		     $DB_NEOS$T_EX_BIZ_CAR_PERSON A
+		     LEFT JOIN $DB_NEOS$v_t_co_emp_multi EM ON A.EMP_SEQ = EM.EMP_SEQ
+		     LEFT JOIN $DB_NEOS$v_t_co_dept_multi DM ON A.DEPT_SEQ = DM.DEPT_SEQ
+		     LEFT JOIN (SELECT CAR_CODE,CAR_NUMBER,SUM(MILEAGE_KM) AS WORK_KM 
+		     			FROM $DB_NEOS$T_EX_BIZ_CAR_PERSON 
+		     			WHERE COMP_SEQ = #compSeq#
+		     			<isNotEqual property="userSe" compareValue="ADMIN">
+						AND   EMP_SEQ = #empSeq#
+						</isNotEqual>
+		     			AND   USE_FLAG IN ('1','2','3','4')
+		     			AND   (DATE_FORMAT(USE_DATE, '%Y-%m-%d') BETWEEN #frDt# AND #toDt#)
+		     			GROUP BY CAR_CODE
+		     			) B
+		     ON A.CAR_CODE=B.CAR_CODE
+		     LEFT JOIN (SELECT CAR_CODE,CAR_NUMBER,SUM(MILEAGE_KM) AS NOWORK_KM 
+		     			FROM $DB_NEOS$T_EX_BIZ_CAR_PERSON 
+		     			WHERE COMP_SEQ = #compSeq#
+		     			<isNotEqual property="userSe" compareValue="ADMIN">
+						AND   EMP_SEQ = #empSeq#
+						</isNotEqual>
+		     			AND   USE_FLAG IN ('5') 
+		     			AND   (DATE_FORMAT(USE_DATE, '%Y-%m-%d') BETWEEN #frDt# AND #toDt#)
+		     			GROUP BY CAR_CODE
+		     			) C
+		     ON A.CAR_CODE=C.CAR_CODE
+			 WHERE A.COMP_SEQ = #compSeq#
+			<isNotEqual property="userSe" compareValue="ADMIN">
+			AND   A.EMP_SEQ = #empSeq#
+			</isNotEqual>
+			<isNotEmpty property="carCode">
+        	AND   A.CAR_CODE = #carCode#
+			</isNotEmpty>
+			<isNotEmpty property="sendType">
+        	AND   A.ERP_SEND_YN = #sendType#
+			</isNotEmpty>
+			<isNotEmpty property="deptNm">
+			AND DEPT_NAME LIKE CONCAT('%',ifnull(#deptNm#,''),'%')
+			</isNotEmpty>
+			<isNotEmpty property="userNm">
+			AND EMP_NAME LIKE CONCAT('%',ifnull(#userNm#,''),'%')
+			</isNotEmpty>
+			<isNotEmpty property="flagList">
+				<iterate property="flagList" prepend="AND A.USE_FLAG IN" open="(" close=")" conjunction="," >
+		        	#flagList[]#
+		        </iterate>
+       		</isNotEmpty>
+			AND   (DATE_FORMAT(A.USE_DATE, '%Y-%m-%d') BETWEEN #frDt# AND #toDt#)
+		  	) v
+        GROUP BY CAR_CODE
+    </select>
+	
+	<select id="BizCarManageDAO.getDetailViewRowData" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		/* BizCarManageDAO.getDetailViewRowData - mariadb */
+		SELECT
+        	SEQ_NUMBER
+        	, CAR_CODE
+        	, CAR_NUMBER
+           , A.EMP_SEQ
+           , $DB_NEOS$FN_GetMultiLang('kr', EM.emp_name_multi) as EMP_NAME
+           , A.DEPT_SEQ
+           , $DB_NEOS$FN_GetMultiLang('kr', DM.dept_name_multi) as DEPT_NAME
+           , USE_FLAG
+           , DATE_FORMAT(USE_DATE, '%Y-%m-%d') AS USE_DATE
+           , CONCAT(SUBSTR(START_TIME,1,2),':',SUBSTR(START_TIME,3,4)) AS START_TIME
+           , CONCAT(SUBSTR(END_TIME,1,2),':',SUBSTR(END_TIME,3,4)) AS END_TIME
+           , IFNULL(START_ADDR, '') AS START_ADDR
+           , IFNULL(START_ADDR_DETAIL, '') AS START_ADDR_DETAIL
+           , IFNULL(END_ADDR, '') AS END_ADDR
+           , IFNULL(END_ADDR_DETAIL, '') AS END_ADDR_DETAIL
+           , IFNULL(MILEAGE_KM, 0) AS MILEAGE_KM
+           , CASE WHEN USE_FLAG IN ('1','2','3') THEN IFNULL(MILEAGE_KM,0) END AS IO_KM
+           , CASE WHEN USE_FLAG IN ('4') THEN IFNULL(MILEAGE_KM,0) END AS WORK_KM
+           , CASE WHEN USE_FLAG IN ('5') THEN IFNULL(MILEAGE_KM,0) END AS NOWORK_KM
+           , IFNULL(BEFORE_KM, 0) AS BEFORE_KM
+           , IFNULL(AFTER_KM, 0) AS AFTER_KM
+           , IFNULL(OIL_AMT, 0) AS OIL_AMT
+           , IFNULL(TOLL_AMT, 0) AS TOLL_AMT
+           , IFNULL(PARKING_AMT, 0) AS PARKING_AMT
+           , IFNULL(REPAIR_AMT, 0) AS REPAIR_AMT
+           , IFNULL(ETC_AMT, 0) AS ETC_AMT
+           , IFNULL((OIL_AMT+TOLL_AMT+PARKING_AMT+REPAIR_AMT+ETC_AMT),0) AS TOTAL_AMT
+           , IFNULL(RMK_DC, '') AS RMK_DC
+           , ERP_SEND_YN
+        FROM $DB_NEOS$T_EX_BIZ_CAR_PERSON A
+        LEFT JOIN $DB_NEOS$v_t_co_emp_multi EM ON A.EMP_SEQ = EM.EMP_SEQ
+        LEFT JOIN $DB_NEOS$v_t_co_dept_multi DM ON A.DEPT_SEQ = DM.DEPT_SEQ
+        WHERE A.COMP_SEQ  = #compSeq#
+        AND   A.CAR_CODE = #carCode#
+        <isNotEqual property="userSe" compareValue="ADMIN">
+			AND   A.EMP_SEQ = #empSeq#
+		</isNotEqual>
+		<isNotEmpty property="seqNum">
+        	AND   A.SEQ_NUMBER = #seqNum#
+		</isNotEmpty>
+		<isNotEmpty property="sendType">
+       		AND   A.ERP_SEND_YN = #sendType#
+		</isNotEmpty>
+		<isNotEmpty property="deptNm">
+			AND DEPT_NAME LIKE CONCAT('%',ifnull(#deptNm#,''),'%')
+			</isNotEmpty>
+		<isNotEmpty property="userNm">
+			AND EMP_NAME LIKE CONCAT('%',ifnull(#userNm#,''),'%')
+		</isNotEmpty>
+		<isNotEmpty property="flagList">
+			<iterate property="flagList" prepend="AND A.USE_FLAG IN" open="(" close=")" conjunction="," >
+	        	#flagList[]#
+	        </iterate>
+      	</isNotEmpty>
+		AND   (DATE_FORMAT(A.USE_DATE, '%Y-%m-%d') BETWEEN #frDt# AND #toDt#)
+        ORDER BY USE_DATE, START_TIME
+	</select>
+	
+	<select id="BizCarManageDAO.selectBizCarViewExcelList" parameterClass="java.util.HashMap" resultClass="java.util.LinkedHashMap" remapResults="true">
+		/* BizCarManageDAO.selectBizCarViewExcelList - mariadb */
+		SELECT
+	        <isEqual property="userSe" compareValue="ADMIN">
+	        $DB_NEOS$FN_GetMultiLang('kr', DM.dept_name_multi) as DEPT_NAME
+			, $DB_NEOS$FN_GetMultiLang('kr', EM.emp_name_multi) as EMP_NAME
+			,
+	        </isEqual>
+	        CAR_CODE
+	      	, CAR_NUMBER
+	        , convert(DATE_FORMAT(USE_DATE,'%Y-%m-%d'), char(20)) AS USE_DATE
+	        , CASE WHEN USE_FLAG = '1' THEN "출근" 
+					WHEN USE_FLAG = '2' THEN "퇴근" 
+					WHEN USE_FLAG = '3' THEN "출퇴근" 
+					WHEN USE_FLAG = '4' THEN "업무용" 
+					WHEN USE_FLAG = '5' THEN "비업무용" 
+					ELSE "" END AS USE_FLAG
+	        , CONCAT(SUBSTR(START_TIME,1,2),':',SUBSTR(START_TIME,3,4)) AS START_TIME
+	        , CONCAT(SUBSTR(END_TIME,1,2),':',SUBSTR(END_TIME,3,4)) AS END_TIME
+	        , CASE WHEN START_FLAG = '0' THEN "직접입력" 
+					WHEN START_FLAG = '1' THEN "회사" 
+					WHEN START_FLAG = '2' THEN "자택" 
+					WHEN START_FLAG = '3' THEN "거래처" 
+					WHEN START_FLAG = '4' THEN "직전출발지" 
+					ELSE "" END AS START_FLAG
+	        , IFNULL(START_ADDR, '') AS START_ADDR
+	        , CASE WHEN END_FLAG = '0' THEN "직접입력" 
+					WHEN END_FLAG = '1' THEN "회사" 
+					WHEN END_FLAG = '2' THEN "자택" 
+					WHEN END_FLAG = '3' THEN "거래처" 
+					WHEN END_FLAG = '4' THEN "직전도착지" 
+					ELSE "" END AS END_FLAG
+	        , IFNULL(END_ADDR, '') AS END_ADDR
+	        , IFNULL(BEFORE_KM, '0') AS BEFORE_KM
+	        , IFNULL(AFTER_KM, '0') AS AFTER_KM
+	        , IFNULL(MILEAGE_KM, '0') AS MILEAGE_KM
+	        , IFNULL(RMK_DC, '') AS RMK_DC
+	    FROM $DB_NEOS$T_EX_BIZ_CAR_PERSON A
+	    LEFT JOIN $DB_NEOS$v_t_co_emp_multi EM ON A.EMP_SEQ = EM.EMP_SEQ
+        LEFT JOIN $DB_NEOS$v_t_co_dept_multi DM ON A.DEPT_SEQ = DM.DEPT_SEQ
+        WHERE A.COMP_SEQ  = #compSeq#
+       	<isNotEqual property="userSe" compareValue="ADMIN">
+			AND   A.EMP_SEQ = #empSeq#
+		</isNotEqual>
+        <isNotEmpty property="carCode">
+        	AND   A.CAR_CODE = #carCode#
+		</isNotEmpty>
+		<isNotEmpty property="sendType">
+       		AND   A.ERP_SEND_YN = #sendType#
+		</isNotEmpty>
+		<isEqual property="userSe" compareValue="ADMIN">
+			<isNotEmpty property="deptNm">
+				AND DEPT_NAME LIKE CONCAT('%',ifnull(#deptNm#,''),'%')
+				</isNotEmpty>
+			<isNotEmpty property="userNm">
+				AND EMP_NAME LIKE CONCAT('%',ifnull(#userNm#,''),'%')
+			</isNotEmpty>
+		</isEqual>
+		AND   (DATE_FORMAT(A.USE_DATE, '%Y-%m-%d') BETWEEN #frDt# AND #toDt#)
+        ORDER BY CAR_CODE, USE_DATE, START_TIME
+	</select>
+	
+	<update id="BizCarManageDAO.updateReCalData" parameterClass="java.util.HashMap">
+		UPDATE $DB_NEOS$T_EX_BIZ_CAR_PERSON
+			SET MODIFY_DATE = NOW()
+			, MODIFY_SEQ = #empSeq#
+			, MODIFY_IP = #ipAddress#
+			<isNotEmpty property="afterKm">
+			, AFTER_KM = #afterKm#
+			</isNotEmpty>
+			<isNotEmpty property="beforeKm">
+			, BEFORE_KM = #beforeKm#
+			</isNotEmpty>
+	    WHERE COMP_SEQ  = #compSeq#
+	    AND SEQ_NUMBER = #seqNum#
+	   	AND	EMP_SEQ = #empSeq#
+	</update>
+	
+	<insert id="BizCarManageDAO.insertBookMarkData" parameterClass="java.util.HashMap">
+		/* BizCarManageDAO.insertBookMarkData - mariadb */
+		INSERT INTO $DB_NEOS$T_EX_BIZ_CAR_BOOKMARK (`comp_seq`,`emp_seq`,`bookmark_code`,`use_flag`,`start_time` ,`end_time`,`start_flag`,`start_addr` ,`start_addr_detail` ,`end_flag` ,`end_addr`,`end_addr_detail` ,`rmk_dc`,`seq_number`,`dept_seq`,`create_seq`,`create_ip`,`create_date` )
+		SELECT
+			#compSeq#
+			, #empSeq#
+			, #bmCode#
+			, use_flag
+			, start_time
+			, end_time
+			, start_flag
+			, start_addr
+			, start_addr_detail
+			, end_flag
+			, end_addr
+			, end_addr_detail
+			, rmk_dc
+			, #seqNum#
+			, #deptSeq#
+			, #empSeq#
+			, #ipAddress#
+			, NOW()
+		FROM $DB_NEOS$T_EX_BIZ_CAR_PERSON
+		WHERE COMP_SEQ = #compSeq#
+		AND SEQ_NUMBER = #seqNum#
+ 	</insert>
+ 	
+ 	<update id="BizCarManageDAO.updateBookMarkCode" parameterClass="java.util.HashMap">
+		UPDATE $DB_NEOS$T_EX_BIZ_CAR_PERSON
+			SET BOOKMARK_CODE = #bmCode#
+	    WHERE COMP_SEQ  = #compSeq#
+	    AND SEQ_NUMBER = #seqNum#
+	</update>
+	
+	<update id="BizCarManageDAO.delBookMarkCode" parameterClass="java.util.HashMap">
+		UPDATE $DB_NEOS$T_EX_BIZ_CAR_PERSON
+			SET BOOKMARK_CODE = null
+	    WHERE COMP_SEQ  = #compSeq#
+	    AND BOOKMARK_CODE = #bmCode#
+	</update>
+ 	
+ 	<insert id="BizCarManageDAO.bizCarErpSendInsert" parameterClass="java.util.HashMap">
+		/* BizCarManageDAO.bizCarErpSendInsert - mariadb */
+		INSERT INTO $DB_NEOS$T_EX_BIZ_CAR_SEND_LIST
+		SET
+			`comp_seq` = #compSeq# ,
+			`car_code` = #carCode# ,
+			`send_status` = #sendStatus#,
+			`use_date` = #driveDate# ,
+			`seq_number` = #seqNum# ,
+			`erp_comp_seq` = #erpCompSeq# ,
+			`erp_biz_seq` = #erpBizSeq# ,
+			`erp_dept_seq` = #erpDeptSeq# ,
+			`erp_emp_seq` = #erpEmpSeq# ,
+			`erp_send_seq` = #erpSeqNb# ,
+			`emp_seq` = #empSeq# ,
+			`dept_seq` = #deptSeq# ,
+			`use_time` = #startTime# ,
+			`mileage_km` = #mileageKm# ,
+			`commute_km` = #ioKm# ,
+			`business_km` = #workKm# ,
+			`before_km` = #beforeKm# ,
+			`after_km` = #afterKm# ,
+			`rmk_dc` = #note# ,
+			`data_flag` = '3' ,
+			`create_seq` = #empSeq#,
+			`create_ip` = #ipAddress#,
+			`create_date` = NOW()
+		ON DUPLICATE KEY UPDATE
+			`car_code` = #carCode# ,
+			`use_date` = #driveDate# ,
+			`erp_send_seq` = #erpSeqNb# ,
+			`use_time` = #startTime# ,
+			`mileage_km` = #mileageKm# ,
+			`commute_km` = #ioKm# ,
+			`business_km` = #workKm# ,
+			`before_km` = #beforeKm# ,
+			`after_km` = #afterKm# ,
+			`rmk_dc` = #note# ,
+			`data_flag` = '3'
+ 	</insert>
+ 	
+ 	<update id="BizCarManageDAO.updateBizCarErpSendYn" parameterClass="java.util.HashMap">
+		UPDATE $DB_NEOS$T_EX_BIZ_CAR_PERSON
+			SET ERP_SEND_YN = #erpSendYn#
+			, ERP_SEND_SEQ = #erpSeqNb#
+			, MODIFY_SEQ = #empSeq#
+			, MODIFY_IP = #ipAddress#
+			, MODIFY_DATE = NOW()
+	    WHERE SEQ_NUMBER = #seqNum#
+	   	AND	  COMP_SEQ = #compSeq#
+	   	AND	  EMP_SEQ = #empSeq#
+	</update>
+	
+	<select id="BizCarManageDAO.getErpSendInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+        /* BizCarManageDAO.getErpSendInfo - mariadb */
+        SELECT
+        	ERP_SEND_YN
+        	, ERP_SEND_SEQ
+        FROM $DB_NEOS$T_EX_BIZ_CAR_PERSON 
+        WHERE SEQ_NUMBER = #seqNum#
+	   	AND	  COMP_SEQ = #compSeq#
+	   	AND	  EMP_SEQ = #empSeq#
+    </select>
+    
+    <delete id="BizCarManageDAO.bizCarErpSendDelete" parameterClass="java.util.HashMap">
+		/* BizCarManageDAO.bizCarErpSendDelete - mariadb */
+		DELETE FROM $DB_NEOS$T_EX_BIZ_CAR_SEND_LIST
+		WHERE SEQ_NUMBER = #seqNum#
+	   	AND	  COMP_SEQ = #compSeq#
+	   	AND	  EMP_SEQ = #empSeq#
+	   	AND	  USE_DATE = #driveDate#
+	   	AND	  CAR_CODE = #carCode#
+	</delete>
+	
+	<select id="BizCarManageDAO.getDivideRowList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+        /* BizCarManageDAO.getDivideRowList - mariadb */
+        SELECT
+        	SEQ_NUMBER
+        	, COMP_SEQ
+        	, CAR_CODE
+        	, CAR_NUMBER
+        	, DATE_FORMAT(USE_DATE, '%Y-%m-%d') AS USE_DATE
+           , USE_FLAG           
+           , START_FLAG
+           , START_ADDR
+           , START_ADDR_DETAIL
+           , END_FLAG
+           , END_ADDR
+           , END_ADDR_DETAIL
+           , MILEAGE_KM
+           , BEFORE_KM
+           , AFTER_KM
+        FROM $DB_NEOS$T_EX_BIZ_CAR_PERSON
+        WHERE COMP_SEQ = #compSeq#
+        AND	  EMP_SEQ = #empSeq#
+        AND	  CAR_CODE = #carCode#
+		<iterate property="dRowList" prepend="AND SEQ_NUMBER IN" open="(" close=")" conjunction="," >
+        	#dRowList[]#
+        </iterate>
+      	ORDER BY USE_DATE, START_TIME, CREATE_DATE
+    </select>
+    
+    <update id="BizCarManageDAO.updateDivideRowList" parameterClass="java.util.HashMap">
+    /* BizCarManageDAO.updateDivideRowList - mariadb */
+		UPDATE $DB_NEOS$T_EX_BIZ_CAR_PERSON
+			SET MILEAGE_KM = #editkm#
+			, BEFORE_KM = #beforekm#
+			, AFTER_KM = #afterkm#
+			, MODIFY_SEQ = #empSeq#
+			, MODIFY_IP = #ipAddress#
+			, MODIFY_DATE = NOW()
+	    WHERE SEQ_NUMBER = #seqNum#
+	   	AND	  COMP_SEQ = #compSeq#
+	   	AND	  EMP_SEQ = #empSeq#
+	</update>
+	
+	<insert id="BizCarManageDAO.copyBizCarDataInsert" parameterClass="java.util.HashMap">
+		/* BizCarManageDAO.copyBizCarDataInsert - mariadb */
+		INSERT INTO $DB_NEOS$T_EX_BIZ_CAR_PERSON ( `comp_seq`,`seq_number`,`car_code`,`use_date`,`car_number` ,`car_name`,`start_time`,`end_time` ,`use_flag` ,`start_flag` ,`start_addr`,`start_addr_detail` ,`end_flag` ,`end_addr`,`end_addr_detail`,`before_km`,`after_km`,`mileage_km` ,`rmk_nb` ,`rmk_dc` ,`dept_seq` ,`emp_seq` ,`erp_comp_seq` ,`erp_biz_seq` ,`erp_dept_seq` ,`erp_emp_seq`, `erp_send_yn` ,`create_seq` ,`create_ip`,`create_date`,`insert_type` )
+		SELECT
+			#compSeq#
+			, (select MAX(IFNULL(SEQ_NUMBER,0)) from $DB_NEOS$T_EX_BIZ_CAR_PERSON)+(@rownum:=@rownum+1) AS seq_number
+			, car_code
+			, DATE_FORMAT(NOW(), '%Y%m%d')
+			, car_number
+			, car_name
+			, start_time
+			, end_time
+			, use_flag
+			, start_flag
+			, start_addr
+			, start_addr_detail
+			, end_flag
+			, end_addr
+			, end_addr_detail
+			, before_km
+			, after_km
+			, mileage_km
+			, rmk_nb
+			, rmk_dc
+			, dept_seq
+			, emp_seq
+			, erp_comp_seq
+			, erp_biz_seq
+			, erp_dept_seq
+			, erp_emp_seq
+			, '0'
+			, #empSeq#
+			, #ipAddress#
+			, NOW()
+			, #insertType#
+		FROM $DB_NEOS$T_EX_BIZ_CAR_PERSON
+		,(SELECT @rownum:=0) TMP
+		WHERE COMP_SEQ = #compSeq#
+		<isNotEmpty property="copyList">
+			<iterate property="copyList" prepend="AND SEQ_NUMBER IN" open="(" close=")" conjunction="," >
+	        	#copyList[]#
+	        </iterate>
+	    </isNotEmpty>
+	</insert>
+	
+	<select id="BizCarManageDAO.getCarAfterKm" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+        /* BizCarManageDAO.getCarAfterKm - mariadb */
+        SELECT
+        	CAR_CODE
+        	, CAR_NUMBER
+        	, MAX(AFTER_KM) AS AFTER_KM
+        FROM $DB_NEOS$T_EX_BIZ_CAR_PERSON
+        WHERE CAR_CODE = #carCode#
+	   	AND	  COMP_SEQ = #compSeq#
+	   	AND	  EMP_SEQ = #empSeq#
+    </select>
+    
+    <update id="BizCarManageDAO.updateAmtData" parameterClass="java.util.HashMap">
+		UPDATE $DB_NEOS$T_EX_BIZ_CAR_PERSON
+			SET MODIFY_DATE = NOW()
+			, MODIFY_SEQ = #empSeq#
+			, MODIFY_IP = #ipAddress#
+			, OIL_AMT_TYPE = #oilAmtType#
+			, OIL_AMT = #oilAmt#
+			, TOLL_AMT_TYPE = #tollAmtType#
+			, TOLL_AMT = #tollAmt#
+			, PARKING_AMT_TYPE = #parkingAmtType#
+			, PARKING_AMT = #parkingAmt#
+			, REPAIR_AMT_TYPE = #repairAmtType#
+			, REPAIR_AMT = #repairAmt#
+			, ETC_AMT_TYPE = #etcAmtType#
+			, ETC_AMT = #etcAmt#
+	    WHERE COMP_SEQ  = #compSeq#
+	    AND SEQ_NUMBER = #seqNum#
+	   	AND	EMP_SEQ = #empSeq#
+	</update>
+	
+	<select id="BizCarManageDAO.getGwUserAddress" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+        /* BizCarManageDAO.getGwUserAddress - mariadb */
+        SELECT
+        	IFNULL(CONCAT(EDM.ADDR," ",EDM.DETAIL_ADDR),"") AS COMP_ADDR
+		  , IFNULL(CONCAT(EM.ADDR," ",EM.DETAIL_ADDR),"") AS HOUSE_ADDR
+        FROM $DB_NEOS$T_CO_EMP_DEPT_MULTI EDM
+        LEFT JOIN $DB_NEOS$T_CO_EMP_MULTI EM ON EDM.EMP_SEQ = EM.EMP_SEQ
+        WHERE EDM.COMP_SEQ = #compSeq#
+	   	AND	  EM.EMP_SEQ = #empSeq#
+	   	LIMIT 1
+    </select>
+		
+</sqlMap>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Framework>
+	<version>1.0.0</version>
+	<xml>
+		<name>namespace</name>
+		<src>/js/pudd/init/namespace.xml</src>
+	</xml>
+	<xml>
+		<name>component</name>
+		<src>/js/pudd/init/component.xml</src>
+	</xml>
+	<xml>
+		<name>svg</name>
+		<src>/js/pudd/init/svg.xml</src>
+	</xml>
+	<date>2017.11.07</date>
+	<note>배포 버전</note>
+</Framework>
+
+	
+	

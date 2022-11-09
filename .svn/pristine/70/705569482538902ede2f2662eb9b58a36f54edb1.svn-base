@@ -1,0 +1,47 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<!--css-->
+<link rel="stylesheet" type="text/css" href="/gw/js/portlet/css/common.css">
+<link rel="stylesheet" type="text/css" href="/gw/js/portlet/css/portlet.css">
+
+<!--js-->
+<script type="text/javascript" src="/gw/js/portlet/Scripts/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="/gw/js/portlet/Scripts/common.js"></script>
+
+<!-- 메인 js -->
+<script type="text/javascript" src="/gw/js/portlet/Scripts/jquery.alsEN-1.0.min.js"></script>
+<script type="text/javascript" src="/gw/js/portlet/Scripts/jquery.bxslider.min.js"></script>
+
+<script type="text/javascript">
+
+	$(document).ready(function() {
+		
+		$("#quick").als({
+			visible_items: 5,
+			scrolling_items: 1,
+			orientation: "horizontal",
+			circular: "yes",
+			autoscroll: "yes",
+			interval: 5000,
+			direction: "left"
+		});		
+
+	});	
+</script>
+
+<div class="i_quick">
+	<div id="quick">
+		<span class="als-prev"><img src="/gw/js/portlet/Images/btn/btn_quick_prev.png" alt="이전" /></span>
+		<div class="als-viewport">
+			<ul class="als-wrapper">
+				<li class="als-item"><img width="210" height="90" src="/gw/Images/portal/demo/main_img_q01.png" alt="" /></li>
+				<li class="als-item"><img width="210" height="90" src="/gw/Images/portal/demo/main_img_q02.png" alt="" /></li>
+				<li class="als-item"><img width="210" height="90" src="/gw/Images/portal/demo/main_img_q03.png" alt="" /></li>
+				<li class="als-item"><img width="210" height="90" src="/gw/Images/portal/demo/main_img_q04.png" alt="" /></li>
+				<li class="als-item"><img width="210" height="90" src="/gw/Images/portal/demo/main_img_q05.png" alt="" /></li>
+				<li class="als-item"><img width="210" height="90" src="/gw/Images/portal/demo/main_img_q06.png" alt="" /></li>
+				<li class="als-item"><img width="210" height="90" src="/gw/Images/portal/demo/main_img_q07.png" alt="" /></li>
+			</ul>
+		</div>
+		<span class="als-next"><img src="/gw/js/portlet/Images/btn/btn_quick_next.png" alt="다음" /></span>
+	</div>
+</div>

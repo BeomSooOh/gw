@@ -1,0 +1,94 @@
+package api.menuAccess.task;
+
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.scheduling.annotation.Async;
+
+import api.common.model.APIResponse;
+import api.menuAccess.service.MenuAccessService;
+import bizbox.orgchart.util.JedisClient;
+import cloud.CloudConnetInfo;
+import main.constants.CommonConstants;
+import neos.cmm.util.BizboxAProperties;
+
+public class MenuAccessTask {
+    private static Log logger = LogFactory.getLog(MenuAccessTask.class);
+
+    @Resource(name="MenuAccessService")
+    MenuAccessService menuAccessService;
+
+    @Async
+    public void pollingMenuAccessDelete() {
+        // 프로퍼티 모드 체크
+        if(!BizboxAProperties.getProperty("BizboxA.mode").equals("live") || !BizboxAProperties.getProperty("BizboxA.ReserveMessageTimer").equals("0")) {
+            return;
+        }
+
+        APIResponse response = new APIResponse();
+
+        try {
+            JedisClient jedis = CloudConnetInfo.getJedisClient();
+
+            List<Map<String, String>> list = jedis.getCustInfoList();
+
+            for(Map<String, String> mp : list){
+                if(mp.get("OPERATE_STATUS") != null && mp.get("OPERATE_STATUS").equals("20")) {
+                    logger.debug("MenuAccessTask.pollingMenuAccessDelete start....");
+
+                    Map<String, Object> map = new HashMap<String, Object>();
+
+                    response = menuAccessService.deleteMenuAccessList(map);
+
+                    logger.debug("MenuAccessTask.pollingMenuAccessDelete end..... Response: " + response.getResultString() + ", result=" + response.getResult());
+                }
+            }
+        }catch(Exception e) {
+//            e.printStackTrace();
+            response.setResultCode(CommonConstants.API_RESPONSE_FAIL);
+            response.setResultMessage(e.getMessage());
+            logger.error("MenuAccessTask.pollingMenuAccessDelete error: " + response.getResultString());
+        }
+    }
+
+
+    @Async
+    public void pollingWebMenuAccessSync() {
+        // 프로퍼티 모드 체크
+        if(!BizboxAProperties.getProperty("BizboxA.mode").equals("live") || !BizboxAProperties.getProperty("BizboxA.ReserveMessageTimer").equals("0")) {
+            return;
+        }
+
+        APIResponse response = new APIResponse();
+        String groupSeq = "";
+        try {
+            JedisClient jedis = CloudConnetInfo.getJedisClient();
+
+            List<Map<String, String>> list = jedis.getCustInfoList();
+
+            for(Map<String, String> mp : list){
+                if(mp.get("OPERATE_STATUS") != null && mp.get("OPERATE_STATUS").equals("20")) {
+                    groupSeq = mp.get("GROUP_SEQ");
+                    logger.debug("MenuAccessTask.pollingWebMenuAccessSync start.... GROUP_SEQ:"+groupSeq);
+                    Map<String, Object> parmMap = new HashMap<String, Object>();
+                    parmMap.put("groupSeq", groupSeq);
+                    
+                    response = menuAccessService.saveWebMenuAccessSync(parmMap);
+                    
+                    logger.debug("MenuAccessTask.pollingWebMenuAccessSync end..... GROUP_SEQ:"+groupSeq+" Response: " + response.getResultString() + ", result=" + response.getResult());
+                }
+            }
+        }catch(Exception e) {
+//            e.printStackTrace();
+            response.setResultCode(CommonConstants.API_RESPONSE_FAIL);
+            response.setResultMessage(e.getMessage());
+            logger.error("MenuAccessTask.pollingWebMenuAccessSync error GROUP_SEQ:"+groupSeq+" / message:" + response.getResultString());
+        }
+    }
+}

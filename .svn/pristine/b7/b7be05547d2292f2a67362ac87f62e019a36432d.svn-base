@@ -1,0 +1,578 @@
+package main.web;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.log4j.Logger;
+import org.codehaus.plexus.util.StringUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import api.common.model.APIResponse;
+import bizbox.orgchart.service.vo.LoginVO;
+import cloud.CloudConnetInfo;
+import egovframework.com.cmm.annotation.IncludedInfo;
+import egovframework.com.cmm.util.EgovUserDetailsHelper;
+import main.constants.CommonConstants;
+import main.service.BizboxTotalSearchService;
+import main.service.MainService;
+import neos.cmm.db.CommonSqlDAO;
+import neos.cmm.systemx.secGrade.constant.Constant;
+import neos.cmm.util.BizboxAProperties;
+import neos.cmm.util.CommonUtil;
+import neos.cmm.util.MessageUtil;
+import net.sf.json.JSONObject;
+
+@Controller
+public class BizboxTotalSearchController {
+	
+	@Resource(name = "MainService")
+	MainService mainService;
+	
+	@Resource(name = "BizboxTotalSearchService")
+	BizboxTotalSearchService bizboxTotalSearchService;
+	
+	@Resource(name = "commonSql")
+	private CommonSqlDAO commonSql;
+	
+	/* 변수정의 로그 */
+	private Logger logger = Logger.getLogger(BizboxTotalSearchController.class);
+
+	@IncludedInfo(name = "통합검색", order = 17, gid = 0)
+	@RequestMapping("/getTotalSearchContentNew.do")
+	public ModelAndView getTotalSearchContentNew(@RequestParam Map<String, String> params) throws Exception {
+
+		LoginVO loginVO = (LoginVO) EgovUserDetailsHelper.getAuthenticatedUser();
+		Boolean isAuthenticated = EgovUserDetailsHelper.isAuthenticated();
+		ModelAndView mv = new ModelAndView();
+		
+		if (!isAuthenticated) {
+			mv.setViewName("redirect:/uat/uia/egovLoginUsr.do");
+			return mv;
+		}
+		
+		try {
+			int totalCnt = 0;
+			params.put("pageIndex", (params.get("pageIndex") != null ? params.get("pageIndex") : "1"));
+			params.put("eaType", (loginVO.getEaType() != null ? loginVO.getEaType() : "eap"));
+			params.put("empSeq", loginVO.getUniqId());
+			params.put("compSeq", loginVO.getCompSeq());
+			params.put("groupSeq", loginVO.getGroupSeq());
+			params.put("langCode", loginVO.getLangCode());
+			params.put("hrSearchYn", params.get("hrSearchYn"));
+			params.put("hrEmpSeq", params.get("hrEmpSeq"));
+			
+			//빈 Array iOS null 방지
+			List<Map<String, Object>> spaceList = new ArrayList<Map<String,Object>>(); // 리스트로 담기
+			String tsearchKeyword = params.get("tsearchKeyword").trim(); // 검색어
+			String tsearchKeywordTmp = params.get("tsearchKeyword").trim(); // 검색어
+        	        	
+        	if(tsearchKeyword.indexOf("^^^") > -1){
+	        	params.put("tsearchKeyword",tsearchKeyword.substring(0,tsearchKeyword.length()-4));
+	        	tsearchKeywordTmp = tsearchKeywordTmp.substring(0,tsearchKeywordTmp.length()-4);
+	        	params.put("boardType",tsearchKeyword.substring(tsearchKeyword.length()-1,tsearchKeyword.length()));
+        	}
+			
+			//사용자별 대메뉴 권한 가져오기
+			Map<String,Object> menuAuthMap = bizboxTotalSearchService.getMenuAuthMap(params);
+			
+			String mailUrl = mainService.getTotalSearchMailDomain(params);
+
+			params.put("tsearchKeyword",tsearchKeywordTmp);
+			
+			mv.addObject("params", params);
+			mv.addObject("mailList", spaceList);
+			mv.addObject("mailCnt", 0);
+			mv.addObject("mailUrl",mailUrl);
+			mv.addObject("totalCnt", totalCnt);
+			mv.addObject("searchCnt", totalCnt);
+			
+			//첨부파일 보기옵션 모듈별 가져오기.
+			Map<String, Object> mp = new HashMap<String, Object>();
+			mp.put("optionId", "cm1700");
+			String cmmOptionValue = (String) commonSql.select("CmmnCodeDetailManageDAO.getOptionSetValue", mp);
+			mv.addObject("attViewOptionValue", cmmOptionValue);
+			if(cmmOptionValue.equals("1")){
+				//downloadType : -1 -> 미선택
+				//downloadType : 0 -> 문서뷰어+파일다운
+				//downloadType : 1 -> 파일다운
+				//downloadType : 2 -> 문서뷰어
+				Map<String, Object> empMap = new HashMap<String, Object>();
+				List<Map<String, Object>> attViewOptionList = (List<Map<String, Object>>) commonSql.list("CmmnCodeDetailManageDAO.getOptionSetValueList", empMap);
+				
+				for(Map<String, Object> map : attViewOptionList){
+					String downloadType = "";
+					//미선택
+					if(map.get("val").toString().equals("999")){
+						downloadType = "-1";
+					}
+					else{
+						String optionValueArr[] = map.get("val").toString().split("\\|");
+						if(optionValueArr.length == 2) {
+							
+							downloadType = "0";
+						}
+						else{
+							if(optionValueArr[0].equals("0")) {
+								downloadType = "2";
+							}
+							else {
+								downloadType = "1";
+							}
+						}						 
+					}
+					mv.addObject(map.get("optionId").toString(), downloadType);
+				 }
+			}
+			mv.addObject("menuAuthMap",menuAuthMap);
+			
+			if(CloudConnetInfo.getBuildType().equals("cloud")){
+				mv.addObject("profilePath", "/upload/" + loginVO.getGroupSeq() + "/img/profile/" + loginVO.getGroupSeq());
+			}else{
+				mv.addObject("profilePath", "/upload/img/profile/" + loginVO.getGroupSeq());
+			}			
+			
+			mv.addObject("inlineViewYn", BizboxAProperties.getCustomProperty("BizboxA.inlineViewYn"));
+			mv.setViewName("/main/totalsearch/totalSearchContentNew");
+
+		} catch (Exception e) {
+			CommonUtil.printStatckTrace(e);//오류메시지를 통한 정보노출
+		}
+		return mv;
+	}
+	
+	/*
+	 * 
+	 * post 호출 및 json 응답
+	 * 조회 타입 (boardType) : 메일(0),업무관리(2), 일정(3), 노트(4), 업무보고(5), 전자결재(6:영리,7:비영리), 문서(8), 게시판(9), 첨부파일(10), 인물(11), ONEFFICE(12) 
+	 */
+	@RequestMapping(value="/getTotalSearchList.do", method={RequestMethod.GET, RequestMethod.POST})
+	@ResponseBody
+	public APIResponse getTotalSearchList(@RequestParam Map<String, String> reqParams, HttpServletRequest servletRequest) throws Exception {
+		APIResponse response = new APIResponse();
+	
+		logger.debug("/getTotalSearchList.do Request Params: " + JSONObject.fromObject(reqParams).toString());
+		
+		try{
+			
+			LoginVO loginVO = (LoginVO) EgovUserDetailsHelper.getAuthenticatedUser();
+			
+			if(loginVO == null) {
+				MessageUtil.setApiMessage(response, servletRequest, "systemx.login.", "LOGIN004");
+				return response;
+			}
+			
+			String listType = reqParams.get("listType"); 
+			
+			String tsearchKeyword = reqParams.get("tsearchKeyword").trim(); // 검색어
+			String tsearchKeywordTmp = reqParams.get("tsearchKeyword").trim(); // 검색어
+        	        	
+        	if(tsearchKeyword.indexOf("^^^") > -1){
+        		reqParams.put("tsearchKeyword",tsearchKeyword.substring(0,tsearchKeyword.length()-4));
+	        	tsearchKeywordTmp = tsearchKeywordTmp.substring(0,tsearchKeywordTmp.length()-4);
+	        	reqParams.put("boardType",tsearchKeyword.substring(tsearchKeyword.length()-1,tsearchKeyword.length()));
+        	}
+			
+			//목록 호출
+			PagingReturnObj pagingReturnObj = null;
+			
+			reqParams.put("email", loginVO.getEmail());
+			reqParams.put("emailDomain", loginVO.getEmailDomain());
+			reqParams.put("compSeq", loginVO.getCompSeq());
+			reqParams.put("groupSeq", loginVO.getGroupSeq());
+			reqParams.put("empSeq", loginVO.getUniqId());
+			reqParams.put("langCode", loginVO.getLangCode());
+			
+			//메일 조회 일경우
+			if("0".equals(listType)) {
+				pagingReturnObj = bizboxTotalSearchService.tsearchListForMail(reqParams);
+			}else {
+				pagingReturnObj = bizboxTotalSearchService.tsearchList(reqParams, listType);
+			}
+			
+			response.setResultCode(CommonConstants.API_RESPONSE_SUCCESS);
+			response.setResultMessage(BizboxAMessage.getMessage("TX000011955","성공하였습니다"));
+			HashMap<String, Object> resultMap = new HashMap<>();
+			resultMap.put("pagingReturnObj", pagingReturnObj);
+			response.setResult(resultMap);
+		}catch(Exception e){
+			response.setResultCode(CommonConstants.API_RESPONSE_FAIL);
+			response.setResultMessage(e.getMessage());	
+		}
+		
+		logger.debug("/getTotalSearchList.do Response: " + JSONObject.fromObject(response).toString());
+	
+		return response;		
+	}
+	
+	/*
+	 * post 호출 및 json 응답
+	 */
+	@RequestMapping(value="/getTotalSearchCount.do", method={RequestMethod.GET, RequestMethod.POST})
+	@ResponseBody
+	public APIResponse getTotalSearchCount(@RequestParam Map<String, String> reqParams, HttpServletRequest servletRequest) throws Exception {
+		APIResponse response = new APIResponse();
+	
+		logger.debug("/getTotalSearchCount.do Request Params: " + JSONObject.fromObject(reqParams).toString());
+		
+		try{
+			
+			LoginVO loginVO = (LoginVO) EgovUserDetailsHelper.getAuthenticatedUser();
+			
+			if(loginVO == null) {
+				MessageUtil.setApiMessage(response, servletRequest, "systemx.login.", "LOGIN004");
+				return response;
+			}
+			
+			String listTypesStr = reqParams.get("listTypes");
+			String[] listTypes = listTypesStr.split(",");
+			reqParams.put("boardType", "-1");
+			reqParams.put("email", loginVO.getEmail());
+			reqParams.put("emailDomain", loginVO.getEmailDomain());
+			reqParams.put("compSeq", loginVO.getCompSeq());
+			reqParams.put("groupSeq", loginVO.getGroupSeq());
+			reqParams.put("empSeq", loginVO.getUniqId());
+			reqParams.put("langCode", loginVO.getLangCode());
+			
+			HashMap<String, Object> resultMap = new HashMap<>();
+			HashMap<String, Object> count = new HashMap<>();
+			
+			for(int i=0;i<listTypes.length;i++) {
+				String listType = listTypes[i];
+				//목록 호출
+				PagingReturnObj pagingReturnObj = null;
+				//메일 조회 일경우
+				if("0".equals(listType)) {
+					pagingReturnObj = bizboxTotalSearchService.tsearchListForMail(reqParams);
+				}else {
+					pagingReturnObj = bizboxTotalSearchService.tsearchList(reqParams, listType);
+				}
+				count.put(listType, pagingReturnObj);
+			}
+			
+			response.setResultCode(CommonConstants.API_RESPONSE_SUCCESS);
+			response.setResultMessage(BizboxAMessage.getMessage("TX000011955","성공하였습니다"));
+			resultMap.put("count", count);
+			response.setResult(resultMap);
+		}catch(Exception e){
+			response.setResultCode(CommonConstants.API_RESPONSE_FAIL);
+			response.setResultMessage(e.getMessage());	
+		}
+		
+		logger.debug("/getTotalSearchCount.do Response: " + JSONObject.fromObject(response).toString());
+	
+		return response;		
+	}
+	
+	/*
+	 * 검색어 index 저장(tsearch_word/search_word) 
+	 */
+	@RequestMapping(value="/saveSearchKeyword.do", method={RequestMethod.GET, RequestMethod.POST})
+	@ResponseBody
+	public APIResponse addSearchKeyword(@RequestParam Map<String, String> reqParams, HttpServletRequest servletRequest) throws Exception {
+		APIResponse response = new APIResponse();
+	
+		logger.debug("/saveSearchKeyword.do Request Params: " + JSONObject.fromObject(reqParams).toString());
+		
+		try{
+			
+			LoginVO loginVO = (LoginVO) EgovUserDetailsHelper.getAuthenticatedUser();
+			
+			if(loginVO == null) {
+				MessageUtil.setApiMessage(response, servletRequest, "systemx.login.", "LOGIN004");
+				return response;
+			}
+			
+			String tsearchKeyword = reqParams.get("tsearchKeyword").trim(); // 검색어
+			String tsearchKeywordTmp = reqParams.get("tsearchKeyword").trim(); // 검색어
+        	        	
+        	if(tsearchKeyword.indexOf("^^^") > -1){
+        		reqParams.put("tsearchKeyword",tsearchKeyword.substring(0,tsearchKeyword.length()-4));
+	        	tsearchKeywordTmp = tsearchKeywordTmp.substring(0,tsearchKeywordTmp.length()-4);
+	        	reqParams.put("boardType",tsearchKeyword.substring(tsearchKeyword.length()-1,tsearchKeyword.length()));
+        	}
+			
+			reqParams.put("compSeq", loginVO.getCompSeq());
+			reqParams.put("groupSeq", loginVO.getGroupSeq());
+			reqParams.put("deptSeq", loginVO.getOrgnztId());
+			reqParams.put("empSeq", loginVO.getUniqId());
+			if(StringUtils.isNotEmpty(reqParams.get("tsearchKeyword"))) {
+				//검색어 elasticsearch 저장처리
+				bizboxTotalSearchService.saveSearchKeyword(reqParams);
+			}
+			response.setResultCode(CommonConstants.API_RESPONSE_SUCCESS);
+			response.setResultMessage(BizboxAMessage.getMessage("TX000011955","성공하였습니다"));
+		}catch(Exception e){
+			response.setResultCode(CommonConstants.API_RESPONSE_FAIL);
+			response.setResultMessage(e.getMessage());	
+		}
+		
+		logger.debug("/saveSearchKeyword.do Response: " + JSONObject.fromObject(response).toString());
+	
+		return response;		
+	}
+	
+	/*
+	 * 최근검색어 조회(tsearch_word/search_word) 
+	 */
+	@RequestMapping(value="/getRecentSearchKeyword.do", method={RequestMethod.GET, RequestMethod.POST})
+	@ResponseBody
+	public APIResponse getRecentSearchKeyword(@RequestParam Map<String, String> reqParams, HttpServletRequest servletRequest) throws Exception {
+		APIResponse response = new APIResponse();
+	
+		logger.debug("/getRecentSearchKeyword.do Request Params: " + JSONObject.fromObject(reqParams).toString());
+		
+		try{
+			
+			LoginVO loginVO = (LoginVO) EgovUserDetailsHelper.getAuthenticatedUser();
+			
+			if(loginVO == null) {
+				MessageUtil.setApiMessage(response, servletRequest, "systemx.login.", "LOGIN004");
+				return response;
+			}
+			
+			//Validation
+			if(!validateForGetRecentSearchKeyword(reqParams, response)) {
+				logger.debug("/getRecentSearchKeyword.do Response: " + JSONObject.fromObject(response).toString());
+				return response;
+			}
+			
+			reqParams.put("compSeq", loginVO.getCompSeq());
+			reqParams.put("groupSeq", loginVO.getGroupSeq());
+			reqParams.put("deptSeq", loginVO.getOrgnztId());
+			reqParams.put("empSeq", loginVO.getUniqId());
+			
+			response.setResult(bizboxTotalSearchService.getRecentSearchKeyword(reqParams));
+			response.setResultCode(CommonConstants.API_RESPONSE_SUCCESS);
+			response.setResultMessage(BizboxAMessage.getMessage("TX000011955","성공하였습니다"));
+		}catch(Exception e){
+			response.setResultCode(CommonConstants.API_RESPONSE_FAIL);
+			response.setResultMessage(e.getMessage());	
+		}
+		
+		logger.debug("/getRecentSearchKeyword.do Response: " + JSONObject.fromObject(response).toString());
+	
+		return response;		
+	}
+	
+	private boolean validateForGetRecentSearchKeyword(Map<String, String> reqParams,
+			APIResponse response) {
+		if(!reqParams.containsKey("size")) {
+			response.setResultCode(Constant.API_RESPONSE_FAIL);
+			response.setResultMessage("NOT CONTAINS KEY [size] in body");
+			return false;
+		}
+		return true;
+	}
+	
+	/*
+	 * 최근검색어 조회(tsearch_word/search_word) 
+	 */
+	@RequestMapping(value="/setNoUseSearchKeyword.do", method={RequestMethod.GET, RequestMethod.POST})
+	@ResponseBody
+	public APIResponse setNoUseSearchKeyword(@RequestParam Map<String, String> reqParams, HttpServletRequest servletRequest) throws Exception {
+		APIResponse response = new APIResponse();
+	
+		logger.debug("/setNoUseSearchKeyword.do Request Params: " + JSONObject.fromObject(reqParams).toString());
+		
+		try{
+			
+			LoginVO loginVO = (LoginVO) EgovUserDetailsHelper.getAuthenticatedUser();
+			
+			if(loginVO == null) {
+				MessageUtil.setApiMessage(response, servletRequest, "systemx.login.", "LOGIN004");
+				return response;
+			}
+			
+			//Validation
+			if(!validateForSetNoUseSearchKeyword(reqParams, response)) {
+				logger.debug("/setNoUseSearchKeyword.do Response: " + JSONObject.fromObject(response).toString());
+				return response;
+			}
+			bizboxTotalSearchService.setNoUseSearchKeyword(reqParams);
+			response.setResultCode(CommonConstants.API_RESPONSE_SUCCESS);
+			response.setResultMessage(BizboxAMessage.getMessage("TX000011955","성공하였습니다"));
+		}catch(Exception e){
+			response.setResultCode(CommonConstants.API_RESPONSE_FAIL);
+			response.setResultMessage(e.getMessage());	
+		}
+		
+		logger.debug("/setNoUseSearchKeyword.do Response: " + JSONObject.fromObject(response).toString());
+	
+		return response;		
+	}
+	
+	private boolean validateForSetNoUseSearchKeyword(Map<String, String> reqParams,
+			APIResponse response) {
+		if(!reqParams.containsKey("_id")) {
+			response.setResultCode(Constant.API_RESPONSE_FAIL);
+			response.setResultMessage("NOT CONTAINS KEY [_id] in body");
+			return false;
+		}
+		return true;
+	}
+	
+	/*
+	 * 통합 검색 옵션 API
+	 */
+	@SuppressWarnings("unchecked")
+	@RequestMapping(value="/getTotalSearchOption.do", method={RequestMethod.GET, RequestMethod.POST})
+	@ResponseBody
+	public APIResponse getMenuAuthMap(@RequestParam Map<String, String> reqParams, HttpServletRequest servletRequest) throws Exception {
+		APIResponse response = new APIResponse();
+	
+		logger.debug("/getTotalSearchOption.do Request Params: " + JSONObject.fromObject(reqParams).toString());
+		
+		try{
+			
+			LoginVO loginVO = (LoginVO) EgovUserDetailsHelper.getAuthenticatedUser();
+			
+			if(loginVO == null) {
+				MessageUtil.setApiMessage(response, servletRequest, "systemx.login.", "LOGIN004");
+				return response;
+			}
+			
+			reqParams.put("compSeq", loginVO.getCompSeq());
+			reqParams.put("groupSeq", loginVO.getGroupSeq());
+			reqParams.put("empSeq", loginVO.getUniqId());
+			
+			HashMap<String, Object> resultMap = new HashMap<>();
+			resultMap.put("menuAuthMap", bizboxTotalSearchService.getMenuAuthMap(reqParams));
+			
+			//첨부파일 보기옵션 모듈별 가져오기.
+			Map<String, Object> mp = new HashMap<String, Object>();
+			mp.put("optionId", "cm1700");
+			String cmmOptionValue = (String) commonSql.select("CmmnCodeDetailManageDAO.getOptionSetValue", mp);
+			resultMap.put("attViewOptionValue", cmmOptionValue);
+			if(cmmOptionValue.equals("1")){
+				//downloadType : -1 -> 미선택
+				//downloadType : 0 -> 문서뷰어+파일다운
+				//downloadType : 1 -> 파일다운
+				//downloadType : 2 -> 문서뷰어
+				Map<String, Object> empMap = new HashMap<String, Object>();
+				List<Map<String, Object>> attViewOptionList = (List<Map<String, Object>>) commonSql.list("CmmnCodeDetailManageDAO.getOptionSetValueList", empMap);
+				
+				for(Map<String, Object> map : attViewOptionList){
+					String downloadType = "";
+					//미선택
+					if(map.get("val").toString().equals("999")){
+						downloadType = "-1";
+					}
+					else{
+						String optionValueArr[] = map.get("val").toString().split("\\|");
+						if(optionValueArr.length == 2) {
+							downloadType = "0";
+						}
+						else{
+							if(optionValueArr[0].equals("0")) {
+								downloadType = "2";
+							}
+							 else {
+								downloadType = "1";
+							 }
+						}						 
+					}
+					resultMap.put(map.get("optionId").toString(), downloadType);
+				 }
+			}
+			
+			if(CloudConnetInfo.getBuildType().equals("cloud")){
+				resultMap.put("profilePath", "/upload/" + loginVO.getGroupSeq() + "/img/profile/" + loginVO.getGroupSeq());
+			}else{
+				resultMap.put("profilePath", "/upload/img/profile/" + loginVO.getGroupSeq());
+			}
+			//영리/비영리 구분
+			String eaType = (loginVO.getEaType() != null ? loginVO.getEaType() : "eap");
+			if(eaType == "" || eaType == null) {
+				eaType = "eap";
+			}
+			String eaName = "6"; // 기본 전자결재(영리)
+			if(eaType == "ea"){
+				eaName = "7"; // 기본 전자결재(비영리)
+			}
+			resultMap.put("eaType", eaType);
+			resultMap.put("eaName", eaName);
+			resultMap.put("mailUrl", mainService.getTotalSearchMailDomain(reqParams));
+			response.setResult(resultMap);
+			response.setResultCode(CommonConstants.API_RESPONSE_SUCCESS);
+			response.setResultMessage(BizboxAMessage.getMessage("TX000011955","성공하였습니다"));
+		}catch(Exception e){
+			response.setResultCode(CommonConstants.API_RESPONSE_FAIL);
+			response.setResultMessage(e.getMessage());	
+		}
+		
+		logger.debug("/getTotalSearchOption.do Response: " + JSONObject.fromObject(response).toString());
+	
+		return response;		
+	}
+
+	public static JSONObject getPostJSON(String url, String data) {
+		StringBuilder sbBuf = new StringBuilder();
+		HttpURLConnection con = null;
+		BufferedReader brIn = null;
+		OutputStreamWriter wr = null;
+		String line = null;
+		try {
+			con = (HttpURLConnection) new URL(url).openConnection();
+			con.setRequestMethod("POST");
+			con.setConnectTimeout(5000);
+			con.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
+			con.setDoOutput(true);
+			con.setDoInput(true);
+
+			wr = new OutputStreamWriter(con.getOutputStream());
+			wr.write(data);
+			wr.flush();
+			brIn = new BufferedReader(new InputStreamReader(con.getInputStream(), "UTF-8"));
+			while ((line = brIn.readLine()) != null) {
+				sbBuf.append(line);
+			}
+			// System.out.println(sbBuf);
+
+			JSONObject rtn = JSONObject.fromObject(sbBuf.toString());
+
+			sbBuf = null;
+
+			return rtn;
+		} catch (Exception e) {
+			CommonUtil.printStatckTrace(e);//오류메시지를 통한 정보노출
+			return null;
+		} finally {
+			try {
+				if(wr!=null) {//Null Pointer 역참조
+				wr.close();
+				}
+			} catch (Exception e) {
+				CommonUtil.printStatckTrace(e);//오류메시지를 통한 정보노출
+			}
+			try {
+				if(brIn!=null) {//Null Pointer 역참조
+				brIn.close();
+				}
+			} catch (Exception e) {
+				CommonUtil.printStatckTrace(e);//오류메시지를 통한 정보노출
+			}
+			try {
+				if(con!=null) {//Null Pointer 역참조
+				con.disconnect();
+				}
+			} catch (Exception e) {
+				CommonUtil.printStatckTrace(e);//오류메시지를 통한 정보노출
+			}
+		}
+	}
+}

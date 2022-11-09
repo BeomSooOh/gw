@@ -1,0 +1,157 @@
+<html>
+<!--xmlns="http://www.w3.org/1999/xhtml"-->
+	<!-- 7J2866as7JWE7Lm4 -->
+	<head>
+		<link rel="shortcut icon" type="image/x-icon" href="./image/cloud/oneffice_Site.png" />
+		<meta http-equiv="expires" content="0">
+		<meta http-equiv="expires" content="now">
+		<meta http-equiv="Cache-Control" content="private">
+		<meta http-equiv="Cache-Control" content="No-Cache">
+		<meta http-equiv="Pragma" content="No-Cache">
+		<meta http-equiv="content-type" content="text/html; charset=utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta property="og:title" content="{ONEFFICE_OG_TITLE}" />
+		<meta property="og:image" content="{ONEFFICE_OG_IMAGE}" />
+		<meta property="og:type" content="article" />
+		<title>ONEFFICE DOCUMENT VIEWER</title>
+        <script>
+			var pageLocation = "view";
+        </script>
+		<script>
+			try {
+				window.moveTo(0, 0);
+				if (window.screen && window.screen.availWidth && window.screen.availHeight) {
+					window.resizeTo(window.screen.availWidth, window.screen.availHeight);
+				}
+			} catch (e) {}
+		</script>
+		<script language="javascript" src="./oneffice_loader.js?ver=3.0.33.0"></script>
+		<script>
+			if (typeof(onefficeExtContent) != "undefined" && onefficeExtContent.setExtLocation() === true) {
+				dzeUiConfig.bIndependentEdit = true;
+			}
+			window.onload = function () {
+				var nAppEnv = oneffice.getAppEnvType();
+
+				if (g_browserCHK.mobile === true) {
+					document.body.style.backgroundColor = "#F6F7F9";
+				} else if (onefficeUtil.getRequestParameter("load_type") === "embeded") {
+					document.body.style.backgroundColor = "#FFFFFF";
+				} else {
+					document.body.style.backgroundColor = "#000000";
+				}
+	
+				//가상화처리
+				var default_size = document.getElementById("default_size");
+				if(default_size)
+					document.body.removeChild(default_size);
+
+				if (nAppEnv == APPENV.WE) {
+					if (g_browserCHK.mobile === true) {
+						cmnCtrlToast.showToastMsg(null, "모바일에서는 접속할 수 없습니다.", 2, "screen_center");
+						return;
+					}
+					onefficeWE.setOnefficeWeEnv();
+				}
+
+				var ref = onefficeUtil.getRequestParameter("ref");
+				
+				if (ref) {
+					if (ref == "qr_url") {	// QR 로 열람
+						onefficeUtil.openQRCodeDialog(false);
+					} else if (ref.indexOf("open_request") >= 0) {
+						onefficeUtil.openQRCodeDialog(true);
+					} else {
+						fnLoadViewMode();
+					}
+				} else {
+					fnLoadViewMode();
+					
+					if (dzeUiConfig.bIndependentEdit === true) return;
+					
+					if (nAppEnv == APPENV.GW && typeof (onefficeCommon.accessUserFunction) !== "undefined") {
+						onefficeCommon.accessUserFunction("visit");
+					}
+				}
+			};
+	
+			window.onkeyup = function (evnt) {
+				//console.log("evnt.keyCode:"+evnt.keyCode);
+				try {
+					if (g_objOnefficeShot) //misty 
+					{
+						switch (evnt.keyCode) {
+							case ID_KEYCODE_BACKSPACE:
+								{
+									// 모바일이거나 암호 입력을 위한 다이얼로그 등이 출력 중인 경우 썸네일 로드 안함
+									if (!(cmnDlg.isShowDlg() || duzon_dialog.dialogExtStatus || g_browserCHK.mobile))
+										return showPgThumbnailView();
+								}
+								break;
+							case ID_KEYCODE_ESCAPE:
+								if (g_objOnefficeShot.m_bShow)
+									return g_objOnefficeShot.displayThumbnailLayer(false);
+								break;
+							default:
+								break;
+						}
+					}
+				} catch (e) {
+					dalert(e);
+				}
+			};
+	
+			window.onkeydown = function (evnt) {
+				try {	
+					if (cmnDlg.isShowDlg() || duzon_dialog.dialogExtStatus || g_browserCHK.mobile)
+						return;
+	
+					//				console.log("evnt.keyCode:"+evnt.keyCode);
+					//				console.log("ID_KEYCODE_MINUS_R"+ID_KEYCODE_MINUS_R);
+					if (evnt.keyCode == ID_KEYCODE_ESCAPE) {
+						if (g_DirectShowMode === true) {
+							window.close();
+						} else {
+							if (g_bSlideMode !== true) {
+								//closeViewer();
+							} else {
+								setSlideShowMode(false);
+							}
+						}
+	
+					}
+					if (evnt.keyCode == ID_KEYCODE_ENTER) {
+						setSlideShowMode(true);
+						TBCancelBubbleEvent(evnt);
+					}
+					if (!evnt.shiftKey && !evnt.altKey && DZESHORTCUT.isPressedKeyMapForOS(evnt,ID_KEYCODE_CTRL) && evnt.keyCode == ID_KEYCODE_P) {
+						beforePrint();
+						window.print();
+						afterPrint();
+	
+						TBCancelBubbleEvent(evnt);
+					}
+					if (evnt.keyCode == ID_KEYCODE_PLUS) {
+						zoomOutList(false);
+						TBCancelBubbleEvent(evnt);
+					}
+					if (evnt.keyCode == ID_KEYCODE_MINUS_R) {
+						zoomOutList(true);
+						TBCancelBubbleEvent(evnt);
+					}
+	
+	
+				} catch (e) {
+	
+					dalert(e);
+	
+				}
+	
+			};
+			document.oncontextmenu = function (e) {
+				return false;
+			};
+		</script>
+	</head>	
+	<body><div id="default_size" style="width:1366px;height:768px;"></div></body>
+</html>

@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="CommonCodeInfo">
+	<typeAlias  alias="CmmnDetailCodeVO" type="egovframework.com.sym.ccm.cde.service.CmmnDetailCodeVO"/>
+	<typeAlias  alias="CmmnDetailCodeParamVO" type="egovframework.com.sym.ccm.cde.service.CmmnDetailCodeParamVO"/>
+	
+	<select id="CommonCodeInfo.getSequence" parameterClass="hashmap" resultClass="string">
+	/* CommonCodeInfo.getSequence - oracle */
+    	select $DB_NEOS$F_NEXTVAL(#value#) from DUAL
+	</select>
+
+	<select id="CommonCodeInfo.selectCommonInfo" resultClass="java.util.HashMap" >
+            SELECT 
+            	a.code as CODE_ID,
+      		 	a.detail_code as CODE,
+      		 	'kr' as LANG_CODE,
+				<isNotEmpty property="langCode">
+				$DB_NEOS$FN_GetLanguageName(#langCode#,kr.detail_name,en.detail_name,jp.detail_name,cn.detail_name) as CODE_NM,
+				</isNotEmpty>      		 	
+				<isEmpty property="langCode">
+				kr.detail_name as CODE_NM,
+				</isEmpty>       		 	
+		        NVL(en.detail_name,' ') as CODE_EN,
+        		NVL(jp.detail_name,' ') as CODE_JP,
+        		NVL(cn.detail_name,' ') as CODE_CN,
+                kr.note as CODE_DC,
+                a.flag_1,
+                a.flag_2
+              from $DB_NEOS$t_co_code_detail a
+              inner join $DB_NEOS$t_co_code_detail_multi kr on kr.lang_code='kr' and a.code = kr.code and a.detail_code = kr.detail_code
+              left  join $DB_NEOS$t_co_code_detail_multi en on en.lang_code='en' and a.code = en.code and a.detail_code = en.detail_code
+              left  join $DB_NEOS$t_co_code_detail_multi cn on en.lang_code='cn' and a.code = cn.code and a.detail_code = cn.detail_code
+              left  join $DB_NEOS$t_co_code_detail_multi jp on en.lang_code='jp' and a.code = jp.code and a.detail_code = jp.detail_code
+              where a.use_yn = 'Y'
+				<isNotEmpty property="code">
+				and a.code = #code#
+				</isNotEmpty>
+				<isNotEmpty property="detailCode">
+				and a.detail_code = #detailCode#
+				</isNotEmpty>              
+          	  order by a.code, a.order_num, a.detail_code	
+	</select>
+	
+	<select id="CommonCodeInfo.selectCommonInfoMulti" parameterClass="java.util.HashMap" resultClass="java.util.HashMap" >
+            SELECT 
+            	a.code || '-' || b.lang_code as CODE_ID,
+      		 	a.detail_code as CODE,
+					b.detail_name as CODE_NM,
+                b.note as CODE_DC,
+                a.FLAG_1,
+                a.FLAG_2
+              FROM $DB_NEOS$t_co_code_detail a, $DB_NEOS$t_co_code_detail_multi b
+             WHERE a.use_yn = 'Y'
+				and a.code = b.code
+				and a.detail_code = b.detail_code
+          	ORDER BY CODE_ID,
+          			 a.code,
+                   a.order_num,
+                   a.detail_code
+	</select>
+	
+	<select id="CommonCodeInfo.selectChildCommonInfoMulti" resultClass="java.util.HashMap" >
+            SELECT 
+            	a.code || '-' || b.lang_code as CODE_ID,
+      		 	a.detail_code as CODE,
+				b.detail_name as CODE_NM,	
+                b.note as CODE_DC,
+                a.flag_1,
+                a.flag_2
+              FROM $DB_NEOS$t_co_code_detail a, $DB_NEOS$t_co_code_detail_multi b
+             WHERE a.use_yn = 'Y'
+				and a.code = b.code
+				and a.detail_code = b.detail_code
+				and a.ischild = 'Y'
+          	ORDER BY CODE_ID,
+          		a.code,
+          		a.order_num,
+                   a.detail_code
+	</select>	
+	
+	<select id="CommonCodeInfo.selectChildCommonInfo" resultClass="java.util.HashMap" >
+            SELECT 
+            	a.code as CODE_ID,
+      		 	a.detail_code as CODE,
+      		 	'kr' as LANG_CODE,
+				<isNotEmpty property="langCode">
+				$DB_NEOS$FN_GetLanguageName(#langCode#,kr.detail_name,en.detail_name,jp.detail_name,cn.detail_name) as CODE_NM,
+				</isNotEmpty>      		 	
+				<isEmpty property="langCode">
+				kr.detail_name as CODE_NM,
+				</isEmpty>       		 	
+		        NVL(en.detail_name,' ') as CODE_EN,
+        		NVL(jp.detail_name,' ') as CODE_JP,
+        		NVL(cn.detail_name,' ') as CODE_CN,
+                kr.note as CODE_DC,
+                a.flag_1,
+                a.flag_2
+              from $DB_NEOS$t_co_code_detail a
+              inner join $DB_NEOS$t_co_code_detail_multi kr on kr.lang_code='kr' and a.code = kr.code and a.detail_code = kr.detail_code
+              left  join $DB_NEOS$t_co_code_detail_multi en on en.lang_code='en' and a.code = en.code and a.detail_code = en.detail_code
+              left  join $DB_NEOS$t_co_code_detail_multi cn on en.lang_code='cn' and a.code = cn.code and a.detail_code = cn.detail_code
+              left  join $DB_NEOS$t_co_code_detail_multi jp on en.lang_code='jp' and a.code = jp.code and a.detail_code = jp.detail_code
+              where a.use_yn = 'Y' and a.ischild = 'Y'
+          	  order by a.code, a.order_num, a.detail_code    
+	</select>
+
+	<select id="CommonCodeInfo.selectCmmnDetailCodeList" resultClass="CmmnDetailCodeVO">
+		<![CDATA[
+            SELECT * FROM (
+                 SELECT COM.*
+                           , COUNT(*) OVER() AS RESULT_COUNT
+                           , ROWNUM AS RN
+                 FROM
+                ( SELECT   A.CODE_ID  codeId
+                           ,  A.CODE code
+                 ,  A.CODE_NM codeNm
+                 ,  A.CODE_DC  codeDc
+                 ,  A.USE_AT useAt
+                 ,     A.ORD ord
+			       FROM  $DB_NEOS$COMTCCMMNDETAILCODE A
+			               ,  $DB_NEOS$COMTCCMMNCODE       B
+			     WHERE  1=1
+			         AND  A.CODE_ID = B.CODE_ID
+		]]>
+			<isNotEmpty prepend="AND" property="codeId" >
+				<![CDATA[	A.CODE_ID LIKE '%' || #codeId# || '%'		]]>
+			</isNotEmpty>
+			         AND A.CODE_NM LIKE '%' || #searchKeyword# || '%' 
+		<![CDATA[
+			  /*ORDER BY CODE*/
+			  ORDER BY A.ORD
+			  ) COM
+			  )
+             WHERE RN BETWEEN #paginationInfo.firstRecordIndex# + 1 AND #paginationInfo.lastRecordIndex#
+		]]>
+	</select>
+
+	<select id="CommonCodeInfo.selectCmmnDetailCodeList2" parameterClass="CmmnDetailCodeVO" resultClass="java.util.HashMap">
+		<![CDATA[
+			SELECT A.*
+			   FROM (
+				SELECT COUNT(A.CODE) OVER() AS resultCount
+				       , ROWNUM AS RN
+				       , A.*
+				  FROM (
+					    SELECT A.CODE_ID
+						   , A.CODE
+						   , A.CODE_NM
+						   , A.CODE_DC
+						   , A.USE_AT
+						   , A.ORD
+					      FROM COMTCCMMNDETAILCODE A
+						   , COMTCCMMNCODE     B
+					     WHERE 1=1
+					       AND  A.CODE_ID = B.CODE_ID
+		]]>
+						<isNotEmpty prepend="AND" property="codeId" >
+							<![CDATA[	A.CODE_ID LIKE '%' || #codeId# || '%'		]]>
+						</isNotEmpty>
+		<![CDATA[
+					) A
+			         ) A
+			 WHERE RN BETWEEN #paginationInfo.firstRecordIndex# + 1 AND #paginationInfo.lastRecordIndex#
+		]]>
+
+	</select>
+
+	<delete id="CommonCodeInfo.deleteCmmnCode" parameterClass="java.util.HashMap">
+		<![CDATA[
+		DELETE
+		  FROM $DB_NEOS$COMTCCMMNDETAILCODE
+		 WHERE CODE_ID = #codeId#
+		   AND CODE = #code#
+		]]>
+	</delete>
+
+ 	<insert id="CommonCodeInfo.insertCmmnCode" parameterClass="CmmnDetailCodeVO" >
+		<![CDATA[
+			INSERT INTO $DB_NEOS$COMTCCMMNDETAILCODE
+			(
+				CODE_ID, CODE, CODE_NM, CODE_DC, USE_AT,
+				FRST_REGIST_PNTTM, FRST_REGISTER_ID, ORD
+			)
+			VALUES
+			(
+				#codeId#, #code#, #codeNm#, #codeDc#, #useAt#,
+				SYSDATE, #frstRegisterId#
+			)
+		]]>
+	</insert>
+
+	<update id="CommonCodeInfo.updateCmmnCode" parameterClass="CmmnDetailCodeVO">
+ 		<![CDATA[
+
+ 		]]>
+ 	</update>
+ 	
+ 	<update id="CommonCodeInfo.updateDetailCode" parameterClass="hashmap">
+ 		update $DB_NEOS$t_co_code_detail 
+		set
+			flag_1 = #flag1# , 
+			flag_2 = #flag2# , 
+			modify_seq = #editSeq# , 
+			modify_date = SYSDATE
+		where
+			detail_code = #detailCode# and code = #code#
+ 	</update>
+</sqlMap>

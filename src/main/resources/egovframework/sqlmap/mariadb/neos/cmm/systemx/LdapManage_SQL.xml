@@ -1,0 +1,811 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="LdapManage">
+	
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	
+	<insert id="LdapManage.insertLdapApiLog" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_ldap_api_log(reg_date, api_name, input_param, error_msg) values
+		(NOW(), #apiName#, #inputParam#, #errorMsg#);
+	</insert>
+	
+	<select id="LdapManage.getLdapSetInfo" parameterClass="hashmap" resultClass="egovMap">
+    	select * from $DB_NEOS$t_co_ldap where comp_seq=#compSeq#
+		<isNotEmpty property="empSeq">
+		and comp_seq in (select main_comp_seq from $DB_NEOS$t_co_emp where emp_seq=#empSeq#)
+		</isNotEmpty>
+	</select>
+	
+	<select id="LdapManage.getLdapSchSetInfoList" parameterClass="hashmap" resultClass="egovMap">
+		select * from $DB_NEOS$t_co_ldap 
+		where sync_mode='gta' and sch_time=#schTime# and 
+		(
+			(sch_type = '1')
+			or
+			(sch_type = '2' and sch_info = DAYOFWEEK(NOW()))
+			or
+			(sch_type = '3' and sch_info = DATE_FORMAT(NOW(), '%d'))
+			or
+			(sch_type = '4' and sch_info = DATE_FORMAT(NOW(), '%Y-%m-%d'))
+		)
+	</select>	
+	
+	<select id="LdapManage.getCompInfo" parameterClass="hashmap" resultClass="egovMap">
+		select a.email_domain, b.comp_name from $DB_NEOS$t_co_comp a
+		join $DB_NEOS$t_co_comp_multi b on a.comp_seq=b.comp_seq and b.lang_code='kr'
+		where a.comp_seq=#compSeq#
+	</select>
+
+	<select id="LdapManage.getEmpInfo" parameterClass="hashmap" resultClass="egovMap">
+		select e.login_id, em.emp_name 
+		from $DB_NEOS$t_co_emp e
+		join $DB_NEOS$t_co_emp_multi em on e.emp_seq = em.emp_seq and em.lang_code='kr'
+		where e.emp_seq = #empSeq#
+	</select>	
+	
+	<insert id="LdapManage.insertLdapSetInfo" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_ldap(group_seq, comp_seq, use_yn, ad_ip, userid, password, ad_domain, base_dir, dept_dir, emp_dir, dept_ou_type, sync_mode, login_id_sync_yn, login_passwd_sync_yn, tel_num_sync_yn, email_sync_yn, addr_sync_yn, create_seq, create_date, modify_seq, modify_date, org_sync_status, org_sync_date, sch_type, sch_info, sch_time) VALUES
+		(#groupSeq#, #compSeq#, #useYn#, #adIp#, #userid#, #password#, #adDomain#, #baseDir#, #deptDir#, #empDir#, #deptOuType#, #syncMode#, #loginIdSyncYn#, #loginPasswdSyncYn#, #telNumSyncYn#, #emailSyncYn#, #addrSyncYn#, #createSeq#, NOW(), #createSeq#, NOW(), 'I', null, '', '', '');
+	</insert>
+	
+	<insert id="LdapManage.insertLdapDeptStart" parameterClass="hashmap">
+		insert ignore into $DB_NEOS$t_co_ldap_dept(sync_seq, uid, reg_date, sync_status, error_msg, sync_date, sync_type, comp_seq, dept_seq, parent_dept_seq, dept_name)
+		select '', concat('GW_DEPT_', a.dept_seq), DATE_ADD(now(), INTERVAL a.dept_level-100 SECOND), '', '', null, 'I', a.comp_seq, a.dept_seq, a.parent_dept_seq, b.dept_name
+		from $DB_NEOS$t_co_dept a
+		join $DB_NEOS$t_co_dept_multi b on a.dept_seq = b.dept_seq and b.lang_code='kr'
+		where a.comp_seq = #compSeq# and a.use_yn = 'Y';
+	</insert>
+	
+	<insert id="LdapManage.insertLdapEmpStart" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_ldap_emp(sync_seq, uid, reg_date, sync_status, error_msg, sync_date, sync_type, comp_seq, dept_seq, emp_seq, login_id, erp_emp_seq, email_addr, email_domain, emp_name, duty_code, mobile_tel_num, fax_num, home_tel_num, tel_num, login_passwd, use_yn)
+		select
+		'', concat('GW_EMP_', e.emp_seq), now(), '', '', null, 'I',
+		ec.comp_seq,
+		ed.dept_seq,
+		e.emp_seq,
+		e.login_id,
+		ifnull(ec.erp_emp_seq,''),
+		ifnull(e.email_addr,e.login_id),
+		ifnull(c.email_domain,''),
+		ifnull(em.emp_name,e.login_id),
+		ifnull(ed.duty_code,''),
+		ifnull(e.mobile_tel_num,''),
+		ifnull(ed.fax_num,''),
+		ifnull(e.home_tel_num,''),
+		ifnull(ed.tel_num,''),
+		'' as login_passwd,
+		case when ec.use_yn = 'N' or ec.work_status = '001' then 'N' else 'Y' end as use_yn
+		from $DB_NEOS$t_co_emp e
+		join $DB_NEOS$t_co_emp_multi em on e.emp_seq=em.emp_seq and em.lang_code='kr'
+		join $DB_NEOS$t_co_emp_dept ed on e.emp_seq=ed.emp_seq and ed.comp_seq=e.main_comp_seq and ed.main_dept_yn='Y'
+		join $DB_NEOS$t_co_emp_comp ec on ed.emp_seq=ec.emp_seq and ed.comp_seq=ec.comp_seq and ec.work_status != '001'
+		join $DB_NEOS$t_co_comp c on ec.comp_seq=c.comp_seq
+		where ec.comp_seq=#compSeq#
+	</insert>
+	
+	<insert id="LdapManage.insertLdapDept" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_ldap_dept(sync_seq, uid, reg_date, sync_status, error_msg, sync_date, sync_type, comp_seq, dept_seq, parent_dept_seq, dept_name) VALUES
+		('', UUID(), NOW(), '', '', null, #syncType#, #compSeq#, #deptSeq#, #parentDeptSeq#, #deptName#);
+	</insert>
+	
+	<insert id="LdapManage.insertLdapEmp" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_ldap_emp
+		(sync_seq, uid, reg_date, sync_status, error_msg, sync_date, sync_type, comp_seq, dept_seq, emp_seq, login_id, erp_emp_seq, email_addr, email_domain, emp_name, duty_code, mobile_tel_num, fax_num, home_tel_num, tel_num, login_passwd, use_yn) VALUES
+		(
+		<isNotNull property="syncSeq">#syncSeq#,</isNotNull><isNull property="syncSeq">'',</isNull>
+		UUID(), NOW(), '', '', null,
+		<isNotNull property="syncType">#syncType#,</isNotNull><isNull property="syncType">'',</isNull>
+		<isNotNull property="compSeq">#compSeq#,</isNotNull><isNull property="compSeq">'',</isNull>
+		<isNotNull property="deptSeq">#deptSeq#,</isNotNull><isNull property="deptSeq">'',</isNull>
+		<isNotNull property="empSeq">#empSeq#,</isNotNull><isNull property="empSeq">'',</isNull>
+		<isNotNull property="loginId">#loginId#,</isNotNull><isNull property="loginId">'',</isNull>
+		<isNotNull property="erpEmpSeq">#erpEmpSeq#,</isNotNull><isNull property="erpEmpSeq">'',</isNull>
+		<isNotNull property="emailAddr">#emailAddr#,</isNotNull><isNull property="emailAddr">'',</isNull>
+		<isNotNull property="emailDomain">#emailDomain#,</isNotNull><isNull property="emailDomain">'',</isNull>
+		<isNotNull property="empName">#empName#,</isNotNull><isNull property="empName">'',</isNull>
+		<isNotNull property="dutyCode">#dutyCode#,</isNotNull><isNull property="dutyCode">'',</isNull>
+		<isNotNull property="mobileTelNum">#mobileTelNum#,</isNotNull><isNull property="mobileTelNum">'',</isNull>
+		<isNotNull property="faxNum">#faxNum#,</isNotNull><isNull property="faxNum">'',</isNull>
+		<isNotNull property="homeTelNum">#homeTelNum#,</isNotNull><isNull property="homeTelNum">'',</isNull>
+		<isNotNull property="telNum">#telNum#,</isNotNull><isNull property="telNum">'',</isNull>
+		<isNotNull property="loginPasswd">#loginPasswd#,</isNotNull><isNull property="loginPasswd">'',</isNull>
+		<isNotNull property="useYn">#useYn#</isNotNull><isNull property="useYn">'Y'</isNull>
+		 );
+	</insert>
+	
+	<insert id="LdapManage.insertLdapEmpList" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_ldap_emp
+		(sync_seq, uid, reg_date, sync_status, error_msg, sync_date, sync_type, comp_seq, dept_seq, emp_seq, login_id, email_addr, email_domain, emp_name, duty_code, mobile_tel_num, fax_num, home_tel_num, tel_num, login_passwd, use_yn) VALUES
+  		<iterate property="userInfoList" prepend="" open="" close=""  conjunction="," >
+   		(#userInfoList[].syncSeq#,
+   		UUID(), NOW(), '', '', null,
+   		#userInfoList[].syncType#,
+   		#userInfoList[].compSeq#,
+   		#userInfoList[].deptSeq#,
+   		#userInfoList[].empSeq#,
+   		#userInfoList[].loginId#,
+   		#userInfoList[].emailAddr#,
+   		#userInfoList[].emailDomain#,
+   		#userInfoList[].empName#,
+   		#userInfoList[].dutyCode#,
+   		#userInfoList[].mobileTelNum#,
+   		#userInfoList[].faxNum#,
+   		#userInfoList[].homeTelNum#,
+   		#userInfoList[].telNum#,
+   		#userInfoList[].loginPasswd#,
+   		#userInfoList[].useYn#
+   		)
+  		</iterate>		 
+	</insert>	
+	
+	<insert id="LdapManage.insertLdapEmpResign" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_ldap_emp(sync_seq, uid, reg_date, sync_status, error_msg, sync_date, sync_type, comp_seq, dept_seq, emp_seq, login_id, erp_emp_seq, email_addr, email_domain, emp_name, duty_code, mobile_tel_num, fax_num, home_tel_num, tel_num, login_passwd, use_yn)
+		select '', UUID(), now(), '', '', null, 'D', comp_seq, relate_dept_seq, gw_seq, '', '', '', '', '', '', '', '', '', '', '', 'N'
+    	from $DB_NEOS$t_co_ldap_key where org_div='U' and gw_seq=#empSeq#;
+	</insert>
+	
+	<update id="LdapManage.updateLdapDept" parameterClass="hashmap">
+    	update $DB_NEOS$t_co_ldap_dept set
+    	reg_date=now()
+		<isNotEmpty property="syncType">
+		,sync_type=#syncType#
+		</isNotEmpty>    	
+		<isNotEmpty property="parentDeptSeq">
+		,parent_dept_seq=#parentDeptSeq#
+		</isNotEmpty>
+		<isNotEmpty property="deptName">
+		,dept_name=#deptName#
+		</isNotEmpty>		
+    	where uid=#uid#;
+	</update>
+	
+	<update id="LdapManage.updateLdapEmp" parameterClass="hashmap">
+    	update $DB_NEOS$t_co_ldap_emp set
+    	reg_date=now()
+		<isNotEmpty property="syncType">
+		,sync_type=#syncType#
+		</isNotEmpty>
+		<isNotEmpty property="deptSeq">
+		,dept_seq=#deptSeq#
+		</isNotEmpty>
+		<isNotEmpty property="loginId">
+		,login_id=#loginId#
+		</isNotEmpty>
+		<isNotEmpty property="erpEmpSeq">
+		,erp_emp_seq=#erpEmpSeq#
+		</isNotEmpty>		
+		<isNotEmpty property="emailAddr">
+		,email_addr=#emailAddr#
+		</isNotEmpty>
+		<isNotEmpty property="emailDomain">
+		,email_domain=#emailDomain#
+		</isNotEmpty>
+		<isNotEmpty property="empName">
+		,emp_name=#empName#
+		</isNotEmpty>	
+		<isNotEmpty property="dutyCode">
+		,duty_code=#dutyCode#
+		</isNotEmpty>
+		<isNotNull property="mobileTelNum">
+		,mobile_tel_num=#mobileTelNum#
+		</isNotNull>
+		<isNotNull property="faxNum">
+		,fax_num=#faxNum#
+		</isNotNull>
+		<isNotNull property="homeTelNum">
+		,home_tel_num=#homeTelNum#
+		</isNotNull>
+		<isNotNull property="telNum">
+		,tel_num=#telNum#
+		</isNotNull>		
+		<isNotNull property="loginPasswd">
+		,login_passwd=#loginPasswd#
+		</isNotNull>
+		<isNotEmpty property="useYn">
+		,use_yn=#useYn#
+		</isNotEmpty>
+		where uid=#uid#;
+	</update>
+	
+	<update id="LdapManage.updateLdapEmpAtg" parameterClass="hashmap">
+    	update $DB_NEOS$t_co_ldap_emp set
+    	
+ 		<isEqual property="syncStatus" compareValue="N">
+ 		sync_status='N'
+ 		,sync_date=now()
+ 		,emp_seq=#empSeq#
+ 		</isEqual>
+ 		
+ 		<isEqual property="syncStatus" compareValue="F">
+ 		sync_status='F'
+ 		,error_msg=#errorMsg#
+ 		</isEqual> 		
+ 		
+		where sync_seq=#syncSeq#;
+	</update>		
+	
+	<select id="LdapManage.selectLdapDept" parameterClass="hashmap" resultClass="egovMap">
+    	select * from $DB_NEOS$t_co_ldap_dept where dept_seq=#deptSeq# order by reg_date desc limit 1;
+	</select>
+	
+	<select id="LdapManage.selectLdapEmp" parameterClass="hashmap" resultClass="egovMap">
+    	select * from $DB_NEOS$t_co_ldap_emp where emp_seq=#empSeq# order by reg_date desc limit 1;
+	</select>	
+	
+	<select id="LdapManage.selectLdapDeptFromUid" parameterClass="hashmap" resultClass="egovMap">
+    	select * 
+    	from $DB_NEOS$t_co_ldap_dept a
+    	join $DB_NEOS$t_co_ldap b on a.comp_seq = b.comp_seq
+    	where a.uid=#uid#;
+	</select>
+	
+	<select id="LdapManage.selectLdapEmpFromUid" parameterClass="hashmap" resultClass="egovMap">
+    	select * 
+    	from $DB_NEOS$t_co_ldap_emp a
+    	join $DB_NEOS$t_co_ldap b on a.comp_seq = b.comp_seq	
+		where a.uid=#uid#;
+	</select>
+	
+	<update id="LdapManage.updateLdapDeptStart" parameterClass="hashmap">
+    	update $DB_NEOS$t_co_ldap_dept set sync_status='P' where uid=#uid#;
+	</update>
+	
+	<update id="LdapManage.updateLdapEmpStart" parameterClass="hashmap">
+    	update $DB_NEOS$t_co_ldap_emp set sync_status='P' where uid=#uid#;
+	</update>	
+	
+	<update id="LdapManage.updateLdapDeptResult" parameterClass="hashmap">
+    	update $DB_NEOS$t_co_ldap_dept set
+    	sync_date=now()
+		<isNotEmpty property="syncSeq">
+		,sync_seq=#syncSeq#
+		</isNotEmpty>    	
+		<isNotEmpty property="syncStatus">
+		,sync_status=#syncStatus#
+		</isNotEmpty>
+		<isNotEmpty property="errorMsg">
+		,error_msg=#errorMsg#
+		</isNotEmpty>
+    	where uid=#uid#;
+	</update>
+	
+	<update id="LdapManage.updateLdapEmpResult" parameterClass="hashmap">
+    	update $DB_NEOS$t_co_ldap_emp set
+    	sync_date=now()
+		<isNotEmpty property="syncSeq">
+		,sync_seq=#syncSeq#
+		</isNotEmpty>    	
+		<isNotEmpty property="syncStatus">
+		,sync_status=#syncStatus#
+		</isNotEmpty>
+		<isNotEmpty property="errorMsg">
+		,error_msg=#errorMsg#
+		</isNotEmpty>
+    	where uid=#uid#;
+	</update>	
+	
+	<delete id="LdapManage.deleteLdapKey" parameterClass="hashmap">
+		delete from $DB_NEOS$t_co_ldap_key where org_div=#orgDiv# and gw_seq=#gwSeq#;
+	</delete>
+	
+	<delete id="LdapManage.deleteLdapKeyAll" parameterClass="hashmap">
+		delete from $DB_NEOS$t_co_ldap_key where comp_seq=#compSeq#;
+	</delete>			
+	
+	<insert id="LdapManage.insertLdapKey" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_ldap_key(org_div, gw_seq, usn, ad_name, relate_dept_seq, comp_seq
+		<isNotEmpty property="pwSyncYn">
+		,pw_sync_yn
+		</isNotEmpty>
+		) VALUES
+		(#orgDiv#, #gwSeq#, #usn#, #adName#, #relateDeptSeq#, #compSeq#
+		<isNotEmpty property="pwSyncYn">
+		,#pwSyncYn#
+		</isNotEmpty>		
+		);	
+	</insert>
+	
+	<update id="LdapManage.updateLdapKey" parameterClass="hashmap">
+    	update $DB_NEOS$t_co_ldap_key set
+    	org_div = org_div
+		<isNotEmpty property="adName">
+		,ad_name = #adName#
+		</isNotEmpty>    	
+		<isNotEmpty property="relateDeptSeq">
+		,relate_dept_seq=#relateDeptSeq#
+		</isNotEmpty>
+		<isNotEmpty property="pwSyncYn">
+		,pw_sync_yn=#pwSyncYn#
+		</isNotEmpty>			
+    	where org_div=#orgDiv# and gw_seq=#gwSeq#
+	</update>
+	
+	<select id="LdapManage.selectLdapKey" parameterClass="hashmap" resultClass="egovMap">
+		select * from $DB_NEOS$t_co_ldap_key where org_div=#orgDiv# and gw_seq=#gwSeq#;
+	</select>	
+	
+	<update id="LdapManage.updateLdapSchSet" parameterClass="hashmap">
+		update $DB_NEOS$t_co_ldap set
+		modify_date = now()
+		,modify_seq = #createSeq#
+		,sch_type = #schType#
+		,sch_info = #schInfo#
+		,sch_time = #schTime#
+    	where comp_seq=#compSeq#
+	</update>
+	
+	<update id="LdapManage.updateLdapSetInfo" parameterClass="hashmap">
+		update $DB_NEOS$t_co_ldap set
+		modify_date = now()
+		,modify_seq = #createSeq#
+		,ad_ip = #adIp#
+		,ad_domain = #adDomain#
+		,use_yn = #useYn#
+		,sync_mode = #syncMode#
+		,userid = #userid#
+		,password = #password#
+		,emp_dir = #empDir#
+		,dept_ou_type = #deptOuType#
+		,dept_dir = #deptDir#
+		,base_dir = #baseDir#
+		,addr_sync_yn = #addrSyncYn#
+		,email_sync_yn = #emailSyncYn#
+		,login_id_sync_yn = #loginIdSyncYn#
+		,login_passwd_sync_yn = #loginPasswdSyncYn#
+		,tel_num_sync_yn = #telNumSyncYn#
+    	where comp_seq=#compSeq#
+	</update>
+	
+	<delete id="LdapManage.deleteLdapSetInfo" parameterClass="hashmap">
+		delete from $DB_NEOS$t_co_ldap where comp_seq=#compSeq#
+	</delete>	
+	
+	<delete id="LdapManage.deleteLdapDept" parameterClass="hashmap">
+		delete from $DB_NEOS$t_co_ldap_dept where comp_seq=#compSeq#
+	</delete>
+	
+	<delete id="LdapManage.deleteLdapEmp" parameterClass="hashmap">
+		delete from $DB_NEOS$t_co_ldap_emp where comp_seq=#compSeq#
+	</delete>
+	
+	<select id="LdapManage.selectLdapSyncList" parameterClass="hashmap" resultClass="egovMap">
+		select
+		result.sync_seq,
+		DATE_FORMAT(result.sync_date,'%Y-%m-%d %H:%i:%s') as sync_date,
+		case when result.sync_mode = 'M' then '수동' else '자동' end as sync_mode,
+		result.emp_name,
+		(select count(*) from $DB_NEOS$t_co_ldap_dept where sync_seq=result.sync_seq and sync_type='I') as dept_new,
+		(select count(*) from $DB_NEOS$t_co_ldap_dept where sync_seq=result.sync_seq and sync_type='U') as dept_mod,
+		(select count(*) from $DB_NEOS$t_co_ldap_dept where sync_seq=result.sync_seq and sync_type='D') as dept_del,
+		(select count(*) from $DB_NEOS$t_co_ldap_emp where sync_seq=result.sync_seq and sync_type='I') as emp_new,
+		(select count(*) from $DB_NEOS$t_co_ldap_emp where sync_seq=result.sync_seq and sync_type='U') as emp_mod,
+		(select count(*) from $DB_NEOS$t_co_ldap_emp where sync_seq=result.sync_seq and sync_type='D') as emp_del
+		from                       
+		(select 
+		r.sync_seq as sync_seq,
+		r.sync_date as sync_date,
+		r.sync_mode as sync_mode,
+		em.emp_name as emp_name
+		from $DB_NEOS$t_co_ldap_req r
+		left join $DB_NEOS$t_co_emp_multi em on r.create_seq=em.emp_seq and em.lang_code='kr'
+		where r.comp_seq=#compSeq#
+		<isNotEmpty property="syncType">
+			and r.sync_mode = #syncType#
+		</isNotEmpty>
+		order by r.sync_date desc
+		<isNotEmpty property="startNum">
+		 	<isNotEmpty property="endNum">
+		 		<isNotEqual property="endNum" compareValue="0">
+		 			LIMIT $startNum$, $endNum$
+		 		</isNotEqual>
+		 	</isNotEmpty>
+		</isNotEmpty>
+		) result	
+	</select>
+	
+	<select id="LdapManage.selectLdapSyncList_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+		select count(*) as cnt from $DB_NEOS$t_co_ldap_req where comp_seq=#compSeq#
+		<isNotEmpty property="syncType">
+			and	r.sync_mode = #syncType#
+		</isNotEmpty>
+	</select>
+	
+	<delete id="LdapManage.deleteLdapReq" parameterClass="hashmap">
+		delete from $DB_NEOS$t_co_ldap_req where comp_seq=#compSeq#;
+	</delete>	
+	
+	<select id="LdapManage.selectLdapSyncDetail" parameterClass="hashmap" resultClass="egovMap">
+		select * from
+		(select
+		DATE_FORMAT(d.reg_date,'%Y-%m-%d %H:%i:%s') as reg_date,
+		d.reg_date as reg_datetime,
+		case d.sync_type
+		when 'I' then '등록'
+		when 'U' then '수정'
+		when 'D' then '삭제'
+		else ''
+		end as sync_type,
+		case d.sync_status
+		when 'P' then '처리중'
+		when 'C' then '처리완료'
+		when 'E' then '전송불가'
+		else '대기'
+		end as sync_status,
+		d.error_msg as sync_msg,
+		ifnull(DATE_FORMAT(d.sync_date,'%Y-%m-%d %H:%i:%s'),'') as sync_date,
+		'부서' as org_div,
+		dm.dept_name as org_name
+		from $DB_NEOS$t_co_ldap_dept d
+		join $DB_NEOS$t_co_dept_multi dm on dm.lang_code='kr' and d.dept_seq = dm.dept_seq and d.sync_seq=#syncSeq#
+		union all
+		select
+		DATE_FORMAT(d.reg_date,'%Y-%m-%d %H:%i:%s') as reg_date,
+		d.reg_date as reg_datetime,
+		case d.sync_type
+		when 'I' then '등록'
+		when 'U' then '수정'
+		when 'D' then '삭제'
+		else ''
+		end as sync_type,
+		case d.sync_status
+		when 'P' then '처리중'
+		when 'C' then '처리완료'
+		when 'E' then '전송불가'
+		else '대기'
+		end as sync_status,
+		d.error_msg as sync_msg,
+		ifnull(DATE_FORMAT(d.sync_date,'%Y-%m-%d %H:%i:%s'),'') as sync_date,
+		'사용자' as org_div,
+		em.emp_name as org_name
+		from $DB_NEOS$t_co_ldap_emp d
+		join $DB_NEOS$t_co_emp_multi em on em.lang_code='kr' and d.emp_seq = em.emp_seq and d.sync_seq=#syncSeq#) result
+		order by reg_datetime desc
+		<isNotEmpty property="startNum">
+		 	<isNotEmpty property="endNum">
+		 		<isNotEqual property="endNum" compareValue="0">
+		 			LIMIT $startNum$, $endNum$
+		 		</isNotEqual>
+		 	</isNotEmpty>
+		</isNotEmpty>		
+	</select>
+	
+	<select id="LdapManage.selectLdapSyncDetail_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+		select (select count(*) from $DB_NEOS$t_co_ldap_dept where sync_seq=#syncSeq#) + (select count(*) from $DB_NEOS$t_co_ldap_emp where sync_seq=#syncSeq#) as cnt
+	</select>	
+	
+	<insert id="LdapManage.insertLdapReq" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_ldap_req (sync_seq, comp_seq, sync_date, sync_mode, create_seq) VALUES
+		(#syncSeq#, #compSeq#, NOW(), #syncMode#, #createSeq#);
+	</insert>	
+	
+	<select id="LdapManage.selectLdapDeptCnt" parameterClass="hashmap" resultClass="string">
+		select count(*) as cnt from $DB_NEOS$t_co_ldap_dept where comp_seq=#compSeq# and sync_status=''
+	</select>
+	
+	<select id="LdapManage.selectLdapEmpCnt" parameterClass="hashmap" resultClass="string">
+		select count(*) as cnt from $DB_NEOS$t_co_ldap_emp where comp_seq=#compSeq# and sync_status=''
+	</select>
+	
+	<select id="LdapManage.selectLdapSyncTargetList" parameterClass="hashmap" resultClass="egovMap">
+		select 
+	    result.org_div,
+	    result.org_name,
+	    result.uid
+	    from
+		(
+			select
+			d.reg_date,
+			'D' as org_div,
+			dm.dept_name as org_name,
+			d.uid
+			from $DB_NEOS$t_co_ldap_dept d
+			join $DB_NEOS$t_co_dept_multi dm on d.dept_seq=dm.dept_seq and dm.lang_code='kr'
+			where d.comp_seq=#compSeq# and d.sync_status=''
+			union all
+			select
+			d.reg_date,
+			'U' as org_div,
+			dm.emp_name as org_name,
+			d.uid
+			from $DB_NEOS$t_co_ldap_emp d
+			join $DB_NEOS$t_co_emp_multi dm on d.emp_seq=dm.emp_seq and dm.lang_code='kr'
+			where d.comp_seq=#compSeq# and d.sync_status=''
+		) result
+		order by reg_date
+	</select>	
+	
+	<select id="LdapManage.selectEmpLoginCheckInfo" parameterClass="hashmap" resultClass="egovMap">
+	    select
+	    case when e.login_passwd = #loginPasswdEnc# then 'Y' else 'N' end as enc_password_check,
+		ifnull(lk.pw_sync_yn,'N') as pw_sync_yn,
+		lk.ad_name,
+		lk.gw_seq,
+		l.comp_seq,
+		l.ad_ip,
+		l.userid, 
+		l.password,
+		l.ad_domain,
+		l.base_dir,
+		l.dept_dir,
+		l.emp_dir,
+		l.dept_ou_type,
+		ifnull(l.sync_mode,'') as sync_mode,
+		case 
+	    when l.sync_mode = 'atg' and le.emp_seq is not null then 'Y'
+	    when l.sync_mode = 'gta' and lk.gw_seq is not null then 'Y'
+	    when l.sync_mode = 'login' then 'Y'
+	    else 'N' end as ldap_use_yn
+	    from $DB_NEOS$t_co_emp e
+	    join $DB_NEOS$t_co_emp_comp ec on e.emp_seq = ec.emp_seq and ec.use_yn = 'Y'
+	    join $DB_NEOS$t_co_emp_dept ed on ec.emp_seq = ed.emp_seq and ec.dept_seq = ed.dept_seq
+	    join $DB_NEOS$t_co_comp c on ec.comp_seq = c.comp_seq and c.use_yn = 'Y'
+	    left join $DB_NEOS$t_co_ldap l on ec.comp_seq = l.comp_seq
+	    left join $DB_NEOS$t_co_ldap_emp le on e.emp_seq = le.emp_seq and l.comp_seq = le.comp_seq
+	    left join $DB_NEOS$t_co_ldap_key lk on lk.org_div='U' and e.emp_seq = lk.gw_seq
+	    where e.login_id=#loginId#
+	    order by l.use_yn desc, ed.main_comp_yn desc
+	    limit 1;		
+	</select>
+	
+	<select id="LdapManage.selectLdapPasswdLiveChangeInfo" parameterClass="hashmap" resultClass="egovMap">
+	
+ 		<isEqual property="syncMode" compareValue="gta">
+ 	 		
+			<isNotEmpty property="nonKey">
+				select
+				l.group_seq, 
+				l.comp_seq,
+				l.use_yn,
+				l.ad_ip,
+				l.userid, 
+				l.password,
+				l.ad_domain,
+				l.base_dir,
+				l.dept_dir,
+				l.emp_dir,
+				l.dept_ou_type, 
+				l.sync_mode,
+				e.emp_seq as gw_seq,
+				'U' as org_div,
+				'' as ad_name,
+				e.login_id,
+				ec.dept_seq as relate_dept_seq
+				from neos.t_co_emp_comp ec
+				join neos.t_co_ldap l on ec.comp_seq = l.comp_seq and l.sync_mode='gta'
+				join neos.t_co_comp c on c.comp_seq=l.comp_seq and c.use_yn='Y'
+				join neos.t_co_emp e on ec.emp_seq=e.emp_seq
+				where ec.comp_seq = #compSeq# and ec.emp_seq=#empSeq#
+				limit 1;
+			</isNotEmpty>
+			
+			<isEmpty property="nonKey">
+				select
+				l.group_seq, 
+				l.comp_seq,
+				l.use_yn,
+				l.ad_ip,
+				l.userid, 
+				l.password,
+				l.ad_domain,
+				l.base_dir,
+				l.dept_dir,
+				l.emp_dir,
+				l.dept_ou_type, 
+				l.sync_mode,
+				lk.gw_seq,
+				lk.org_div,
+				lk.ad_name,
+				e.login_id
+				from $DB_NEOS$t_co_ldap_key lk
+				join $DB_NEOS$t_co_ldap l on lk.comp_seq = l.comp_seq and l.sync_mode='gta'
+				join $DB_NEOS$t_co_comp c on c.comp_seq=l.comp_seq and c.use_yn='Y'
+				join $DB_NEOS$t_co_emp e on lk.gw_seq=e.emp_seq
+				where lk.org_div='U' and lk.gw_seq=#empSeq#
+				limit 1;
+			</isEmpty>			
+ 	 	
+ 		</isEqual>
+ 		
+  		<isEqual property="syncMode" compareValue="atg">
+  		
+			select
+			l.group_seq, 
+			l.comp_seq,
+			l.use_yn,
+			l.ad_ip,
+			l.userid, 
+			l.password,
+			l.ad_domain,
+			l.base_dir,
+			l.dept_dir,
+			l.emp_dir,
+			l.dept_ou_type, 
+			l.sync_mode,
+			le.emp_seq as gw_seq,
+			'U' as org_div,
+			le.login_passwd as ad_name,
+			le.login_id
+			from $DB_NEOS$t_co_ldap_emp le
+			join $DB_NEOS$t_co_ldap l on le.comp_seq = l.comp_seq and l.sync_mode='atg'
+			join $DB_NEOS$t_co_comp c on c.comp_seq=l.comp_seq and c.use_yn='Y'
+			where le.emp_seq=#empSeq#
+			limit 1; 	
+			
+ 		</isEqual>		
+	
+	
+	</select>
+	
+	
+	<select id="LdapManage.selectLdapKeyUsn" parameterClass="hashmap" resultClass="egovMap">
+		select * from $DB_NEOS$t_co_ldap_key where comp_seq=#compSeq# and usn=#usn# limit 1;
+	</select>
+	
+	<delete id="LdapManage.deleteGarbageLdapKey" parameterClass="hashmap">
+		delete from $DB_NEOS$t_co_ldap_key where org_div='D' and comp_seq = #compSeq# and relate_dept_seq not in (select dept_seq from $DB_NEOS$t_co_dept);
+	</delete>
+	
+	<delete id="LdapManage.deleteGarbageLdapEmp" parameterClass="hashmap">
+		delete from $DB_NEOS$t_co_ldap_emp where comp_seq = #compSeq# and login_id not in (select login_id from t_co_emp);
+	</delete>	
+	
+	<delete id="LdapManage.deleteRemoveLdapKey" parameterClass="hashmap">
+		delete from $DB_NEOS$t_co_ldap_key where comp_seq = #compSeq# and #usnArray# not like concat('%,',usn,',%');
+	</delete>	
+	
+	<select id="LdapManage.ldapKeyList" parameterClass="hashmap" resultClass="string">
+		select concat(',', group_concat(usn), ',') as usn from $DB_NEOS$t_co_ldap_key where org_div=#orgDiv# and comp_seq=#compSeq#;
+	</select>
+	
+	<select id="LdapManage.ldapUserKeyArray" parameterClass="hashmap" resultClass="string">
+		select ifnull(concat(',', group_concat(sync_seq), ','),'') as uid from $DB_NEOS$t_co_ldap_emp where comp_seq=#compSeq#;
+	</select>	
+	
+	<select id="LdapManage.selectLdapKeyAll" parameterClass="hashmap" resultClass="egovMap">
+	
+		select * from $DB_NEOS$t_co_ldap_key where comp_seq=#compSeq#;
+		
+	</select>
+	
+	<select id="LdapManage.selectLdapAtgUserList_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+		select
+		count(*) as cnt
+		from $DB_NEOS$t_co_ldap_emp le
+		left join $DB_NEOS$t_co_ldap_key lk on le.dept_seq = lk.relate_dept_seq
+		left join $DB_NEOS$t_co_dept_multi rd on rd.lang_code = 'kr' and lk.relate_dept_seq = rd.dept_seq
+		left join $DB_NEOS$t_co_emp e on le.login_id = e.login_id 
+		left join $DB_NEOS$t_co_emp_comp ec on e.emp_seq = ec.emp_seq and le.comp_seq = ec.comp_seq 
+		left join $DB_NEOS$t_co_emp_comp ect on le.comp_seq != ect.comp_seq and e.emp_seq = ect.emp_seq and e.main_comp_seq = ect.comp_seq
+		left join $DB_NEOS$t_co_emp_comp cc on le.comp_seq = cc.comp_seq and le.emp_seq = cc.emp_seq
+		left join $DB_NEOS$t_co_dept_multi dm on dm.lang_code = 'kr' and cc.dept_seq = dm.dept_seq
+		where le.comp_seq = #compSeq# and (le.login_id like CONCAT('%',ifnull(#empSearchName#,''),'%') or le.emp_name like CONCAT('%',ifnull(#empSearchName#,''),'%'))
+ 		<isEqual property="syncStatus" compareValue="success">
+ 			and cc.emp_seq is not null
+ 		</isEqual>
+ 		<isEqual property="syncStatus" compareValue="link">
+ 			and cc.emp_seq is null and ec.emp_seq is not null
+ 		</isEqual>
+ 		<isEqual property="syncStatus" compareValue="overlap">
+ 			and cc.emp_seq is null and ec.emp_seq is null and e.emp_seq is not null and ect.emp_seq is not null
+ 		</isEqual>
+ 		<isEqual property="syncStatus" compareValue="new">
+ 			and e.emp_seq is null
+ 		</isEqual>  		
+	</select>
+
+	<select id="LdapManage.selectLdapAtgUserList" parameterClass="hashmap" resultClass="egovMap">
+		select
+		le.sync_seq,
+		le.uid,
+		case 
+		when cc.emp_seq is not null then '동기화완료'
+		when ec.emp_seq is not null then '동기화대기(동일계정연결)'
+		when e.emp_seq is not null and ect.emp_seq is not null then '동기화불가(중복ID)'
+		else '동기화대기(입사처리)' end as sync_status,
+		le.login_id,
+		le.emp_name,
+		le.email_addr,
+		le.email_domain,
+		le.mobile_tel_num,
+		le.tel_num,
+		ifnull(dm.dept_name,ifnull(rd.dept_name,'')) as gw_dept_name,
+		ifnull(DATE_FORMAT(le.sync_date,'%Y-%m-%d %H:%i:%s'),'') as sync_date,
+		ifnull(DATE_FORMAT(le.reg_date,'%Y-%m-%d %H:%i:%s'),'') as reg_date,
+		ifnull(ec.emp_seq,'') as link_emp_seq,
+		le.error_msg
+		from $DB_NEOS$t_co_ldap_emp le
+		left join $DB_NEOS$t_co_ldap_key lk on le.dept_seq = lk.relate_dept_seq
+		left join $DB_NEOS$t_co_dept_multi rd on rd.lang_code = 'kr' and lk.relate_dept_seq = rd.dept_seq
+		left join $DB_NEOS$t_co_emp e on le.login_id = e.login_id
+		left join $DB_NEOS$t_co_emp_comp ec on e.emp_seq = ec.emp_seq and le.comp_seq = ec.comp_seq 
+		left join $DB_NEOS$t_co_emp_comp ect on le.comp_seq != ect.comp_seq and e.emp_seq = ect.emp_seq and e.main_comp_seq = ect.comp_seq
+		left join $DB_NEOS$t_co_emp_comp cc on le.comp_seq = cc.comp_seq and le.emp_seq = cc.emp_seq
+		left join $DB_NEOS$t_co_dept_multi dm on dm.lang_code = 'kr' and cc.dept_seq = dm.dept_seq
+		where le.comp_seq = #compSeq# and (le.login_id like CONCAT('%',ifnull(#empSearchName#,''),'%') or le.emp_name like CONCAT('%',ifnull(#empSearchName#,''),'%'))
+ 		<isEqual property="syncStatus" compareValue="success">
+ 			and cc.emp_seq is not null
+ 		</isEqual>
+ 		<isEqual property="syncStatus" compareValue="link">
+ 			and cc.emp_seq is null and ec.emp_seq is not null
+ 		</isEqual>
+ 		<isEqual property="syncStatus" compareValue="overlap">
+ 			and cc.emp_seq is null and ec.emp_seq is null and e.emp_seq is not null and ect.emp_seq is not null
+ 		</isEqual>
+ 		<isEqual property="syncStatus" compareValue="new">
+ 			and e.emp_seq is null
+ 		</isEqual>  		
+		order by le.sync_date desc, le.reg_date desc, le.emp_name
+		<isNotEmpty property="startNum">
+		 	<isNotEmpty property="endNum">
+		 		<isNotEqual property="endNum" compareValue="0">
+		 			LIMIT $startNum$, $endNum$
+		 		</isNotEqual>
+		 	</isNotEmpty>
+		</isNotEmpty>
+	</select>
+	
+	<update id="LdapManage.updateLdapEmpLinkSeq" parameterClass="hashmap">
+		update $DB_NEOS$t_co_ldap_emp le
+		left join $DB_NEOS$t_co_ldap_key lk on le.dept_seq = lk.relate_dept_seq
+		left join $DB_NEOS$t_co_emp e on le.login_id = e.login_id
+		join $DB_NEOS$t_co_emp_comp ec on e.emp_seq = ec.emp_seq and le.comp_seq = ec.comp_seq
+		left join $DB_NEOS$t_co_emp_comp cc on le.comp_seq = cc.comp_seq and le.emp_seq = cc.emp_seq
+		set le.emp_seq = ec.emp_seq, le.sync_date = NOW(), le.sync_status = 'L', error_msg = '동일계정 연결완료'
+		where le.comp_seq = #compSeq# and cc.emp_seq is null
+ 		<isNotEqual property="chkLdapUser" compareValue="all">
+ 			and le.sync_seq in ($chkLdapUser$)
+ 		</isNotEqual>
+	</update>
+	
+	<select id="LdapManage.selectLdapAtgNewUserList" parameterClass="hashmap" resultClass="egovMap">
+		select
+		le.sync_seq,
+		le.uid,
+		le.login_id,
+    	le.comp_seq,
+    	d.biz_seq,
+    	d.dept_seq,
+		le.emp_name,
+		case when le.email_domain = c.email_domain then le.email_addr else le.login_id end as email_addr,
+		case when le.email_domain != c.email_domain then le.email_addr else '' end as out_mail,
+		case when le.email_domain != c.email_domain then le.email_domain else '' end as out_domain,
+		le.mobile_tel_num,
+		le.tel_num,
+		le.fax_num,
+		le.home_tel_num
+		from $DB_NEOS$t_co_ldap_emp le
+		join $DB_NEOS$t_co_ldap_key lk on le.dept_seq = lk.relate_dept_seq
+
+		<isEmpty property="selectedDeptSeq">
+		join $DB_NEOS$t_co_dept d on lk.relate_dept_seq = d.dept_seq
+		</isEmpty>
+
+		<isNotEmpty property="selectedDeptSeq">
+		join $DB_NEOS$t_co_dept d on d.dept_seq = #selectedDeptSeq#
+		</isNotEmpty>
+    	
+    	join $DB_NEOS$t_co_comp c on d.comp_seq = c.comp_seq
+		left join $DB_NEOS$t_co_emp e on le.login_id = e.login_id
+		where le.comp_seq = #compSeq# and e.emp_seq is null
+ 		<isNotEqual property="chkLdapUser" compareValue="all">
+ 			and le.sync_seq in ($chkLdapUser$)
+ 		</isNotEqual>		
+    	order by le.reg_date desc, le.sync_date desc, le.emp_name
+	</select>
+	
+	<update id="LdapManage.updateLoginpwFromLdap" parameterClass="hashmap">
+		update $DB_NEOS$t_co_emp
+		SET passwd_date=NOW(), passwd_status_code='P', prev_login_passwd = login_passwd, login_passwd = #loginPasswdEnc#
+		where login_id = #loginId#;
+	</update>
+	
+	<select id="LdapManage.selectDeptSeqFomDeptCd" parameterClass="hashmap" resultClass="string">
+		select dept_seq from $DB_NEOS$t_co_dept where use_yn = 'Y' and comp_seq = #compSeq# and dept_cd = #deptCd#
+		limit 1;
+	</select>			
+	
+	
+    
+</sqlMap>

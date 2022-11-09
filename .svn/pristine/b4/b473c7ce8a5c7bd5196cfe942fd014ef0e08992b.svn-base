@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="MenuAccess">
+
+    <select id="MenuAccess.selectPreMenuAccessList_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+        /* MenuAccess.selectPreMenuAccessList_TOTALCOUNT - mariaDB */
+        SELECT COUNT(*)
+          FROM $DB_NEOS$t_co_emp_menu_history t1
+          JOIN $DB_NEOS$t_co_emp t2 ON t1.emp_seq = t2.emp_seq
+          JOIN $DB_NEOS$t_co_emp_multi t3 ON t1.emp_seq = t3.emp_seq AND t3.lang_code = 'kr'
+          LEFT JOIN $DB_NEOS$t_co_menu t4 ON t1.menu_no = t4.menu_no
+          LEFT JOIN $DB_NEOS$t_co_menu_multi t5 ON t1.menu_no = t5.menu_no AND t5.lang_code = 'kr'
+          LEFT JOIN $DB_NEOS$t_co_menu_adm t6 ON t1.menu_no = t6.menu_no
+          LEFT JOIN $DB_NEOS$t_co_menu_adm_multi t7 ON t1.menu_no = t7.menu_no AND t7.lang_code = 'kr'
+         WHERE 1=1
+           AND t3.emp_name LIKE CONCAT('%', IFNULL(#empName#,''), '%')
+           AND (t5.menu_nm LIKE CONCAT('%', IFNULL(#menuName#,''), '%') OR t7.menu_nm LIKE CONCAT('%', IFNULL(#menuName#,''), '%'))
+           AND t1.use_date BETWEEN #frDt# AND #toDt#
+           AND t4.menu_no != '0' AND t6.menu_no NOT IN('0','1')
+    </select>
+    
+    <select id="MenuAccess.selectPreMenuAccessList" parameterClass="hashmap" resultClass="egovMap">
+        /* MenuAccess.selectPreMenuAccessList - mariaDB */
+        SELECT t1.emp_seq AS empSeq
+             , DATE_FORMAT(t1.use_date, '%Y-%m-%d %H:%i:%s') AS useDate
+             , t1.access_ip AS accessIp
+             , t1.menu_auth AS menuAuth
+             , CONCAT(CASE WHEN t1.menu_auth = 'USER' THEN t5.menu_nm ELSE t7.menu_nm END, ' [', t1.menu_auth, ']') AS menuName
+             , CONCAT(t3.emp_name, ' [', t2.login_id, ']') AS empName
+             , t2.login_id AS loginId
+          FROM $DB_NEOS$t_co_emp_menu_history t1
+          JOIN $DB_NEOS$t_co_emp t2 ON t1.emp_seq = t2.emp_seq
+          JOIN $DB_NEOS$t_co_emp_multi t3 ON t1.emp_seq = t3.emp_seq AND t3.lang_code = 'kr'
+          LEFT JOIN $DB_NEOS$t_co_menu t4 ON t1.menu_no = t4.menu_no
+          LEFT JOIN $DB_NEOS$t_co_menu_multi t5 ON t1.menu_no = t5.menu_no AND t5.lang_code = 'kr'
+          LEFT JOIN $DB_NEOS$t_co_menu_adm t6 ON t1.menu_no = t6.menu_no
+          LEFT JOIN $DB_NEOS$t_co_menu_adm_multi t7 ON t1.menu_no = t7.menu_no AND t7.lang_code = 'kr'
+         WHERE 1=1
+           AND t3.emp_name LIKE CONCAT('%', IFNULL(#empName#,''), '%')
+           AND (t5.menu_nm LIKE CONCAT('%', IFNULL(#menuName#,''), '%') OR t7.menu_nm LIKE CONCAT('%', IFNULL(#menuName#,''), '%'))
+           AND t1.use_date BETWEEN #frDt# AND #toDt#
+           AND t4.menu_no != '0' AND t6.menu_no NOT IN('0','1')
+         ORDER BY t1.use_date DESC
+         LIMIT $startNum$, $endNum$
+    </select>
+
+    <select id="MenuAccess.selectPreMenuAccessListExcel_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+        /* MenuAccess.selectPreMenuAccessListExcel_TOTALCOUNT - mariaDB */
+        SELECT COUNT(*)
+          FROM $DB_NEOS$t_co_emp_menu_history t1
+          JOIN $DB_NEOS$t_co_emp t2 ON t1.emp_seq = t2.emp_seq
+          JOIN $DB_NEOS$t_co_emp_multi t3 ON t1.emp_seq = t3.emp_seq AND t3.lang_code = 'kr'
+          LEFT JOIN $DB_NEOS$t_co_menu t4 ON t1.menu_no = t4.menu_no
+          LEFT JOIN $DB_NEOS$t_co_menu_multi t5 ON t1.menu_no = t5.menu_no AND t5.lang_code = 'kr'
+          LEFT JOIN $DB_NEOS$t_co_menu_adm t6 ON t1.menu_no = t6.menu_no
+          LEFT JOIN $DB_NEOS$t_co_menu_adm_multi t7 ON t1.menu_no = t7.menu_no AND t7.lang_code = 'kr'
+         WHERE 1=1
+           AND t3.emp_name LIKE CONCAT('%', IFNULL(#empName#,''), '%')
+           AND (t5.menu_nm LIKE CONCAT('%', IFNULL(#menuName#,''), '%') OR t7.menu_nm LIKE CONCAT('%', IFNULL(#menuName#,''), '%'))
+           AND t1.use_date BETWEEN #startDate# AND #endDate#
+           AND t4.menu_no != '0' AND t6.menu_no NOT IN('0','1')
+    </select>
+
+    <select id="MenuAccess.selectPreMenuAccessListExcel" parameterClass="hashmap" resultClass="egovMap">
+        /* MenuAccess.selectMenuAccessListExcel - mariaDB */
+        SELECT CONCAT(t3.emp_name, ' [', t2.login_id, ']') AS empName
+             , DATE_FORMAT(t1.use_date, '%Y-%m-%d %H:%i:%s') AS useDate
+             , CONCAT(CASE WHEN t1.menu_auth = 'USER' THEN t5.menu_nm ELSE t7.menu_nm END, ' [', t1.menu_auth, ']') AS menuName
+             , t1.access_ip AS accessIp
+          FROM $DB_NEOS$t_co_emp_menu_history t1
+          JOIN $DB_NEOS$t_co_emp t2 ON t1.emp_seq = t2.emp_seq
+          JOIN $DB_NEOS$t_co_emp_multi t3 ON t1.emp_seq = t3.emp_seq AND t3.lang_code = 'kr'
+          LEFT JOIN $DB_NEOS$t_co_menu t4 ON t1.menu_no = t4.menu_no
+          LEFT JOIN $DB_NEOS$t_co_menu_multi t5 ON t1.menu_no = t5.menu_no AND t5.lang_code = 'kr'
+          LEFT JOIN $DB_NEOS$t_co_menu_adm t6 ON t1.menu_no = t6.menu_no
+          LEFT JOIN $DB_NEOS$t_co_menu_adm_multi t7 ON t1.menu_no = t7.menu_no AND t7.lang_code = 'kr'
+         WHERE 1=1
+           AND t3.emp_name LIKE CONCAT('%', IFNULL(#empName#,''), '%')
+           AND (t5.menu_nm LIKE CONCAT('%', IFNULL(#menuName#,''), '%') OR t7.menu_nm LIKE CONCAT('%', IFNULL(#menuName#,''), '%'))
+           AND t1.use_date BETWEEN #startDate# AND #endDate#
+           AND t4.menu_no != '0' AND t6.menu_no NOT IN('0','1')
+         ORDER BY t1.use_date DESC
+         LIMIT $startNum$, $endNum$
+    </select>
+    
+    <select id="MenuAccess.selectMenuAccessSync" parameterClass="hashmap" resultClass="egovMap">
+        /* MenuAccess.selectMenuAccessSync - mariaDB */
+        SELECT group_seq
+             , emp_seq
+             , DATE_FORMAT(use_date, '%Y-%m-%d %H:%i:%s')AS use_date
+             , login_id
+             , emp_name
+             , lang_code
+             , type_code
+             , menu_no
+             , menu_name
+             , menu_auth
+             , access_ip
+          FROM $DB_NEOS$t_co_menu_access_sync
+         WHERE use_date <![CDATA[ <= ]]> #reqDate#
+    </select>
+    
+    <insert id="MenuAccess.insertMenuAccessSync" parameterClass="hashmap">
+        INSERT INTO $DB_NEOS$t_co_menu_access_sync
+        (group_seq, emp_seq, use_date, login_id, emp_name, lang_code, type_code, menu_no, menu_name, menu_auth, access_ip)
+        VALUES (#groupSeq#, #empSeq#, #useDate#, #loginId#, #empName#, #langCode#, #typeCode#, #menuNo#, #menuName#, #menuAuth#, #accessIp#)
+    </insert>
+    
+    <delete id="MenuAccess.deleteMenuAccessSync" parameterClass="hashmap">
+        /* MenuAccess.deleteMenuAccessSync - mariadb */       
+        DELETE FROM $DB_NEOS$t_co_menu_access_sync
+         WHERE use_date <![CDATA[ <= ]]> #reqDate#
+    </delete>
+</sqlMap>

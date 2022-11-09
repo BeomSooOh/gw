@@ -1,0 +1,174 @@
+{
+    "ITEMS": {
+            "anapDt": "2022-03-02",
+            "noticeDt": "2022-03-02 오후 03:18",
+            "applicationYear": "2022",
+            "applicationMonth": "3",
+            "applicationDate": "2",
+            "menuUrl": {
+                "type": "hyperlink",
+                "href": "http:///#/H/HRH0430/HRH0430?anapDt=20220302&anapNo=2022-0019",
+                "title": "g테스트"
+            },
+            "executiveTotalTableCount": "2",
+            "promotionB16TotalTableCount": "1",
+            "promotionB17TotalTableCount": "2",
+            "mainTotalCount": "5",
+            "executiveTotalCount": "2",
+            "promotionB16TotalCount": "1",
+            "promotionB17TotalCount": "2"
+        },
+    "TABLE": {
+            "promotionMainTable": {
+                "group": [
+                    {
+                        "items": {
+                            "no": "1",
+                            "hclsCdNm": "전무2",
+                            "totalCount": "2",
+                            "executiveCount": "2",
+                            "b16Count": "",
+                            "b17Count": "",
+                            "rmkDc": ""
+                        }
+                    },
+                    {
+                        "items": {
+                            "no": "2",
+                            "hclsCdNm": "대리",
+                            "totalCount": "2",
+                            "executiveCount": "",
+                            "b16Count": "1",
+                            "b17Count": "1",
+                            "rmkDc": ""
+                        }
+                    },
+                    {
+                        "items": {
+                            "no": "3",
+                            "hclsCdNm": "주임",
+                            "totalCount": "1",
+                            "executiveCount": "",
+                            "b16Count": "",
+                            "b17Count": "1",
+                            "rmkDc": ""
+                        }
+                    }
+                ]
+            },
+            "executiveTable": {
+                "group": [
+                    {
+                        "items": {
+                            "executiveHclsCdNm": "전무2",
+                            "executiveCount": "2"
+                        },
+                        "group": [
+                            {
+                                "items": {
+                                    "no": "1",
+                                    "deptPathNm": "솔루션사업부문본사>솔루션사업부문>솔루션사업부문>솔루션개발본부>개발2부>ERP개발1팀",
+                                    "joinDt": "2021-01-05",
+                                    "empNm": "홍길동",
+                                    "hrspNm": "사원",
+                                    "jobNm": "일반업무",
+                                    "bfHclsNm": "부장",
+                                    "afHclsNm": "전무2",
+                                    "rmkDc": "",
+                                    "afHclsCd": "122"
+                                }
+                            },
+                            {
+                                "items": {
+                                    "no": "2",
+                                    "deptPathNm": "솔루션사업부문본사>솔루션사업부문>솔루션사업부문>솔루션개발본부>개발2부>ERP개발1팀",
+                                    "joinDt": "2020-02-02",
+                                    "empNm": "방영민",
+                                    "hrspNm": "부문장",
+                                    "jobNm": "총무업무",
+                                    "bfHclsNm": "직급",
+                                    "afHclsNm": "전무2",
+                                    "rmkDc": "",
+                                    "afHclsCd": "122"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "employeeB16Table": {
+                "group": [
+                    {
+                        "items": {
+                            "employeeB16HclsCdNm": "대리",
+                            "employeeB16Count": "1"
+                        },
+                        "group": [
+                            {
+                                "items": {
+                                    "no": "1",
+                                    "deptPathNm": "솔루션사업부문본사>솔루션사업부문>솔루션사업부문>솔루션개발본부>개발2부>ERP개발1팀",
+                                    "joinDt": "2017-08-21",
+                                    "empNm": "박준A",
+                                    "hrspNm": "CEO",
+                                    "jobNm": "경은2",
+                                    "bfHclsNm": "직급",
+                                    "afHclsNm": "대리",
+                                    "afHclsCd": "007",
+                                    "rmkDc": ""
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "employeeB17Table": {
+                "group": [
+                    {
+                        "items": {
+                            "employeeB17HclsCdNm": "대리",
+                            "employeeB17Count": "1"
+                        },
+                        "group": [
+                            {
+                                "items": {
+                                    "no": "1",
+                                    "deptPathNm": "솔루션사업부문본사>솔루션사업부문>솔루션사업부문>솔루션개발본부>개발2부>ERP개발1팀",
+                                    "joinDt": "2021-06-29",
+                                    "empNm": "김대식",
+                                    "hrspNm": "직책테스트",
+                                    "jobNm": "총무업무",
+                                    "bfHclsNm": "직급테스트555",
+                                    "afHclsNm": "대리",
+                                    "afHclsCd": "007",
+                                    "rmkDc": ""
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "items": {
+                            "employeeB17HclsCdNm": "주임",
+                            "employeeB17Count": "1"
+                        },
+                        "group": [
+                            {
+                                "items": {
+                                    "no": "1",
+                                    "deptPathNm": "솔루션사업부문본사>솔루션사업부문>솔루션사업부문>솔루션개발본부>개발2부>ERP개발1팀",
+                                    "joinDt": "2019-07-08",
+                                    "empNm": "김주영B",
+                                    "hrspNm": "CEO",
+                                    "jobNm": "일반업무",
+                                    "bfHclsNm": "직급",
+                                    "afHclsNm": "주임",
+                                    "afHclsCd": "008",
+                                    "rmkDc": ""
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    }

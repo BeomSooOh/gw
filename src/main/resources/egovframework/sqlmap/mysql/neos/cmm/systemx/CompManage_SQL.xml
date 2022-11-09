@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CompManage">
+	
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+		<select id="CompManage.getCompList" parameterClass="hashmap" resultClass="egovMap">
+			SELECT *
+			FROM t_co_comp A, t_co_comp_multi B 
+			WHERE
+				A.comp_seq = B.comp_seq
+				AND A.group_seq = #groupSeq#
+				AND	B.lang_code = #langCode#
+				AND	A.use_yn = 'Y'
+				<isNotEmpty property="compSeq">  
+				AND	A.comp_seq = #compSeq#
+				</isNotEmpty>
+				<isNotEmpty property="compName">  
+				AND	B.comp_name LIKE '%$compName$%'
+				</isNotEmpty>
+			ORDER BY A.order_num
+		</select>
+		
+		<select id="CompManage.getCompListAuth" parameterClass="hashmap" resultClass="egovMap">
+		    /* CompManage.getCompListAuth - mysql */
+			SELECT A.comp_seq, B.comp_name
+			FROM t_co_comp A, t_co_comp_multi B 
+				<isNotEqual property="userSe" compareValue="MASTER">  	
+				<isNotEqual property="loginId" compareValue="master"> 
+					, t_co_auth_adm_user_relate C
+				</isNotEqual>	 
+				</isNotEqual>	 
+			WHERE
+				A.comp_seq = B.comp_seq
+				<isNotEqual property="userSe" compareValue="MASTER">  				
+				<isNotEqual property="loginId" compareValue="master">  				
+				AND	A.comp_seq = C.comp_seq
+				AND	C.emp_seq = #empSeq#
+				<isNotEmpty property="compSeq">
+				AND	A.comp_seq = #compSeq#
+				</isNotEmpty>
+				</isNotEqual>
+				</isNotEqual>
+				AND A.group_seq = #groupSeq#
+				AND	B.lang_code = #langCode#
+				AND	A.use_yn = 'Y'
+				
+				<isEqual property="userSe" compareValue="USER">
+						<isNotEmpty property="compSeq">  
+				AND	A.comp_seq = #compSeq#
+						</isNotEmpty>
+				</isEqual>
+				
+			GROUP BY A.comp_seq	
+			ORDER BY A.order_num
+		</select>
+		
+		<select id="CompManage.getComp" parameterClass="hashmap" resultClass="egovMap">
+			select *
+			from t_co_comp
+			where
+				comp_seq = #compSeq#
+				<isEmpty property="blockUseYn"> 
+				and	use_yn = 'Y'
+				</isEmpty> 
+			limit 1
+		</select>
+		
+		<select id="CompManage.getCompAdmin" parameterClass="hashmap" resultClass="egovMap">
+			select *
+			from t_co_comp
+			where
+				comp_seq = #compSeq#
+			limit 1
+		</select>
+		
+		<delete id="CompManage.deleteComp" parameterClass="hashmap">
+			delete
+			from t_co_comp
+			where
+				comp_seq = #compSeq#
+		</delete>
+		
+		<delete id="CompManage.deleteCompMulti" parameterClass="hashmap">
+			delete
+			from t_co_comp_multi
+			where
+				comp_seq = #compSeq#
+		</delete>
+		
+		<select id="CompManage.getChildComp" parameterClass="hashmap" resultClass="egovMap">
+			select *
+			from t_co_comp
+			where
+				parent_comp_seq = #compSeq#
+		</select>
+		
+		<select id="CompManage.getCompMulti" parameterClass="hashmap" resultClass="egovMap">
+			select *
+			from t_co_comp_multi
+			where
+				comp_seq = #compSeq#
+				and lang_code = #langCode#
+<!-- 				and	use_yn = 'Y' -->
+			limit 1
+		</select>
+
+	    <update id="CompManage.updateComp" parameterClass="hashmap">
+			UPDATE `t_co_comp` 
+				SET
+				<isNotEmpty property="compRegistNum">
+				`comp_regist_num` = #compRegistNum# ,
+				</isNotEmpty>
+				<isNotEmpty property="compNum"> 
+				`comp_num` = #compNum# , 
+				</isNotEmpty>
+				<isNotEmpty property="standardCode">
+				`standard_code` = #standardCode# ,
+				</isNotEmpty>
+				<isNotEmpty property="telNum"> 
+				`tel_num` = #telNum# , 
+				</isNotEmpty>
+				<isNotEmpty property="faxNum">
+				`fax_num` = #faxNum# , 
+				</isNotEmpty>
+				<isNotEmpty property="homepgAddr">
+				`homepg_addr` = #homepgAddr# , 
+				</isNotEmpty>
+				<isNotEmpty property="emailAddr">
+				`email_addr` = #emailAddr# , 
+				</isNotEmpty>
+				<isNotEmpty property="emailDomain">
+				`email_domain` = #emailDomain# ,
+				</isNotEmpty>
+				<isNotEmpty property="zipCode"> 
+				`zip_code` = #zipCode# , 
+				</isNotEmpty>
+				<isNotEmpty property="smsId">
+				`sms_id` = #smsId# , 
+				</isNotEmpty>
+				<isNotEmpty property="smsPasswd">
+				`sms_passwd` = #smsPasswd# , 
+				</isNotEmpty>
+				<isNotEmpty property="useYn">
+				`use_yn` = #useYn# , 
+				</isNotEmpty>
+				<isNotEmpty property="orderNum">
+				`order_num` = #orderNum# , 
+				</isNotEmpty>
+				`modify_seq` = #modifySeq# , 
+				`modify_date` = now()
+				WHERE
+				`comp_seq` = #compSeq#
+	    </update>
+	    
+	     <update id="CompManage.updateCompMulti" parameterClass="hashmap">
+	     	UPDATE `t_co_comp_multi` 
+			SET
+				<isNotEmpty property="compName">
+				`comp_name` = #compName# , 
+				</isNotEmpty>
+				<isNotEmpty property="compDisplayName">
+				`comp_display_name` = #compDisplayName# ,
+				</isNotEmpty>
+				<isNotEmpty property="ownerName"> 
+				`owner_name` = #ownerName# , 
+				</isNotEmpty>
+				<isNotEmpty property="senderName">
+				`sender_name` = #senderName# , 
+				</isNotEmpty>
+				<isNotEmpty property="bizCondition">
+				`biz_condition` = #bizCondition# ,
+				</isNotEmpty>
+				<isNotEmpty property="item"> 
+				`item` = #item# , 
+				</isNotEmpty>
+				<isNotEmpty property="addr">
+				`addr` = #addr# , 
+				</isNotEmpty>
+				<isNotEmpty property="detailAddr">
+				`detail_addr` = #detailAddr# , 
+				</isNotEmpty>
+				<isNotEmpty property="useYn">
+				`use_yn` = #useYn# , 
+				</isNotEmpty>
+				`modify_seq` = #modifySeq# , 
+				`modify_date` = now()
+			WHERE
+				`comp_seq` = #compSeq# AND `lang_code` = #langCode#
+	     </update>
+	     
+	     
+	     
+	    
+	     
+	     <insert id="CompManage.insertCompLang" parameterClass="hashmap">
+	     	INSERT INTO `t_co_comp_lang`
+			SET 
+				lang_code 				= 			#langCode#,
+				comp_seq 				= 			#compSeq#,
+				main_yn					= 			#mainYn#,
+				<isNotEmpty property="subYn">
+				sub_yn 					= 			#subYn#,
+				</isNotEmpty>
+				create_seq 				= 			#createSeq#,
+				create_date 			= 			now(), 
+				modify_seq 				= 			#modifySeq#, 
+				modify_date				 = 			now()
+			ON DUPLICATE KEY UPDATE
+				main_yn					= 			#mainYn#,
+				<isNotEmpty property="subYn">
+				sub_yn 					= 			#subYn#,
+				</isNotEmpty>
+				modify_seq 				= 			#modifySeq#, 
+				modify_date				 = 			now()
+	     </insert>
+	     
+	     <update id="CompManage.updateCompLang" parameterClass="hashmap">
+	     	UPDATE `t_co_comp_lang`
+	     	SET
+	     		main_yn					= 			#mainYn#,
+				sub_yn 					= 			#subYn#,
+				modify_seq 				= 			#modifySeq#, 
+				modify_date				= 			now()
+			WHERE
+				comp_seq = #compSeq#
+				<isNotEmpty property="langCode">
+				AND	lang_code = #langCode#
+				</isNotEmpty>
+	     </update>
+	     
+ 		<select id="CompManage.getGroupCompList_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+	    	SELECT 
+				COUNT(a.comp_seq) TOTAL_COUNT
+			FROM 
+				t_co_comp a, 
+				t_co_comp_multi b
+			WHERE a.group_seq = b.group_seq
+				AND a.comp_seq = b.comp_seq
+				AND b.lang_code = #langCode#
+				AND a.group_seq = #groupSeq#
+				
+				<isNotEmpty property="searchType">
+					<isEqual property="searchType" compareValue="0">
+						AND b.comp_name like '%$searchKeyword$%'
+					</isEqual>
+					
+					<isEqual property="searchType" compareValue="1">
+						AND b.comp_seq like '%$searchKeyword$%'
+					</isEqual>
+				
+				</isNotEmpty>
+	    </select>
+		
+		<select id="CompManage.getGroupCompList" parameterClass="hashmap" resultClass="egovMap">
+	    	SELECT 
+				a.comp_seq, 
+				b.comp_name, 
+				a.use_yn, 
+				IF ((SELECT COUNT(*) FROM `t_co_erp_comp` WHERE comp_seq = a.comp_seq) > 0, 'Y', 'N') AS erp_yn,
+				a.sms_id,
+				a.login_type,
+				c.lang,
+				DATE_FORMAT(a.create_date, '%Y-%m-%d') AS create_date
+			FROM 
+				t_co_comp a
+				LEFT OUTER JOIN
+				(
+					SELECT 
+						comp_seq, 
+						GROUP_CONCAT(get_code_detail_info('0','LNG000',lang_code,#langCode#),'|', IFNULL(main_yn,'N')) AS lang 
+					FROM 
+						t_co_comp_lang 
+					GROUP BY 
+						comp_seq
+				) c ON a.comp_seq = c.comp_seq,
+				t_co_comp_multi b 
+			WHERE a.group_seq = b.group_seq
+				AND a.comp_seq = b.comp_seq
+				AND b.lang_code = #langCode#
+				AND a.group_seq = #groupSeq#
+				
+				<isNotEmpty property="searchType">
+					<isEqual property="searchType" compareValue="0">
+						AND b.comp_name like '%$searchKeyword$%'
+					</isEqual>
+					
+					<isEqual property="searchType" compareValue="1">
+						AND b.comp_seq like '%$searchKeyword$%'
+					</isEqual>
+				
+				</isNotEmpty>
+				
+			ORDER BY a.create_date
+			
+			LIMIT $startNum$, $endNum$
+	    </select>
+	    
+	    <select id="CompManage.getCompDeptExist" parameterClass="hashmap" resultClass="Integer">
+	        /* CompManage.getCompDeptExist - mysql */
+            SELECT count(*) 
+            FROM ( SELECT A.* , CONCAT('|',`a`.`path`,'|') AS `fPath` 
+                   FROM v_org_chart_admin A
+                 ) AA 
+            WHERE INSTR(fPath , CONCAT('|' , #compSeq# , '|'))
+            AND   seq != #compSeq# 
+            <isNotEmpty property="chkType">
+              <isEqual property="chkType" compareValue="U"> 
+            AND   use_yn = 'Y'  <!-- 사용여부 -->
+              </isEqual>
+            </isNotEmpty>       
+        </select>
+        
+        <select id="CompManage.getErpConInfo_ac" parameterClass="hashmap" resultClass="hashmap">
+        	/* CompManage.getErpConInfo_ac - mysql */
+        	SELECT *
+        	FROM t_co_erp
+        	WHERE group_seq = #groupSeq#
+       		AND	  comp_seq = #compSeq#
+       		AND   achr_gbn = 'ac' 
+        </select>
+        
+        <select id="CompManage.getErpConInfo_hr" parameterClass="hashmap" resultClass="hashmap">
+        	/* CompManage.getErpConInfo_ac - mysql */
+        	SELECT *
+        	FROM t_co_erp
+        	WHERE group_seq = #groupSeq#
+       		AND	  comp_seq = #compSeq#
+       		AND   achr_gbn = 'hr'
+        </select>
+        
+        <select id="CompManage.getErpConInfo_etc" parameterClass="hashmap" resultClass="hashmap">
+        	/* CompManage.getErpConInfo_ac - mysql */
+        	SELECT *
+        	FROM t_co_erp
+        	WHERE group_seq = #groupSeq#
+       		AND	  comp_seq = #compSeq#
+       		AND   achr_gbn = 'etc'
+        </select>
+        
+        <insert id="CompManage.dbConnectInfoSave" parameterClass="hashmap">
+        INSERT INTO `t_co_erp`
+			SET 
+				group_seq 				= 			#groupSeq#,
+				comp_seq 				= 			#compSeq#,
+				erp_seq					= 			1000,
+				achr_gbn 				= 			#achrGbn#,
+				erp_type_code 			= 			#erpTypeCode# ,
+				erp_name 				= 			#erpName#, 
+				database_type    		= 			#databaseType#,
+				driver		    		= 			#Driver#,
+				url			    		= 			#Url#,
+				userid    				= 			#UserID#,
+				password	    		= 			#PassWord#,
+				create_seq	    		= 			#empSeq#,
+				create_date	    		= 			now()
+			ON DUPLICATE KEY UPDATE
+				erp_seq					= 			1000,
+				achr_gbn 				= 			#achrGbn#,
+				erp_type_code 			= 			#erpTypeCode#, 
+				erp_name 				= 			#erpName#, 
+				database_type    		= 			#databaseType#,
+				driver		    		= 			#Driver#,
+				url			    		= 			#Url#,
+				userid    				= 			#UserID#,
+				password	    		= 			#PassWord#,
+				modify_seq	    		= 			#empSeq#,
+				modify_date	    		= 			now()
+        </insert>
+        
+        <delete id="CompManage.deleteDbConnectInfo" parameterClass="hashmap">
+       	DELETE FROM t_co_erp
+       	WHERE group_seq = #groupSeq#
+       	AND   comp_seq = #compSeq#
+       	AND   erp_seq = 1000
+       	AND   achr_gbn = #achrGbn#
+        </delete>
+        
+        <update id="CompManage.updateCompInfo" parameterClass="hashmap">
+        	UPDATE t_co_comp
+        	SET
+        		erp_use = #erpUseYN#
+        		,sms_use = #smsUseYN#
+        		,login_type = #loginType#
+        	WHERE
+        		group_seq = #groupSeq#
+        		AND comp_seq = #compSeq#
+        </update>
+        
+        
+        <select id="CompManage.selectCompSmsOption" parameterClass="hashmap" resultClass="hashmap">
+        	SELECT 
+        		sms_use as smsUse
+        		,sms_id as smsId
+        		,sms_passwd as smsPasswd
+       		FROM t_co_comp
+       		WHERE
+       			comp_seq = #compSeq#
+        </select>
+        
+        <select id="CompManage.selectOrgImg" parameterClass="hashmap" resultClass="hashmap">
+        	SELECT *
+        	FROM t_co_org_img
+        	WHERE
+        		org_seq = #compSeq#
+        		and img_type = #imgType#    
+       		LIMIT 1    
+        </select>
+        
+        <select id="CompManage.getTitle" parameterClass="hashmap" resultClass="egovMap">
+        	SELECT 
+        		comp_display_name
+       		FROM t_co_comp_multi
+       		WHERE 
+       			comp_seq = #compSeq#
+       			AND lang_code = #langCode#
+        </select>
+</sqlMap>

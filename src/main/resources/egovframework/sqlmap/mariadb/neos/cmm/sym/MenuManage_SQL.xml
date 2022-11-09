@@ -1,0 +1,1738 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="MenuManageDAO">	
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	
+	<select id="MenuManageDAO.getAllTopMenuList" parameterClass="hashmap" resultClass="egovMap" >
+		
+		select 
+		m.menu_gubun,
+		$DB_NEOS$FN_GetMultiLang(#langCode#,mm.menu_nm_multi) as menu_nm
+		from
+		<isEqual property="menuAuthType" compareValue="USER">
+		$DB_NEOS$t_co_menu m
+		join
+		$DB_NEOS$v_t_co_menu_multi mm on m.menu_no = mm.menu_no
+		</isEqual>
+		<isEqual property="menuAuthType" compareValue="ADMIN">
+		$DB_NEOS$t_co_menu_adm m
+		join
+		$DB_NEOS$v_t_co_menu_adm_multi mm on m.menu_no = mm.menu_no
+		</isEqual>
+		where
+		m.upper_menu_no = '0'
+		and ifnull(m.delete_yn,'N') != 'Y'
+		order by m.menu_ordr
+	 						
+	</select>
+
+	<select id="MenuManageDAO.selectTreeMenu" parameterClass="hashmap" resultClass="egovMap" >
+	    /* MenuManageDAO.selectTreeMenu - mariaDB */
+	    SELECT C.menu_no
+	         , C.menu_gubun
+	         , C.upper_menu_no
+	         , $DB_NEOS$FN_GetMultiLang(#langCode#,D.menu_nm_multi) as name
+	         , D.menu_dc
+	         , C.url_path
+	         , C.sso_use_yn
+	         , A.LEVEL AS lvl
+	         , (SELECT COUNT(menu_no) FROM $DB_NEOS$t_co_menu WHERE upper_menu_no = C.menu_no AND IFNULL(delete_yn , 'N') <![CDATA[ <> ]]> 'Y') AS child_count
+	         , "" AS checked
+	         , IF( IFNULL(C.url_path, '') = '' , 'folder' , 'file') AS spriteCssClass
+	         , menu_ordr
+	    FROM    (
+				SELECT  $DB_NEOS$`get_adm_menu_connect_by_id2`(menu_no,'USER') AS menu_no, @level AS LEVEL
+				FROM    (
+					SELECT  @start_with := 0,
+						@menu_no := @start_with,
+						@level := 0
+					) vars, $DB_NEOS$t_co_menu
+				WHERE   @menu_no IS NOT NULL
+		         ) A
+	    INNER JOIN $DB_NEOS$t_co_menu C ON C.menu_no = A.menu_no
+	    LEFT OUTER JOIN $DB_NEOS$v_t_co_menu_multi D ON C.menu_no = D.menu_no			
+	    WHERE C.menu_gubun = #menuGubun#
+	    AND   IFNULL(delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+	    GROUP BY A.menu_no
+	    ORDER BY lvl , menu_ordr	 						
+	</select>
+	
+	<select id="MenuManageDAO.selectTreeAdmMenu" parameterClass="hashmap" resultClass="egovMap" >
+	    /* MenuManageDAO.selectTreeAdmMenu - mariaDB */
+	    SELECT C.menu_no
+	         , C.menu_gubun
+	         , C.upper_menu_no
+	         , $DB_NEOS$FN_GetMultiLang(#langCode#,D.menu_nm_multi) as name
+	         , D.menu_dc
+	         , C.url_path
+	         , C.sso_use_yn
+	         , A.LEVEL AS lvl
+	         ,(SELECT COUNT(menu_no) FROM $DB_NEOS$t_co_menu_adm WHERE upper_menu_no = C.menu_no AND  IFNULL(delete_yn , 'N') <![CDATA[ <> ]]> 'Y') AS child_count
+	         , "" AS checked
+	         , IF( IFNULL(C.url_path, '') = '' , 'folder' , 'file') AS spriteCssClass
+	         , menu_ordr
+	    FROM    (
+				SELECT  $DB_NEOS$`get_adm_menu_connect_by_id2`(menu_no,'ADMIN') AS menu_no, @level AS LEVEL
+				FROM    (
+					SELECT  @start_with := 0,
+						@menu_no := @start_with,
+						@level := 0
+					) vars, $DB_NEOS$t_co_menu_adm
+				WHERE   @menu_no IS NOT NULL
+		         ) A
+	    INNER JOIN $DB_NEOS$t_co_menu_adm C ON C.menu_no = A.menu_no
+	    LEFT OUTER JOIN $DB_NEOS$v_t_co_menu_adm_multi D ON C.menu_no = D.menu_no
+	    WHERE C.menu_gubun= #menuGubun#
+	    AND   C.menu_auth_type = 'ADMIN'
+	    AND   IFNULL(delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+	    GROUP BY A.menu_no
+	    ORDER BY lvl , menu_ordr	 						
+	</select>
+	
+	<select id="MenuManageDAO.getMenuChlidCnt" parameterClass="hashMap" resultClass="int">
+	    /* MenuManageDAO.getChildCnt - mariadb */
+	    SELECT COUNT(*)
+	      <isEqual property="type" compareValue="USER">
+	    FROM $DB_NEOS$t_co_menu
+		  </isEqual>
+		  <isEqual property="type" compareValue="ADMIN">
+	    FROM $DB_NEOS$t_co_menu_adm
+		  </isEqual>
+	    WHERE UPPER_MENU_NO = #menuNo#
+	    AND   IFNULL(delete_yn , 'N') <![CDATA[ <> ]]> 'Y'	
+	</select>
+	
+	<select id="MenuManageDAO.getMenuNo" parameterClass="hashMap" resultClass="int">
+	      /* MenuManageDAO.getMenuNo - mariadb */
+<!-- 	      SELECT IFNULL((SELECT MAX(menu_no)+1 FROM $tbName$ WHERE menu_gubun = #menuGubun#)  -->
+<!-- 	                 ,  CAST( REPLACE(#menuGubun#, 'MENU', '') AS UNSIGNED ) * 100000000 )AS menuNo -->
+<!-- 		  FROM DUAL -->
+	      SELECT MAX(menu_no)+1 AS menuNo
+	      <isEqual property="type" compareValue="USER">
+		  FROM $DB_NEOS$t_co_menu
+		  </isEqual>
+		  <isEqual property="type" compareValue="ADMIN">
+		  FROM $DB_NEOS$t_co_menu_adm
+		  </isEqual>
+	</select>
+	<insert id="MenuManageDAO.insertMenu" parameterClass="hashMap" >	
+	    /* MenuManageDAO.insertMenu - mariadb */    
+	<isEqual property="type" compareValue="USER">	
+		INSERT INTO $DB_NEOS$t_co_menu
+			(
+				MENU_GUBUN, MENU_NO, UPPER_MENU_NO, MENU_ORDR, URL_GUBUN, URL_PATH, USE_YN, SSO_USE_YN, PUBLIC_YN, MENU_DEPTH, CREATE_SEQ, CREATE_DATE
+				<isNotEmpty property="menuImgClass">, MENU_IMG_CLASS</isNotEmpty>
+			)
+			VALUES
+			( 			  
+				#menuGubun#, #menuNo#, #upperMenuNo#, #menuOrdr#, #urlGubun#, #urlPath#, #useChk#, #ssoUseYn#, #publicYn#, $DB_NEOS$get_menu_depth(#upperMenuNo#,#menuGubun#), #loginVO.uniqId#, now()
+				<isNotEmpty property="menuImgClass">, #menuImgClass#</isNotEmpty>
+			)	
+	</isEqual>			
+	
+	<isEqual property="type" compareValue="ADMIN">	
+	
+	INSERT INTO $DB_NEOS$t_co_menu_adm
+			(
+				MENU_GUBUN,MENU_ADM_GUBUN, MENU_AUTH_TYPE, MENU_NO, UPPER_MENU_NO, MENU_ORDR, URL_GUBUN, URL_PATH, USE_YN, PUBLIC_YN ,MENU_DEPTH, CREATE_SEQ, CREATE_DATE, SSO_USE_YN
+				<isNotEmpty property="menuImgClass">, MENU_IMG_CLASS</isNotEmpty>
+			)
+			VALUES
+			( 			  
+				#menuGubun#,#menuGubun#,'ADMIN', #menuNo#, #upperMenuNo#, #menuOrdr#, #urlGubun#, #urlPath#, #useChk#, #publicYn# , $DB_NEOS$get_menu_depth(#upperMenuNo#,#menuGubun#), #loginVO.uniqId#, now(), #ssoUseYn#
+				<isNotEmpty property="menuImgClass">, #menuImgClass#</isNotEmpty>
+			)	
+	</isEqual>		
+		
+	</insert>
+ 
+	<insert id="MenuManageDAO.insertMenuMulti" parameterClass="hashMap" >	
+        /* MenuManageDAO.insertMenuMulti - mariadb */
+	<isEqual property="type" compareValue="USER">
+		INSERT INTO $DB_NEOS$t_co_menu_multi
+				(
+					MENU_NO, 
+					LANG_CODE, 
+					MENU_NM, 
+					MENU_DC,
+					CREATE_SEQ, 
+					CREATE_DATE
+				)
+				VALUES
+				( 			  
+					#menuNo# , 				
+					#langKind#, 
+					#menuNm#, 
+					#menuDc#,
+					#loginVO.uniqId# ,
+					 now()
+				)	
+	</isEqual>
+		
+	<isEqual property="type" compareValue="ADMIN">
+	    
+		INSERT INTO $DB_NEOS$t_co_menu_adm_multi
+				(
+					MENU_NO, 
+					LANG_CODE, 
+					MENU_NM, 
+					MENU_DC,
+					CREATE_SEQ, 
+					CREATE_DATE
+				)
+				VALUES
+				( 			  
+					#menuNo# , 				
+					#langKind#, 
+					#menuNm#, 
+					#menuDc#,
+					#loginVO.uniqId# ,
+				    now()
+				 )
+		</isEqual>
+	</insert>	
+	
+
+<!-- 	<insert id="MenuManageDAO.insertMenuAuth" parameterClass="hashMap" > -->
+	 		
+<!-- 		<![CDATA[ -->
+
+<!-- 			INSERT INTO t_co_menu_auth -->
+<!-- 			( -->
+<!-- 				MENU_NO, AUTHOR_CODE -->
+<!-- 			) -->
+<!-- 			VALUES -->
+<!-- 			( 			   -->
+<!-- 				#menuNo#, #authorCode# -->
+<!-- 			)						 -->
+<!-- 		]]> -->
+<!-- 	</insert>	 -->
+    
+	<update id="MenuManageDAO.updateMenuDelYn" parameterClass="hashMap">
+	        /* MenuManageDAO.updateMenuDelYn - mariadb */
+ 			<isEqual property="type" compareValue="USER">
+			UPDATE $DB_NEOS$t_co_menu 
+			   SET 				    
+				    DELETE_YN		    =	'Y'
+				   ,MODIFY_SEQ			=   #loginVO.uniqId#
+				   ,MODIFY_DATE			=   now()
+			WHERE MENU_NO = #menuNo#	
+			</isEqual>
+		
+			<isEqual property="type" compareValue="ADMIN">
+			UPDATE $DB_NEOS$t_co_menu_adm 
+			   SET 				    
+				    DELETE_YN		    =	'Y'
+				   ,MODIFY_SEQ			=   #loginVO.uniqId#
+				   ,MODIFY_DATE			=   now()
+			WHERE MENU_NO = #menuNo#	
+			</isEqual>
+ 	</update>    
+  
+ 	<delete id="MenuManageDAO.deleteMenu" parameterClass="hashMap">
+ 	        /* MenuManageDAO.deleteMenu - mariadb */ 
+ 			<isEqual property="type" compareValue="USER">
+ 			DELETE FROM $DB_NEOS$t_co_menu
+ 			 WHERE MENU_NO	= #menuNo#
+ 			</isEqual>
+ 			<isEqual property="type" compareValue="ADMIN">
+ 			DELETE FROM $DB_NEOS$t_co_menu_adm
+ 			 WHERE MENU_NO	= #menuNo#
+ 			</isEqual>
+ 			 
+ 	</delete>
+ 	
+ 	<delete id="MenuManageDAO.deleteMenuMulti" parameterClass="hashMap">
+ 	        /* MenuManageDAO.deleteMenuMulti - mariadb */ 
+ 			<isEqual property="type" compareValue="USER">
+ 			DELETE FROM $DB_NEOS$t_co_menu_multi
+ 			 WHERE MENU_NO	= #menuNo#
+ 			</isEqual>
+ 			<isEqual property="type" compareValue="ADMIN">
+ 			DELETE FROM $DB_NEOS$t_co_menu_adm_multi
+ 			 WHERE MENU_NO	= #menuNo#
+ 			</isEqual> 			 
+ 	</delete>
+ 	
+ 	<delete id="MenuManageDAO.deleteMenuAuth" parameterClass="hashMap">
+ 	        /* MenuManageDAO.deleteMenuAuth - mariadb */
+ 	        DELETE FROM $DB_NEOS$`t_co_menu_auth`
+ 			WHERE MENU_NO	= #menuNo#
+ 			 
+ 	</delete>
+
+	<update id="MenuManageDAO.updateMenu" parameterClass="hashMap">
+	        /* MenuManageDAO.updateMenu - mariadb */
+ 			<isEqual property="type" compareValue="USER">
+			UPDATE $DB_NEOS$t_co_menu 
+			   SET 				    
+				    UPPER_MENU_NO		=	#upperMenuNo#
+				   ,USE_YN				=	#useChk#
+				   ,SSO_USE_YN			=	#ssoUseYn#
+				   ,URL_GUBUN           =   #urlGubun#
+				   ,URL_PATH			=   #urlPath#
+				   ,MENU_ORDR           =   #menuOrdr#
+				   ,PUBLIC_YN           =   #publicYn#
+				   ,MODIFY_SEQ			=   #loginVO.uniqId#
+				   ,MODIFY_DATE			=   now()
+				   ,OPEN_MENU_NO		=   #openMenuNo#
+			WHERE MENU_NO = #menuNo#	
+			</isEqual>
+		
+			<isEqual property="type" compareValue="ADMIN">
+			UPDATE $DB_NEOS$t_co_menu_adm 
+			   SET 				    
+				    UPPER_MENU_NO		=	#upperMenuNo#
+				   ,USE_YN				=	#useChk#
+				   ,SSO_USE_YN			=	#ssoUseYn#
+				   ,URL_GUBUN           =   #urlGubun#
+				   ,URL_PATH			=   #urlPath#
+				   ,MENU_ORDR           =   #menuOrdr#
+				   ,PUBLIC_YN           =   #publicYn#
+				   ,MODIFY_SEQ			=   #loginVO.uniqId#
+				   ,MODIFY_DATE			=   now()
+			WHERE MENU_NO = #menuNo#	
+			</isEqual>
+ 	</update>
+
+	<update id="MenuManageDAO.updateMenuDetail" parameterClass="hashMap">
+	    /* MenuManageDAO.updateMenuDetail - mariadb */
+		<isEqual property="type" compareValue="USER">
+		INSERT INTO $DB_NEOS$`t_co_menu_multi`
+	    </isEqual>	
+		<isEqual property="type" compareValue="ADMIN">
+		INSERT INTO $DB_NEOS$`t_co_menu_adm_multi`
+	    </isEqual>	
+		        SET  MENU_NO = #menuNo# 
+				   , LANG_CODE = #langKind#  
+				   , MENU_NM = #menuNm#
+				   , MENU_DC = #menuDc#
+				   , CREATE_SEQ = #loginVO.uniqId#
+				   , CREATE_DATE = NOW()
+			ON DUPLICATE KEY UPDATE
+				     MENU_NM = #menuNm#
+				   , MENU_DC = #menuDc#
+				   , MODIFY_SEQ = #loginVO.uniqId#
+				   , MODIFY_DATE = NOW() 
+ 	</update>
+ 	
+ 	<select id="MenuManageDAO.selectComboBOxList" parameterClass="hashMap" resultClass="egovMap">
+	
+		 SELECT   f.menu_no as upper_menu_no
+  		        , $DB_NEOS$FN_GetMultiLang(#loginVO.langCode#,f.menu_nm_multi) as upper_menu_nm 
+  		       <isEqual property="type" compareValue="USER">
+  		       FROM $DB_NEOS$t_co_menu e, $DB_NEOS$v_t_co_menu_multi f 
+  		       </isEqual>
+  		       <isEqual property="type" compareValue="ADMIN">
+  		       FROM $DB_NEOS$t_co_menu_adm e, $DB_NEOS$v_t_co_menu_adm_multi f 
+  		       </isEqual>
+  		       WHERE e.menu_no = f.menu_no
+  		         AND e.menu_gubun = #menuGubun#
+  		       <isEqual property="type" compareValue="ADMIN">
+  		         AND e.menu_auth_type = 'ADMIN'
+  		       </isEqual>
+  		       <isEqual property="type" compareValue="USER">
+  		         AND IFNULL(E.menu_type,'') <![CDATA[ <>  ]]>'eaBox'
+  		       </isEqual>
+  		         AND IFNULL(e.delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+  		         order by menu_ordr
+	</select>
+	
+ 	<select id="MenuManageDAO.selectComboBOxSubList" parameterClass="hashMap" resultClass="egovMap">
+		 SELECT f.menu_no, $DB_NEOS$FN_GetMultiLang(#loginVO.langCode#,f.menu_nm_multi) as menu_nm 
+  		       <isEqual property="type" compareValue="USER">
+  		       FROM $DB_NEOS$t_co_menu e, $DB_NEOS$v_t_co_menu_multi f 
+  		       </isEqual>
+  		       <isEqual property="type" compareValue="ADMIN">
+  		       FROM $DB_NEOS$t_co_menu_adm e, $DB_NEOS$v_t_co_menu_adm_multi f 
+  		       </isEqual>
+  		       WHERE e.menu_no = f.menu_no
+  		         AND e.menu_gubun = #menuGubun#
+  		       <isEqual property="type" compareValue="ADMIN">
+  		         AND e.menu_auth_type = 'ADMIN'
+  		       </isEqual>
+  		         AND IFNULL(e.delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+  		         AND IFNULL(e.url_path , '') <![CDATA[ <> ]]> ''
+  		         order by menu_ordr
+	</select>	
+	
+	<select id="MenuManageDAO.selectMenuCompList" parameterClass="hashmap" resultClass="egovMap">
+ 	  /* MenuManageDAO.selectMenuCompList - mariaDB */
+ 	  
+ 	  SELECT b.comp_seq as comp_seq_list
+  		   , $DB_NEOS$FN_GetMultiLang(#langCode#,c.comp_name_multi) as comp_name_list
+        FROM $DB_NEOS$t_co_menu a 
+            ,$DB_NEOS$t_co_menu_comp b 
+            ,$DB_NEOS$v_t_co_comp_multi c
+       WHERE a.menu_no = b.menu_no
+         and b.comp_seq = c.comp_seq	
+         and a.menu_no = #menuNo#
+         and c.group_seq = #groupSeq#	  		        
+ 	
+ 	</select>
+	
+	<select id="MenuManageDAO.menuInfoView" parameterClass="hashmap" resultClass="egovMap" >
+	   /* MenuManageDAO.menuInfoView - mariadb */ 
+	   SELECT	   
+	          a.menu_gubun
+	   		, a.comp_seq
+	        , a.menu_img_path
+	        , a.menu_no
+	        , a.upper_menu_no
+	        , a.menu_ordr
+	        , a.use_yn
+	        , a.url_gubun
+	        , a.url_path
+	        , a.sso_use_yn
+	        , a.menu_depth
+	        , a.menu_img_class
+	        , b.menu_nm AS menu_nm_kr
+	        , $DB_NEOS$FN_GetMultiLang('en_f',b.menu_nm_multi) AS menu_nm_en 
+	        , $DB_NEOS$FN_GetMultiLang('jp_f',b.menu_nm_multi) AS menu_nm_jp
+	        , $DB_NEOS$FN_GetMultiLang('cn_f',b.menu_nm_multi) AS menu_nm_cn
+	        , b.menu_dc
+	        , A.public_yn
+	        , A.open_menu_no
+  		     FROM $DB_NEOS$t_co_menu A, $DB_NEOS$v_t_co_menu_multi B
+	    WHERE A.menu_no = B.menu_no  
+	     AND a.menu_no =  #menuNo#
+	     LIMIT 1
+		
+
+	</select>	
+	
+	<select id="MenuManageDAO.admMenuInfoView" parameterClass="hashmap" resultClass="egovMap" >
+	    /* MenuManageDAO.admMenuInfoView - mariadb */
+	    SELECT	   
+	          a.menu_gubun
+	        , a.menu_no
+	        , a.upper_menu_no
+	        , a.menu_ordr
+	        , a.use_yn
+	        , a.url_gubun
+	        , a.url_path
+	        , a.sso_use_yn
+	        , a.menu_depth
+	        , a.menu_img_class
+	        , b.menu_nm AS menu_nm_kr
+	        , $DB_NEOS$FN_GetMultiLang('en_f',b.menu_nm_multi) AS menu_nm_en 
+	        , $DB_NEOS$FN_GetMultiLang('jp_f',b.menu_nm_multi) AS menu_nm_jp
+	        , $DB_NEOS$FN_GetMultiLang('cn_f',b.menu_nm_multi) AS menu_nm_cn
+	        , b.menu_dc      
+	        , A.menu_auth_type
+	        , A.public_yn
+  		     FROM $DB_NEOS$t_co_menu_adm A, $DB_NEOS$v_t_co_menu_adm_multi B
+	    WHERE A.menu_no = B.menu_no  
+	     AND a.menu_no =  #menuNo#
+	     LIMIT 1
+		
+
+	</select>	
+	
+	<select id="MenuManageDAO.selectMenuImgClass" parameterClass="hashmap" resultClass="String" >
+			select menu_img_class from  
+			<isEqual property="userSe" compareValue="USER">
+			$DB_NEOS$t_co_menu
+			</isEqual>
+			<isNotEqual property="userSe" compareValue="USER">
+			$DB_NEOS$t_co_menu_adm
+			</isNotEqual>
+			where menu_no = $startWith$ limit 1
+	</select>
+	
+	<select id="MenuManageDAO.selectMenuTreeList" parameterClass="hashmap" resultClass="egovMap" >
+		
+		select	    
+		result.menu_no
+		,result.menu_gubun
+		,result.upper_menu_no
+		,result.name
+		,result.menu_dc
+		,result.sso_use_yn
+		,result.lvl
+	    <isEqual property="startWith" compareValue="0">
+		,1 AS child_count
+		,'true' AS opened
+		</isEqual>
+		<isNotEqual property="startWith" compareValue="0">
+		,(SELECT COUNT(menu_no) FROM $DB_NEOS$t_co_menu WHERE upper_menu_no = result.menu_no AND USE_YN = 'Y' AND IFNULL(delete_yn , 'N') != 'Y') AS child_count
+		,CASE WHEN (SELECT COUNT(menu_no) FROM $DB_NEOS$t_ea_box WHERE upper_menu_no = result.menu_no) > 0 THEN 'true' ELSE 'false' END AS opened
+		</isNotEqual>		
+		,result.menu_img_class
+		,result.menu_type
+		,result.menu_ordr
+		,result.url_path
+		,result.url_gubun
+		,result.lnb_menu_no
+		from
+		(	    
+			select
+			distinct
+			m.menu_no
+			,m.menu_gubun
+			,m.upper_menu_no
+			,$DB_NEOS$FN_GetMultiLang(#langCode#,mm.menu_nm_multi) as name
+			,mm.menu_dc
+			,case when m.sso_use_yn = 'Y' and cs.link_id is not null then 'Y' else 'N' end as sso_use_yn
+			,m.menu_depth as lvl
+			,m.menu_img_class
+			,m.menu_type
+			,m.menu_ordr
+			<isEqual property="startWith" compareValue="0">
+			,ifnull(open.url_path, m.url_path) AS url_path
+			,ifnull(open.url_gubun, m.url_gubun) AS url_gubun
+			,ifnull(open.menu_no,'') AS lnb_menu_no
+			</isEqual>
+			<isNotEqual property="startWith" compareValue="0">
+			,m.url_path
+			,m.url_gubun
+			,'' as lnb_menu_no		
+			</isNotEqual>
+			from $DB_NEOS$t_co_menu m
+			join $DB_NEOS$v_t_co_menu_multi mm on m.menu_no = mm.menu_no and m.use_yn = 'Y' and ifnull(m.delete_yn,'N') != 'Y'
+			join $DB_NEOS$t_co_menu_auth ma on m.menu_no = ma.menu_no and ma.author_code <iterate prepend="IN" property="authCodeList" open="(" close=")" conjunction=","> #authCodeList[]# </iterate>
+			join $DB_NEOS$t_co_authcode ac on ma.author_code = ac.author_code and ac.author_type != '005'
+			<isEqual property="startWith" compareValue="0">
+			left join $DB_NEOS$t_co_menu open on m.open_menu_no = open.menu_no and open.use_yn = 'Y' and ifnull(open.delete_yn,'N') != 'Y'
+			</isEqual>
+			left join $DB_NEOS$t_co_menu_comp cmc on cmc.menu_no = m.menu_no and cmc.comp_seq = #compSeq#
+			left join $DB_NEOS$t_co_sso cs on cs.link_tp = 'gw_menu' and m.menu_no = cs.link_id
+			where m.upper_menu_no = $startWith$
+			<isEqual property="startWith" compareValue="0">
+			and m.menu_depth = 1
+			</isEqual>
+			and (ifnull(m.public_yn,'Y') = 'Y' or cmc.menu_no is not null)
+		) result
+		order by result.menu_ordr, result.menu_no
+
+	</select> 
+	
+	<select id="MenuManageDAO.selectMenuJsTreeList"  parameterClass="hashmap" resultClass="egovMap" >
+		 /* MenuManageDAO.selectMenuJsTreeList MenuJsTree 가져오기 - mariadb */
+		
+		 SELECT TB.menu_no
+		      , TB.menu_gubun
+		      , TB.upper_menu_no
+		      , TB.NAME
+		      , TB.menu_dc
+		      , TB.url_path
+		      , TB.sso_use_yn
+		      , TB.child_count
+		      , TB.ea_child_count
+		      , TB.url_gubun
+		      , TB.menu_img_class
+		      , TB.menu_type
+		      , TB.menu_ordr
+		 FROM(	
+		      SELECT A.menu_no 
+		           , A.menu_gubun
+		           , A.upper_menu_no 
+		           , $DB_NEOS$FN_GetMultiLang(#langCode#,B.menu_nm_multi) AS NAME 
+		           , B.menu_dc 
+		           , A.url_path
+		           , CASE WHEN S.link_id IS NULL THEN 'N' ELSE A.sso_use_yn END AS sso_use_yn
+		           , (SELECT COUNT(menu_no) FROM $DB_NEOS$t_co_menu WHERE upper_menu_no = A.menu_no AND USE_YN = 'Y' AND IFNULL(delete_yn , 'N') <![CDATA[ <> ]]> 'Y') AS child_count
+		           , (SELECT COUNT(menu_no) FROM $DB_NEOS$t_ea_box WHERE upper_menu_no = A.menu_no AND emp_seq = #empSeq# AND  comp_seq = #compSeq# AND use_yn = 'Y' AND menu_gubun = 'MENU010' ) AS ea_child_count 
+		           , A.url_gubun
+		           , A.menu_img_class
+		           , A.menu_type
+		           , A.menu_ordr
+		      FROM $DB_NEOS$t_co_menu A 
+		      LEFT OUTER JOIN $DB_NEOS$v_t_co_menu_multi B ON A.menu_no = B.menu_no
+		      LEFT OUTER JOIN $DB_NEOS$t_co_sso S ON A.menu_no = S.link_id AND S.link_tp = 'gw_menu'
+		      <isNotEqual property="userSe" compareValue="MASTER">
+		      <isNotEmpty property="authCodeList">
+		      INNER JOIN $DB_NEOS$t_co_menu_auth C
+		      ON    A.menu_no = C.menu_no
+		      AND   C.author_code <iterate prepend="IN" property="authCodeList" open="(" close=")" conjunction=","> #authCodeList[]# </iterate>
+		      </isNotEmpty>
+		      </isNotEqual>	
+		      LEFT OUTER JOIN $DB_NEOS$t_co_menu_comp E ON C.menu_no = E.menu_no AND E.comp_seq = #compSeq#
+		      WHERE IF(public_yn = 'Y' , #compSeq# , IFNULL(E.comp_seq, '0')) = #compSeq#
+		      AND   A.use_yn = 'Y'
+		      AND   IFNULL(A.delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+		      AND A.upper_menu_no = #upperMenuNo#
+		      GROUP BY C.menu_no
+		      <isEqual property="eaPrivateBox" compareValue="Y">
+		      UNION ALL
+		      SELECT menu_no
+		           , menu_gubun
+		           , upper_menu_no 
+		           , menu_nm AS NAME
+		           , menu_dc
+		           , url_path
+		           , sso_use_yn
+		           , (SELECT COUNT(menu_no) FROM $DB_NEOS$t_ea_box WHERE upper_menu_no = A.menu_no AND emp_seq = #empSeq# AND  comp_seq = #compSeq# AND use_yn = 'Y' AND menu_gubun = 'MENU010') AS child_count
+		           , 0 AS ea_child_count 
+		           , url_gubun
+		           , menu_img_class
+		           , A.menu_type
+		           , menu_ordr
+		      FROM $DB_NEOS$t_ea_box A
+		      WHERE upper_menu_no = #upperMenuNo#
+		      AND comp_seq = #compSeq#
+		      AND emp_seq = #empSeq#
+		      AND use_yn = 'Y'
+		      AND menu_gubun = 'MENU010'
+		</isEqual>
+		) TB ORDER BY menu_ordr
+	</select>
+	
+	<select id="MenuManageDAO.selectFirstMenuInfo" parameterClass="hashmap" resultClass="egovMap" >
+	    /* MenuManageDAO.selectFirstMenuInfo - mariadb */
+		SELECT  
+			C.menu_no, 
+			C.menu_gubun,
+			C.upper_menu_no, 
+			$DB_NEOS$FN_GetMultiLang(#langCode#,D.menu_nm_multi) as menu_nm, 
+			D.menu_dc, 
+			C.url_path, 
+			C.sso_use_yn,
+			A.LEVEL AS lvl,
+			C.url_gubun,
+			C.menu_img_class,
+			C.menu_ordr
+		FROM    (
+				SELECT  $DB_NEOS$`get_menu_connect_by_id`(menu_no) AS menu_no, @level AS LEVEL
+				FROM    (
+					SELECT  @start_with := $startWith$,
+						@menu_no := @start_with,
+						@level := 0
+					) vars, $DB_NEOS$t_co_menu
+				WHERE   @menu_no IS NOT NULL
+		         ) A
+		        INNER JOIN $DB_NEOS$t_co_menu C ON C.menu_no = A.menu_no
+		        LEFT OUTER JOIN $DB_NEOS$v_t_co_menu_multi D ON C.menu_no = D.menu_no
+		        LEFT OUTER JOIN $DB_NEOS$t_co_menu_comp E ON C.menu_no = E.menu_no AND E.comp_seq = #compSeq#
+		        INNER JOIN $DB_NEOS$t_co_menu_auth MA ON    A.menu_no = MA.menu_no		      
+		        INNER JOIN $DB_NEOS$t_co_authcode AC 
+		        ON    MA.author_code = AC.author_code
+		        AND   AC.comp_seq IN (#compSeq# , '0') 
+		        AND   AC.author_type IN('001', '002') 
+		        AND   AC.author_use_yn = 'Y'
+		        INNER JOIN (
+		                    SELECT author_code FROM $DB_NEOS$t_co_auth_relate U
+		                    WHERE  (author_type = '002' and u.dept_seq = #deptSeq#) 
+		                        or (author_type <![CDATA[ <> ]]> '002' and u.emp_seq = #empSeq#)
+		                    ) AR 
+		         ON   AR.author_code AND AC.author_code              
+		WHERE C.use_yn = 'Y'
+		AND   IF(public_yn = 'Y' , #compSeq# , IFNULL(E.comp_seq, '0')) = #compSeq#
+		AND   IFNULL(C.delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+		ORDER BY IFNULL(C.menu_ordr,99999)
+		LIMIT 1
+	</select> 
+	
+	<select id="MenuManageDAO.selectFirstAdminMenuInfo" parameterClass="hashmap" resultClass="egovMap" >
+	    /* MenuManageDAO.selectFirstAdminMenuInfo - mariadb */
+		SELECT  
+			C.menu_no, 
+			C.menu_gubun,
+			C.upper_menu_no, 
+			$DB_NEOS$FN_GetMultiLang(#langCode#,D.menu_nm_multi) as menu_nm, 
+			D.menu_dc, 
+			C.url_path, 
+			C.sso_use_yn,
+			A.LEVEL AS lvl,
+			C.url_gubun,
+			C.menu_img_class,
+			C.menu_ordr
+		FROM    (
+				SELECT  $DB_NEOS$`get_adm_menu_connect_by_id2`(menu_no,'ADMIN') AS menu_no, @level AS LEVEL
+				FROM    (
+					SELECT  @start_with := $startWith$,
+						@menu_no := @start_with,
+						@level := 0
+					) vars, $DB_NEOS$t_co_menu_adm
+				WHERE   @menu_no IS NOT NULL 
+		         ) A
+		 INNER JOIN $DB_NEOS$t_co_menu_adm C ON A.menu_no = C.menu_no
+		 LEFT OUTER JOIN $DB_NEOS$v_t_co_menu_adm_multi D ON C.menu_no = D.menu_no
+		 <isNotEqual property="userSe" compareValue="MASTER">  
+		 INNER JOIN $DB_NEOS$t_co_menu_auth MA
+		 ON    A.menu_no = MA.menu_no		      
+		 INNER JOIN $DB_NEOS$t_co_authcode AC
+		 ON    MA.author_code = AC.author_code
+		 AND   AC.comp_seq in (#compSeq# , '0')
+		 AND   AC.author_type = '005' 
+		 AND   AC.author_use_yn = 'Y'
+		 INNER JOIN $DB_NEOS$t_co_auth_relate AR
+		 ON    AC.author_code = AR.author_code
+		 AND   AR.comp_seq = #compSeq# 
+		 AND   AR.emp_seq = #empSeq#
+		 LEFT  OUTER JOIN $DB_NEOS$t_co_menu_adm_comp E ON A.menu_no = E.menu_no AND  E.comp_seq = #compSeq#
+		 </isNotEqual> 		    
+		WHERE C.menu_auth_type = #menuAuthType#
+		AND C.use_yn = 'Y'
+		AND IFNULL(C.delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+		<isNotEqual property="userSe" compareValue="MASTER">
+		AND   IF(public_yn = 'Y' , #compSeq# , IFNULL(E.comp_seq, '0')) = #compSeq#
+		</isNotEqual>
+		ORDER BY IFNULL(C.menu_ordr,99999)
+		LIMIT 1
+	</select> 
+	
+	
+	<select id="MenuManageDAO.selectAdminMenuJsTreeList"  parameterClass="hashmap" resultClass="egovMap" >
+		 /* MenuManageDAO.selectAdminMenuJsTreeList 관리자 MenuJsTree 가져오기 - mariadb */
+		 SELECT A.menu_no
+		      , A.upper_menu_no
+		      , $DB_NEOS$FN_GetMultiLang(#langCode#,B.menu_nm_multi) AS NAME
+		      , B.menu_dc
+		      , A.url_path
+		      , CASE WHEN S.link_id IS NULL THEN 'N' ELSE A.sso_use_yn END AS sso_use_yn
+		      , (SELECT COUNT(menu_no) FROM $DB_NEOS$t_co_menu_adm WHERE upper_menu_no = A.menu_no AND USE_YN = 'Y' AND IFNULL(delete_yn , 'N') <![CDATA[ <> ]]> 'Y') AS child_count 
+		      , 0 AS ea_child_count 
+		      , A.url_gubun
+		      , A.menu_img_class
+		      , A.menu_ordr
+		 FROM $DB_NEOS$t_co_menu_adm A 
+		 LEFT OUTER JOIN $DB_NEOS$v_t_co_menu_adm_multi B ON A.menu_no = B.menu_no
+		 LEFT OUTER JOIN $DB_NEOS$t_co_sso S ON A.menu_no = S.link_id AND S.link_tp = 'gw_menu'
+		 <isNotEqual property="userSe" compareValue="MASTER">  
+		 INNER JOIN $DB_NEOS$t_co_menu_auth MA
+		 ON    A.menu_no = MA.menu_no		      
+		 INNER JOIN $DB_NEOS$t_co_authcode AC
+		 ON    MA.author_code = AC.author_code
+		 AND   AC.comp_seq in (#compSeq# , '0')
+		 AND   AC.author_type = '005' 
+		 AND   AC.author_use_yn = 'Y'
+		 INNER JOIN $DB_NEOS$t_co_auth_relate AR
+		 ON    AC.author_code = AR.author_code
+		 AND   AR.comp_seq = #compSeq# 
+		 AND   AR.emp_seq = #empSeq#
+		 LEFT  OUTER JOIN $DB_NEOS$t_co_menu_adm_comp E ON A.menu_no = E.menu_no AND  E.comp_seq = #compSeq#
+		 </isNotEqual> 
+		 WHERE A.menu_auth_type = #menuAuthType#
+		 AND   A.use_yn = 'Y'  	
+		 AND   A.upper_menu_no = #upperMenuNo#
+		 <isNotEqual property="userSe" compareValue="MASTER">
+		 AND   IF(public_yn = 'Y' , #compSeq# , IFNULL(E.comp_seq, '0')) = #compSeq#
+		 </isNotEqual>
+		 AND   IFNULL(A.delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+		 GROUP BY A.menu_no
+		 ORDER BY menu_ordr
+	</select>
+	
+	<select id="MenuManageDAO.selectAdminMenuTreeListAuth" parameterClass="hashmap" resultClass="egovMap" >
+		
+		select
+		result.menu_no
+		,result.upper_menu_no
+		,result.name
+		,result.menu_dc
+		,result.sso_use_yn
+		,result.lvl
+		<isEqual property="startWith" compareValue="0">
+		,1 AS child_count
+		</isEqual>
+		<isNotEqual property="startWith" compareValue="0">
+		,(SELECT COUNT(menu_no) FROM $DB_NEOS$t_co_menu_adm WHERE upper_menu_no = result.menu_no AND USE_YN = 'Y' AND IFNULL(delete_yn , 'N') != 'Y') AS child_count
+		</isNotEqual>		
+		,result.menu_img_class
+		,result.menu_ordr
+		,result.url_gubun
+		,result.url_path
+		from
+		(
+			select
+			distinct
+			m.menu_no
+			,m.upper_menu_no
+			,$DB_NEOS$FN_GetMultiLang(#langCode#,mm.menu_nm_multi) as name
+			,mm.menu_dc
+			,case when m.sso_use_yn = 'Y' and cs.link_id is not null then 'Y' else 'N' end as sso_use_yn
+			,m.menu_depth as lvl
+			,m.menu_img_class
+			,m.menu_ordr
+			,m.url_gubun
+			,m.url_path
+			from $DB_NEOS$t_co_menu_adm m
+			join $DB_NEOS$v_t_co_menu_adm_multi mm on m.menu_no = mm.menu_no and m.use_yn = 'Y' and ifnull(m.delete_yn,'N') != 'Y'
+			<isNotEqual property="userSe" compareValue="MASTER">  
+			INNER JOIN $DB_NEOS$t_co_menu_auth MA
+			ON    m.menu_no = MA.menu_no		      
+			INNER JOIN $DB_NEOS$t_co_authcode AC
+			ON    MA.author_code = AC.author_code
+			AND   AC.comp_seq in (#compSeq# , '0')
+			AND   AC.author_type = '005' 
+			AND   AC.author_use_yn = 'Y'
+			INNER JOIN $DB_NEOS$t_co_auth_relate AR
+			ON    AC.author_code = AR.author_code
+			AND   AR.comp_seq = #compSeq# 
+			AND   AR.emp_seq = #empSeq#
+			left join $DB_NEOS$t_co_menu_comp cmc on cmc.menu_no = m.menu_no and cmc.comp_seq = #compSeq#
+			</isNotEqual>		
+			left join $DB_NEOS$t_co_sso cs on cs.link_tp = 'gw_menu' and m.menu_no = cs.link_id
+			where m.menu_auth_type = #menuAuthType# and m.upper_menu_no = $startWith$
+			<isEqual property="startWith" compareValue="0">
+			and m.menu_depth = 1
+			</isEqual>
+			<isNotEqual property="userSe" compareValue="MASTER">  
+			and (ifnull(m.public_yn,'Y') = 'Y' or cmc.menu_no is not null)
+			</isNotEqual>
+		) result	
+		order by result.menu_ordr, result.menu_no	
+
+	</select> 
+	
+	<select id="MenuManageDAO.selectMenuListOfUrl" parameterClass="hashmap" resultClass="egovMap">
+		SELECT m.menu_no, m.upper_menu_no, $DB_NEOS$FN_GetMultiLang(#langCode#,mm.menu_nm_multi) as menu_nm,
+		m.url_path, m.url_gubun, m.menu_img_class
+		FROM
+			(
+				SELECT  @r AS _id,
+					 (
+					 SELECT  @r := upper_menu_no
+					 FROM    $DB_NEOS$t_co_menu
+					 WHERE   menu_no = _id
+					 ) AS parent,
+					 @l := @l + 1 AS lvl
+				 FROM    (
+					 SELECT  @r := (SELECT menu_no 
+									FROM $DB_NEOS$t_co_menu 
+									WHERE 
+										(
+											CASE WHEN url_gubun IS NOT NULL THEN CONCAT('/',url_gubun,url_path)
+											ELSE url_path
+											END
+										) LIKE CONCAT('%',ifnull(#urlPath#,''),'%')
+									LIMIT 1),
+						 @l := 0,
+						 @cl := 0
+					 ) vars,
+					 $DB_NEOS$t_co_menu h
+				WHERE    @r > 10
+			) v, $DB_NEOS$t_co_menu m, $DB_NEOS$t_co_menu_multi mm
+		WHERE
+			v._id = m.menu_no
+			AND m.menu_no = mm.menu_no
+			AND m.use_yn ='Y'
+			AND IFNULL(m.delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+			ORDER BY v.lvl DESC
+	</select>
+	
+	
+	<select id="MenuManageDAO.selectMenuAdminListOfUrl" parameterClass="hashmap" resultClass="egovMap">
+		SELECT m.menu_no, m.upper_menu_no, $DB_NEOS$FN_GetMultiLang(#langCode#,mm.menu_nm_multi) as menu_nm,
+		m.url_path, m.url_gubun, m.menu_img_class
+		FROM
+			(
+				SELECT  @r AS _id,
+					 (
+					 SELECT  @r := upper_menu_no
+					 FROM    $DB_NEOS$t_co_menu
+					 WHERE   menu_no = _id
+					 ) AS parent,
+					 @l := @l + 1 AS lvl
+				 FROM    (
+					 SELECT  @r := (SELECT menu_no 
+									FROM $DB_NEOS$t_co_menu_adm 
+									WHERE 
+										(
+											CASE WHEN url_gubun IS NOT NULL THEN CONCAT('/',url_gubun,url_path)
+											ELSE url_path
+											END
+										) LIKE CONCAT('%',ifnull(#urlPath#,''),'%')
+										LIMIT 1),
+						 @l := 0,
+						 @cl := 0
+					 ) vars,
+					 $DB_NEOS$t_co_menu h
+				WHERE    @r > 10
+			) v, $DB_NEOS$t_co_menu_adm m, $DB_NEOS$t_co_menu_adm_multi mm
+		WHERE
+			v._id = m.menu_no
+			AND m.menu_no = mm.menu_no
+			AND m.use_yn ='Y'
+			AND IFNULL(m.delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+		ORDER BY v.lvl DESC
+	</select>
+	
+	<select id="MenuManageDAO.selectMyMenuList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT c.menu_no, $DB_NEOS$FN_GetMultiLang(#langCode#,b.menu_nm_multi) as menu_nm,
+		a.url_gubun, a.url_path, a.menu_img_class, a.menu_img_path, 
+			$DB_NEOS$get_menu_first_info('0', C.menu_no, #langCode#) AS gnb_menu_no,
+			$DB_NEOS$get_menu_first_info('1', C.menu_no, #langCode#) AS gnb_menu_nm
+		FROM $DB_NEOS$t_co_menu_mymenu c 
+		left outer join $DB_NEOS$t_co_menu a on a.menu_no = c.menu_no and a.use_yn = 'Y'
+		left outer join $DB_NEOS$v_t_co_menu_multi b on b.menu_no = c.menu_no
+		WHERE
+		       c.emp_seq = #empSeq#
+		       AND c.dept_seq = #deptSeq#
+	</select>
+	
+	
+	
+	<insert id="MenuManageDAO.insertMyMenuList" parameterClass="hashmap">
+	   INSERT $DB_NEOS$t_co_menu_mymenu 
+			(`menu_no`, 
+			`emp_seq`, 
+			`dept_seq`
+			)
+		VALUES
+	   <dynamic>
+	       <iterate conjunction="," property="menuList">
+	          (#menuList[].menuNo#, #menuList[].empSeq#, #menuList[].deptSeq#)
+	       </iterate>
+	   </dynamic>
+	
+	</insert>
+	
+	<delete id="MenuManageDAO.deleteMyMenuList" parameterClass="hashmap">
+		delete from $DB_NEOS$`t_co_menu_mymenu` 
+		where
+		`emp_seq` = #empSeq# and `dept_seq` = #deptSeq#
+	
+	
+	</delete>
+	
+	<select id="MenuManageDAO.eaBoxChildCnt" parameterClass="hashmap" resultClass="int">
+		 SELECT COUNT(*) 
+		  FROM $DB_NEOS$t_ea_box 
+		 WHERE upper_menu_no = #eaId#
+		   AND comp_seq = #compSeq#
+		   AND emp_seq = #empSeq#  
+	</select>
+	<select id="MenuManageDAO.selectMenuListOfMenuNo" parameterClass="hashmap" resultClass="egovMap">
+		SELECT m.menu_no, m.upper_menu_no, $DB_NEOS$FN_GetMultiLang(#langCode#,mm.menu_nm_multi) as menu_nm,
+		m.url_path, m.url_gubun, m.menu_img_class
+		FROM
+			(
+				SELECT  @r AS _id,
+					 (
+					 SELECT  @r := upper_menu_no
+					 FROM    $DB_NEOS$t_co_menu
+					 WHERE   menu_no = _id
+					 ) AS parent,
+					 @l := @l + 1 AS lvl
+				 FROM    (
+					 SELECT  @r := $menuNo$,
+						 @l := 0,
+						 @cl := 0
+					 ) vars,
+					 t_co_menu h
+				WHERE    @r > 10
+			) v, $DB_NEOS$t_co_menu m, $DB_NEOS$v_t_co_menu_multi mm
+		WHERE
+			v._id = m.menu_no
+			AND m.menu_no = mm.menu_no
+			AND m.use_yn ='Y'
+			AND IFNULL(m.delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+			ORDER BY v.lvl DESC
+	</select>
+	
+		<select id="MenuManageDAO.selectEaEmpMenuTreeList" parameterClass="hashmap" resultClass="egovMap" >
+		/* MenuManageDAO.selectEaEmpMenuTreeList - mariaDB */
+		SELECT  
+			C.menu_no, 
+			C.menu_gubun,
+			C.upper_menu_no, 
+			C.menu_nm as name, 
+			C.menu_dc, 
+			C.url_path, 
+			C.sso_use_yn,
+			A.LEVEL AS lvl,
+			(SELECT COUNT(menu_no) FROM $DB_NEOS$t_ea_box WHERE upper_menu_no = C.menu_no AND emp_seq = #empSeq# AND comp_seq = #compSeq# AND use_yn = 'Y' AND menu_gubun = 'MENU010') AS child_count,
+			C.url_gubun,
+			C.menu_img_class,
+			C.menu_ordr
+		FROM    (
+				SELECT  $DB_NEOS$`get_ea_box_connect_by_id`(menu_no) AS menu_no, @level AS LEVEL
+				FROM    (
+					SELECT  @start_with := $eaStartWith$,
+						@menu_no := @start_with,
+						@level := 0
+					) vars, $DB_NEOS$t_ea_box
+				WHERE   @menu_no IS NOT NULL AND use_yn = 'Y'
+		         ) A,
+		        $DB_NEOS$t_ea_box C 
+		WHERE 
+			C.menu_no = A.menu_no
+			AND C.emp_seq = #empSeq#
+			AND C.comp_seq = #compSeq#
+			AND C.use_yn = 'Y'
+			AND C.menu_gubun = 'MENU010'
+			AND use_yn = 'Y'
+			<isNotEmpty property="level">
+			AND A.LEVEL = $level$
+			</isNotEmpty>
+		GROUP BY A.menu_no
+<!-- 		ORDER BY IFNULL(C.menu_ordr,99999) -->
+		ORDER BY lvl , menu_ordr
+		
+		
+	</select> 	
+	
+	<select id="MenuManageDAO.selectEAPrivateMenuTreeList" parameterClass="hashmap" resultClass="egovMap" >
+		/*MenuManageDAO.selectEAPrivateMenuTreeList 개인결재함 가져오기 - mariaDB */
+		
+		SELECT  menu_no, 
+				menu_gubun,
+				upper_menu_no, 
+				menu_nm AS NAME, 
+				menu_dc, 
+				url_path, 
+				sso_use_yn,
+				(SELECT COUNT(menu_no) FROM $DB_NEOS$t_ea_box WHERE upper_menu_no = A.menu_no AND emp_seq = #empSeq# AND comp_seq = #compSeq# AND use_yn = 'Y' AND menu_gubun = 'MENU010') AS child_count,
+				url_gubun,
+				menu_img_class,
+				menu_ordr 
+			  FROM $DB_NEOS$t_ea_box A
+			 WHERE upper_menu_no = #upperMenuNo#
+			   AND comp_seq = #compSeq#
+			   AND emp_seq = #empSeq#
+			   AND use_yn = 'Y'
+			   AND menu_gubun = 'MENU010'
+			 ORDER BY menu_ordr
+		
+		
+	</select> 	
+	
+	
+	<select id="MenuManageDAO.selectCompList" parameterClass="hashMap" resultClass="egovMap">
+		
+		SELECT comp_seq
+		  FROM $DB_NEOS$t_co_comp	
+		 WHERE group_seq = #loginVO.groupSeq#
+		   AND use_yn = 'Y'
+		   AND native_lang_code = #loginVO.langCode#
+			
+	</select>
+	
+	<insert id="MenuManageDAO.insertMenuComp" parameterClass="hashMap">
+	    /* MenuManageDAO.insertMenuComp - mariadb */
+<!-- 		INSERT INTO $tbName$ -->
+		<isEqual property="type" compareValue="USER">
+		INSERT INTO $DB_NEOS$`t_co_menu_comp`
+	    </isEqual>	
+		<isEqual property="type" compareValue="ADMIN">
+		INSERT INTO $DB_NEOS$`t_co_menu_adm_comp`
+		</isEqual>		
+		( menu_no , comp_seq ) 
+		VALUES
+	   <dynamic>
+	   	   <iterate property="arrCompList" conjunction="," >
+		(#menuNo#, #arrCompList[]#)
+	       </iterate>
+	   </dynamic>
+	</insert>
+	    	      	
+	    	      		    	      	
+	<delete id="MenuManageDAO.deleteMenuComp" parameterClass="hashMap"> 
+		<isEqual property="type" compareValue="USER">
+		DELETE FROM $DB_NEOS$`t_co_menu_comp`
+	    </isEqual>	
+		<isEqual property="type" compareValue="ADMIN">
+		DELETE FROM $DB_NEOS$`t_co_menu_adm_comp`
+		</isEqual>
+			where menu_no = #menuNo#
+	
+	</delete>
+	
+	<select id="MenuManageDAO.getMenuCnt" parameterClass="hashMap" resultClass="hashMap">
+		
+		call $DB_NEOS$p_menu_cnt(#compSeq#,#deptSeq#,#empSeq#)
+		   
+	</select>
+	
+	
+	<select id="MenuManageDAO.getIsAuthMenuCnt" parameterClass="hashMap" resultClass="int">
+		select count(D.menu_no) From $DB_NEOS$t_co_menu_auth A
+		inner join $DB_NEOS$t_co_authcode B on A.author_code = B.author_code
+		inner join $DB_NEOS$t_co_auth_relate C on C.author_code = B.author_code AND C.author_type = '005'
+		inner join $DB_NEOS$t_co_menu_adm D on A.menu_no = D.menu_no
+		where C.emp_seq = #empSeq# and C.comp_seq = #compSeq# and D.use_yn = 'Y' and (D.delete_yn is null or D.delete_yn != 'Y')
+		AND A.menu_no = #menuNo#	
+	</select>
+	
+	<select id="MenuManageDAO.selectEaBoxListTreeMenu" parameterClass="hashmap" resultClass="egovMap" >
+<!-- 	    	SELECT C.menu_no -->
+<!-- 	         , C.menu_gubun -->
+<!-- 	         , C.upper_menu_no -->
+<!-- 	         , D.menu_nm as name -->
+<!-- 	         , D.menu_dc -->
+<!-- 	         , C.url_path -->
+<!-- 	         , C.sso_use_yn -->
+<!-- 	         , A.LEVEL AS lvl -->
+<!-- 	         , (SELECT COUNT(menu_no) FROM t_co_menu WHERE upper_menu_no = C.menu_no AND IFNULL(delete_yn , 'N') <![CDATA[ <> ]]>  'Y') AS child_count -->
+<!-- 	         , (SELECT menu_no FROM t_co_menu_auth WHERE menu_no = A.menu_no AND author_code = '') AS auth_menu_no -->
+<!-- 	         , C.url_gubun -->
+<!-- 	         , C.menu_img_class -->
+<!-- 	         , IF( IFNULL(C.url_path, '') = '' , 'folder' , 'file') AS spriteCssClass -->
+<!-- 	         , C.menu_ordr -->
+<!-- 	    FROM    ( -->
+<!-- 				SELECT  `get_menu_connect_by_id`(menu_no) AS menu_no, @level AS LEVEL -->
+<!-- 				FROM    ( -->
+<!-- 					SELECT  @start_with := 0, -->
+<!-- 						@menu_no := @start_with, -->
+<!-- 						@level := 0 -->
+<!-- 					) vars, t_co_menu -->
+<!-- 				WHERE   @menu_no IS NOT NULL -->
+<!-- 		         ) A -->
+<!-- 	    INNER JOIN t_co_menu C ON C.menu_no = A.menu_no -->
+<!-- 	    LEFT OUTER JOIN t_co_menu_multi D ON C.menu_no = D.menu_no			 -->
+<!-- 	    LEFT OUTER JOIN v_menu_chart G ON C.menu_no = G.menu_no -->
+	    
+<!-- 	    WHERE D.lang_code = #langCode# -->
+<!-- 	    AND   C.menu_gubun = #menuGubun# -->
+<!-- 	    AND   IFNULL(delete_yn , 'N')  <![CDATA[ <> ]]> 'Y' -->
+<!-- 	    AND   G.path like '%2002000000%' -->
+<!-- 	    GROUP BY A.menu_no -->
+<!-- 	    ORDER BY lvl , C.menu_ordr		 						 -->
+			SELECT  
+				C.menu_no, 
+				C.menu_gubun,
+				C.upper_menu_no, 
+				$DB_NEOS$FN_GetMultiLang(#langCode#,D.menu_nm_multi) as name, 
+				D.menu_dc, 
+				C.url_path, 
+				C.sso_use_yn,
+				'0' AS lvl,
+				'0' AS child_count,
+				null AS auth_menu_no,
+				C.url_gubun,
+				C.menu_img_class,
+				IF( IFNULL(C.url_path, '') = '' , 'folder' , 'file') AS spriteCssClass,
+				C.menu_ordr
+			FROM    $DB_NEOS$t_co_menu C 
+			LEFT OUTER JOIN $DB_NEOS$v_t_co_menu_multi D ON C.menu_no = D.menu_no
+			WHERE   C.menu_gubun = #menuGubun#
+			AND     IFNULL(delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+			AND     C.menu_no = $startWith$
+			UNION ALL
+			SELECT  
+				C.menu_no, 
+				C.menu_gubun,
+				C.upper_menu_no, 
+				$DB_NEOS$FN_GetMultiLang(#langCode#,D.menu_nm_multi) as name, 
+				D.menu_dc, 
+				C.url_path, 
+				C.sso_use_yn,
+				A.LEVEL AS lvl,
+				'0' AS child_count,
+				null AS auth_menu_no,
+				C.url_gubun,
+				C.menu_img_class,
+				IF( IFNULL(C.url_path, '') = '' , 'folder' , 'file') AS spriteCssClass,
+				C.menu_ordr
+			FROM    (
+					SELECT  $DB_NEOS$get_menu_connect_by_id(menu_no) AS menu_no, @level AS LEVEL
+					FROM    (
+						SELECT  @start_with := $startWith$,
+							@menu_no := @start_with,
+							@level := 0
+						) vars, $DB_NEOS$t_co_menu
+					WHERE   @menu_no IS NOT NULL AND use_yn = 'Y'
+			         ) A
+			        INNER JOIN $DB_NEOS$t_co_menu C
+			        ON C.menu_no = A.menu_no 
+			        LEFT OUTER JOIN $DB_NEOS$v_t_co_menu_multi D ON C.menu_no = D.menu_no
+			WHERE   C.menu_gubun = #menuGubun#
+				<isEqual property="eaType" compareValue="eap">
+					AND C.MENU_TYPE = 'eaBox'
+				</isEqual>
+				AND IFNULL(delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+				AND A.LEVEL = 1
+			GROUP BY A.menu_no
+			ORDER BY lvl , IFNULL(menu_ordr,99999)
+	</select>
+
+	<select id="MenuManageDAO.selectNonEaBoxListTreeMenu" parameterClass="hashmap" resultClass="egovMap" >
+		/* MenuManageDAO.selectNonEaBoxListTreeMenu - mariaDB */
+		SELECT  
+			C.menu_no, 
+			C.menu_gubun,
+			C.upper_menu_no, 
+			$DB_NEOS$FN_GetMultiLang(#langCode#,D.menu_nm_multi) as name, 
+			D.menu_dc, 
+			C.url_path, 
+			C.sso_use_yn,
+			'0' AS lvl,
+			'0' AS child_count,
+			null AS auth_menu_no,
+			C.url_gubun,
+			C.menu_img_class,
+			IF( IFNULL(C.url_path, '') = '' , 'folder' , 'file') AS spriteCssClass,
+			C.menu_ordr
+		FROM    $DB_NEOS$t_co_menu C 
+		LEFT OUTER JOIN $DB_NEOS$v_t_co_menu_multi D ON C.menu_no = D.menu_no
+		WHERE   C.menu_gubun = #menuGubun#
+		AND     IFNULL(delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+		AND     C.menu_no = $startWith$ OR C.menu_no = $startWith1$
+		UNION ALL
+		
+		SELECT *
+		FROM (
+			SELECT  
+				C.menu_no, 
+				C.menu_gubun,
+				C.upper_menu_no, 
+				$DB_NEOS$FN_GetMultiLang(#langCode#,D.menu_nm_multi) as name, 
+				D.menu_dc, 
+				C.url_path, 
+				C.sso_use_yn,
+				A.LEVEL AS lvl,
+				'0' AS child_count,
+				null AS auth_menu_no,
+				C.url_gubun,
+				C.menu_img_class,
+				IF( IFNULL(C.url_path, '') = '' , 'folder' , 'file') AS spriteCssClass,
+				C.menu_ordr
+			FROM    (
+					SELECT  $DB_NEOS$`get_menu_connect_by_id`(menu_no) AS menu_no, @level AS LEVEL
+					FROM    (
+						SELECT  @start_with := $startWith$,
+							@menu_no := @start_with,
+							@level := 0
+						) vars, $DB_NEOS$t_co_menu
+					WHERE   @menu_no IS NOT NULL AND use_yn = 'Y'
+			         ) A
+			        INNER JOIN $DB_NEOS$t_co_menu C
+			        ON C.menu_no = A.menu_no 
+			        LEFT OUTER JOIN $DB_NEOS$v_t_co_menu_multi D ON C.menu_no = D.menu_no
+			WHERE   C.menu_gubun = #menuGubun#
+				AND IFNULL(delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+				AND A.LEVEL = 1
+			GROUP BY A.menu_no
+			
+			UNION ALL
+			
+			SELECT  
+				C.menu_no, 
+				C.menu_gubun,
+				C.upper_menu_no, 
+				$DB_NEOS$FN_GetMultiLang(#langCode#,D.menu_nm_multi) as name, 
+				D.menu_dc, 
+				C.url_path, 
+				C.sso_use_yn,
+				A.LEVEL AS lvl,
+				'0' AS child_count,
+				null AS auth_menu_no,
+				C.url_gubun,
+				C.menu_img_class,
+				IF( IFNULL(C.url_path, '') = '' , 'folder' , 'file') AS spriteCssClass,
+				C.menu_ordr
+			FROM    (
+					SELECT  $DB_NEOS$`get_menu_connect_by_id`(menu_no) AS menu_no, @level AS LEVEL
+					FROM    (
+						SELECT  @start_with1 := $startWith1$,
+							@menu_no := @start_with1,
+							@level := 0
+						) vars, $DB_NEOS$t_co_menu
+					WHERE   @menu_no IS NOT NULL AND use_yn = 'Y'
+			         ) A
+			        INNER JOIN $DB_NEOS$t_co_menu C
+			        ON C.menu_no = A.menu_no 
+			        LEFT OUTER JOIN $DB_NEOS$v_t_co_menu_multi D ON C.menu_no = D.menu_no
+			WHERE   C.menu_gubun = #menuGubun#
+				AND IFNULL(delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+				AND A.LEVEL = 1
+			GROUP BY A.menu_no
+			
+		) eaFormList
+		where eaFormList.menu_no IN ('102010000', '102020000', '102030000', '102040000', '101030000', '101060000')
+		ORDER BY lvl , IFNULL(menu_ordr,99999)
+	</select>
+
+	<select id="MenuManageDAO.selectEaFormTreeMenu" parameterClass="hashmap" resultClass="egovMap" >
+	    /* MenuManageDAO.selectEaFormTreeMenu - mariaDB */
+	    SELECT * FROM (
+	    SELECT	CONCAT(FORM_FOLDER_ID,'R') AS form_id
+		     , 0 AS upper_form_id
+		     , $DB_NEOS$FN_GetLanguageName(#loginVo.langCode#, form_folder_nm, form_folder_nm_en, form_folder_nm_jp, form_folder_nm_cn ) AS form_nm
+		     , SORT_ORDER        
+		     , 'folder' AS spriteCssClass
+     		 , 'true' AS expanded
+     		 , '' AS interlock_url
+       		 , '' AS interlock_width
+       		 , '' AS interlock_height
+       		 , '' AS form_tp
+       		 , '' AS form_d_tp
+       		 , '' AS doc_width
+		FROM	$DB_NEOS$TEAG_FORM_FOLDER
+		WHERE	use_yn = '1'
+		AND 	co_id in (#loginVo.compSeq#, '0')
+		AND 	group_id = #loginVo.groupSeq#
+		UNION ALL
+		SELECT 	DISTINCT A.form_id
+		     ,  CONCAT(A.FORM_FOLDER_ID,'R') AS upper_form_id
+		     ,  $DB_NEOS$FN_GetLanguageName(#loginVo.langCode#, a.form_nm, a.form_nm_en, a.form_nm_jp, a.form_nm_cn ) AS form_nm
+		     ,  IFNULL(A.sort_order, '') AS sort_order  
+		     , 'file' AS spriteCssClass
+     		 , 'false' AS expanded
+     		 , IFNULL(A.interlock_url, '') AS interlock_url
+     		 , IFNULL(A.interlock_width, '') AS interlock_width
+     		 , IFNULL(A.interlock_height, '') AS interlock_height
+     		 , A.form_tp AS form_tp
+     		 , A.form_d_tp AS form_d_tp
+     		 , CASE A.form_mode WHEN '1' THEN 900 ELSE 1024 END AS doc_width
+		FROM $DB_NEOS$TEAG_FORM A
+		JOIN $DB_NEOS$TEAG_FORM_FOLDER B
+			ON B.USE_YN = '1'
+			AND	A.FORM_FOLDER_ID = B.FORM_FOLDER_ID
+		INNER JOIN (
+			SELECT	b.gbn_org AS gbnOrg
+			      , b.seq AS seq
+			FROM	(
+				SELECT path FROM (
+					SELECT  dept_seq AS deptSeq
+					FROM	$DB_NEOS$t_co_emp_dept
+					WHERE	comp_seq = #loginVo.compSeq#
+					AND	emp_seq = #loginVo.uniqId#
+				   )a INNER JOIN (
+				   	SELECT	gbn_org
+					      , seq AS deptSeq
+					      , CONCAT('|',path,'|') AS path
+					FROM	$DB_NEOS$v_org_chart
+					WHERE	gbn_org = 'd'
+				   ) b ON a.deptSeq = b.deptSeq 
+			 	) a INNER JOIN (
+					SELECT	gbn_org
+				      , seq
+				      , CONCAT('%|',path,'|%') AS path
+				  	FROM	$DB_NEOS$v_org_chart
+			 	) b ON a.path LIKE b.path
+			 	GROUP BY b.gbn_org, b.seq 
+		) D 
+		WHERE     A.USE_YN = '1'
+		AND     A.DISPLAY_YN = '1'
+		<isNotEmpty property="search">
+		AND 	(A.form_nm LIKE CONCAT('%',ifnull(#search#,''),'%') OR A.form_nm_en LIKE CONCAT('%',ifnull(#search#,''),'%') OR A.form_nm_jp LIKE CONCAT('%',ifnull(#search#,''),'%') OR A.form_nm_cn LIKE CONCAT('%',ifnull(#search#,''),'%')) 
+		</isNotEmpty>
+		) A
+		ORDER BY UPPER_FORM_ID , CONVERT(IFNULL(SORT_ORDER, 999), INT)
+	</select>	
+	
+	<select id="MenuManageDAO.selectEaFormPortlet" parameterClass="hashmap" resultClass="egovMap" >
+	    /* MenuManageDAO.selectEaFormTreeMenu - mariaDB */
+	    SELECT * FROM (
+	    SELECT	CONCAT(FORM_FOLDER_ID,'R') AS form_id
+		     , 0 AS upper_form_id
+		     , $DB_NEOS$FN_GetLanguageName(#loginVo.langCode#, form_folder_nm, form_folder_nm_en, form_folder_nm_jp, form_folder_nm_cn ) AS form_nm
+		     , ifnull(SORT_ORDER, '') as sort_order        
+		     , 'folder' AS spriteCssClass
+     		 , 'true' AS expanded
+     		 , '' AS interlock_url
+       		 , '' AS interlock_width
+       		 , '' AS interlock_height
+       		 , '' AS form_tp
+       		 , '' AS form_d_tp
+       		 , '' AS doc_width
+       		 , co_id
+		FROM	$DB_NEOS$TEAG_FORM_FOLDER
+		WHERE	use_yn = '1'
+		AND 	co_id in (#loginVo.compSeq#, '0')
+		AND 	group_id = #loginVo.groupSeq#
+		UNION ALL
+		SELECT 	DISTINCT A.form_id
+		     ,  CONCAT(A.FORM_FOLDER_ID,'R') AS upper_form_id
+		     ,  $DB_NEOS$FN_GetLanguageName(#loginVo.langCode#, a.form_nm, a.form_nm_en, a.form_nm_jp, a.form_nm_cn ) AS form_nm
+		     ,  IFNULL(A.sort_order, '') AS sort_order
+		     , 'file' AS spriteCssClass
+     		 , 'false' AS expanded
+     		 , IFNULL(A.interlock_url, '') AS interlock_url
+     		 , IFNULL(A.interlock_width, '') AS interlock_width
+     		 , IFNULL(A.interlock_height, '') AS interlock_height
+     		 , A.form_tp AS form_tp
+     		 , A.form_d_tp AS form_d_tp
+     		 , CASE A.form_mode WHEN '1' THEN 900 ELSE 1024 END AS doc_width
+     		 , A.co_id
+		FROM $DB_NEOS$TEAG_FORM A
+		JOIN $DB_NEOS$TEAG_FORM_FOLDER B
+			ON B.USE_YN = '1'
+			AND	A.FORM_FOLDER_ID = B.FORM_FOLDER_ID
+		<isNotEmpty property="userFormSet">	
+		INNER JOIN (
+			SELECT form_id AS formId
+				, org_div AS gbnOrg
+				, org_id AS seq
+		    FROM  $DB_NEOS$teag_form_auth
+		) C ON A.FORM_ID = C.formId 	
+		</isNotEmpty>
+		INNER JOIN (
+			SELECT	b.gbn_org AS gbnOrg
+			      , b.seq AS seq
+			FROM	(
+				SELECT path FROM (
+					SELECT  dept_seq AS deptSeq
+					FROM	$DB_NEOS$t_co_emp_dept
+					WHERE	comp_seq = #loginVo.compSeq#
+					AND	emp_seq = #loginVo.uniqId#
+				   )a INNER JOIN (
+				   	SELECT	gbn_org
+					      , seq AS deptSeq
+					      , CONCAT('|',path,'|') AS path
+					FROM	$DB_NEOS$v_org_chart
+					WHERE	gbn_org = 'd'
+				   ) b ON a.deptSeq = b.deptSeq 
+			 	) a INNER JOIN (
+					SELECT	gbn_org
+				      , seq
+				      , CONCAT('%|',path,'|%') AS path
+				  	FROM	$DB_NEOS$v_org_chart
+			 	) b ON a.path LIKE b.path
+			 	GROUP BY b.gbn_org, b.seq 
+		) D 
+		<isNotEmpty property="userFormSet">	
+			ON C.gbnOrg = D.gbnOrg AND C.seq = D.seq
+		</isNotEmpty>
+		WHERE     A.USE_YN = '1'
+		AND     A.DISPLAY_YN = '1'
+		AND 	A.co_id in (#loginVo.compSeq#, '0')
+		<isNotEmpty property="search">
+		AND 	(A.form_nm LIKE CONCAT('%',ifnull(#search#,''),'%') OR A.form_nm_en LIKE CONCAT('%',ifnull(#search#,''),'%') OR A.form_nm_jp LIKE CONCAT('%',ifnull(#search#,''),'%') OR A.form_nm_cn LIKE CONCAT('%',ifnull(#search#,''),'%')) 
+		</isNotEmpty>
+		
+		) A
+		<isNotEmpty property="portletForm">
+		WHERE spriteCssClass = 'file'	
+			<iterate prepend="AND"  property="opValue" open=" form_id IN (" close=")" conjunction="," >
+				#opValue[]#
+			</iterate>
+		</isNotEmpty>
+		<isEmpty property="portletForm">
+		WHERE form_id = ''
+		</isEmpty>
+		ORDER BY CONVERT(IFNULL(SORT_ORDER, 999), INT)
+	</select>	
+	
+	<select id="MenuManageDAO.getEaBoxPortletInfo" parameterClass="hashMap" resultClass="egovMap">
+		select A.menu_no, $DB_NEOS$FN_GetMultiLang(#langCode#,B.menu_nm_multi) as menu_nm 
+		from $DB_NEOS$t_co_menu A
+		inner join $DB_NEOS$v_t_co_menu_multi B on A.menu_no = B.menu_no
+		where A.menu_no in($opValue$)		
+	</select>
+	
+	<select id="MenuManageDAO.getEaFormPortletInfo" parameterClass="hashMap" resultClass="egovMap">
+		/* MenuManageDAO.getEaFormPortletInfo - mariaDB */
+		SELECT form_id, form_nm
+		FROM   $DB_NEOS$teag_form
+		WHERE  form_id IN ($opValue$)
+				
+	</select>
+	
+	<select id="MenuManageDAO.getNonEaFormPortletInfo" parameterClass="hashMap" resultClass="egovMap">
+		/* MenuManageDAO.getNonEaFormPortletInfo - mariaDB */
+		SELECT c_tikeycode as 'form_id', c_tiname as 'form_nm'
+		FROM   $DB_NEOS$A_TEMPLATEINFO
+		WHERE  c_tikeycode IN ($opValue$)
+				
+	</select>
+	
+	<select id="MenuManageDAO.getAttendCheck" parameterClass="hashMap" resultClass="egovMap">
+		SELECT *
+		FROM   $DB_NEOS$t_secom_alarm
+		LIMIT 1;
+	</select>
+	
+ 	
+ 	<select id="MenuManageDAO.getOpenMenuDepth" parameterClass="hashMap" resultClass="String">
+	 	<isEqual property="userSe" compareValue="USER">
+	 		SELECT
+	 			IFNULL(open_menu_depth,'')
+	 		FROM
+	 			$DB_NEOS$t_co_menu
+	 		WHERE
+	 			menu_no = #firstDepthMenuNo#
+	 	</isEqual>
+	 	<isNotEqual property="userSe" compareValue="USER">
+	 		SELECT
+	 			IFNULL(open_menu_depth,'')
+	 		FROM
+	 			$DB_NEOS$t_co_menu_adm
+	 		WHERE
+	 			menu_no = #firstDepthMenuNo#
+	 	</isNotEqual>
+ 		
+ 	</select>
+ 	
+ 	
+ 	<select id="MenuManageDAO.getReportMenuCnt" parameterClass="hashMap" resultClass="String">
+ 	<isEqual property="kind" compareValue="0">
+ 		SELECT count(tswr.report_seq) menuCnt
+		FROM $DB_NEOS$t_sc_work_report tswr
+		WHERE tswr.create_seq = #empSeq#
+		AND tswr.group_seq = #groupSeq#
+		AND tswr.use_yn = 'Y'
+		AND tswr.read_yn = 'N'
+ 	</isEqual>
+ 	<isEqual property="kind" compareValue="1">
+ 		SELECT  count(tswr.report_seq) menuCnt
+		FROM $DB_NEOS$t_sc_work_report tswr
+		WHERE tswr.target_emp_seq = #empSeq#	
+		AND tswr.use_yn = 'Y'
+		AND tswr.state = 'B'
+		AND tswr.group_seq = #groupSeq#
+		AND tswr.read_yn = 'N'
+ 	</isEqual>
+ 	</select>
+ 	
+ 	
+ 	
+	<select id="MenuManageDAO.FormTreeList" resultClass="java.util.HashMap"  parameterClass="java.util.HashMap">
+	    /* MenuManageDAO.FormTreeList - mariadb */
+	    SELECT T.*  /* , LEVEL */
+	    FROM
+	    (
+			SELECT		LPAD('0',17,'0') AS CODE, LPAD('9',17,'9') AS UPPER_CODE, '서식' AS CODE_NM
+						, CONVERT(0, INT) AS ORD, 'A' AS CONTENTTYPE
+						, 'open' AS STATE, 'A' REL
+						, 'rootfolder' AS SPRITECSSCLASS
+						, '0' AS COMP_SEQ
+						, 'Y' AS Visible
+						<isNotEmpty property="portletForm">
+						, '' AS UPPER_ORD
+						</isNotEmpty>
+			FROM	DUAL
+			UNION	ALL		
+			SELECT		a. C_FIKEYCODE AS CODE, LPAD('0',17,'0') AS UPPER_CODE, 
+						$DB_NEOS$FN_GetLanguageName(#loginVO.langCode#, c_finame, c_finame_en, c_finame_jp, c_finame_cn ) AS CODE_NM
+						, CONVERT(IFNULL(C_FIORD, 9999), INT)  AS ORD, 'F' AS CONTENTTYPE
+						, 'open' AS STATE, 'F' AS REL
+						, 'folder' AS SPRITECSSCLASS
+					    , C_FIORGCODE AS COMP_SEQ
+					    , C_FIVISIBLE AS Visible
+					    <isNotEmpty property="portletForm">
+					    , '' AS UPPER_ORD
+					    </isNotEmpty>
+			FROM	$DB_NEOS$A_FOLDERINFO a
+			<isEqual property="loginVO.userSe" compareValue="USER">
+			INNER JOIN (SELECT C_FIKEYCODE FROM $DB_NEOS$A_FOLDERAUTH 
+						WHERE     (ORGGUBUN = 'g') 
+						       or (ORGGUBUN = 'c' AND orgSEQ = #loginVO.organId#) 
+						       or (ORGGUBUN = 'd' AND orgSEQ = #loginVO.orgnztId#)
+						GROUP BY C_FIKEYCODE
+			) b ON      a.C_FIKEYCODE = b.C_FIKEYCODE
+			</isEqual>
+			WHERE	1=1
+			AND		IFNULL(C_FIUSEFLAG, '000') <![CDATA[<> ]]>'999'
+			UNION	ALL
+			SELECT	a.C_TIKEYCODE AS CODE, COALESCE(PARENT,LPAD('0',17,'0')) AS UPPER_CODE, 
+					$DB_NEOS$FN_GetLanguageName(#loginVO.langCode#, c_tiname, c_tiname_en, c_tiname_jp, c_tiname_cn ) AS CODE_NM
+					, CONVERT(IFNULL(C_ORD, 9999), INT)  AS ORD, TYPE AS CONTENTTYPE
+					, 'close' AS STATE, 'T' AS REL
+					, 'file'  AS SPRITECSSCLASS
+					, C_TIORGCODE AS COMP_SEQ
+					, C_TIVISIBLE AS Visible
+					<isNotEmpty property="portletForm">
+					, CONVERT(IFNULL(c.C_FIORD, 9999), INT) AS UPPER_ORD
+					</isNotEmpty>
+			FROM	$DB_NEOS$A_TEMPLATEINFO a
+			<isEqual property="loginVO.userSe" compareValue="USER">
+			INNER JOIN (SELECT C_TIKEYCODE FROM $DB_NEOS$A_TEMPLATEAUTH 
+						WHERE     (ORGGUBUN = 'g' ) 
+						       or (ORGGUBUN = 'c' AND orgSEQ = #loginVO.organId#) 
+						       or (ORGGUBUN = 'd' AND orgSEQ = #loginVO.orgnztId#)
+						GROUP BY C_TIKEYCODE
+			) b ON      a.C_TIKEYCODE = b.C_TIKEYCODE
+			</isEqual>
+			<isNotEmpty property="portletForm">
+			INNER JOIN $DB_NEOS$A_FOLDERINFO c ON a.PARENT = c.C_FIKEYCODE
+			</isNotEmpty>
+			WHERE	1=1
+			AND		C_CIKIND     <![CDATA[<]]> '920'
+			AND		IFNULL(C_TIUSEFLAG, '000')  <![CDATA[<> ]]> '999'    
+			AND      a.c_tiuse = 'Y'
+			AND      a.c_tivisible = 'Y'
+	    )T
+	    WHERE	1=1
+		<isNotEqual property="loginVO.userSe" compareValue="MASTER">
+		AND     COMP_SEQ in ('0', #loginVO.organId#)
+		</isNotEqual>
+		<isNotEmpty property="tiVisible">
+		AND     Visible = #tiVisible#
+		</isNotEmpty>		
+		<isNotEmpty property="portletForm">
+		AND sPRITECSSCLASS = 'file'
+			<isNotEmpty property="opValue">
+				<iterate prepend="AND"  property="opValue" open=" CODE IN (" close=")" conjunction="," >
+					#opValue[]#
+				</iterate>
+			</isNotEmpty>
+		</isNotEmpty>
+		ORDER BY REL 
+		<isNotEmpty property="portletForm">
+		, UPPER_ORD
+		, CAST(UPPER_CODE AS unsigned)
+		</isNotEmpty>
+		, ORD
+		<isNotEmpty property="portletForm">
+		, CAST(CODE AS unsigned)
+		</isNotEmpty>
+<!-- 		START WITH T.CODE = LPAD('0',17,'0') -->
+<!-- 		CONNECT BY PRIOR T.CODE = T.UPPER_CODE -->
+<!-- 		ORDER BY LEVEL, C_ORD  -->
+	</select>
+	
+	
+	<delete id="MenuManageDAO.delMenuMulti" parameterClass="hashMap">
+		delete from $DB_NEOS$t_co_menu_multi
+		where menu_no = #menuNo# and lang_code = #langCode#
+	</delete>
+	
+	
+	<select id="MenuManageDAO.getGwPkgMenuList" parameterClass="hashmap" resultClass="egovMap" >		
+<!-- 		select  -->
+<!-- 			convert(a.menu_no, char(50)) id,  -->
+<!-- 			case when menu_depth -1 = 1 then '' else upper_menu_no end parentId, -->
+<!-- 			convert(menu_depth -1, char(50)) level, -->
+<!-- 			$DB_NEOS$FN_GetMultiLang(#langCode#, menu_nm_multi) text, -->
+<!-- 			ifnull(url_path,'') url_path, -->
+<!-- 			false children, -->
+<!-- 			'' count, -->
+<!-- 			#module# urlGubun, -->
+<!-- 			convert(menu_ordr, char(50)) as orderNum -->
+<!-- 		from $DB_NEOS$t_co_menu a  -->
+<!-- 		inner join $DB_NEOS$v_t_co_menu_multi b on a.menu_no = b.menu_no -->
+<!-- 		where a.menu_no in ( -->
+<!-- 			select menu_no from $DB_NEOS$t_Co_menu_auth where author_Code in ( -->
+<!-- 				SELECT a.author_Code FROM $DB_NEOS$t_co_auth_relate a -->
+<!-- 				inner join $DB_NEOS$t_co_authcode b on a.author_code = b.author_Code -->
+<!-- 				WHERE  -->
+<!-- 				case when (a.author_Type = '001' or a.author_type = '005') then (a.comp_Seq = #compSeq# AND a.dept_Seq = #deptSeq# AND a.emp_Seq = #empSeq#) -->
+<!-- 					 when a.author_type = '002' then (a.comp_seq = #compSeq# and a.dept_Seq = #deptSeq#) end -->
+<!-- 				and b.author_use_yn = 'Y' -->
+<!-- 			) -->
+<!-- 		) and menu_gubun = #menuGubun# and menu_depth > 1 and a.use_yn = 'Y' and (a.delete_yn is null or a.delete_yn = '') -->
+
+			SELECT TB.id
+		      , TB.parentId
+		      , TB.level
+		      , TB.text
+		      , TB.url_path
+		      , TB.children
+		      , TB.count
+		      , TB.urlGubun
+		      , TB.orderNum
+		 FROM(	
+		      SELECT convert(a.menu_no, char(50)) id
+		           , case when menu_depth -1 = 1 then '' else upper_menu_no end parentId
+		           , convert(menu_depth -1, char(50)) level 
+		           , $DB_NEOS$FN_GetMultiLang(#langCode#,B.menu_nm_multi) text
+		           <isEqual property="menuGubun" compareValue="MENU010">
+		           , if(A.url_path = null or url_path = '' , '' ,concat(ifnull(concat('/',A.url_gubun), ''), ifnull(A.url_path,''),'?menu_no=',a.menu_no)) url_path
+		           </isEqual>
+		           <isNotEqual property="menuGubun" compareValue="MENU010">
+		           , if(A.url_path = null or url_path = '' , '' ,concat(ifnull(concat('/',A.url_gubun), ''), ifnull(A.url_path,''))) url_path
+		           </isNotEqual>		           
+		           , false children
+		           , '' count
+		           , #module# urlGubun
+		           , convert(A.menu_ordr, char(50)) as orderNum
+		      FROM $DB_NEOS$t_co_menu A 
+		      LEFT OUTER JOIN $DB_NEOS$v_t_co_menu_multi B ON A.menu_no = B.menu_no
+		      INNER JOIN $DB_NEOS$t_co_menu_auth C
+		      ON    A.menu_no = C.menu_no
+		      AND   C.author_code <iterate prepend="IN" property="authCodeList" open="(" close=")" conjunction=","> #authCodeList[]# </iterate>
+		      LEFT OUTER JOIN $DB_NEOS$t_co_menu_comp E ON C.menu_no = E.menu_no AND E.comp_seq = #compSeq#
+		      WHERE IF(public_yn = 'Y' , #compSeq# , IFNULL(E.comp_seq, '0')) = #compSeq#
+		      AND   A.use_yn = 'Y'
+		      AND   IFNULL(A.delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+		      AND   A.menu_gubun = #menuGubun#
+		      AND   A.menu_depth > 1
+		      GROUP BY C.menu_no		      
+		) TB 
+		WHERE $DB_NEOS$get_upper_menu_use(id) IS NULL OR $DB_NEOS$get_upper_menu_use(id) = 'Y'
+		<isEqual property="menuGubun" compareValue="MENU010">
+			and $DB_NEOS$get_menu_except(tb.id,'2002000000') != '2002000000'
+		</isEqual>
+		<isEqual property="menuGubun" compareValue="MENU003">
+			and tb.id != '301050000'
+		</isEqual>
+		ORDER BY orderNum
+
+
+	</select>
+	
+	
+	
+	
+	
+	<select id="MenuManageDAO.searchGwPkgMenuList" parameterClass="hashmap" resultClass="egovMap" >		
+		SELECT TB.id
+		      , TB.text name
+		      , TB.url_path url
+		      , TB.module
+		      , TB.path_nm path
+		      , case
+					 when TB.module = 'CL' then (SELECT $DB_NEOS$FN_GetMultiLang(#langCode#,menu_nm_multi) FROM $DB_NEOS$v_t_co_menu_multi WHERE menu_no = '300000000')
+					 when TB.module = 'BD' then (SELECT $DB_NEOS$FN_GetMultiLang(#langCode#,menu_nm_multi) FROM $DB_NEOS$v_t_co_menu_multi WHERE menu_no = '500000000')
+					 when TB.module = 'EA' then (SELECT $DB_NEOS$FN_GetMultiLang(#langCode#,menu_nm_multi) FROM $DB_NEOS$v_t_co_menu_multi WHERE menu_no = '2000000000')
+					 when TB.module = 'DC' then (SELECT $DB_NEOS$FN_GetMultiLang(#langCode#,menu_nm_multi) FROM $DB_NEOS$v_t_co_menu_multi WHERE menu_no = '600000000')
+					 when TB.module = 'PR' then (SELECT $DB_NEOS$FN_GetMultiLang(#langCode#,menu_nm_multi) FROM $DB_NEOS$v_t_co_menu_multi WHERE menu_no = '400000000')
+				  END moduleName
+			  , TB.orderNum
+		 FROM(	
+		      SELECT convert(a.menu_no, char(50)) id
+		           , $DB_NEOS$FN_GetMultiLang(#langCode#,B.menu_nm_multi) text
+		           <isEqual property="menuGubun" compareValue="MENU010">
+		           , if(A.url_path = null or url_path = '' , '' ,concat(ifnull(concat('/',A.url_gubun), ''), ifnull(A.url_path,''),'?menu_no=',a.menu_no)) url_path
+		           </isEqual>		           
+		           <isNotEqual property="menuGubun" compareValue="MENU010">
+		           , if(A.url_path = null or url_path = '' , '' ,concat(ifnull(concat('/',A.url_gubun), ''), ifnull(A.url_path,''))) url_path
+		           </isNotEqual>
+		           , convert(A.menu_ordr, char(50)) as orderNum
+		           , $DB_NEOS$get_menu_path_nm('>',A.menu_no,#langCode#) path_nm
+		           , case when A.menu_gubun = 'MENU003' then 'CL' when A.menu_gubun = 'MENU005' then 'BD' when A.menu_gubun = 'MENU010' then 'EA' when A.menu_gubun = 'MENU006' then 'DC' when A.menu_gubun = 'MENU004' then 'PR' else '' end as module
+		      FROM $DB_NEOS$t_co_menu A 
+		      LEFT OUTER JOIN $DB_NEOS$v_t_co_menu_multi B ON A.menu_no = B.menu_no
+		      INNER JOIN $DB_NEOS$t_co_menu_auth C
+		      ON    A.menu_no = C.menu_no
+		      AND   C.author_code <iterate prepend="IN" property="authCodeList" open="(" close=")" conjunction=","> #authCodeList[]# </iterate>
+		      LEFT OUTER JOIN $DB_NEOS$t_co_menu_comp E ON C.menu_no = E.menu_no AND E.comp_seq = #compSeq#
+		      WHERE IF(public_yn = 'Y' , #compSeq# , IFNULL(E.comp_seq, '0')) = #compSeq#
+		      AND   A.use_yn = 'Y'
+		      AND   IFNULL(A.delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+		      AND   A.menu_gubun in ('MENU003','MENU005','MENU010','MENU006','MENU004')
+		      AND   A.menu_depth > 1
+		      <isNotEmpty property="menuGubun">
+		      AND 	A.menu_gubun = #menuGubun#
+		      </isNotEmpty>
+		      GROUP BY C.menu_no		      
+		) TB 
+		WHERE $DB_NEOS$get_upper_menu_use(id) IS NULL OR $DB_NEOS$get_upper_menu_use(id) = 'Y'
+		and $DB_NEOS$get_menu_except(tb.id,'2002000000') != '2002000000'
+		AND TB.url_path != '' 
+		AND TB.path_nm LIKE CONCAT('%',#keyword#,'%')		
+		ORDER BY orderNum
+	</select>
+	
+	
+	
+	
+	<select id="MenuManageDAO.checkMenuAuth" parameterClass="hashMap" resultClass="int">
+	    /* MenuManageDAO.checkMenuAuth - mariadb */
+	    SELECT 
+	    	COUNT(menu_no) cnt	    
+	    FROM $DB_NEOS$t_Co_menu_auth
+	    WHERE 
+	    	author_code IN (
+				SELECT 
+					author_Code 
+				FROM 
+					$DB_NEOS$t_Co_auth_relate 
+				WHERE 
+					(emp_seq = #empSeq# or (dept_seq = #deptSeq# and emp_seq ='')) 
+					
+					AND comp_Seq = #compSeq#
+					<isEqual property="eaType" compareValue="ea">
+						<isNotEmpty property="deptSeq">
+							and dept_seq = #deptSeq#
+						</isNotEmpty>
+					</isEqual>
+					<isEqual property="userSe" compareValue="USER">
+						and author_type IN ('001','002')
+					</isEqual>
+					<isEqual property="userSe" compareValue="ADMIN">
+						and author_type IN ('005')
+					</isEqual>
+			) 
+			<isEqual property="userSe" compareValue="USER">
+				and menu_no in (select menu_no from $DB_NEOS$t_co_menu where url_path like concat('%', #urlPath#,'%'))
+			</isEqual>
+			<isEqual property="userSe" compareValue="ADMIN">
+				and menu_no in (select menu_no from $DB_NEOS$t_co_menu_adm where url_path like concat('%', #urlPath#,'%') and menu_auth_type = 'ADMIN')
+			</isEqual>
+	</select>
+</sqlMap>

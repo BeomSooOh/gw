@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="account.webservice" basedir=".">
+	<property environment="env" />
+	<property name="target" value="${basedir}/target" />
+	<property name="output" value="${basedir}/output" />
+	<property name="target.java" value="${target}/src" />
+	<property name="target.classes" value="${target}/classes" />
+	
+	<path id="axis2.classpath">
+		<fileset dir="env.AXIS2_HOME" includes="**/*.jar" />
+	</path>
+	 
+    <target name="check.dependency" unless="env.AXIS2_HOME">
+        <echo message="AXIS2_HOME must be set"/>
+    	<delete dir="${target}"/>
+		<mkdir dir="${target}"/>		
+    </target>
+    
+	<target name="gen.account_stub" if="env.AXIS2_HOME" depends="check.dependency">
+	    <delete dir="${target}/account"/>
+		<mkdir dir="${target}/account"/>
+		<java classname="org.apache.axis2.wsdl.WSDL2Java" fork="true">
+			<arg line="-u"/>
+			<arg line="-or"/>
+			<arg line="-o '${target}/account'"/>
+			<arg line="-uri http://103.8.100.145/WebScrapping.asmx"/>
+			<classpath>
+				<fileset dir="${env.AXIS2_HOME}\lib">
+					<include name="*.jar"/>
+				</fileset>
+			</classpath>
+		</java>
+		<ant dir="${target}/account"/>
+		<copy file="${target}/account/build/lib/WebScrappingSoap-test-client.jar" tofile="${output}/bizbox.account.ws.client.jar"/>
+	</target>
+</project>

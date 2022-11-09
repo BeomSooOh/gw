@@ -1,0 +1,597 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="MenuManageDAO">	
+	<typeAlias alias="MenuInfo" type="neos.cmm.menu.vo.MenuInfo" />
+	<typeAlias alias="MenuMappingInfo" type="neos.cmm.menu.vo.MenuMappingInfo"/>
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+ 
+	<resultMap id="resultTree" class="neos.cmm.util.jstree.TreeDaoVO">
+		<result property="level" column="LVL" columnIndex="1"/>
+		<result property="contentId" column="MENU_NO" columnIndex="2"/>
+		<result property="contentNm" column="MENU_NM" columnIndex="3"/>
+		<result property="upperContentId" column="UPPER_MENU_NO" columnIndex="4"/>
+		<result property="state" column="STATE" columnIndex="5"/>
+		<result property="url" column="URL" columnIndex="6"/>
+		<result property="rel" column="REL" columnIndex="7"/>
+		<result property="lowRankCount" column="CNT" columnIndex="8"/>
+		<result property="ord" column="MENU_ORDR" columnIndex="9"/>
+		<result property="contentType" column="CONTENT_TYPE" columnIndex="10"/>
+		<result property="icon" column="ICON" columnIndex="11"/>
+	</resultMap>
+
+	<select id="MenuManageDAO.selectTreeMenuKen" parameterClass="hashmap" resultClass="egovMap" >
+		SELECT  
+			C.menu_no, 
+			C.menu_gubun,
+			C.upper_menu_no, 
+			D.menu_nm as name, 
+			D.menu_dc, 
+			C.url_path, 
+			C.sso_use_yn,
+			A.LEVEL AS lvl,
+			(SELECT COUNT(menu_no) FROM t_co_menu WHERE upper_menu_no = C.menu_no) AS child_count,
+			"" AS checked
+		FROM    (
+				SELECT  `get_menu_connect_by_id`(menu_no) AS menu_no, @level AS LEVEL
+				FROM    (
+					SELECT  @start_with := 0,
+						@menu_no := @start_with,
+						@level := 0
+					) vars, t_co_menu
+				WHERE   @menu_no IS NOT NULL AND use_yn = 'Y' AND comp_seq = #compSeq#
+		         ) A,
+		        t_co_menu C LEFT OUTER JOIN t_co_menu_multi D ON C.menu_no = D.menu_no
+		      			
+		WHERE 
+		        C.menu_no = A.menu_no
+			AND D.lang_code = #langCode#
+			AND C.menu_gubun = #menuGubun#
+		GROUP BY A.menu_no							
+	</select>
+	
+	<resultMap id="MenuManageDAO.MenuManageDetail" class="neos.cmm.menu.vo.MenuInfo">		
+		<result property="menuNo" column="MENU_NO" columnIndex="1"/>
+		<result property="upperMenuNo" column="UPPER_MENU_NO" columnIndex="2"/>
+		<result property="menuName" column="MENU_NM" columnIndex="3"/>
+		<result property="programName" column="PROGRM_FILE_NM" columnIndex="4"/>
+		<result property="menuOrd" column="MENU_ORDR" columnIndex="5"/>
+		<result property="menuDc" column="MENU_DC" columnIndex="6"/>
+		<result property="linkImgName" column="RELATE_IMAGE_PATH" columnIndex="7"/>
+		<result property="linkImgHref" column="RELATE_IMAGE_NM" columnIndex="8"/>	
+	</resultMap>
+	
+    <resultMap id="MenuManageDAO.MenuManageDetail2" class="neos.cmm.menu.vo.MenuInfo">       
+        <result property="menuNo" column="MENU_NO" columnIndex="1"/>
+        <result property="upperMenuNo" column="UPPER_MENU_NO" columnIndex="2"/>
+        <result property="menuName" column="MENU_NM" columnIndex="3"/>
+        <result property="programName" column="PROGRM_FILE_NM" columnIndex="4"/>
+        <result property="menuOrd" column="MENU_ORDR" columnIndex="5"/>
+        <result property="menuDc" column="MENU_DC" columnIndex="6"/>
+        <result property="linkImgName" column="RELATE_IMAGE_PATH" columnIndex="7"/>
+        <result property="linkImgHref" column="RELATE_IMAGE_NM" columnIndex="8"/>       
+       <result property="crudmYn" column="CRUDM_YN" columnIndex="9"/>
+    </resultMap>	
+	
+    <resultMap id="MenuManageDAO.MenuManageDetail3" class="neos.cmm.menu.vo.MenuInfo">       
+        <result property="menuNo" column="MENU_NO" columnIndex="1"/>
+        <result property="upperMenuNo" column="UPPER_MENU_NO" columnIndex="2"/>
+        <result property="menuOrd" column="MENU_ORDR" columnIndex="3"/>
+    </resultMap>
+	
+	<select id="MenuManageDAO.selectMenuInfo" parameterClass="MenuInfo" resultMap="MenuManageDetail3">
+		<![CDATA[
+			SELECT MENU_NO
+		           , UPPER_MENU_NO
+		           , MENU_ORDR
+		  FROM t_co_menu
+		 WHERE MENU_NO = #menuNo#		 
+		   			
+		]]> 
+	</select>
+	
+	<insert id="MenuManageDAO.insertMenu" parameterClass="MenuInfo" >		
+		<![CDATA[
+
+			INSERT INTO t_co_menu
+			(
+				COMP_SEQ, MENU_GUBUN, MENU_NO, UPPER_MENU_NO, MENU_ORDR, URL_PATH, USE_YN, SSO_USE_YN, MENU_DEPTH, CREATE_DATE
+			)
+			VALUES
+			( 			  
+				#compSeq#, #menuGubun#, #menuNo#, #upperMenuNo#, #menuOrd#, #urlPath#, #useChk#, #ssoUseYn#, 1, now()
+			)						
+		]]>
+	</insert>
+ 
+	<insert id="MenuManageDAO.insertMenuMulti" parameterClass="MenuInfo" >		
+		<![CDATA[
+
+			INSERT INTO t_co_menu_multi
+			(
+				MENU_NO, LANG_CODE, MENU_NM, MENU_DC, CREATE_DATE
+			)
+			VALUES
+			( 			  
+				#menuNo#, #menuLang#, #menuName#, #menuDc#, now()
+			)						
+		]]>
+	</insert>	
+
+	<insert id="MenuManageDAO.insertMenuAuth" parameterClass="hashMap" >		
+		<![CDATA[
+
+			INSERT INTO t_co_menu_auth
+			(
+				MENU_NO, AUTHOR_CODE
+			)
+			VALUES
+			( 			  
+				#menuNo#, #authorCode#
+			)						
+		]]>
+	</insert>	
+
+ 	<delete id="MenuManageDAO.deleteMenuAuth" parameterClass="MenuInfo">
+ 		<![CDATA[
+ 			DELETE FROM t_co_menu_auth
+ 			 WHERE MENU_NO	= #menuNo#
+ 		]]>
+ 	</delete>
+
+	
+	<update id="MenuManageDAO.updateMenu" parameterClass="MenuInfo">
+ 		<![CDATA[
+			UPDATE t_co_menu SET 				    
+				    MENU_NO				=	#menuNo#
+				   ,UPPER_MENU_NO		=	#upperMenuNo#
+				   ,USE_YN				=	#useChk#
+				   ,SSO_USE_YN			=	#ssoUseYn#
+				   ,URL_PATH			=   #urlPath#
+				   ,MODIFY_SEQ			=   #empSeq#
+				   ,MODIFY_DATE			=   now()
+			WHERE MENU_NO = #selMenuNo#								
+ 		]]>
+ 	</update>
+
+	<update id="MenuManageDAO.updateMenuDetail" parameterClass="MenuInfo">
+ 		<![CDATA[
+			UPDATE t_co_menu_multi SET 				    
+				    MENU_NM				=	#menuName#
+				   ,MENU_DC     		=	#menuDc#
+				   ,MODIFY_SEQ          =   #empSeq#
+				   ,MODIFY_DATE         =   now()
+			WHERE MENU_NO = #selMenuNo#		
+			 AND  LANG_CODE = #menuLang#							
+ 		]]>
+ 	</update>
+ 	
+ 	
+ 	<delete id="MenuManageDAO.deleteMenu" parameterClass="MenuInfo">
+ 		<![CDATA[
+ 			DELETE FROM COMTNMENUINFO
+ 			 WHERE MENU_NO	= #menuNo#
+ 			
+ 		]]>
+ 	</delete>
+	
+	<resultMap id="resultAuthTree" class="neos.cmm.util.jstree.TreeDaoVO">
+		<result property="level" column="LVL" columnIndex="1"/>
+		<result property="contentId" column="MENU_NO" columnIndex="2"/>
+		<result property="contentNm" column="MENU_NM" columnIndex="3"/>
+		<result property="upperContentId" column="UPPER_MENU_NO" columnIndex="4"/>
+		<result property="state" column="STATE" columnIndex="5"/>
+		<result property="url" column="URL" columnIndex="6"/>
+		<result property="rel" column="REL" columnIndex="7"/>
+		<result property="lowRankCount" column="CNT" columnIndex="8"/>
+		<result property="ord" column="MENU_ORDR" columnIndex="9"/>
+		<result property="contentType" column="CONTENT_TYPE" columnIndex="10"/>
+		<result property="icon" column="ICON" columnIndex="11"/>
+		<result property="crudmYn" column="CRUDM_YN" columnIndex="12"/>
+	</resultMap>
+	
+	<select id="MenuManageDAO.selectMenuCrudm" parameterClass="Map" resultClass="int">
+	   SELECT NVL(MAX(crudm) , 0) AS crudm
+	     FROM comtnmenucreatdtls
+	    WHERE menu_no = #menuNo#
+	      AND author_code IN (SELECT author_code
+	                            FROM comtnauthor_s
+	                           WHERE emplyr_id = #emplyrId#
+	                             AND ena_yn = 'Y'
+	                          )
+	</select>	
+	
+	
+	<select id="MenuManageDAO.menuInfoView" parameterClass="hashmap" resultClass="egovMap" >
+		<![CDATA[ 	 
+		 SELECT *
+  		     FROM t_co_menu A, t_co_menu_multi B,
+  		     ( SELECT   GROUP_CONCAT(D.author_code) AS sel_auth_code
+  		             ,  GROUP_CONCAT(D.author_nm) AS sel_auth_nm 
+  		       FROM t_co_menu_auth C, comtnauthorinfo D
+  		       WHERE C.menu_no = #menuNo#  AND C.author_code = D.author_code	
+  		     ) z,
+  		     ( SELECT   GROUP_CONCAT(F.menu_no) AS sel_upper_menu_no
+  		             ,  GROUP_CONCAT(F.menu_nm) AS sel_upper_menu_nm 
+  		       FROM t_co_menu E, t_co_menu_multi F
+  		       WHERE E.menu_depth IN (
+					SELECT CASE WHEN c1.menu_depth = 1 THEN 1
+					            ELSE c1.menu_depth -1
+					            END
+					FROM t_co_menu c1
+					WHERE c1.menu_no =  #menuNo#		 		  		       
+  		       ) AND E.menu_no = F.menu_no
+  		         AND E.menu_gubun = #menuGubun#
+  		     ) x   		     
+	     WHERE A.menu_no = B.menu_no
+	     AND B.lang_code = 'kr'		     
+	     AND a.menu_no =  #menuNo#
+
+		]]> 
+	</select>
+	
+	<select id="MenuManageDAO.selectMenuImgClass" parameterClass="hashmap" resultClass="String" >
+			select menu_img_class from  
+			<isEqual property="userSe" compareValue="USER">
+			t_co_menu
+			</isEqual>
+			<isNotEqual property="userSe" compareValue="USER">
+			t_co_menu_adm
+			</isNotEqual>
+			where menu_no = $startWith$ limit 1
+	</select>	
+		
+	<select id="MenuManageDAO.selectMenuTreeList" parameterClass="hashmap" resultClass="egovMap" >
+		SELECT  
+			C.menu_no, 
+			C.menu_gubun,
+			C.upper_menu_no, 
+			D.menu_nm as name, 
+			D.menu_dc, 
+			C.url_path, 
+			C.sso_use_yn,
+			A.LEVEL AS lvl,
+			(SELECT COUNT(menu_no) FROM t_co_menu WHERE upper_menu_no = C.menu_no) AS child_count,
+			C.url_gubun,
+			C.menu_img_class
+		FROM    (
+				SELECT  `get_menu_connect_by_id`(menu_no) AS menu_no, @level AS LEVEL
+				FROM    (
+					SELECT  @start_with := $startWith$,
+						@menu_no := @start_with,
+						@level := 0
+					) vars, t_co_menu
+				WHERE   @menu_no IS NOT NULL AND use_yn = 'Y'
+		         ) A,
+		        <isNotEqual property="id" compareValue="master">  
+		        t_co_menu_auth B,
+		        </isNotEqual>
+		        t_co_menu C LEFT OUTER JOIN t_co_menu_multi D ON C.menu_no = D.menu_no,
+		        t_co_code_detail E,
+				t_co_menu_comp F
+			
+		WHERE 
+			C.menu_no = A.menu_no
+			AND C.menu_no = F.menu_no
+			AND D.lang_code = #langCode#
+			AND F.comp_seq = #compSeq#
+			AND C.menu_gubun = E.detail_code
+			AND C.use_yn = 'Y'
+			<isNotEmpty property="level">
+			AND A.LEVEL = $level$
+			</isNotEmpty>
+			<isNotEmpty property="authCodeList"> 
+				<isNotEqual property="id" compareValue="master">  
+				AND A.menu_no = B.menu_no
+				AND B.author_code <iterate prepend="IN" property="authCodeList" open="(" close=")" conjunction=","> #authCodeList[]# </iterate>
+				</isNotEqual>
+			</isNotEmpty>
+		GROUP BY A.menu_no
+		ORDER BY IFNULL(E.order_num, 99999), IFNULL(C.menu_ordr,99999)
+	</select> 
+	
+	<select id="MenuManageDAO.selectFirstMenuInfo" parameterClass="hashmap" resultClass="egovMap" >
+		SELECT  
+			C.menu_no, 
+			C.menu_gubun,
+			C.upper_menu_no, 
+			D.menu_nm, 
+			D.menu_dc, 
+			C.url_path, 
+			C.sso_use_yn,
+			A.LEVEL AS lvl,
+			C.url_gubun,
+			C.menu_img_class
+		FROM    (
+				SELECT  `get_menu_connect_by_id`(menu_no) AS menu_no, @level AS LEVEL
+				FROM    (
+					SELECT  @start_with := $startWith$,
+						@menu_no := @start_with,
+						@level := 0
+					) vars, t_co_menu
+				WHERE   @menu_no IS NOT NULL AND use_yn = 'Y'
+		         ) A,
+		        <isNotEqual property="id" compareValue="master">  
+		        t_co_menu_auth B,
+		        </isNotEqual>
+		        t_co_menu C LEFT OUTER JOIN t_co_menu_multi D ON C.menu_no = D.menu_no,
+		        t_co_menu_comp E
+			
+		WHERE 
+			C.menu_no = A.menu_no
+			AND C.menu_no = E.menu_no
+			AND D.lang_code = #langCode#
+			AND E.comp_seq = #compSeq#
+			AND C.use_yn = 'Y'
+			<isNotEmpty property="authCodeList">
+				<isNotEqual property="id" compareValue="master">   
+					AND A.menu_no = B.menu_no
+					AND B.author_code <iterate prepend="IN" property="authCodeList" open="(" close=")" conjunction=","> #authCodeList[]# </iterate>
+				</isNotEqual>
+			</isNotEmpty>
+		ORDER BY IFNULL(C.menu_ordr,99999)
+		LIMIT 1
+	</select> 
+	
+	<select id="MenuManageDAO.selectFirstAdminMenuInfo" parameterClass="hashmap" resultClass="egovMap" >
+		SELECT  
+			C.menu_no, 
+			C.menu_gubun,
+			C.upper_menu_no, 
+			D.menu_nm, 
+			D.menu_dc, 
+			C.url_path, 
+			C.sso_use_yn,
+			A.LEVEL AS lvl,
+			C.url_gubun,
+			C.menu_img_class
+		FROM    (
+				SELECT  `get_adm_menu_connect_by_id`(menu_no) AS menu_no, @level AS LEVEL
+				FROM    (
+					SELECT  @start_with := $startWith$,
+						@menu_no := @start_with,
+						@level := 0
+					) vars, t_co_menu_adm
+				WHERE   @menu_no IS NOT NULL AND use_yn = 'Y'
+		         ) A,
+		        t_co_menu_adm C LEFT OUTER JOIN t_co_menu_adm_multi D ON C.menu_no = D.menu_no
+		    <isNotEqual property="menuGubun" compareValue="MASTER">    
+		        ,
+		        t_co_auth_adm_user_relate R
+		    </isNotEqual>
+		WHERE 
+			A.menu_no = B.menu_no
+			AND C.menu_no = A.menu_no
+			AND C.menu_gubun = #menuGubun#
+			AND D.lang_code = #langCode#
+			AND C.use_yn = 'Y'
+			<isNotEqual property="menuGubun" compareValue="MASTER">    		
+			AND R.menu_no = A.menu_no 
+			AND R.emp_seq = #empSeq#
+			AND R.comp_seq = #compSeq#
+			</isNotEqual>
+		ORDER BY IFNULL(C.menu_ordr,99999)
+		LIMIT 1
+	</select> 
+	
+<!-- 	<select id="MenuManageDAO.selectAdminMenuTreeList" parameterClass="hashmap" resultClass="egovMap" > -->
+<!-- 		SELECT   -->
+<!-- 			C.menu_no,  -->
+<!-- 			C.upper_menu_no,  -->
+<!-- 			D.menu_nm AS NAME,  -->
+<!-- 			D.menu_dc,  -->
+<!-- 			C.url_path,  -->
+<!-- 			C.sso_use_yn, -->
+<!-- 			A.LEVEL AS lvl, -->
+<!-- 			(SELECT COUNT(menu_no) FROM t_co_menu_adm WHERE upper_menu_no = C.menu_no) AS child_count -->
+<!-- 			, -->
+<!-- 			(SELECT menu_no FROM t_co_auth_adm_user_relate WHERE menu_no = A.menu_no AND emp_seq = #empSeq# AND comp_seq = #compSeq#) AS auth_menu_no, -->
+<!-- 			C.url_gubun, -->
+<!-- 			C.menu_img_class -->
+<!-- 		FROM    ( -->
+<!-- 					SELECT  `get_adm_menu_connect_by_id`(menu_no) AS menu_no, @level AS LEVEL -->
+<!-- 					FROM    ( -->
+<!-- 						SELECT  @start_with := $startWith$, -->
+<!-- 							@menu_no := @start_with, -->
+<!-- 							@level := 0 -->
+<!-- 						) vars, t_co_menu_adm -->
+<!-- 					WHERE   @menu_no IS NOT NULL AND use_yn = 'Y' -->
+<!-- 		         ) A, -->
+<!-- 		        t_co_menu_adm C LEFT OUTER JOIN t_co_menu_adm_multi D ON C.menu_no = D.menu_no -->
+<!-- 		WHERE  -->
+<!-- 			C.menu_no = A.menu_no -->
+<!-- 			AND C.menu_gubun = #menuGubun# -->
+<!-- 			AND D.lang_code = #langCode#	 -->
+<!-- 			AND C.use_yn = 'Y'		 -->
+<!-- 			<isNotEmpty property="level"> -->
+<!-- 			AND A.LEVEL = $level$ -->
+<!-- 			</isNotEmpty> -->
+			
+<!-- 		GROUP BY A.menu_no -->
+<!-- 		<isNotEmpty property="level"> -->
+<!-- 		ORDER BY IFNULL(C.menu_ordr,99999) -->
+<!-- 		</isNotEmpty> -->
+<!-- 	</select>  -->
+	
+	<select id="MenuManageDAO.selectAdminMenuTreeListAuth" parameterClass="hashmap" resultClass="egovMap" >
+		SELECT  
+			C.menu_no, 
+			C.upper_menu_no, 
+			D.menu_nm AS NAME, 
+			D.menu_dc, 
+			C.url_path, 
+			C.sso_use_yn,
+			A.LEVEL AS lvl,
+			(SELECT COUNT(menu_no) FROM t_co_menu_adm WHERE upper_menu_no = C.menu_no) AS child_count
+			,(SELECT menu_no FROM t_co_auth_adm_user_relate WHERE menu_no = A.menu_no AND emp_seq = #empSeq# AND comp_seq = #compSeq#) AS auth_menu_no,
+			C.url_gubun,
+			C.menu_img_class
+		FROM    (
+				SELECT  `get_adm_menu_connect_by_id`(menu_no) AS menu_no, @level AS LEVEL
+				FROM    (
+					SELECT  @start_with := $startWith$,
+						@menu_no := @start_with,
+						@level := 0
+					) vars, t_co_menu_adm
+				WHERE   @menu_no IS NOT NULL AND use_yn = 'Y'
+		         ) A,
+		        t_co_menu_adm C LEFT OUTER JOIN t_co_menu_adm_multi D ON C.menu_no = D.menu_no
+		    <isNotEqual property="id" compareValue="master">    
+		        ,
+		         (SELECT * FROM t_co_auth_adm_user_relate WHERE emp_seq = #empSeq# AND comp_seq = #compSeq#) R
+		    </isNotEqual>
+		WHERE 
+			C.menu_no = A.menu_no
+			AND C.menu_gubun = #menuGubun#
+			AND D.lang_code = #langCode#
+			AND C.use_yn = 'Y'
+			<isNotEqual property="id" compareValue="master">    		
+			AND R.menu_no = A.menu_no 
+			</isNotEqual>
+				 
+			<isNotEmpty property="level">
+			AND A.LEVEL = $level$
+			</isNotEmpty>
+			
+		GROUP BY A.menu_no
+		<isNotEmpty property="level">
+		ORDER BY IFNULL(C.menu_ordr,99999)
+		</isNotEmpty>
+	</select> 
+	
+	<select id="MenuManageDAO.selectMenuListOfUrl" parameterClass="hashmap" resultClass="egovMap">
+		SELECT m.menu_no, m.upper_menu_no, mm.menu_nm, m.url_path, m.url_gubun, m.menu_img_class
+		FROM
+			(
+				SELECT  @r AS _id,
+					 (
+					 SELECT  @r := upper_menu_no
+					 FROM    t_co_menu
+					 WHERE   menu_no = _id
+					 ) AS parent,
+					 @l := @l + 1 AS lvl
+				 FROM    (
+					 SELECT  @r := (SELECT menu_no 
+									FROM t_co_menu 
+									WHERE 
+										(
+											CASE WHEN url_gubun IS NOT NULL THEN CONCAT('/',url_gubun,url_path)
+											ELSE url_path
+											END
+										) LIKE '%$urlPath$%'
+									LIMIT 1),
+						 @l := 0,
+						 @cl := 0
+					 ) vars,
+					 t_co_menu h
+				WHERE    @r > 10
+			) v, t_co_menu m, t_co_menu_multi mm
+		WHERE
+			v._id = m.menu_no
+			AND m.menu_no = mm.menu_no
+			AND mm.lang_code = #langCode#
+			AND m.use_yn ='Y'
+			ORDER BY v.lvl DESC
+	</select>
+	
+	
+	<select id="MenuManageDAO.selectMenuAdminListOfUrl" parameterClass="hashmap" resultClass="egovMap">
+		SELECT m.menu_no, m.upper_menu_no, mm.menu_nm, m.url_path, m.url_gubun, m.menu_img_class
+		FROM
+			(
+				SELECT  @r AS _id,
+					 (
+					 SELECT  @r := upper_menu_no
+					 FROM    t_co_menu
+					 WHERE   menu_no = _id
+					 ) AS parent,
+					 @l := @l + 1 AS lvl
+				 FROM    (
+					 SELECT  @r := (SELECT menu_no 
+									FROM t_co_menu_adm 
+									WHERE 
+										(
+											CASE WHEN url_gubun IS NOT NULL THEN CONCAT('/',url_gubun,url_path)
+											ELSE url_path
+											END
+										) LIKE '%$urlPath$%'
+										LIMIT 1),
+						 @l := 0,
+						 @cl := 0
+					 ) vars,
+					 t_co_menu h
+				WHERE    @r > 10
+			) v, t_co_menu_adm m, t_co_menu_adm_multi mm
+		WHERE
+			v._id = m.menu_no
+			AND m.menu_no = mm.menu_no
+			AND mm.lang_code = #langCode#
+			AND m.use_yn ='Y'
+		ORDER BY v.lvl DESC
+	</select>
+	
+	<select id="MenuManageDAO.selectMyMenuList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT c.menu_no, b.menu_nm, a.url_gubun, a.url_path, a.menu_img_class, a.menu_img_path, 
+			get_menu_first_info('0', C.menu_no, #langCode#) AS gnb_menu_no,
+			get_menu_first_info('1', C.menu_no, #langCode#) AS gnb_menu_nm
+		FROM t_co_menu_mymenu c left outer join (select * from t_co_menu where use_yn = 'Y' ) a on a.menu_no = c.menu_no
+			left outer join (select * from t_co_menu_multi where lang_code = #langCode#) b on b.menu_no = c.menu_no
+		WHERE
+		       c.emp_seq = #empSeq#
+		       AND c.dept_seq = #deptSeq#
+	</select>
+	
+	
+	
+	<insert id="MenuManageDAO.insertMyMenuList" parameterClass="java.util.List">
+	   INSERT t_co_menu_mymenu 
+			(`menu_no`, 
+			`emp_seq`, 
+			`dept_seq`
+			)
+		VALUES
+	   <dynamic>
+	       <iterate conjunction=",">
+    	      (#[].menuNo# , #[].empSeq#, #[].deptSeq#)
+	       </iterate>
+	   </dynamic>
+	
+	</insert>
+	
+	<delete id="MenuManageDAO.deleteMyMenuList" parameterClass="hashmap">
+		delete from `neos`.`t_co_menu_mymenu` 
+		where
+		`emp_seq` = #empSeq# and `dept_seq` = #deptSeq#
+	
+	
+	</delete>
+	
+	
+	<select id="MenuManageDAO.selectMenuListOfMenuNo" parameterClass="hashmap" resultClass="egovMap">
+		SELECT m.menu_no, m.upper_menu_no, mm.menu_nm, m.url_path, m.url_gubun, m.menu_img_class
+		FROM
+			(
+				SELECT  @r AS _id,
+					 (
+					 SELECT  @r := upper_menu_no
+					 FROM    t_co_menu
+					 WHERE   menu_no = _id
+					 ) AS parent,
+					 @l := @l + 1 AS lvl
+				 FROM    (
+					 SELECT  @r := $menuNo$,
+						 @l := 0,
+						 @cl := 0
+					 ) vars,
+					 t_co_menu h
+				WHERE    @r > 10
+			) v, t_co_menu m, t_co_menu_multi mm
+		WHERE
+			v._id = m.menu_no
+			AND m.menu_no = mm.menu_no
+			AND mm.lang_code = #langCode#
+			AND m.use_yn ='Y'
+			ORDER BY v.lvl DESC
+	</select>
+	
+	
+</sqlMap>

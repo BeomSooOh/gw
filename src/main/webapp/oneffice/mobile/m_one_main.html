@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko" ng-app="onefficeApp" class="ui-mobile">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="description" content="" />
+		<meta name="keywords" content="" />
+		<meta name="viewport" content="width=device-width, user-scalable=0, initial-scale=1.0 , maximum-scale=1.0 , minimum-scale=1.0 ,target-densitydpi=medium-dpi" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+		<script>
+			var pageLocation = "mobile_home";
+		</script>
+		<script language="javascript" src="../oneffice_loader.js?ver=2.3.2"></script>
+		<link rel="shortcut icon" type="image/x-icon" href="../image/cloud/oneffice_Site.png" />
+		<title>ONEFFICE MOBILE</title>
+	</head>
+	
+	<body id="mainContainer" class="ui-mobile-viewport ui-overlay-a" ng-controller="ctrl_main" ng-init="initMain()" style="display: none;">
+		<div class="status_bar" style="display:none;"></div>
+		
+		<!-- oneffice home -->
+		<ng-include id="one_home" src="'m_one_home.html'" class="wrap" data-role="page" ng-controller="ctrl_home" onload="getBaseData()"></ng-include>
+		
+		<!-- viewer -->
+		<ng-include id="one_viewer" src="getExtraPage('viewer')" class="wrap" data-role="page" ng-controller="ctrl_viewer" onload="initViewer()"></ng-include>
+		
+		<!-- security setting -->
+		<ng-include id="one_scty" src="getExtraPage('scty')" class="wrap" data-role="page" ng-controller="ctrl_scty" onload="initScty()"></ng-include>
+		
+		<!-- share -->
+		<ng-include id="one_share" src="getExtraPage('share')" class="wrap" data-role="page" ng-controller="ctrl_share" onload="initShare()"></ng-include>
+		
+		<!-- template -->
+		<ng-include id="one_template" src="getExtraPage('template')" class="wrap" data-role="page" ng-controller="ctrl_template" onload="initTemplate()"></ng-include>
+		
+		<!-- custom page -->
+		<ng-include id="one_custom_page" src="getExtraPage('custom')" class="wrap" data-role="page" ng-controller="ctrl_custom" onload="initCustom()"></ng-include>
+		
+		<!-- slideshow -->
+		<ng-include id="one_slideshow" src="getExtraPage('slideshow')" class="wrap" data-role="page" ng-controller="ctrl_slideshow" onload="initSlideshow()"></ng-include>
+		
+		<div class="pop_layer_wrap" style="display:none;">
+			<div class="pop_layer alert_layer">
+				<div class="pl_con"></div>
+				<div class="pl_foot"></div>
+			</div>
+			<div class="pop_layer_modal" style="display:block;"></div>
+		</div>
+		
+		<div class="toast_box" style="display:none;">
+			<img class="image" src="">
+			<p class="message"></p>
+		</div>
+		<div class="dialog_layer_wrap" style="display:none;"></div>
+	</body>
+</html>
+

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="FundDAO">
+
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+	<!-- 자금관리 메뉴 권한 리스트 -->
+	<select id="FundDAO.SmartMenuAuthListSelect" resultClass="hashmap" parameterClass="hashmap">
+		SELECT 		 A.detail_code			as "menuType"
+					<isNotEmpty property="langCode">
+					, $DB_NEOS$FN_GetMultiLang(#langCode#, B.detail_name_multi) as "menuName"
+					</isNotEmpty>      		 	
+					<isEmpty property="langCode">
+					, B.detail_name			as "menuName"
+					</isEmpty>		
+					, C.erp_co_cd			as "erpCompSeq"
+					, C.erp_biz_cd			as "erpBizSeq"
+					, C.erp_co_cd_name		as "erpCompName"
+					, C.erp_biz_cd_name		as "erpBizName"
+					, D.emp_seq				as "empSeq"
+					, E.comp_seq			as "compSeq"
+					, D.dept_seq			as "deptSeq"
+					, 'Y'					as "useYN"
+		FROM   		$DB_NEOS$t_co_code_detail 	A
+		INNER JOIN	$DB_NEOS$v_t_co_code_detail_multi  B
+			ON	A.code = B.code 
+			AND 	A.detail_code = B.detail_code 
+			AND 	A.code = 'ac0001'
+		INNER JOIN	$DB_NEOS$t_smart_authcode_menu	C
+			ON	C.menu_code = B.detail_code
+		INNER JOIN	$DB_NEOS$t_smart_authcode_emp	D
+			ON	C.auth_code = D.auth_code 	
+		INNER JOIN 	$DB_NEOS$t_co_erp E
+			ON		C.erp_co_cd = E.erp_comp_seq	
+			AND 	E.achr_gbn = 'ac'
+			AND		E.erp_type_code = 'iCUBE'
+		INNER JOIN	$DB_NEOS$t_smart_authcode F
+			ON		C.auth_code = F.auth_code
+			AND		E.comp_seq = F.comp_seq
+		WHERE   	D.emp_seq = #empSeq#  
+	</select>
+
+
+</sqlMap>

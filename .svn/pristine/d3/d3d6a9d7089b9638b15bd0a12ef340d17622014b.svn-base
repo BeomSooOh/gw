@@ -1,0 +1,179 @@
+@charset "utf-8";
+
+input[type="checkbox"]:disabled:checked + label{background: url("../Images/bg/checkbox04.png") no-repeat left center;}
+
+/*첨부파일*/
+.imgPointer{cursor:pointer;}
+.dz_file_name_tool_tip{font-family: sans-serif;font-size: 8.25pt;border: 1px solid #BBBBBB;padding: 5px;height: auto;background: white;}
+
+.file_add_bot{padding:7px 10px 7px 0px; height:100%; display:table;width:100%;}
+.file_add_bot .file_add_bot_dis{text-align:center;font-size:0;display:table-cell;vertical-align: middle;}
+.file_add_bot .file_add_bot_dis .fileplus_ico{display:inline-block;padding-left:20px;font-size:12px;height:20px;line-height:23px;color:#a0a0a0;background:url('/gw/Images/ico/fileplus_ico.png') no-repeat left;}
+
+table.Addfile{table-layout: fixed;}
+.tooltip_file{display:none;font-size:8.25pt; border:1px solid #BBBBBB;padding:10px;height:auto;background:white;position:absolute;z-index:10001;}
+.mi135 {-ms-word-break:break-all;word-break:break-all; overflow: auto;}
+.file_add_bot .checkOn{position:absolute; left:3px; top:2px; z-index:1;}
+.file_add_bot .file_disp .checkOn{z-index:0;}
+.file_add_bot a:hover{text-decoration:underline;}
+
+
+/*조회*/
+.file_set {float:left; position:relative; margin:7px 10px;}
+.file_set .file_img {text-align:center;overflow:hidden;float:left; width:87px; height:87px;cursor:pointer;}
+.file_set .file_img a{display:block;width:100%;height:100%;border:1px solid #eee;overflow: hidden;}
+.file_set .file_img.wide img {margin-left: -20%; max-height:100px;}
+.file_set .file_img.tall img {margin-top: -20%; width:100%;}
+.file_set .file_img.square img {height:100%; width:100%;}
+.file_set .file_img.load img{width:100%;height:100%;max-width:87px;max-height:87px;}
+.file_set .file_delete{position:absolute;top:0px;right:0px;width:16px;height:16px;background:url("../Images/ico/btn_fileX.png") 0px 0px no-repeat;cursor:pointer;}
+.file_set .file_delete:hover{background:url("../Images/ico/btn_fileX.png") -16px 0px no-repeat;}
+
+.file_add_bot .file_hwp{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_01.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_zip{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_02.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_doc{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_03.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_ppt{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_04.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_mp4{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_05.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_wav{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_06.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_wma{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_07.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_tif{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_08.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_gul{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_09.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_ai{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_10.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_psd{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_11.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_htm{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_12.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_flv{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_13.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_mpg{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_14.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_mpeg{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_15.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_asf{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_16.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_mov{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_17.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_wmv{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_18.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_pdf{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_19.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_txt{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_20.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_mp3{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_21.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_avi{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_22.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_etc{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_23.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_xls{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_24.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_img2{width:100%;height:100%;background:#fff url("../Images/ico/icon_file_25.png") center center no-repeat;cursor:pointer;}
+.file_add_bot .file_name {width:89px;}
+.file_add_bot .file_name a{display:block;padding:5px 0 0 0;line-height:15px;font-size:11px;color:#000;text-overflow: ellipsis;white-space: nowrap;overflow:hidden;}
+.file_add_bot .file_name a:hover {text-decoration:underline;}
+
+/*저장,열기*/
+.downfile_modal{display:none;width:100%;height:100%;position:absolute;top:0;left:0;background:url('../Images/bg/timeline_60p_bg.png') repeat;}
+.downfile_modal ul{float:initial; padding:17px 0 0 0;}
+.downfile_modal ul li{text-align:center;}
+.downfile_modal ul li a{display:inline-block;margin:2px 0;padding:3px 0;color:#fff;border:1px solid #fff;background:#666;min-width:65px;line-height: 16px;}
+.downfile_modal ul li a:hover{border:1px solid #0b6ab2;background:#0b6ab2;}
+
+.downfile_sel_pop{background:#fff;border:1px solid #c3c3c3; padding:0px;}
+.downfile_sel_pop ul li{min-width:70px;padding: 4px 10px;}
+.downfile_sel_pop ul li a{display:block; white-space: nowrap;}
+.downfile_sel_pop ul li:hover{background:#e1eaf1;}
+
+.file_disp{position:relative;width:87px;height:87px;vertical-align:middle;border:1px solid #474747;}
+.file_disp:hover .downfile_modal{display:block}
+.file_info:hover .downfile_modal{display:block}
+
+/*아이콘 리스트*/
+.file_iconList{float:right; padding-top:1px;}
+.file_iconList ul{border:1px solid #c3c3c3; border-right:none;height:22px;}
+.file_iconList ul li{float:left; border-right:1px solid #c3c3c3;}
+.file_iconList a{float:left;width:24px; height:22px;}
+.file_iconList .thumbnail{background:#fff url('../Images/ico/ico_file_thumbnail.png') no-repeat center center;}
+.file_iconList .thumbnail:hover{background:#fff url('../Images/ico/ico_file_thumbnail_on.png') no-repeat center center;}
+.file_iconList .list{background:#fff url('../Images/ico/ico_file_list.png') no-repeat center center;}
+.file_iconList .list:hover{background:#fff url('../Images/ico/ico_file_list_on.png') no-repeat center center;}
+.file_iconList .detail{background:#fff url('../Images/ico/ico_file_detail.png') no-repeat center center;}
+.file_iconList .detail:hover{background:#fff url('../Images/ico/ico_file_detail_on.png') no-repeat center center;}
+.file_iconList .alldown{background:#fff url('../Images/ico/ico_file_alldown.png') no-repeat center center;}
+.file_iconList .alldown:hover{background:#fff url('../Images/ico/ico_file_alldown_on.png') no-repeat center center;}
+
+/*목록형*/
+.file_add_bot .file_group{padding:0px;background:url('../Images/ico/ico_set_bg_bar01.png') repeat-y right 0; background-size:1px;}
+.file_add_bot .file_group:last-child{background:none;}
+.file_add_bot .file_group li.clear{padding-left:10px !important;}
+.file_add_bot .file_group .left{float: left; text-align: center; padding:0 5px; border:1px solid #bebebe; height:18px; line-height:18px; margin:3px 0 0 2px;}
+.file_add_bot .file_group .ac{padding: 5px 0px 3px 0px !important;}
+.file_add_bot .file_group li{padding:5px 5px 0 0;}
+
+
+/* 게시판 쓰기 첨부파일 시작 */
+.write_addfile {display:inline-block; width:100%; background:#fff;}
+.write_addfile .write_addtop {width:100%;}
+.write_addfile .write_addtop td {padding-top:4px; padding-bottom:4px;}
+.write_addfile .write_addtop td img {vertical-align:middle;}
+.write_addfile .write_addtop td.tit {padding-left:7px; color:#3e3e3e;  font-size:12px; font-weight:bold;}
+.write_addfile .write_addtop .tdW{width:75px;}
+
+.write_addfile .write_addbot {width:100%;}
+.write_addfile .write_addbot .con {background:#fff; border:1px solid #c0c0c0;}
+.write_addfile .write_addbot .con ul {margin-left:19px; margin-top:10px; margin-bottom:10px;}
+.write_addfile .write_addbot .con ul li {padding-top:4px; padding-bottom:4px;}
+.write_addfile .write_addbot .con ul li a {color:#3e3e3e;  font-size:12px;}
+.write_addfile .write_addbot .con ul li a:hover {text-decoration:underline;}
+.write_addfile .write_addbot .con ul li span.txt_tit {text-decoration:underline;}
+.write_addfile .write_addbot .con ul li span.size {padding-left:10px; color:#818181;  font-size:11px;}
+.write_addfile .write_addbot .con ul li span.del {float:right; padding-right:20px;}
+.write_addfile .write_addbot .con ul li span.del a {color:#666;  font-size:11px;}
+.write_addfile .write_addbot .con ul li img {vertical-align:middle; padding-right:3px;}
+.write_addfile .write_addbot01 {width:100%;}
+.write_addfile .write_addbot01 table{width:100%; border-right:1px solid #c0c0c0;}
+
+.tb_addfile {margin-right:0px;}
+.tb_addfile .Addfile {width:100%; border-collapse:collapse;}
+.tb_addfile .Addfile tr {border:1px solid #bebebe;}
+.tb_addfile .Addfile tr.line_none {border:none; height:5px;}
+.tb_addfile .Addfile td {text-align:left; word-break:break-all; line-height:16px;}
+.tb_addfile .Addfile td.addfile_top {height:26px; line-height:26px; padding:3px 10px 3px 20px; font-size:11px; color:#404041; background:#f5f4f0 url("../Images/ico/icon_add_file.gif") no-repeat 10px center;}
+.tb_addfile .Addfile td.addfile_top span.bold {font-weight:bold; font-size:12px;}
+.tb_addfile .Addfile td.addfile_top span.blue_bold {font-weight:bold; font-size:12px; color:#058df5;}
+.tb_addfile .Addfile td.addfile_top span.blue {font-size:12px; color:#058df5;}
+.tb_addfile .Addfile td.addfile_top span.save {float:right; margin-right:14px; *margin-top:-7px;}
+.tb_addfile .Addfile td.addfile_top span.save a {font-size:11px; color:#666; padding-left:17px;}
+.tb_addfile .Addfile td.addfile_top span.save img {*vertical-align:middle; *margin-top:-15px;}
+.tb_addfile .Addfile td.addfile_top span.fileuplode { margin-top: 4px; float: left; margin-left: 5px;}
+.tb_addfile .Addfile td.addfile_bot {font-size:12px; color:#323232;}
+.tb_addfile .Addfile td.addfile_bot span.name_size {font-size:11px; color:#818181; padding-left:5px;}
+.tb_addfile .Addfile td.right {text-align:right; padding-right:15px;}
+.tb_addfile .Addfile td.right a {color:#666; font-size:11px;}
+
+.file_add_bot_title{width:100%; height:26px; border-bottom:1px solid #bebebe; line-height:26px;}
+.file_add_bot_title ul li{float:left;}
+.file_add_bot_title ul li.line{height:26px; background:url('../Images/ico/ico_set_bg_bar01.png') repeat-y left top; background-size:1px;}
+.file_add_bot_title img{padding:5px 0 0 11px;}
+
+/*자세히,목록형 이미지*/
+.file_add_bot .ico_jpg{background:url("../Images/ico/ico_jpg.png") left center no-repeat;}
+.file_add_bot .ico_png{background:url("../Images/ico/ico_png.png") left center no-repeat;}
+.file_add_bot .ico_etc{background:url("../Images/ico/ico_etc.png") left center no-repeat;}
+.file_add_bot .ico_file{background:url("../Images/ico/ico_file.png") left center no-repeat;}
+.file_add_bot .ico_gif{background:url("../Images/ico/ico_gif.png") left center no-repeat;}
+.file_add_bot .ico_hwp{background:url("../Images/ico/ico_hwp.png") left center no-repeat;}
+.file_add_bot .ico_img{background:url("../Images/ico/ico_img.png") left center no-repeat;}
+.file_add_bot .ico_pdf{background:url("../Images/ico/ico_pdf.png") left center no-repeat;}
+.file_add_bot .ico_tif{background:url("../Images/ico/ico_tif.png") left center no-repeat;}
+.file_add_bot .ico_word{background:url("../Images/ico/ico_word.png") left center no-repeat;}
+.file_add_bot .ico_doc{background:url("../Images/ico/ico_doc.png") left center no-repeat;}
+.file_add_bot .ico_zip{background:url("../Images/ico/ico_zip.png") left center no-repeat;}
+.file_add_bot .ico_xlsx{background:url("../Images/ico/ico_xls.png") left center no-repeat;}
+.file_add_bot .ico_xls{background:url("../Images/ico/ico_xls.png") left center no-repeat;}
+.file_add_bot .ico_txt{background:url("../Images/ico/ico_txt.png") left center no-repeat;}
+.file_add_bot .ico_ppt{background:url("../Images/ico/ico_ppt.png") left center no-repeat;}
+.file_add_bot .ico_gul{background:url("../Images/ico/ico_gul.png") left center no-repeat;}
+.file_add_bot .ico_htm{background:url("../Images/ico/ico_htm.png") left center no-repeat;}
+.file_add_bot .ico_html{background:url("../Images/ico/ico_htm.png") left center no-repeat;}
+.file_add_bot .ico_psd{background:url("../Images/ico/ico_psd.png") left center no-repeat;}
+.file_add_bot .ico_ai{background:url("../Images/ico/ico_ai.png") left center no-repeat;}
+.file_add_bot .ico_bmp{background:url("../Images/ico/ico_bmp.png") left center no-repeat;}
+.file_add_bot .ico_flv{background:url("../Images/ico/ico_flv.png") left center no-repeat;}
+.file_add_bot .ico_mpg{background:url("../Images/ico/ico_mpg.png") left center no-repeat;}
+.file_add_bot .ico_mpge{background:url("../Images/ico/ico_mpg.png") left center no-repeat;}
+.file_add_bot .ico_mp3{background:url("../Images/ico/ico_mpg.png") left center no-repeat;}
+.file_add_bot .ico_mp4{background:url("../Images/ico/ico_mpg.png") left center no-repeat;}
+.file_add_bot .ico_wav{background:url("../Images/ico/ico_movie.png") left center no-repeat;}
+.file_add_bot .ico_wma{background:url("../Images/ico/ico_movie.png") left center no-repeat;}
+.file_add_bot .ico_tif{background:url("../Images/ico/ico_movie.png") left center no-repeat;}
+.file_add_bot .ico_asf{background:url("../Images/ico/ico_movie.png") left center no-repeat;}
+.file_add_bot .ico_mov{background:url("../Images/ico/ico_movie.png") left center no-repeat;}
+.file_add_bot .ico_wmv{background:url("../Images/ico/ico_movie.png") left center no-repeat;}
+.file_add_bot .ico_avi{background:url("../Images/ico/ico_movie.png") left center no-repeat;}

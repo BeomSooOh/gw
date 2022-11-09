@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<meta http-equiv="expires" content="0" />
+<meta http-equiv="expires" content="now" />
+<meta http-equiv="Cache-Control" content="private" />
+<meta http-equiv="Cache-Control" content="No-Cache" />
+<meta http-equiv="Pragma" content="No-Cache" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+<style>
+body {
+	margin: 0;
+	padding: 0;
+}
+
+html, body {
+	overflow: hidden;
+}
+</style>
+
+<title>더존웹에디터</title>
+
+<script language="javascript" src="./js/dze_env_config_suite.js"></script>
+<script language="javascript" src="./js/dze_ui_config_suite.js"></script>
+<script language="javascript" src="./js/dze_ext_uploader.js"></script>
+<script>
+dzeEnvConfig.iFrameLayer = true;
+
+dzeUiConfig.strLoadingDoneFunction = "loadComplete";
+
+dzeUiConfig.bCustomEditorWidthPercentageYN = true;
+dzeUiConfig.bCustomEditorHeightIFrameYN = true;
+
+/*
+dzeUiConfig.arrCustomFontName = [	//UCDOC-5283, 아마란스10 그룹사 폰트 목록
+	"",		// ----- 공백으로 전달하는 경우 없음(글꼴 제거)으로 설정됨. 표시문구는 "기본".
+	"[더존] 제목체",
+	"[더존] 본문체",
+	"본고딕",
+	"본명조",
+	"나눔고딕",
+	"나눔명조",
+	"나눔바른펜",
+	"나눔손글씨 붓",
+	"나눔손글씨 펜",
+	"나눔스퀘어",
+	"나눔스퀘어라운드",
+	"arial",
+	"tahoma",
+	"times new roman",
+	"verdana"
+];
+*/
+
+</script>
+<script language="javascript" src="./js/loadlayer.js"></script>
+
+<script>
+function loadComplete(dzeditor_no)
+{
+	// 부모창에 해당 함수 구현이 있어야 함
+	parent.dzeditorLoadComplete(dzeditor_no);
+}
+</script>
+
+</head>
+
+<body>
+	<div dzeditor="true">DuzonEditor</div>
+</body>
+</html>

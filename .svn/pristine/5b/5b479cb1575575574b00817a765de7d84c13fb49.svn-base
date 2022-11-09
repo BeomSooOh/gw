@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ExecuteSuiteDAO">
+
+	<select id="ExecuteSuiteDAO.selectSuiteDocId" parameterType="hashmap" resultType="hashmap">
+		with suite_doc as
+		(
+			select 
+				ROW_NUMBER() OVER (ORDER BY (select 1)) as row_number, 
+				a.menu_id, 
+				a.doc_id 
+			from 	
+				BX.TEDG_DOC a, 
+		 		bx.tcmg_menu b
+			 where 
+			 	 a.menu_id = b.menu_id 
+			 and menu_cd = 'KD' 
+			 and menu_div = 'ED'
+			 and auth_div = '1'
+			 and a.menu_id = ${suiteMenuId}
+		)
+		select doc_id as docId from suite_doc where
+		<if test="docId != null">
+			 	doc_id <![CDATA[>]]> ${docId} and
+			 </if>
+		(row_number BETWEEN ${startCnt} and ${endCnt})
+		
+	</select>
+	
+	<select id="ExecuteSuiteDAO.selectSuiteDocCount" parameterType="hashmap" resultType="hashMap">
+    	/* ExecuteSuiteDAO.selectSuiteDocCount - MSSSQL */
+		 
+		 SELECT 
+ 			count(*) AS suiteDoc 
+ 		FROM 
+		 	BX.TEDG_DOC a, 
+		 	bx.tcmg_menu b
+		 where 
+		 	 a.menu_id = b.menu_id 
+		 and menu_cd = 'KD' 
+		 and menu_div = 'ED'
+		 and auth_div = '1'
+		 and a.doc_id != ''
+		 <if test="menuId != null and docId != null">
+		     and a.menu_id >= ${menuId}
+		     and a.doc_id > (case when a.menu_id = ${menuId} then ${docId} else 0 end);
+		 </if>
+		 
+    </select>
+    
+    <select id="ExecuteSuiteDAO.selectAuthApproveDocCount" parameterType="hashmap" resultType="hashMap">
+    	/* ExecuteSuiteDAO.selectAuthApproveDocCount - MSSSQL */
+		 SELECT 
+		 	count(*) AS authApproveDoc
+		 FROM 
+		 	BX.TEDG_DOC_AUTH
+    </select>
+    
+    <select id="ExecuteSuiteDAO.selectViewDocCount" parameterType="hashmap" resultType="hashMap">
+    	/* ExecuteSuiteDAO.selectViewDocCount - MSSSQL */
+		 SELECT 
+		 	count(*) AS viewDoc
+		 FROM 
+		 	BX.TEDG_DOC_READ
+    </select>
+    
+    <select id="ExecuteSuiteDAO.selectAuthApproveDocList" parameterType="hashmap" resultType="egovMap">
+    	/* ExecuteSuiteDAO.selectAuthApproveDocList - MSSSQL */
+		 SELECT
+		 	menu_id,
+		 	doc_id,
+		 	request_co_id,
+		 	request_user_id,
+		 	confirm_co_id,
+		 	confirm_user_id,
+		 	confirm_yn,
+		 	convert(varchar, created_dt, 120) as 'createdDt',
+		 	convert(varchar, modify_dt, 120) as 'modifyDt'
+		 FROM 
+		 	BX.TEDG_DOC_AUTH
+		 WHERE
+		 	doc_id in (${docIdList});
+    </select>
+    
+    <select id="ExecuteSuiteDAO.selectViewDocList" parameterType="hashmap" resultType="egovMap">
+    	/* ExecuteSuiteDAO.selectViewDocList - MSSSQL */
+		 SELECT
+		 	doc_id,
+		 	user_id,
+		 	first_read_dt,
+		 	last_read_dt
+		 FROM 
+		 	BX.TEDG_DOC_READ
+		 WHERE
+		 	doc_id in (${docIdList});
+    </select>
+	
+  	<select id="ExecuteSuiteDAO.selectSuiteCompanyInfoB" resultType="hashMap">    
+   		SELECT    grp_cd
+   				, grp_nm
+		FROM      bx.tcmg_gwinfo
+    </select>
+    
+    <select id="ExecuteSuiteDAO.selectSuiteCompanyInfoC" resultType="hashMap">    
+   		SELECT   TOP 1 grp_cd
+				, grp_nm
+				, databasename
+				, domain
+		FROM 	  bx.tmag_gwserverinfo
+		WHERE 	  grp_id = ${grpId}
+		
+    </select>
+    
+    <select id="ExecuteSuiteDAO.selectSuiteBoardCommentList" resultType="hashMap">    
+   		select                                                                                                                          
+			a.doc_id as artSeqNo,                                                                                                         
+			b.commnet as replyContent,
+			CONVERT(nvarchar, b.created_dt, 120) as createDate,                                                                                                      
+			case when a.writer_show_type='20' or m.folder_type='20' then '' else ISNULL(CONVERT(nvarchar, ud.dept_id), '') end as deptSeq,               
+			case when a.writer_show_type='20' or m.folder_type='20' then '' else ISNULL(ud.grade_cd,'') end as positionCode,                      
+			ISNULL(d.co_id, '') as compSeq,
+			ISNULL(u.email_id, '') as emailAddr,
+			ISNULL(co.mail_domain, '') as emailDomain,
+			ISNULL(u.user_id, '') as empSeq,
+			ISNULL(cd2.cd, '')  as dutyCode,
+			ISNULL(u.user_nm_kr, '') as empName
+		from bx.TNBM_BOARD a                                                                                                            
+		join bx.TCMG_MENU m on a.menu_id=m.menu_id                                                                                      
+		join bx.TNBG_COMMENT b on a.doc_id=b.doc_id                                                                                     
+		join bx.tcmg_user u on b.created_by=u.user_id                                                                                   
+		left join bx.TCMG_USERDEPT ud on a.created_co=ud.co_id and b.created_by=ud.user_id and ud.main_dept_yn='1' and hold_office='1'  
+		left join bx.TCMG_DEPT d on ud.dept_id=d.dept_id                                                                                
+		left join bx.TCMG_CDD cd1 on cd1.cd = ud.grade_cd and cd1.cm_cd = 'cm0002'
+		left join bx.TCMG_CDD cd2 on cd2.cd = ud.duty_cd and cd2.cm_cd = 'cm0003'
+		left join bx.TCMG_CO co on d.co_id = co.co_id 
+		where ISNULL(a.del_yn,'0') = '0';
+		
+    </select>
+    
+     <select id="ExecuteSuiteDAO.selectSuiteDocCommentList" resultType="hashMap">    
+   		select
+			CONVERT(nvarchar, a.doc_id) + CONVERT(nvarchar, a.doc_seq) as artSeqNo,
+			ISNULL(u.user_nm_kr, '') as empName,
+			ISNULL(c.commnet, '') as replyContent,
+			ISNULL(CONVERT(nvarchar, c.created_dt, 120), '') as createDate,
+			ISNULL(u.email_id, '') as emailAddr,
+			ISNULL(u.user_id, '') as empSeq,
+			ISNULL(u.user_nm_kr, '') as empName,
+			ISNULL(CONVERT(nvarchar, ud.dept_id), '') as deptSeq,
+			ISNULL(cd2.cd, '') as dutyCode,
+			ISNULL(ud.grade_cd,'') as positionCode,
+			ISNULL(d.co_id, '') as compSeq,
+			ISNULL(co.mail_domain, '') as emailDomain
+		from bx.TKDM_DOC a
+		join bx.TKDD_COMMENT c on a.doc_id=c.doc_id and a.del_yn='0'
+		join bx.TCMG_USER u on c.created_by=u.user_id
+		left join bx.TCMG_USERDEPT ud on u.main_login_co = ud.co_id and a.created_by=ud.user_id and ud.main_dept_yn='1' and hold_office='1'
+		left join bx.TCMG_DEPT d on ud.dept_id=d.dept_id                                                                                
+		left join bx.TCMG_CDD cd1 on cd1.cd=ud.grade_cd and cd1.cm_cd='cm0002'
+		left join bx.TCMG_CDD cd2 on cd2.cd = ud.duty_cd and cd2.cm_cd = 'cm0003'
+		left join bx.TCMG_CO co on d.co_id = co.co_id;
+				
+    </select>
+    
+    <!-- <select id="ExecuteSuiteDAO.createTedgDocTemp">
+    	select * INTO bx.TEDG_DOC_TEMP from bx.TEDG_DOC
+    </select>
+    
+     <select id="ExecuteSuiteDAO.selectExistTedgDocTemp" resultType="hashMap">
+		SELECT * FROM INFORMATION_SCHEMA.tables WITH(NOLOCK) WHERE TABLE_SCHEMA = 'bx' AND TABLE_NAME = 'TEDG_DOC_TEMP';
+    </select>
+    
+    <update id="ExecuteSuiteDAO.deleteTedgDocTempDocId" parameterType="hashmap">
+    	update bx.TEDG_DOC_TEMP set doc_id = '' where doc_id = '9' and menu_id = '${suiteMenuId}';
+    </update> -->
+    
+</mapper>

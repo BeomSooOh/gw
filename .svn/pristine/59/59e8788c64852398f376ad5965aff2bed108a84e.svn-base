@@ -1,0 +1,27 @@
+  # \uae30\ubcf8 \uc5c5\ub85c\ub4dc \uacbd\ub85c
+System.uploadpath.linux = /ispdata
+System.uploadpath.windows = D:\\upload
+# \uad00\uc778
+System.signFilePath.linux =/basic/stamp
+System.signFilePath.windows =\\doc\\stamp
+
+# \uc0ac\uc6a9\uc790\uc0ac\uc778
+System.userSignFilePath.linux =/basic/sign
+System.userSignFilePath.windows =\\doc\\sign
+
+
+# \uc591\uc2dd
+System.fileFormPath.linux = /basic/template
+System.fileFormPath.windows = \\doc\\template
+
+# \ub85c\uace0
+System.fileLogoPath.linux = /basic/template/logo_Images
+System.fileLogoPath.windows = \\doc\\template\\logo_Images
+
+# \uc2ec\ubcfc
+System.fileSimbolPath.linux = /basic/template/symbol_Images
+System.fileSimbolPath.windows = \\doc\\template\\symbol_Images
+
+# \uc811\uc218\ub85c\uace0,\uc2ec\ubcfc
+System.fileReceivePath.linux = /doc/send
+System.fileReceivePath.windows = \\doc\\send

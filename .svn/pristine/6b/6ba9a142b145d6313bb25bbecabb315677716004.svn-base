@@ -1,0 +1,2622 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="OrgAdapterManage">
+	
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	
+	<select id="OrgAdapterManage.selectGroupInfo" parameterClass="hashmap" resultClass="egovMap">
+        SELECT * FROM $DB_NEOS$t_co_group
+		<isNotEmpty property="groupSeq">
+			WHERE group_seq = #groupSeq#
+		</isNotEmpty>
+		LIMIT 1;
+    </select>
+    
+	<select id="OrgAdapterManage.selectCompInfo" parameterClass="hashmap" resultClass="egovMap">
+        SELECT * FROM $DB_NEOS$t_co_comp WHERE comp_seq = #compSeq#
+    </select>
+	
+	<select id="OrgAdapterManage.getSequence" parameterClass="hashmap" resultClass="string">
+    	SELECT $DB_NEOS$nextval(#name#) as seq FROM DUAL
+	</select>
+	
+	<procedure id="OrgAdapterManage.setBaseDateInfo" parameterClass="hashmap">
+		<![CDATA[CALL $DB_NEOS$p_baseDateSet(#compSeq#,#groupSeq#,#createSeq#)]]>
+	</procedure>
+	
+	<select id="OrgAdapterManage.selectGroupPath" parameterClass="hashmap" resultClass="egovMap">
+	SELECT  group_seq, 
+			path_seq, 
+			path_name, 
+			os_type, 
+			absol_path, 
+			IFNULL(avail_capac, '0') as avail_capac, 
+			IFNULL(total_capac,'2048') as total_capac,
+			IFNULL(limit_file_count, '20') as limit_file_count, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date
+		FROM $DB_NEOS$t_co_group_path
+		WHERE 
+			true
+		<isNotEmpty property="groupSeq">
+		AND group_seq = #groupSeq#
+		</isNotEmpty>
+		<isNotEmpty property="osType">
+			AND os_type = #osType#
+		</isNotEmpty>
+		<isNotEmpty property="pathSeq">
+			AND path_seq = #pathSeq#
+		</isNotEmpty>
+		<isNotEmpty property="usage">
+			<isEqual property="eaType" compareValue="eap">
+				AND path_seq IN ('100', '700', '400', '1300', '300', '500', '600')
+			</isEqual>
+			<isEqual property="eaType" compareValue="ea">
+				AND path_seq IN ('200', '700', '400', '1300', '300', '500', '600', '1500')
+			</isEqual>
+		</isNotEmpty>
+		ORDER BY path_seq
+		LIMIT 1
+	</select>
+	
+	<select id="OrgAdapterManage.getBizSeqFromBizCd" parameterClass="hashmap" resultClass="string">
+    	SELECT biz_seq from $DB_NEOS$t_co_biz where biz_Cd=#bizCd# 
+    	limit 1
+	</select>
+	
+	<select id="OrgAdapterManage.getDeptSeqFromDeptCd" parameterClass="hashmap" resultClass="string">
+    	SELECT dept_seq from $DB_NEOS$t_co_dept where dept_Cd=#deptCd# 
+    	limit 1
+	</select>
+	
+	<select id="OrgAdapterManage.getBizSeqFromDeptCd" parameterClass="hashmap" resultClass="string">
+    	SELECT biz_seq from $DB_NEOS$t_co_dept where dept_Cd=#deptCd# 
+    	limit 1
+	</select>
+	
+	<select id="OrgAdapterManage.getDeptBizSeq" parameterClass="hashmap" resultClass="string">
+    	SELECT biz_seq from $DB_NEOS$t_co_dept where dept_seq=#deptSeq#
+	</select>
+	
+	<select id="OrgAdapterManage.getCompEaType" parameterClass="hashmap" resultClass="string">
+    	SELECT ea_type from $DB_NEOS$t_co_comp where comp_seq=#compSeq#
+	</select>
+	
+	<select id="OrgAdapterManage.selectStandardCodeList" parameterClass="hashmap" resultClass="egovMap">
+    	SELECT distinct standard_code from $DB_NEOS$t_co_comp where IFNULL(standard_code,'') != ''
+	</select>
+	
+    <insert id="OrgAdapterManage.insertComp" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_comp
+		(
+			group_seq 
+			,comp_seq
+			<isNotNull property="compCd">,comp_cd</isNotNull>
+			<isNotNull property="parentCompSeq">,parent_comp_seq</isNotNull>
+			<isNotNull property="loginType">,login_type</isNotNull>
+			<isNotNull property="compRegistNum">,comp_regist_num</isNotNull>
+			<isNotNull property="compNum">,comp_num</isNotNull>
+			<isNotNull property="standardCode">,standard_code</isNotNull>
+			<isNotNull property="standardCompSeq">,standard_comp_seq</isNotNull>
+			<isNotNull property="erpUse">,erp_use</isNotNull>
+			<isNotNull property="erpUseYN">,erp_use</isNotNull>
+			<isNotNull property="telNum">,tel_num</isNotNull>
+			<isNotNull property="faxNum">,fax_num</isNotNull>
+			<isNotNull property="homepgAddr">,homepg_addr</isNotNull>
+			<isNotNull property="compDomain">,comp_domain</isNotNull>
+			<isNotNull property="emailAddr">,email_addr</isNotNull>
+			<isNotNull property="emailDomain">,email_domain</isNotNull>
+			<isNotNull property="zipCode">,zip_code</isNotNull>
+			<isNotNull property="smsUse">,sms_use</isNotNull>
+			<isNotNull property="smsUseYN">,sms_use</isNotNull>
+			<isNotNull property="smsId">,sms_id</isNotNull>
+			<isNotNull property="smsPasswd">,sms_passwd</isNotNull>
+			<isNotNull property="nativeLangCode">,native_lang_code</isNotNull>
+			<isNotNull property="orderNum">,order_num</isNotNull>				
+			<isNotNull property="useYn">,use_yn</isNotNull>
+			<isNotNull property="eaType">,ea_type</isNotNull>
+			<isNotNull property="createSeq">,create_seq</isNotNull>
+			,create_date
+			<isNotNull property="createSeq">,modify_seq</isNotNull>
+			,modify_date
+			<isNotNull property="compEmailYn">,comp_email_yn</isNotNull>
+			<isNotNull property="erpUseYn">,erp_use_yn</isNotNull>
+			<isNotNull property="smsUseYn">,sms_use_yn</isNotNull>
+			<isNotNull property="compMailUrl">,comp_mail_url</isNotNull>
+		) VALUES
+		(
+			#groupSeq#
+			,#compSeq#
+			<isNotNull property="compCd">,#compCd#</isNotNull>
+			<isNotNull property="parentCompSeq">,#parentCompSeq#</isNotNull>
+			<isNotNull property="loginType">,#loginType#</isNotNull>
+			<isNotNull property="compRegistNum">,#compRegistNum#</isNotNull>
+			<isNotNull property="compNum">,#compNum#</isNotNull>
+			<isNotNull property="standardCode">,#standardCode#</isNotNull>
+			<isNotNull property="standardCompSeq">,#standardCompSeq#</isNotNull>
+			<isNotNull property="erpUse">,#erpUse#</isNotNull>
+			<isNotNull property="erpUseYN">,#erpUseYN#</isNotNull>
+			<isNotNull property="telNum">,#telNum#</isNotNull>
+			<isNotNull property="faxNum">,#faxNum#</isNotNull>
+			<isNotNull property="homepgAddr">,#homepgAddr#</isNotNull>
+			<isNotNull property="compDomain">,#compDomain#</isNotNull>
+			<isNotNull property="emailAddr">,#emailAddr#</isNotNull>
+			<isNotNull property="emailDomain">,#emailDomain#</isNotNull>
+			<isNotNull property="zipCode">,#zipCode#</isNotNull>
+			<isNotNull property="smsUse">,#smsUse#</isNotNull>
+			<isNotNull property="smsUseYN">,#smsUseYN#</isNotNull>
+			<isNotNull property="smsId">,#smsId#</isNotNull>
+			<isNotNull property="smsPasswd">,#smsPasswd#</isNotNull>
+			<isNotNull property="nativeLangCode">,#nativeLangCode#</isNotNull>
+			
+			<isNotNull property="orderNum">
+				<isNotEmpty property="orderNum">,#orderNum#</isNotEmpty>
+				<isEmpty property="orderNum">, null</isEmpty>			
+			</isNotNull>
+			
+			<isNotNull property="useYn">,#useYn#</isNotNull>
+			<isNotNull property="eaType">,#eaType#</isNotNull>
+			<isNotNull property="createSeq">,#createSeq#</isNotNull>
+			,NOW()
+			<isNotNull property="createSeq">,#createSeq#</isNotNull>
+			,NOW()
+			<isNotNull property="compEmailYn">,#compEmailYn#</isNotNull>
+			<isNotNull property="erpUseYn">,#erpUseYn#</isNotNull>
+			<isNotNull property="smsUseYn">,#smsUseYn#</isNotNull>
+			<isNotNull property="compMailUrl">,#compMailUrl#</isNotNull>		
+		);
+    </insert>
+    
+    <update id="OrgAdapterManage.updateComp" parameterClass="hashmap">
+		<isNotEmpty property="compSeq">
+			update $DB_NEOS$t_co_comp set
+			modify_date = NOW()
+			<isNotNull property="compCd">,comp_cd = #compCd#</isNotNull>
+			<isNotNull property="parentCompSeq">,parent_comp_seq = #parentCompSeq#</isNotNull>
+			<isNotNull property="loginType">,login_type = #loginType#</isNotNull>
+			<isNotNull property="compRegistNum">,comp_regist_num = #compRegistNum#</isNotNull>
+			<isNotNull property="compNum">,comp_num = #compNum#</isNotNull>
+			<isNotNull property="standardCode">,standard_code = #standardCode#</isNotNull>
+			<isNotNull property="standardCompSeq">,standard_comp_seq = #standardCompSeq#</isNotNull>
+			<isNotNull property="erpUse">,erp_use = #erpUse#</isNotNull>
+			<isNotNull property="erpUseYN">,erp_use = #erpUseYN#</isNotNull>
+			<isNotNull property="telNum">,tel_num = #telNum#</isNotNull>
+			<isNotNull property="faxNum">,fax_num = #faxNum#</isNotNull>
+			<isNotNull property="homepgAddr">,homepg_addr = #homepgAddr#</isNotNull>
+			<isNotNull property="compDomain">,comp_domain = #compDomain#</isNotNull>
+			<isNotNull property="emailAddr">,email_addr = #emailAddr#</isNotNull>
+			<isNotNull property="emailDomain">,email_domain = #emailDomain#</isNotNull>
+			<isNotNull property="zipCode">,zip_code = #zipCode#</isNotNull>
+			<isNotNull property="smsUse">,sms_use = #smsUse#</isNotNull>
+			<isNotNull property="smsUseYN">,sms_use = #smsUseYN#</isNotNull>
+			<isNotNull property="smsId">,sms_id = #smsId#</isNotNull>
+			<isNotNull property="smsPasswd">,sms_passwd = #smsPasswd#</isNotNull>
+			<isNotNull property="nativeLangCode">,native_lang_code = #nativeLangCode#</isNotNull>
+			
+			<isNotNull property="orderNum">
+				<isNotEmpty property="orderNum">, order_num=#orderNum#</isNotEmpty>
+				<isEmpty property="orderNum">, order_num=null</isEmpty>			
+			</isNotNull>				
+			
+			<isNotNull property="useYn">,use_yn = #useYn#</isNotNull>
+			<isNotNull property="eaType">,ea_type = #eaType#</isNotNull>
+			<isNotNull property="createSeq">,modify_seq = #createSeq#</isNotNull>
+			<isNotNull property="compEmailYn">,comp_email_yn = #compEmailYn#</isNotNull>
+			<isNotNull property="erpUseYn">,erp_use_yn = #erpUseYn#</isNotNull>
+			<isNotNull property="smsUseYn">,sms_use_yn = #smsUseYn#</isNotNull>
+			<isNotNull property="compMailUrl">,comp_mail_url = #compMailUrl#</isNotNull>		
+			where comp_seq=#compSeq#
+     	</isNotEmpty>   
+    </update>
+    
+    <delete id="OrgAdapterManage.deleteComp" parameterClass="hashmap">
+		<isNotEmpty property="compSeq">
+			delete from $DB_NEOS$t_co_comp where comp_seq=#compSeq#
+     	</isNotEmpty>
+    </delete>
+    
+    <insert id="OrgAdapterManage.insertCompMulti" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_comp_multi
+		(
+			comp_seq
+			, lang_code
+			, group_seq
+			, comp_name
+			<isNotNull property="compDisplayName">, comp_display_name</isNotNull>
+			<isNotNull property="ownerName">, owner_name</isNotNull>
+			<isNotNull property="senderName">, sender_name</isNotNull>
+			<isNotNull property="bizCondition">, biz_condition</isNotNull>
+			<isNotNull property="item">, item</isNotNull>
+			<isNotNull property="addr">, addr</isNotNull>
+			<isNotNull property="detailAddr">, detail_addr</isNotNull>
+			, use_yn
+			<isNotNull property="createSeq">, create_seq</isNotNull>
+			, create_date
+			<isNotNull property="createSeq">, modify_seq</isNotNull>
+			, modify_date
+			<isNotNull property="compNickname">, comp_nickname</isNotNull>		
+		) VALUES
+		(
+			#compSeq#
+			,#langCode#
+			,#groupSeq#
+			,#compName#
+			<isNotNull property="compDisplayName">, #compDisplayName#</isNotNull>
+			<isNotNull property="ownerName">, #ownerName#</isNotNull>
+			<isNotNull property="senderName">, #senderName#</isNotNull>
+			<isNotNull property="bizCondition">, #bizCondition#</isNotNull>
+			<isNotNull property="item">, #item#</isNotNull>
+			<isNotNull property="addr">, #addr#</isNotNull>
+			<isNotNull property="detailAddr">, #detailAddr#</isNotNull>
+			, 'Y'
+			<isNotNull property="createSeq">, #createSeq#</isNotNull>
+			, NOW()
+			<isNotNull property="createSeq">, #createSeq#</isNotNull>
+			, NOW()
+			<isNotNull property="compNickname">, #compNickname#</isNotNull>
+		);
+    </insert>
+    
+    <update id="OrgAdapterManage.updateCompMulti" parameterClass="hashmap">
+		<isNotEmpty property="compSeq">
+			update $DB_NEOS$t_co_comp_multi set
+			modify_date=NOW(), use_yn = 'Y'
+			<isNotNull property="createSeq">, modify_seq=#createSeq#</isNotNull>
+			
+			<isNotEmpty property="compName">, comp_name=#compName#</isNotEmpty>
+			<isNotNull property="compDisplayName">, comp_display_name=#compDisplayName#</isNotNull>
+			<isNotNull property="ownerName">, owner_name=#ownerName#</isNotNull>
+			<isNotNull property="senderName">, sender_name=#senderName#</isNotNull>
+			<isNotNull property="bizCondition">, biz_condition=#bizCondition#</isNotNull>
+			<isNotNull property="item">, item=#item#</isNotNull>
+			<isNotNull property="addr">, addr=#addr#</isNotNull>
+			<isNotNull property="detailAddr">, detail_addr=#detailAddr#</isNotNull>
+			<isNotNull property="compNickname">, comp_nickname=#compNickname#</isNotNull>
+			
+			where comp_seq=#compSeq# and lang_code='kr'
+     	</isNotEmpty>
+    </update>    
+    
+    <delete id="OrgAdapterManage.deleteCompMulti" parameterClass="hashmap">
+		<isNotEmpty property="compSeq">
+			delete from $DB_NEOS$t_co_comp_multi where comp_seq=#compSeq#
+			<isNotEmpty property="langCode"> and lang_code=#langCode#</isNotEmpty>
+     	</isNotEmpty>
+    </delete>
+    
+    <insert id="OrgAdapterManage.insertBiz" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_biz
+		(
+			biz_seq
+			, group_seq
+			, comp_seq
+			<isNotNull property="bizCd">, biz_cd</isNotNull>
+			<isNotNull property="compRegistNum">, comp_regist_num</isNotNull>
+			<isNotNull property="compNum">, comp_num</isNotNull>
+			<isNotNull property="telNum">, tel_num</isNotNull>
+			<isNotNull property="faxNum">, fax_num</isNotNull>
+			<isNotNull property="homepgAddr">, homepg_addr</isNotNull>
+			<isNotNull property="zipCode">, zip_code</isNotNull>
+			<isNotNull property="displayYn">, display_yn</isNotNull>
+			<isNotNull property="nativeLangCode">, native_lang_code</isNotNull>
+			<isNotNull property="orderNum">, order_num</isNotNull>
+			, use_yn
+			<isNotNull property="sealFileId">, seal_file_id</isNotNull>
+			<isNotNull property="createSeq">, create_seq</isNotNull>
+			, create_date
+			<isNotNull property="createSeq">, modify_seq</isNotNull>
+			, modify_date
+		) VALUES
+		(
+			#bizSeq#
+			, #groupSeq#
+			, #compSeq#
+			<isNotNull property="bizCd">, #bizCd#</isNotNull>
+			<isNotNull property="compRegistNum">, #compRegistNum#</isNotNull>
+			<isNotNull property="compNum">, #compNum#</isNotNull>
+			<isNotNull property="telNum">, #telNum#</isNotNull>
+			<isNotNull property="faxNum">, #faxNum#</isNotNull>
+			<isNotNull property="homepgAddr">, #homepgAddr#</isNotNull>
+			<isNotNull property="zipCode">, #zipCode#</isNotNull>
+			<isNotNull property="displayYn">, #displayYn#</isNotNull>
+			<isNotNull property="nativeLangCode">, #nativeLangCode#</isNotNull>
+			
+			<isNotNull property="orderNum">
+				<isNotEmpty property="orderNum">, #orderNum#</isNotEmpty>
+				<isEmpty property="orderNum">, null</isEmpty>			
+			</isNotNull>					
+			, #useYn#
+			<isNotNull property="sealFileId">, #sealFileId#</isNotNull>
+			<isNotNull property="createSeq">, #createSeq#</isNotNull>
+			, NOW()
+			<isNotNull property="createSeq">, #createSeq#</isNotNull>
+			, NOW()
+		);
+    </insert>
+    
+    <update id="OrgAdapterManage.updateBiz" parameterClass="hashmap">
+		<isNotEmpty property="bizSeq">
+			update $DB_NEOS$t_co_biz set
+			modify_date=NOW()
+			<isNotNull property="bizCd">, biz_cd=#bizCd#</isNotNull>
+			<isNotNull property="compRegistNum">, comp_regist_num=#compRegistNum#</isNotNull>
+			<isNotNull property="compNum">, comp_num=#compNum#</isNotNull>
+			<isNotNull property="telNum">, tel_num=#telNum#</isNotNull>
+			<isNotNull property="faxNum">, fax_num=#faxNum#</isNotNull>
+			<isNotNull property="homepgAddr">, homepg_addr=#homepgAddr#</isNotNull>
+			<isNotNull property="zipCode">, zip_code=#zipCode#</isNotNull>
+			<isNotNull property="displayYn">, display_yn=#displayYn#</isNotNull>
+			<isNotNull property="nativeLangCode">, native_lang_code=#nativeLangCode#</isNotNull>
+			
+			<isNotNull property="orderNum">
+				<isNotEmpty property="orderNum">, order_num=#orderNum#</isNotEmpty>
+				<isEmpty property="orderNum">, order_num=null</isEmpty>			
+			</isNotNull>
+			<isNotNull property="faxNum">, fax_num=#faxNum#</isNotNull>	
+			<isNotNull property="useYn">, use_yn=#useYn#</isNotNull>
+			<isNotNull property="sealFileId">, seal_file_id=#sealFileId#</isNotNull>
+			<isNotNull property="createSeq">, modify_seq=#createSeq#</isNotNull>		
+			where biz_seq=#bizSeq#
+     	</isNotEmpty>
+    </update>
+    
+    <delete id="OrgAdapterManage.deleteBiz" parameterClass="hashmap">
+		<isNotEmpty property="compSeq">
+			delete from $DB_NEOS$t_co_biz where comp_seq=#compSeq#
+			<isNotEmpty property="bizSeq">
+				and biz_seq=#bizSeq#
+	     	</isNotEmpty>
+     	</isNotEmpty>
+    </delete>    
+    
+    <insert id="OrgAdapterManage.insertBizMulti" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_biz_multi
+		(
+			biz_seq
+			, lang_code
+			, group_seq
+			, comp_seq
+			, biz_name
+			<isNotNull property="ownerName">, owner_name</isNotNull>
+			<isNotNull property="bizCondition">, biz_condition</isNotNull>
+			<isNotNull property="senderName">, sender_name</isNotNull>
+			<isNotNull property="bizNickname">, biz_nickname</isNotNull>
+			<isNotNull property="item">, item</isNotNull>
+			<isNotNull property="addr">, addr</isNotNull>
+			<isNotNull property="detailAddr">, detail_addr</isNotNull>
+			, use_yn
+			<isNotNull property="createSeq">, create_seq</isNotNull>
+			, create_date
+			<isNotNull property="createSeq">, modify_seq</isNotNull>
+			, modify_date		
+		) VALUES
+		(
+			#bizSeq#
+			, #langCode#
+			, #groupSeq#
+			, #compSeq#
+			, #bizName#
+			<isNotNull property="ownerName">, #ownerName#</isNotNull>
+			<isNotNull property="bizCondition">, #bizCondition#</isNotNull>
+			<isNotNull property="senderName">, #senderName#</isNotNull>
+			<isNotNull property="bizNickname">, #bizNickname#</isNotNull>
+			<isNotNull property="item">, #item#</isNotNull>
+			<isNotNull property="addr">, #addr#</isNotNull>
+			<isNotNull property="detailAddr">, #detailAddr#</isNotNull>
+			, 'Y'
+			<isNotNull property="createSeq">, #createSeq#</isNotNull>
+			, NOW()
+			<isNotNull property="createSeq">, #createSeq#</isNotNull>
+			, NOW()
+		);
+    </insert>
+    
+    <update id="OrgAdapterManage.updateBizMulti" parameterClass="hashmap">
+		<isNotEmpty property="bizSeq">
+			update $DB_NEOS$t_co_biz_multi set
+			modify_date=NOW(), use_yn = 'Y'
+			<isNotNull property="createSeq">, modify_seq=#createSeq#</isNotNull>
+			
+			<isNotEmpty property="bizName">, biz_name=#bizName#</isNotEmpty>
+			<isNotNull property="ownerName">, owner_name=#ownerName#</isNotNull>
+			<isNotNull property="senderName">, sender_name=#senderName#</isNotNull>
+			<isNotNull property="bizCondition">, biz_condition=#bizCondition#</isNotNull>
+			<isNotNull property="item">, item=#item#</isNotNull>
+			<isNotNull property="addr">, addr=#addr#</isNotNull>
+			<isNotNull property="detailAddr">, detail_addr=#detailAddr#</isNotNull>
+			<isNotNull property="bizNickname">, biz_nickname=#bizNickname#</isNotNull>
+			
+			where biz_seq=#bizSeq# and lang_code='kr'
+     	</isNotEmpty>
+    </update>       
+    
+    <delete id="OrgAdapterManage.deleteBizMulti" parameterClass="hashmap">
+		<isNotEmpty property="compSeq">
+			delete from $DB_NEOS$t_co_biz_multi where comp_seq=#compSeq#
+			<isNotEmpty property="bizSeq"> and biz_seq=#bizSeq#</isNotEmpty>
+			<isNotEmpty property="langCode"> and lang_code=#langCode#</isNotEmpty>
+     	</isNotEmpty>    
+    </delete>
+    
+    <insert id="OrgAdapterManage.insertDept" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_dept
+		(
+			dept_seq
+			, group_seq
+			, comp_seq
+			, biz_seq
+			, dept_cd
+			, parent_dept_seq
+			, display_dept_seq
+			<isNotNull property="telNum">, tel_num</isNotNull>
+			<isNotNull property="faxNum">, fax_num</isNotNull>
+			<isNotNull property="homepgAddr">, homepg_addr</isNotNull>
+			<isNotNull property="zipCode">, zip_code</isNotNull>
+			<isNotNull property="susinYn">, susin_yn</isNotNull>
+			<isNotNull property="virDeptYn">, vir_dept_yn</isNotNull>
+			<isNotNull property="teamYn">, team_yn</isNotNull>
+			<isNotNull property="displayYn">, display_yn</isNotNull>
+			<isNotNull property="nativeLangCode">, native_lang_code</isNotNull>
+			, path
+			<isNotNull property="ptype">, ptype</isNotNull>
+			, dept_level
+			<isNotNull property="orderNum">, order_num</isNotNull>
+			, use_yn
+			<isNotNull property="innerReceiveYn">, inner_receive_yn</isNotNull>
+			<isNotNull property="createSeq">, create_seq</isNotNull>
+			, create_date
+			<isNotNull property="createSeq">, modify_seq</isNotNull>
+			, modify_date
+			<isNotNull property="deptManager">, dept_manager</isNotNull>
+			<isNotNull property="standardCode">, standard_code</isNotNull>
+			<isNotNull property="eaYn">, ea_yn</isNotNull>
+		) VALUES
+		(
+			#deptSeq#
+			, #groupSeq#
+			, #compSeq#
+			, #bizSeq#
+			, #deptCd#
+			, #parentDeptSeq#
+			, #displayDeptSeq#
+			<isNotNull property="telNum">, #telNum#</isNotNull>
+			<isNotNull property="faxNum">, #faxNum#</isNotNull>
+			<isNotNull property="homepgAddr">, #homepgAddr#</isNotNull>
+			<isNotNull property="zipCode">, #zipCode#</isNotNull>
+			<isNotNull property="susinYn">, #susinYn#</isNotNull>
+			<isNotNull property="virDeptYn">, #virDeptYn#</isNotNull>
+			<isNotNull property="teamYn">, #teamYn#</isNotNull>
+			<isNotNull property="displayYn">, #displayYn#</isNotNull>
+			<isNotNull property="nativeLangCode">, #nativeLangCode#</isNotNull>
+			<isEqual property="parentDeptSeq" compareValue="0">, #deptSeq#</isEqual>
+			<isNotEqual property="parentDeptSeq" compareValue="0">, concat($DB_NEOS$get_dept_path('|', #parentDeptSeq#, #groupSeq#),'|',#deptSeq#)</isNotEqual>			
+			<isNotNull property="ptype">, #ptype#</isNotNull>
+			<isEqual property="parentDeptSeq" compareValue="0">, 1</isEqual>
+			<isNotEqual property="parentDeptSeq" compareValue="0">, $DB_NEOS$get_dept_level(#parentDeptSeq#, #groupSeq#)+1</isNotEqual>
+			
+			<isNotNull property="orderNum">
+				<isNotEmpty property="orderNum">, #orderNum#</isNotEmpty>
+				<isEmpty property="orderNum">, null</isEmpty>
+			</isNotNull>
+										
+			, #useYn#
+			<isNotNull property="innerReceiveYn">, #innerReceiveYn#</isNotNull>
+			<isNotNull property="createSeq">, #createSeq#</isNotNull>
+			, NOW()
+			<isNotNull property="createSeq">, #createSeq#</isNotNull>
+			, NOW()
+			<isNotNull property="deptManager">, #deptManager#</isNotNull>
+			<isNotNull property="standardCode">, #standardCode#</isNotNull>
+			<isNotNull property="eaYn">, #eaYn#</isNotNull>
+		);
+    </insert>
+    
+    <update id="OrgAdapterManage.updateDept" parameterClass="hashmap">
+		<isNotEmpty property="deptSeq">
+			update $DB_NEOS$t_co_dept set
+			modify_date=NOW()
+			<isNotNull property="bizSeq">, biz_seq=#bizSeq#</isNotNull>
+			<isNotNull property="deptCd">, dept_cd=#deptCd#</isNotNull>
+			<isNotNull property="parentDeptSeq">, parent_dept_seq=#parentDeptSeq#</isNotNull>
+			<isNotNull property="displayDeptSeq">, display_dept_seq=#displayDeptSeq#</isNotNull>
+			<isNotNull property="telNum">, tel_num=#telNum#</isNotNull>
+			<isNotNull property="faxNum">, fax_num=#faxNum#</isNotNull>
+			<isNotNull property="homepgAddr">, homepg_addr=#homepgAddr#</isNotNull>
+			<isNotNull property="zipCode">, zip_code=#zipCode#</isNotNull>
+			<isNotNull property="susinYn">, susin_yn=#susinYn#</isNotNull>
+			<isNotNull property="virDeptYn">, vir_dept_yn=#virDeptYn#</isNotNull>
+			<isNotNull property="teamYn">, team_yn=#teamYn#</isNotNull>
+			<isNotNull property="displayYn">, display_yn=#displayYn#</isNotNull>
+			<isNotNull property="nativeLangCode">, native_lang_code=#nativeLangCode#</isNotNull>
+			<isEqual property="parentDeptSeq" compareValue="0">, path=#deptSeq#</isEqual>
+			<isNotEqual property="parentDeptSeq" compareValue="0">, path=concat($DB_NEOS$get_dept_path('|', #parentDeptSeq#, #groupSeq#),'|',#deptSeq#)</isNotEqual>
+			<isNotNull property="ptype">, ptype=#ptype#</isNotNull>
+			<isEqual property="parentDeptSeq" compareValue="0">, dept_level=1</isEqual>
+			<isNotEqual property="parentDeptSeq" compareValue="0">, dept_level=$DB_NEOS$get_dept_level(#parentDeptSeq#, #groupSeq#)+1</isNotEqual>
+
+			<isNotNull property="orderNum">
+				<isNotEmpty property="orderNum">, order_num=#orderNum#</isNotEmpty>
+				<isEmpty property="orderNum">, order_num=null</isEmpty>			
+			</isNotNull>			
+
+			<isNotNull property="useYn">, use_yn=#useYn#</isNotNull>
+			<isNotNull property="innerReceiveYn">, inner_receive_yn=#innerReceiveYn#</isNotNull>
+			<isNotNull property="createSeq">, modify_seq=#createSeq#</isNotNull>
+			<isNotNull property="deptManager">, dept_manager = #deptManager#</isNotNull>
+			<isNotNull property="standardCode">, standard_code = #standardCode#</isNotNull>
+			<isNotNull property="eaYn">, ea_yn = #eaYn#</isNotNull>			
+			where dept_seq=#deptSeq#
+		</isNotEmpty>    
+    </update>
+    
+	<update id="OrgAdapterManage.UpdateDisplayDeptSeq" parameterClass="hashmap">
+		update $DB_NEOS$t_co_dept 
+		set display_dept_seq = $DB_NEOS$get_display_dept_seq(dept_seq, group_seq) 
+		where 
+		INSTR(CONCAT('|',path,'|'), concat('|',#deptSeq#,'|'))
+	</update>
+    
+    <delete id="OrgAdapterManage.deleteDept" parameterClass="hashmap">
+		<isNotEmpty property="deptSeq">
+			delete from $DB_NEOS$t_co_dept where dept_seq=#deptSeq#
+		</isNotEmpty>    
+    </delete>
+    
+    <insert id="OrgAdapterManage.insertDeptMulti" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_dept_multi
+		(
+			  dept_seq
+			, lang_code
+			, group_seq
+			, comp_seq
+			, biz_seq
+			, dept_name
+			<isNotNull property="deptDisplayName">, dept_display_name</isNotNull>
+			<isNotNull property="senderName">, sender_name</isNotNull>
+			<isNotNull property="addr">, addr</isNotNull>
+			<isNotNull property="detailAddr">, detail_addr</isNotNull>
+			, path_name
+			, use_yn
+			<isNotNull property="createSeq">, create_seq</isNotNull>
+			, create_date
+			<isNotNull property="createSeq">, modify_seq</isNotNull>
+			, modify_date
+			<isNotNull property="deptNickname">, dept_nickname</isNotNull>
+		) VALUES
+		(
+			  #deptSeq#
+			, #langCode#
+			, #groupSeq#
+			, #compSeq#
+			, #bizSeq#
+			, #deptName#
+			<isNotNull property="deptDisplayName">, #deptDisplayName#</isNotNull>
+			<isNotNull property="senderName">, #senderName#</isNotNull>
+			<isNotNull property="addr">, #addr#</isNotNull>
+			<isNotNull property="detailAddr">, #detailAddr#</isNotNull>
+			<isEqual property="parentDeptSeq" compareValue="0">, #deptName#</isEqual>
+			<isNotEqual property="parentDeptSeq" compareValue="0">, concat($DB_NEOS$get_dept_pathNm('|', #parentDeptSeq#, #groupSeq#, #langCode#),'|',#deptName#)</isNotEqual>			
+			, 'Y'
+			<isNotNull property="createSeq">, #createSeq#</isNotNull>
+			, NOW()
+			<isNotNull property="createSeq">, #createSeq#</isNotNull>
+			, NOW()
+			<isNotNull property="deptNickname">, #deptNickname#</isNotNull>
+		);
+    </insert>
+    
+    <update id="OrgAdapterManage.updateDeptMulti" parameterClass="hashmap">
+		<isNotEmpty property="deptSeq">
+			update $DB_NEOS$t_co_dept_multi set
+			modify_date=NOW(), use_yn = 'Y'
+			<isNotNull property="createSeq">, modify_seq=#createSeq#</isNotNull>
+			
+			<isNotEmpty property="compSeq">, comp_seq=#compSeq#</isNotEmpty>
+			<isNotEmpty property="bizSeq">, biz_seq=#bizSeq#</isNotEmpty>
+			<isNotEmpty property="deptName">, dept_name=#deptName#</isNotEmpty>
+			<isNotNull property="deptDisplayName">, dept_display_name=#deptDisplayName#</isNotNull>
+			<isNotNull property="senderName">, sender_name=#senderName#</isNotNull>
+			<isNotNull property="addr">, addr=#addr#</isNotNull>
+			<isNotNull property="detailAddr">, detail_addr=#detailAddr#</isNotNull>
+			<isNotNull property="deptNickname">, dept_nickname=#deptNickname#</isNotNull>
+			
+			<isNotEmpty property="deptName">
+				<isNotEmpty property="parentDeptSeq">
+					<isEqual property="parentDeptSeq" compareValue="0">, path_name=#deptName#</isEqual>
+					<isNotEqual property="parentDeptSeq" compareValue="0">, path_name=concat($DB_NEOS$get_dept_pathNm('|', #parentDeptSeq#, #groupSeq#, 'kr'),'|',#deptName#)</isNotEqual>			
+				</isNotEmpty>
+			</isNotEmpty>
+			
+			where dept_seq=#deptSeq# and lang_code='kr'
+     	</isNotEmpty>
+    </update>      
+    
+    <delete id="OrgAdapterManage.deleteDeptMulti" parameterClass="hashmap">
+		<isNotEmpty property="deptSeq">
+			delete from $DB_NEOS$t_co_dept_multi where dept_seq=#deptSeq#
+			<isNotEmpty property="langCode"> and lang_code=#langCode#</isNotEmpty>
+     	</isNotEmpty>
+    </delete>
+
+    <insert id="OrgAdapterManage.insertEmp" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_emp
+		(
+			emp_seq
+			, group_seq
+			, login_id
+			<isNotNull property="empNum">, emp_num</isNotNull>
+			<isNotNull property="erpEmpNum">, erp_emp_num</isNotNull>
+			<isNotNull property="juminNb">, jumin_nb</isNotNull>
+			<isNotNull property="emailAddr">, email_addr</isNotNull>
+			<isNotNull property="outMail">, out_mail</isNotNull>
+			<isNotNull property="outDomain">, out_domain</isNotNull>
+			<isNotNull property="loginPasswd">, login_passwd</isNotNull>
+			<isNotNull property="apprPasswd">, appr_passwd</isNotNull>
+			, passwd_date
+			, passwd_input_fail_count
+			<isNotNull property="payPasswd">, pay_passwd</isNotNull>
+			, passwd_status_code
+			<isNotNull property="mobileUseYn">, mobile_use_yn</isNotNull>
+			<isNotNull property="messengerUseYn">, messenger_use_yn</isNotNull>
+			<isNotNull property="checkWorkYn">, check_work_yn</isNotNull>
+			<isNotNull property="shift">, shift</isNotNull>
+			<isNotNull property="jobCode">, job_code</isNotNull>
+			<isNotNull property="statusCode">, status_code</isNotNull>
+			<isNotNull property="mainCompSeq">, main_comp_seq</isNotNull>
+			<isNotNull property="mainCompLoginYn">, main_comp_login_yn</isNotNull>
+			<isNotNull property="dutyCode">, duty_code</isNotNull>
+			<isNotNull property="positionCode">, position_code</isNotNull>
+			<isNotNull property="nativeLangCode">, native_lang_code</isNotNull>
+			<isNotNull property="licenseCheckYn">, license_check_yn</isNotNull>
+			<isNotNull property="joinDay">, join_day</isNotNull>
+			<isNotNull property="resignDay">, resign_day</isNotNull>
+			<isNotNull property="genderCode">, gender_code</isNotNull>
+			<isNotNull property="bday">, bday</isNotNull>
+			<isNotNull property="lunarYn">, lunar_yn</isNotNull>
+			<isNotNull property="workStatus">, work_status</isNotNull>
+			<isNotNull property="homeTelNum">, home_tel_num</isNotNull>
+			<isNotNull property="mobileTelNum">, mobile_tel_num</isNotNull>
+			<isNotNull property="weddingYn">, wedding_yn</isNotNull>
+			<isNotNull property="weddingDay">, wedding_day</isNotNull>
+			<isNotNull property="privateYn">, private_yn</isNotNull>
+			<isNotNull property="zipCode">, zip_code</isNotNull>
+			<isNotNull property="picFileId">, pic_file_id</isNotNull>
+			<isNotNull property="signFileId">, sign_file_id</isNotNull>
+			<isNotNull property="useYn">, use_yn</isNotNull>
+			<isNotNull property="lsRoleId">, ls_role_id</isNotNull>
+			<isNotNull property="createSeq">, create_seq</isNotNull>
+			, create_date
+			<isNotNull property="createSeq">, modify_seq</isNotNull>
+			, modify_date
+			<isNotNull property="signType">, sign_type</isNotNull>
+		) VALUES
+		(
+			#empSeq#
+			, #groupSeq#
+			, #loginId#
+			<isNotNull property="empNum">, #empNum#</isNotNull>
+			<isNotNull property="erpEmpNum">, #erpEmpNum#</isNotNull>
+			<isNotNull property="juminNb">, #juminNb#</isNotNull>
+			<isNotNull property="emailAddr">, #emailAddr#</isNotNull>
+			<isNotNull property="outMail">, #outMail#</isNotNull>
+			<isNotNull property="outDomain">, #outDomain#</isNotNull>
+			<isNotNull property="loginPasswd">, #loginPasswd#</isNotNull>
+			<isNotNull property="apprPasswd">, #apprPasswd#</isNotNull>
+			, NOW()
+			, 0
+			<isNotNull property="payPasswd">, #payPasswd#</isNotNull>
+			, 'I'
+			<isNotNull property="mobileUseYn">, #mobileUseYn#</isNotNull>
+			<isNotNull property="messengerUseYn">, #messengerUseYn#</isNotNull>
+			<isNotNull property="checkWorkYn">, #checkWorkYn#</isNotNull>
+			<isNotNull property="shift">, #shift#</isNotNull>
+			<isNotNull property="jobCode">, #jobCode#</isNotNull>
+			<isNotNull property="statusCode">, #statusCode#</isNotNull>
+			<isNotNull property="mainCompSeq">, #mainCompSeq#</isNotNull>
+			<isNotNull property="mainCompLoginYn">, #mainCompLoginYn#</isNotNull>
+			<isNotNull property="dutyCode">, #dutyCode#</isNotNull>
+			<isNotNull property="positionCode">, #positionCode#</isNotNull>
+			<isNotNull property="nativeLangCode">, #nativeLangCode#</isNotNull>
+			<isNotNull property="licenseCheckYn">, #licenseCheckYn#</isNotNull>
+
+			<isNotNull property="joinDay">
+				<isNotEmpty property="joinDay">, #joinDay#</isNotEmpty>
+				<isEmpty property="joinDay">, null</isEmpty>			
+			</isNotNull>				
+			
+			<isNotNull property="resignDay">
+				<isNotEmpty property="resignDay">, #resignDay#</isNotEmpty>
+				<isEmpty property="resignDay">, null</isEmpty>			
+			</isNotNull>			
+			
+			<isNotNull property="genderCode">, #genderCode#</isNotNull>
+			
+			<isNotNull property="bday">
+				<isNotEmpty property="bday">, #bday#</isNotEmpty>
+				<isEmpty property="bday">, null</isEmpty>			
+			</isNotNull>				
+			
+			<isNotNull property="lunarYn">, #lunarYn#</isNotNull>
+			<isNotNull property="workStatus">, #workStatus#</isNotNull>
+			<isNotNull property="homeTelNum">, #homeTelNum#</isNotNull>
+			<isNotNull property="mobileTelNum">, #mobileTelNum#</isNotNull>
+			<isNotNull property="weddingYn">, #weddingYn#</isNotNull>
+			
+			<isNotNull property="weddingDay">
+				<isNotEmpty property="weddingDay">, #weddingDay#</isNotEmpty>
+				<isEmpty property="weddingDay">, null</isEmpty>			
+			</isNotNull>			
+			
+			<isNotNull property="privateYn">, #privateYn#</isNotNull>
+			<isNotNull property="zipCode">, #zipCode#</isNotNull>
+			<isNotNull property="picFileId">, #picFileId#</isNotNull>
+			<isNotNull property="signFileId">, #signFileId#</isNotNull>
+			<isNotNull property="useYn">, #useYn#</isNotNull>
+			<isNotNull property="lsRoleId">, #lsRoleId#</isNotNull>
+			<isNotNull property="createSeq">, #createSeq#</isNotNull>
+			, NOW()
+			<isNotNull property="createSeq">, #createSeq#</isNotNull>
+			, NOW()
+			<isNotNull property="signType">, #signType#</isNotNull>
+		);
+    </insert>
+
+    <update id="OrgAdapterManage.updateEmp" parameterClass="hashmap">
+		<isNotEmpty property="empSeq">
+			update $DB_NEOS$t_co_emp set
+			modify_date=NOW()
+			<isNotNull property="loginId">, login_id=#loginId#</isNotNull>
+			<isNotNull property="empNum">, emp_num=#empNum#</isNotNull>
+			<isNotNull property="erpEmpNum">, erp_emp_num=#erpEmpNum#</isNotNull>
+			<isNotNull property="juminNb">, jumin_nb=#juminNb#</isNotNull>
+			<isNotNull property="emailAddr">, email_addr=#emailAddr#</isNotNull>
+			<isNotNull property="outMail">, out_mail=#outMail#</isNotNull>
+			<isNotNull property="outDomain">, out_domain=#outDomain#</isNotNull>
+			<isNotEmpty property="loginPasswd">
+			, passwd_date=NOW()
+			, passwd_status_code='P'
+			, passwd_input_fail_count=0
+			, last_login_date=NOW()
+			, prev_login_passwd = login_passwd
+			</isNotEmpty>			
+			<isNotEmpty property="loginPasswd">, login_passwd=#loginPasswd#</isNotEmpty>
+			<isNotEmpty property="apprPasswd">, appr_passwd=#apprPasswd#</isNotEmpty>
+			<isNotEmpty property="payPasswd">, pay_passwd=#payPasswd#</isNotEmpty>
+			<isNotNull property="mobileUseYn">, mobile_use_yn=#mobileUseYn#</isNotNull>
+			<isNotNull property="messengerUseYn">, messenger_use_yn=#messengerUseYn#</isNotNull>
+			<isNotNull property="checkWorkYn">, check_work_yn=#checkWorkYn#</isNotNull>
+			<isNotNull property="shift">, shift=#shift#</isNotNull>
+			<isNotNull property="jobCode">, job_code=#jobCode#</isNotNull>
+			<isNotNull property="statusCode">, status_code=#statusCode#</isNotNull>
+			<isNotNull property="mainCompSeq">, main_comp_seq=#mainCompSeq#</isNotNull>
+			<isNotNull property="mainCompLoginYn">, main_comp_login_yn=#mainCompLoginYn#</isNotNull>
+			<isNotNull property="dutyCode">, duty_code=#dutyCode#</isNotNull>
+			<isNotNull property="positionCode">, position_code=#positionCode#</isNotNull>
+			<isNotNull property="nativeLangCode">, native_lang_code=#nativeLangCode#</isNotNull>
+			<isNotNull property="licenseCheckYn">, license_check_yn=#licenseCheckYn#</isNotNull>
+			
+			<isNotNull property="joinDay">
+				<isNotEmpty property="joinDay">, join_day=#joinDay#</isNotEmpty>
+				<isEmpty property="joinDay">, join_day=null</isEmpty>			
+			</isNotNull>
+			
+			<isNotNull property="resignDay">
+				<isNotEmpty property="resignDay">, resign_day=#resignDay#</isNotEmpty>
+				<isEmpty property="resignDay">, resign_day=null</isEmpty>			
+			</isNotNull>
+			
+			<isNotNull property="bday">
+				<isNotEmpty property="bday">, bday=#bday#</isNotEmpty>
+				<isEmpty property="bday">, bday=null</isEmpty>			
+			</isNotNull>
+			
+			<isNotNull property="weddingDay">
+				<isNotEmpty property="weddingDay">, wedding_day=#weddingDay#</isNotEmpty>
+				<isEmpty property="weddingDay">, wedding_day=null</isEmpty>			
+			</isNotNull>									
+			
+			<isNotNull property="genderCode">, gender_code=#genderCode#</isNotNull>
+			<isNotNull property="lunarYn">, lunar_yn=#lunarYn#</isNotNull>
+			<isNotNull property="workStatus">, work_status=#workStatus#</isNotNull>
+			<isNotNull property="homeTelNum">, home_tel_num=#homeTelNum#</isNotNull>
+			<isNotNull property="mobileTelNum">, mobile_tel_num=#mobileTelNum#</isNotNull>
+			<isNotNull property="weddingYn">, wedding_yn=#weddingYn#</isNotNull>
+			<isNotNull property="privateYn">, private_yn=#privateYn#</isNotNull>
+			<isNotNull property="zipCode">, zip_code=#zipCode#</isNotNull>
+			<isNotNull property="picFileId">, pic_file_id=#picFileId#</isNotNull>
+			<isNotNull property="signFileId">, sign_file_id=#signFileId#</isNotNull>
+			<isNotNull property="useYn">, use_yn=#useYn#</isNotNull>
+			<isNotNull property="lsRoleId">, ls_role_id=#lsRoleId#</isNotNull>
+			<isNotNull property="createSeq">, modify_seq=#createSeq#</isNotNull>
+			<isNotNull property="signType">, sign_type=#signType#</isNotNull>			
+			where emp_seq=#empSeq#
+		</isNotEmpty>    
+    </update>
+
+    <delete id="OrgAdapterManage.deleteEmp" parameterClass="hashmap">
+		<isNotEmpty property="empSeq">
+			delete from $DB_NEOS$t_co_emp where emp_seq=#empSeq#
+     	</isNotEmpty>
+    </delete>
+
+    <insert id="OrgAdapterManage.insertEmpMulti" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_emp_multi
+		(
+			emp_seq
+			, lang_code
+			, group_seq
+			, emp_name
+			<isNotNull property="addr">, addr</isNotNull>
+			<isNotNull property="detailAddr">, detail_addr</isNotNull>
+			<isNotNull property="mainWork">, main_work</isNotNull>
+			, use_yn
+			<isNotNull property="createSeq">, create_seq</isNotNull>
+			, create_date
+			<isNotNull property="createSeq">, modify_seq</isNotNull>
+			, modify_date
+		) VALUES
+		(
+			#empSeq#
+			, #langCode#
+			, #groupSeq#
+			, #empName#
+			<isNotNull property="addr">, #addr#</isNotNull>
+			<isNotNull property="detailAddr">, #detailAddr#</isNotNull>
+			<isNotNull property="mainWork">, #mainWork#</isNotNull>
+			, 'Y'
+			<isNotNull property="createSeq">, #createSeq#</isNotNull>
+			, NOW()
+			<isNotNull property="createSeq">, #createSeq#</isNotNull>
+			, NOW()
+		);
+    </insert>
+    
+    <update id="OrgAdapterManage.updateEmpMulti" parameterClass="hashmap">
+		<isNotEmpty property="empSeq">
+			update $DB_NEOS$t_co_emp_multi set
+			modify_date=NOW(), use_yn = 'Y'
+			<isNotNull property="createSeq">, modify_seq=#createSeq#</isNotNull>
+			<isNotEmpty property="empName">, emp_name=#empName#</isNotEmpty>
+			<isNotNull property="addr">, addr=#addr#</isNotNull>
+			<isNotNull property="detailAddr">, detail_addr=#detailAddr#</isNotNull>
+			<isNotNull property="mainWork">, main_work=#mainWork#</isNotNull>
+			where emp_seq=#empSeq# and lang_code='kr'
+     	</isNotEmpty>
+    </update>      
+
+    <delete id="OrgAdapterManage.deleteEmpMulti" parameterClass="hashmap">
+		<isNotEmpty property="empSeq">
+			delete from $DB_NEOS$t_co_emp_multi where emp_seq=#empSeq#
+			<isNotEmpty property="langCode"> and lang_code=#langCode#</isNotEmpty>
+     	</isNotEmpty>
+    </delete>
+    
+    <insert id="OrgAdapterManage.insertEmpDept" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_emp_dept
+		(
+			dept_seq
+			, emp_seq
+			, group_seq
+			, comp_seq
+			, biz_seq
+			<isNotNull property="mainDeptYn">, main_dept_yn</isNotNull>
+			<isNotNull property="dutyCode">, duty_code</isNotNull>
+			<isNotNull property="positionCode">, position_code</isNotNull>
+			<isNotNull property="telNum">, tel_num</isNotNull>
+			<isNotNull property="faxNum">, fax_num</isNotNull>
+			<isNotNull property="deptZipCode">, zip_code</isNotNull>
+			<isNotNull property="orgchartDisplayYn">, orgchart_display_yn</isNotNull>
+			<isNotNull property="messengerDisplayYn">, messenger_display_yn</isNotNull>
+			<isNotNull property="eaDisplayYn">, ea_display_yn</isNotNull>
+			<isNotNull property="orderNum">, order_num</isNotNull>			
+			, order_text
+			, use_yn
+			<isNotNull property="createSeq">, create_seq</isNotNull>
+			, create_date
+			<isNotNull property="createSeq">, modify_seq</isNotNull>
+			, modify_date		
+			<isNotNull property="mainCompYn">, main_comp_yn</isNotNull>
+		) VALUES
+		(
+			#deptSeq#
+			, #empSeq#
+			, #groupSeq#
+			, #compSeq#
+			, #bizSeq#
+			<isNotNull property="mainDeptYn">, #mainDeptYn#</isNotNull>
+			<isNotNull property="dutyCode">, #dutyCode#</isNotNull>
+			<isNotNull property="positionCode">, #positionCode#</isNotNull>
+			<isNotNull property="telNum">, #telNum#</isNotNull>
+			<isNotNull property="faxNum">, #faxNum#</isNotNull>
+			<isNotNull property="deptZipCode">, #deptZipCode#</isNotNull>
+			<isNotNull property="orgchartDisplayYn">, #orgchartDisplayYn#</isNotNull>
+			<isNotNull property="messengerDisplayYn">, #messengerDisplayYn#</isNotNull>
+			<isNotNull property="eaDisplayYn">, #eaDisplayYn#</isNotNull>
+			<isNotNull property="orderNum">
+				<isNotEmpty property="orderNum">, #orderNum#</isNotEmpty>
+				<isEmpty property="orderNum">, null</isEmpty>			
+			</isNotNull>
+			, ''
+			, 'Y'
+			<isNotNull property="createSeq">, #createSeq#</isNotNull>
+			, NOW()
+			<isNotNull property="createSeq">, #createSeq#</isNotNull>
+			, NOW()
+			<isNotNull property="mainCompYn">, #mainCompYn#</isNotNull>
+		);
+    </insert>    
+
+    <update id="OrgAdapterManage.updateEmpDept" parameterClass="hashmap">
+    	<isNotEmpty property="deptSeq">
+	    	<isNotEmpty property="empSeq">
+	    		update $DB_NEOS$t_co_emp_dept set
+	    		modify_date=NOW()
+				<isNotNull property="mainDeptYn">, main_dept_yn=#mainDeptYn#</isNotNull>
+				<isNotNull property="dutyCode">, duty_code=#dutyCode#</isNotNull>
+				<isNotNull property="positionCode">, position_code=#positionCode#</isNotNull>
+				<isNotNull property="telNum">, tel_num=#telNum#</isNotNull>
+				<isNotNull property="faxNum">, fax_num=#faxNum#</isNotNull>
+				<isNotNull property="mainCompYn">, main_comp_yn=#mainCompYn#</isNotNull>
+				<isNotNull property="deptZipCode">, zip_code=#deptZipCode#</isNotNull>
+				<isNotNull property="orgchartDisplayYn">, orgchart_display_yn=#orgchartDisplayYn#</isNotNull>
+				<isNotNull property="messengerDisplayYn">, messenger_display_yn=#messengerDisplayYn#</isNotNull>
+				<isNotNull property="eaDisplayYn">, ea_display_yn=#eaDisplayYn#</isNotNull>
+				<isNotNull property="orderNum">
+					<isNotEmpty property="orderNum">, order_num=#orderNum#</isNotEmpty>
+					<isEmpty property="orderNum">, order_num=null</isEmpty>			
+				</isNotNull>	
+				
+				<isNotNull property="orderText">, order_text=#orderText#</isNotNull>
+				<isNotNull property="useYn">, use_yn=#useYn#</isNotNull>
+				<isNotNull property="createSeq">, modify_seq=#createSeq#</isNotNull>	    		
+	    		where dept_seq=#deptSeq# and emp_seq=#empSeq#
+	    	</isNotEmpty>
+    	</isNotEmpty>
+    </update>
+    
+    <update id="OrgAdapterManage.updateEmpDeptMessengerDisplayYn" parameterClass="hashmap">
+    	<isNotEmpty property="deptSeq">
+	    	<isNotEmpty property="empSeq">
+	    		<isNotEmpty property="empSeq">
+	    		update $DB_NEOS$t_co_emp_dept set
+				messenger_display_yn=#messengerDisplayYn#    		
+	    		where emp_seq=#empSeq# and comp_seq = (select comp_Seq from $DB_NEOS$t_Co_dept where dept_seq = #deptSeq#)
+	    		</isNotEmpty>
+	    	</isNotEmpty>
+    	</isNotEmpty>
+    </update>
+    
+    <update id="OrgAdapterManage.updateEmpDeptOrderNum" parameterClass="hashmap">
+		update $DB_NEOS$t_co_emp_dept set order_num=#orderNum# where dept_seq=#deptSeq# and emp_seq=#empSeq#
+    </update>
+    
+    <delete id="OrgAdapterManage.deleteEmpDept" parameterClass="hashmap">
+    	<isNotEmpty property="empSeq">
+    		delete from $DB_NEOS$t_co_emp_dept where emp_seq=#empSeq#
+    		<isNotEmpty property="compSeq"> and comp_seq=#compSeq#</isNotEmpty>
+    		<isNotEmpty property="deptSeq"> and dept_seq=#deptSeq#</isNotEmpty>
+    	</isNotEmpty>
+    </delete>
+
+    <insert id="OrgAdapterManage.insertEmpDeptMulti" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_emp_dept_multi
+		(
+			dept_seq
+			, emp_seq
+			, lang_code
+			, group_seq
+			, comp_seq
+			, biz_seq
+			<isNotNull property="deptAddr">, addr</isNotNull>
+			<isNotNull property="deptDetailAddr">, detail_addr</isNotNull>
+			, use_yn
+			<isNotNull property="createSeq">, create_seq</isNotNull>
+			, create_date
+			<isNotNull property="createSeq">, modify_seq</isNotNull>
+			, modify_date
+		) VALUES
+		(
+			#deptSeq#
+			, #empSeq#
+			, #langCode#
+			, #groupSeq#
+			, #compSeq#
+			, #bizSeq#
+			<isNotNull property="deptAddr">, #deptAddr#</isNotNull>
+			<isNotNull property="deptDetailAddr">, #deptDetailAddr#</isNotNull>
+			, 'Y'
+			<isNotNull property="createSeq">, #createSeq#</isNotNull>
+			, NOW()
+			<isNotNull property="createSeq">, #createSeq#</isNotNull>
+			, NOW()
+		);
+    </insert>
+    
+    <update id="OrgAdapterManage.updateEmpDeptMulti" parameterClass="hashmap">
+    	<isNotEmpty property="deptSeq">
+			<isNotEmpty property="empSeq">
+		    	update $DB_NEOS$t_co_emp_dept_multi set
+		    	modify_date=NOW(), use_yn = 'Y'
+				<isNotNull property="deptAddr">, addr=#deptAddr#</isNotNull>
+				<isNotNull property="deptDetailAddr">, detail_addr=#deptDetailAddr#</isNotNull>
+				<isNotNull property="createSeq">, modify_seq=#createSeq#</isNotNull>
+				where dept_seq=#deptSeq# and emp_seq=#empSeq#
+	     	</isNotEmpty>
+     	</isNotEmpty>
+    </update>
+
+    <delete id="OrgAdapterManage.deleteEmpDeptMulti" parameterClass="hashmap">
+		<isNotEmpty property="empSeq">
+			delete from $DB_NEOS$t_co_emp_dept_multi where emp_seq=#empSeq#
+			<isNotEmpty property="compSeq"> and comp_seq=#compSeq#</isNotEmpty>
+			<isNotEmpty property="deptSeq"> and dept_seq=#deptSeq#</isNotEmpty>
+			<isNotEmpty property="langCode"> and lang_code=#langCode#</isNotEmpty>
+     	</isNotEmpty>
+    </delete>
+
+    <insert id="OrgAdapterManage.insertEmpComp" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_emp_comp
+		(
+			emp_seq
+			, group_seq
+			, comp_seq
+			, biz_seq
+			, dept_seq
+			<isNotNull property="erpEmpSeq">, erp_emp_seq</isNotNull>
+			<isNotNull property="erpCompSeq">, erp_comp_seq</isNotNull>
+			<isNotNull property="erpBizSeq">, erp_biz_seq</isNotNull>
+			<isNotNull property="erpDeptSeq">, erp_dept_seq</isNotNull>
+			<isNotNull property="gerpNoGemp">, gerp_no_gemp</isNotNull>
+			<isNotNull property="checkWorkYn">, check_work_yn</isNotNull>
+			<isNotNull property="shift">, shift</isNotNull>
+			<isNotNull property="jobCode">, job_code</isNotNull>
+			<isNotNull property="statusCode">, status_code</isNotNull>
+			<isNotNull property="resignDay">, resign_day</isNotNull>
+			<isNotNull property="workStatus">, work_status</isNotNull>
+			<isNotNull property="useYn">, use_yn</isNotNull>
+			<isNotNull property="createSeq">, create_seq</isNotNull>
+			, create_date
+			<isNotNull property="createSeq">, modify_seq</isNotNull>
+			, modify_date
+		) VALUES
+		(
+			#empSeq#
+			, #groupSeq#
+			, #compSeq#
+			, #bizSeq#
+			, #deptSeq#
+			<isNotNull property="erpEmpSeq">, #erpEmpSeq#</isNotNull>
+			<isNotNull property="erpCompSeq">, #erpCompSeq#</isNotNull>
+			<isNotNull property="erpBizSeq">, #erpBizSeq#</isNotNull>
+			<isNotNull property="erpDeptSeq">, #erpDeptSeq#</isNotNull>
+			<isNotNull property="gerpNoGemp">, #gerpNoGemp#</isNotNull>
+			<isNotNull property="checkWorkYn">, #checkWorkYn#</isNotNull>
+			<isNotNull property="shift">, #shift#</isNotNull>
+			<isNotNull property="jobCode">, #jobCode#</isNotNull>
+			<isNotNull property="statusCode">, #statusCode#</isNotNull>
+			
+			<isNotNull property="resignDay">
+				<isNotEmpty property="resignDay">, resign_day=#resignDay#</isNotEmpty>
+				<isEmpty property="resignDay">, resign_day=null</isEmpty>			
+			</isNotNull>				
+			
+			<isNotNull property="workStatus">, #workStatus#</isNotNull>
+			<isNotNull property="useYn">, #useYn#</isNotNull>
+			<isNotNull property="createSeq">, #createSeq#</isNotNull>
+			, NOW()
+			<isNotNull property="createSeq">, #createSeq#</isNotNull>
+			, NOW()
+		);
+    </insert>
+
+    <update id="OrgAdapterManage.updateEmpComp" parameterClass="hashmap">
+    	<isNotEmpty property="compSeq">
+			<isNotEmpty property="empSeq">
+				update $DB_NEOS$t_co_emp_comp set
+				modify_date=NOW()
+				<isNotNull property="bizSeq">, biz_seq=#bizSeq#</isNotNull>
+				<isNotNull property="deptSeq">, dept_seq=#deptSeq#</isNotNull>
+				<isNotNull property="erpEmpSeq">, erp_emp_seq=#erpEmpSeq#</isNotNull>
+				<isNotNull property="erpCompSeq">, erp_comp_seq=#erpCompSeq#</isNotNull>
+				<isNotNull property="erpBizSeq">, erp_biz_seq=#erpBizSeq#</isNotNull>
+				<isNotNull property="erpDeptSeq">, erp_dept_seq=#erpDeptSeq#</isNotNull>
+				<isNotNull property="gerpNoGemp">, gerp_no_gemp=#gerpNoGemp#</isNotNull>
+				<isNotNull property="checkWorkYn">, check_work_yn=#checkWorkYn#</isNotNull>
+				<isNotNull property="shift">, shift=#shift#</isNotNull>
+				<isNotNull property="jobCode">, job_code=#jobCode#</isNotNull>
+				<isNotNull property="statusCode">, status_code=#statusCode#</isNotNull>
+				
+				<isNotNull property="resignDay">
+					<isNotEmpty property="resignDay">, resign_day=#resignDay#</isNotEmpty>
+					<isEmpty property="resignDay">, resign_day=null</isEmpty>			
+				</isNotNull>					
+				
+				<isNotNull property="workStatus">, work_status=#workStatus#
+					<isNotEqual property="workStatus" compareValue="001">
+						, mail_del_yn='N'
+					</isNotEqual>
+				</isNotNull>
+				<isNotNull property="useYn">, use_yn=#useYn#</isNotNull>
+				<isNotNull property="createSeq">, modify_seq=#createSeq#</isNotNull>
+				where comp_seq=#compSeq# and emp_seq=#empSeq#
+	     	</isNotEmpty>
+     	</isNotEmpty>
+    </update>
+
+    <delete id="OrgAdapterManage.deleteEmpComp" parameterClass="hashmap">
+		<isNotEmpty property="empSeq">
+			delete from $DB_NEOS$t_co_emp_comp where emp_seq=#empSeq#
+			<isNotEmpty property="compSeq"> and comp_seq=#compSeq#</isNotEmpty>
+     	</isNotEmpty>
+    </delete>
+    
+	<update id="OrgAdapterManage.updateChildDeptInfo" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_dept
+		SET
+			path = $DB_NEOS$get_dept_path('|',dept_seq,#groupSeq#),
+			dept_level = $DB_NEOS$get_dept_level(dept_seq, #groupSeq#),
+            
+            <isEqual property="useYn" compareValue="N">
+                use_yn = #useYn#,
+            </isEqual>
+            
+			biz_seq = #bizSeq#
+		WHERE
+			INSTR(CONCAT('|',path,'|'), concat('|',#deptSeq#,'|'))
+	</update>
+
+
+	<update id="OrgAdapterManage.updateChildDeptMultiInfo" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_dept A INNER JOIN $DB_NEOS$t_co_dept_multi B on A.dept_seq = B.dept_seq
+		SET
+			B.path_name = $DB_NEOS$get_dept_pathNm('|',B.dept_seq,B.group_seq,B.lang_code),
+			B.biz_seq = #bizSeq#
+		WHERE
+			INSTR(CONCAT('|',A.path,'|'), concat('|',#deptSeq#,'|'))
+	</update>
+	
+	<update id="OrgAdapterManage.updateChildEmpDeptInfo" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_dept A INNER JOIN $DB_NEOS$t_co_emp_dept B on A.dept_seq = B.dept_seq
+		SET
+			B.biz_seq = #bizSeq#
+		WHERE
+			INSTR(CONCAT('|',A.path,'|'), concat('|',#deptSeq#,'|'))
+	</update>
+	
+	<update id="OrgAdapterManage.updateChildEmpDeptMultiInfo" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_dept A INNER JOIN $DB_NEOS$t_co_emp_dept_multi B on A.dept_seq = B.dept_seq
+		SET
+			B.biz_seq = #bizSeq#
+		WHERE
+			INSTR(CONCAT('|',A.path,'|'), concat('|',#deptSeq#,'|'))
+	</update>
+	
+	<update id="OrgAdapterManage.updateChildEmpCompInfo" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_dept A INNER JOIN $DB_NEOS$t_co_emp_comp B on A.dept_seq = B.dept_seq
+		SET
+			B.biz_seq = #bizSeq#
+		WHERE
+			INSTR(CONCAT('|',A.path,'|'), concat('|',#deptSeq#,'|'))
+	</update>
+	
+	<update id="OrgAdapterManage.updateEmpDeptMainDeptYn" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_emp_dept set main_dept_yn='N'
+		where comp_seq=#compSeq# and dept_seq != #deptSeq# and emp_seq=#empSeq#
+	</update>	
+	
+	
+	
+	<update id="OrgAdapterManage.updateWorkTeam" parameterClass="hashmap">
+		update $DB_NEOS$t_at_work_team_member set dept_seq = #deptSeqNew# where comp_seq = #compSeq# and emp_seq = #empSeq#	
+	</update>
+	
+	<update id="OrgAdapterManage.updateWorkTeamHistory" parameterClass="hashmap">
+		update $DB_NEOS$t_at_work_team_res_history set dept_seq = #deptSeqNew# where comp_seq = #compSeq# and emp_seq = #empSeq#	
+	</update>
+	
+	<update id="OrgAdapterManage.updateAttRegulate" parameterClass="hashmap">
+		update $DB_NEOS$t_at_att_regulate_emp set dept_seq = #deptSeqNew# where comp_seq = #compSeq# and emp_seq = #empSeq#	
+	</update>
+	
+	<update id="OrgAdapterManage.updateAccessEmpInfo" parameterClass="hashmap">
+		update $DB_NEOS$t_co_access_relate set dept_seq = #deptSeqNew# where comp_seq = #compSeq# and emp_seq = #empSeq#	and dept_seq = #deptSeq#
+	</update>
+	
+	<update id="OrgAdapterManage.updateProjectUser" parameterClass="hashmap">
+		update $DB_NEOS$t_pr_project_user 
+		set dept_seq = #deptSeqNew#,
+		modify_seq = 'SYSTEM',
+		modify_date = NOW()
+		where emp_seq = #empSeq# and dept_seq = #deptSeq#
+	</update>
+	
+	<update id="OrgAdapterManage.updateMcalUser" parameterClass="hashmap">
+		update $DB_NEOS$t_sc_mcal_user 
+		set dept_seq = #deptSeqNew#,
+		modify_seq = 'SYSTEM',
+		modify_date = NOW()
+		where org_type = 'E' and org_seq = #empSeq# and dept_seq = #deptSeq#
+	</update>
+
+	<update id="OrgAdapterManage.updateEmpDeptOrderText" parameterClass="hashMap">
+		update $DB_NEOS$t_co_emp_dept A 
+		LEFT JOIN $DB_NEOS$t_co_comp_duty_position POSI ON A.position_code = POSI.dp_seq AND POSI.dp_type='POSITION'
+		LEFT JOIN $DB_NEOS$t_co_comp_duty_position DUTY ON A.duty_code = DUTY.dp_seq AND DUTY.dp_type='DUTY'
+		LEFT JOIN $DB_NEOS$t_co_emp E ON A.emp_seq = e.emp_seq
+		LEFT JOIN $DB_NEOS$v_t_co_emp_multi vem ON A.emp_seq = vem.emp_seq and vem.lang_code = 'kr'
+		SET A.order_text = CONCAT(
+		LPAD(IF(IFNULL(POSI.order_num,'') = '','9999999999',POSI.order_num),10,'0'),'|',
+		LPAD(IF(IFNULL(DUTY.order_num,'') = '','9999999999',DUTY.order_num),10,'0'),'|',
+		LPAD(IF(IFNULL(A.order_num,'') = '','9999999999',A.order_num),10,'0'),'|',
+		IFNULL(LPAD(IF(IFNULL(DATE_FORMAT(E.join_day, '%Y%m%d'),'99999999') = '00000000','99999999',DATE_FORMAT(E.join_day, '%Y%m%d')),8,'0'),'99999999'),'|',
+		IFNULL(vem.emp_name,''))
+		WHERE
+		<isEmpty property="isPositionDutyPage"> 
+			A.dept_seq = #deptSeq#
+			<isNotEmpty property="empSeq">
+				AND A.emp_seq = #empSeq#
+			</isNotEmpty>
+		</isEmpty>
+		<isNotEmpty property="isPositionDutyPage">
+			<isEqual property="dpType" compareValue="POSITION">
+				A.position_code = #dpSeq#
+			</isEqual>
+			<isEqual property="dpType" compareValue="DUTY">
+				A.duty_code = #dpSeq#
+			</isEqual>
+		</isNotEmpty>
+	</update>
+	
+    <update id="OrgAdapterManage.setEmpCalibrate" parameterClass="hashmap">
+		update $DB_NEOS$t_co_emp ce
+		left join 
+		(select c.emp_seq, c.use_yn, c.work_status, c.comp_seq from $DB_NEOS$t_co_emp a
+		join $DB_NEOS$t_co_emp_dept b on a.emp_seq = b.emp_seq
+		join $DB_NEOS$t_co_emp_comp c on b.emp_seq = c.emp_seq and b.comp_seq = c.comp_seq
+		where a.emp_seq=#empSeq#
+		order by c.use_yn desc, c.work_status desc, (a.main_comp_seq = c.comp_seq) desc
+		limit 1) info on ce.emp_seq = info.emp_seq
+		set ce.main_comp_seq= ifnull(info.comp_seq,ce.main_comp_seq), ce.use_yn=ifnull(info.use_yn,'N'), ce.work_status=ifnull(info.work_status,'001')
+		where ce.emp_seq=#empSeq#
+    </update>
+	
+    <update id="OrgAdapterManage.setEmpCompCheckWorkYn" parameterClass="hashmap">
+		update $DB_NEOS$t_co_emp_comp set check_work_yn='N'
+		where comp_seq != #compSeq# and emp_seq = #empSeq#
+    </update>
+    
+    <insert id="OrgAdapterManage.insertEmpBaseAuth" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_auth_relate
+		select a.author_code, a.author_type, #compSeq#, #deptSeq#, #empSeq#
+		from $DB_NEOS$t_co_authcode a
+		left join $DB_NEOS$t_co_auth_relate b on a.author_code=b.author_code and b.comp_seq=#compSeq# and b.dept_seq=#deptSeq# and b.emp_seq=#empSeq#
+		where b.emp_seq is null and a.comp_seq=#compSeq#
+		<isEmpty property="authorCode">
+		and a.author_base_yn='Y' 
+		</isEmpty>
+		<isNotEmpty property="authorCode">
+		and a.author_code=#authorCode#
+		</isNotEmpty>
+    </insert>
+    
+    <update id="OrgAdapterManage.updateEmpBaseAuth" parameterClass="hashmap">
+		update $DB_NEOS$t_co_auth_relate set dept_seq=#deptSeqNew#
+		where emp_seq=#empSeq#
+		<isNotEmpty property="compSeq">
+		and comp_seq=#compSeq#
+		</isNotEmpty>
+		<isNotEmpty property="deptSeq">
+		and dept_seq=#deptSeq#
+		</isNotEmpty>			
+    </update>
+
+    <delete id="OrgAdapterManage.deleteEmpAuth" parameterClass="hashmap">
+		delete from $DB_NEOS$t_co_auth_relate where emp_seq=#empSeq#
+		<isNotEmpty property="compSeq">
+		and comp_seq=#compSeq#
+		</isNotEmpty>
+		<isNotEmpty property="deptSeq">
+		and dept_seq=#deptSeq#
+		</isNotEmpty>		
+    </delete>
+    
+    
+    <select id="OrgAdapterManage.selectEmpMainDept" parameterClass="hashmap" resultClass="egovMap">
+        select a.dept_seq
+        from $DB_NEOS$t_co_emp_dept a
+        join $DB_NEOS$t_co_dept b on a.dept_seq = b.dept_seq and b.ea_yn = 'N'
+        where a.use_yn='Y'
+        and a.main_dept_yn = 'Y'
+        and a.comp_seq=#compSeq#
+        and a.emp_seq=#empSeq#
+        limit 1
+    </select>
+    
+    <update id="OrgAdapterManage.updateAccessIpRelate" parameterClass="hashmap">
+        update $DB_NEOS$t_co_access_relate set dept_seq=#deptSeqNew#
+        where emp_seq=#empSeq#
+        <isNotEmpty property="compSeq">
+        and comp_seq=#compSeq#
+        </isNotEmpty>
+        <isNotEmpty property="deptSeq">
+        and dept_seq=#deptSeq#
+        </isNotEmpty>           
+    </update>
+
+    <delete id="OrgAdapterManage.deleteAccessIp" parameterClass="hashmap">
+        delete from $DB_NEOS$t_co_access
+        where comp_seq=#compSeq#
+    </delete>
+    
+    <delete id="OrgAdapterManage.deleteAccessIpRelate" parameterClass="hashmap">
+        delete from $DB_NEOS$t_co_access_relate
+        <isEqual property="ipDiv" compareValue="comp">
+          where comp_seq = #compSeq#
+        </isEqual>
+        <isEqual property="ipDiv" compareValue="dept">
+          where dept_seq = #deptSeq#
+        </isEqual>
+        <isEqual property="ipDiv" compareValue="emp">
+          where emp_seq = #empSeq#
+          <isNotEmpty property="compSeq">
+            and comp_seq = #compSeq#
+          </isNotEmpty>
+          <isNotEmpty property="deptSeq">
+            and dept_seq = #deptSeq#
+          </isNotEmpty>
+        </isEqual>
+    </delete>
+    
+    <delete id="OrgAdapterManage.deleteCompAuthCodeMulti" parameterClass="hashmap">
+		delete from $DB_NEOS$t_co_authcode_multi
+		where author_code in (select author_code from $DB_NEOS$t_co_authcode where comp_seq=#compSeq#)		
+    </delete>    
+    
+    <delete id="OrgAdapterManage.deleteCompMenuAuth" parameterClass="hashmap">
+		delete from $DB_NEOS$t_co_menu_auth
+		where author_code in (select author_code from $DB_NEOS$t_co_authcode where comp_seq=#compSeq#)		
+    </delete>  
+    
+    <delete id="OrgAdapterManage.deleteCompAuthRelate" parameterClass="hashmap">
+		delete from $DB_NEOS$t_co_auth_relate
+		where author_code in (select author_code from $DB_NEOS$t_co_authcode where comp_seq=#compSeq#)		
+    </delete>          
+
+    <delete id="OrgAdapterManage.deleteCompAuthCode" parameterClass="hashmap">
+    	delete from $DB_NEOS$t_co_authcode where comp_seq=#compSeq#
+    </delete>
+    
+    <delete id="OrgAdapterManage.deleteGrouppingComp" parameterClass="hashmap">
+    	delete from $DB_NEOS$t_co_groupping_comp where comp_seq=#compSeq#
+    </delete>    
+    
+	<select id="OrgAdapterManage.selectEmpDept" parameterClass="hashmap" resultClass="egovMap">
+		select * 
+		from $DB_NEOS$t_co_emp_dept
+		where dept_seq=#deptSeq# and emp_seq=#empSeq#
+		limit 1		
+	</select>
+	
+	
+	<select id="OrgAdapterManage.selectEmpDeptTop" parameterClass="hashmap" resultClass="egovMap">
+		select a.dept_seq
+		from $DB_NEOS$t_co_emp_dept a
+		inner join $DB_NEOS$t_co_dept b on a.dept_seq = b.dept_seq
+		where a.use_yn='Y' and a.comp_seq=#compSeq# and a.emp_seq=#empSeq# and b.ea_yn = 'N'
+		limit 1
+	</select>
+	
+	<update id="OrgAdapterManage.updateEmpDeptTop" parameterClass="hashmap">
+		update $DB_NEOS$t_co_emp_dept set
+		main_dept_yn='Y'
+		where comp_seq=#compSeq# and dept_seq=#deptSeq# and emp_seq=#empSeq#
+	</update>		
+	
+	<update id="OrgAdapterManage.updateEmpCompTop" parameterClass="hashmap">
+		update $DB_NEOS$t_co_emp_comp set
+		dept_seq=#deptSeq#
+		where comp_seq=#compSeq# and emp_seq=#empSeq#
+	</update>
+	
+	<select id="OrgAdapterManage.selectEmpDeptMulti" parameterClass="hashmap" resultClass="egovMap">
+		select * 
+		from $DB_NEOS$t_co_emp_dept_multi
+		where dept_seq=#deptSeq# and emp_seq=#empSeq#
+		limit 1		
+	</select>
+	
+	<select id="OrgAdapterManage.selectDeptInfo" parameterClass="hashmap" resultClass="egovMap">
+		select * 
+		from $DB_NEOS$t_co_dept
+		where dept_seq=#deptSeq#
+		limit 1		
+	</select>	
+    
+	<select id="OrgAdapterManage.selectEmpInfo" parameterClass="hashmap" resultClass="egovMap">
+		select 
+		ifnull(ce.license_check_yn,'1') as license_check_yn,
+		ifnull(cc.work_status,'001') as work_status,
+		ifnull(cc.use_yn,'N') as use_yn,
+		ce.emp_seq,
+		ifnull(ce.login_id,'') as login_id,
+		ifnull(ce.email_addr,'') as email_addr
+		from $DB_NEOS$t_co_emp ce
+		left join $DB_NEOS$t_co_emp_comp cc on ce.emp_seq=cc.emp_seq and cc.work_status in ('999','004') and cc.use_yn='Y'
+		where ce.use_yn in ('Y','N') and ce.emp_seq=#empSeq#
+		limit 1		
+	</select>
+	
+	<select id="OrgAdapterManage.selectEmpCompInfo" parameterClass="hashmap" resultClass="egovMap">
+		select 
+		ce.license_check_yn,
+		ifnull(cc.work_status,'001') as work_status,
+		ifnull(cc.use_yn,'N') as use_yn
+		from $DB_NEOS$t_co_emp ce
+		join $DB_NEOS$t_co_emp_comp cc on ce.emp_seq=cc.emp_seq
+		where cc.comp_seq=#compSeq# and ce.emp_seq=#empSeq#
+		limit 1
+	</select>
+	
+	<select id="OrgAdapterManage.selectEmpDeptInfo" parameterClass="hashmap" resultClass="egovMap">
+		select 
+		main_dept_yn
+		from $DB_NEOS$t_co_emp_dept
+		where comp_seq=#compSeq# and dept_seq=#deptSeq# and emp_seq=#empSeq#
+		limit 1
+	</select>
+	
+   	<select id ="OrgAdapterManage.selectErpInfo" parameterClass="hashmap" resultClass="egovMap">
+		SELECT 		A.group_seq, 
+					A.comp_seq, 
+					A.erp_seq, 
+					A.erp_type_code, 
+					A.database_type, 
+					A.driver, 
+					A.url, 
+					A.userid, 
+					A.password, 
+					A.erp_comp_seq, 
+					A.erp_comp_name, 
+					A.use_yn
+		FROM  		$DB_NEOS$t_co_erp A
+		WHERE  		A.group_seq = #groupSeq#
+		AND			A.comp_seq = #compSeq#
+		AND 		A.achr_gbn = #erpGubun#
+		AND			A.use_yn = 'Y'
+		limit 1
+	</select>
+	
+    <select id="OrgAdapterManage.selectMailInfo" parameterClass="hashmap" resultClass="egovMap">
+    	SELECT
+    		a.email_domain
+    		,b.mail_url
+    		,a.comp_email_yn
+   		FROM
+   			$DB_NEOS$t_co_comp a
+   		INNER JOIN
+   			$DB_NEOS$t_co_group b on a.group_seq = b.group_seq
+   		WHERE
+   			a.comp_seq = #compSeq#  
+   		limit 1
+    </select>
+    
+    <select id="OrgAdapterManage.selectMailInfoGroup" parameterClass="hashmap" resultClass="egovMap">
+    	SELECT
+    		a.email_domain
+    		,c.mail_url
+    		,a.comp_email_yn
+   		FROM $DB_NEOS$t_co_comp a
+   		JOIN $DB_NEOS$t_co_emp_comp b on a.comp_email_yn='Y' and a.use_yn='Y' and a.comp_seq=b.comp_seq and b.emp_seq=#empSeq#
+   		JOIN $DB_NEOS$t_co_group c on a.group_seq = c.group_seq
+   		limit 1
+    </select>
+    
+    <select id="OrgAdapterManage.selectEmpMailResignList" parameterClass="hashmap" resultClass="egovMap">
+		select
+		<isEqual property="isAll" compareValue="Y"> distinct </isEqual>
+		cec.emp_seq,
+		cc.email_domain as domain,
+		concat(cg.mail_url, if(#mailDelYn#='Y','deleteUser.do','resignUser.do')) as url,
+		'1' as flag
+		from $DB_NEOS$t_co_emp_comp cec
+		join $DB_NEOS$t_co_comp cc on cec.comp_seq=cc.comp_seq and cc.comp_email_yn='Y' and ifnull(cc.email_domain,'') != ''
+								<isEmpty property="workStatusFlag">and cec.work_status != '001'</isEmpty> 	
+		join $DB_NEOS$t_co_group cg on cc.group_seq=cg.group_seq and ifnull(cg.mail_url,'') != ''
+		<isEqual property="isAll" compareValue="N">
+		left join $DB_NEOS$t_co_comp cc0 on cc0.comp_seq=#compSeq# and cc.email_domain=cc0.email_domain
+		</isEqual>
+		where cec.emp_Seq=#empSeq#
+		<isEqual property="isAll" compareValue="N">
+		and cc0.email_domain is not null    
+		and cc0.comp_email_yn='Y'
+    	</isEqual>
+    </select>    
+    
+    <select id="OrgAdapterManage.getCompCnt" parameterClass="hashmap" resultClass="string">
+		select count(*) as cnt 
+		from $DB_NEOS$t_co_comp where comp_seq=#compSeq#
+    </select>
+    
+    <select id="OrgAdapterManage.getBizCnt" parameterClass="hashmap" resultClass="string">
+		select count(*) as cnt 
+		from $DB_NEOS$t_co_biz where biz_seq=#bizSeq#
+    </select>        
+    
+    <select id="OrgAdapterManage.getDeptCnt" parameterClass="hashmap" resultClass="string">
+		select count(*) as cnt 
+		from $DB_NEOS$t_co_dept where dept_seq=#deptSeq#
+    </select>    
+    
+    <select id="OrgAdapterManage.getCompDeptCnt" parameterClass="hashmap" resultClass="string">
+		select count(*) as cnt 
+		from $DB_NEOS$t_co_dept where comp_seq=#compSeq#
+    </select>
+    
+    <select id="OrgAdapterManage.getBizDeptCnt" parameterClass="hashmap" resultClass="string">
+		select count(*) as cnt 
+		from $DB_NEOS$t_co_dept where biz_seq=#bizSeq#
+    </select>
+    
+    <select id="OrgAdapterManage.getDeptChildCnt" parameterClass="hashmap" resultClass="string">
+		select count(*) as cnt 
+		from $DB_NEOS$t_co_dept where parent_dept_seq=#deptSeq#
+    </select>
+    
+    <select id="OrgAdapterManage.getDeptEmpCnt" parameterClass="hashmap" resultClass="string">
+		select count(*) as cnt 
+		from $DB_NEOS$t_co_emp_dept where dept_seq=#deptSeq# and use_yn='Y'
+    </select>
+    
+    <select id="OrgAdapterManage.getDeptEmpResignCnt" parameterClass="hashmap" resultClass="string">
+		select count(*) as cnt 
+		from $DB_NEOS$t_co_emp_dept where dept_seq=#deptSeq# and use_yn != 'Y'
+    </select>
+    
+    <select id="OrgAdapterManage.getEmpDeptCnt" parameterClass="hashmap" resultClass="string">
+		select count(*) as cnt 
+		from $DB_NEOS$t_co_emp_dept where dept_seq=#deptSeq# and emp_seq=#empSeq#
+    </select>
+    
+    <select id="OrgAdapterManage.getEmpDeptAllCnt" parameterClass="hashmap" resultClass="string">
+		select count(*) as cnt 
+		from $DB_NEOS$t_co_emp_dept where emp_seq=#empSeq#
+		<isNotEmpty property="compSeq">
+		and comp_seq=#compSeq#
+		</isNotEmpty>
+    </select>
+    
+    <select id="OrgAdapterManage.getEmpCompCnt" parameterClass="hashmap" resultClass="string">
+		select count(*) as cnt 
+		from $DB_NEOS$t_co_emp_comp where emp_seq=#empSeq# and comp_seq=#compSeq#
+    </select>
+    
+    <select id="OrgAdapterManage.getEmpCompWorkCnt" parameterClass="hashmap" resultClass="string">
+		select count(*) as cnt 
+		from $DB_NEOS$t_co_emp_comp where emp_seq=#empSeq#
+    </select>
+    
+    <select id="OrgAdapterManage.getNewEmpDeptCnt" parameterClass="hashmap" resultClass="string">
+		select count(*) as cnt 
+		from $DB_NEOS$t_co_emp_dept where dept_seq=#deptSeqNew# and emp_seq=#empSeq#
+    </select>
+    
+    <select id="OrgAdapterManage.getEmpCnt" parameterClass="hashmap" resultClass="string">
+		select count(*) as cnt 
+		from $DB_NEOS$t_co_emp
+		where 1=1
+		<isNotEmpty property="loginId">
+		and login_id=#loginId#
+		</isNotEmpty>		
+		<isNotEmpty property="emailAddr">
+		and email_addr=#emailAddr#
+		</isNotEmpty>			
+    </select>
+    
+    <select id="OrgAdapterManage.getEmpDefCnt" parameterClass="hashmap" resultClass="string">
+		select count(*) as cnt 
+		from $DB_NEOS$t_co_emp
+		where emp_seq=#empSeqDef#	
+    </select>  
+    
+    <select id="OrgAdapterManage.getEmpInfo" parameterClass="hashmap" resultClass="egovMap">
+		select *
+		from $DB_NEOS$t_co_emp_comp
+		where erp_emp_seq = #erpEmpSeq# and erp_comp_seq = #erpCompSeq#	limit 1
+    </select>  
+    
+	<select id="OrgAdapterManage.getEmpDuplicate" parameterClass="hashmap" resultClass="string">
+		SELECT
+		CASE WHEN e.emp_seq IS NOT NULL THEN 1
+		<isNotEmpty property="loginId">
+		WHEN IFNULL(ov200.option_value,'0')='1' AND CONCAT('|', IFNULL(ov206.option_value,''),'|') LIKE '%|$loginId$|%' THEN 2
+		</isNotEmpty>
+		<isNotEmpty property="emailAddr">
+		WHEN IFNULL(ov200.option_value,'0')='1' AND CONCAT('|', IFNULL(ov206.option_value,''),'|') LIKE '%|$emailAddr$|%' THEN 2
+		</isNotEmpty>
+		ELSE 0 END AS result
+		FROM $DB_NEOS$t_co_group g
+		<isNotEmpty property="loginId">
+		LEFT JOIN $DB_NEOS$t_co_emp e on e.login_id = #loginId#
+		</isNotEmpty>
+		<isNotEmpty property="emailAddr">
+		LEFT JOIN $DB_NEOS$t_co_emp e on e.email_addr = #emailAddr#
+		</isNotEmpty>
+		LEFT JOIN $DB_NEOS$tcmg_optionvalue ov200 on ov200.option_id='cm200'
+		LEFT JOIN $DB_NEOS$tcmg_optionvalue ov206 on ov206.option_id='cm206'
+		LIMIT 1
+	</select>
+	
+	 <select id="OrgAdapterManage.getEmpCalendarSeq" parameterClass="hashMap" resultClass="String">
+	 	SELECT IFNULL(max(mcal_seq * 1),0)+1 as mcal_seq
+		FROM $DB_NEOS$t_sc_mcalendar		
+	 </select>	
+	
+	 <insert id="OrgAdapterManage.insertEmpMcalendar" parameterClass="hashMap">
+	 	insert into $DB_NEOS$t_sc_mcalendar
+	 	( 
+				mcal_seq
+		, 		cal_title
+		, 		cal_title_eng
+  		, 		cal_title_jp
+  		, 		cal_title_cn		
+		, 		cal_type		
+		, 		contents
+		, 		open_yn
+		, 		window_type
+		,		cal_type_seq
+		, 		group_seq
+		,		comp_seq
+		, 		use_yn
+		, 		create_seq
+		, 		create_date	)
+		VALUES(		
+				#mcalSeq#
+		, 		concat('개인캘린더.',#empName#)
+		, 		concat('Private calendar.',#empName#)
+		, 		concat('個人カレンダー.',#empName#)
+		, 		concat('个人日历.',#empName#)		
+		, 		'E'
+		, 		''
+		,		'Y'
+		, 		'1'
+		,		''
+		, 		#groupSeq#
+		, 		#compSeq#
+		,		'Y'
+		, 		#empSeq#
+		, 		now()		
+				)
+	 </insert>
+	 
+	 <insert id="OrgAdapterManage.insertEmpMcalUserCreate" parameterClass="hashMap">
+	 	insert into $DB_NEOS$t_sc_mcal_user
+	 	( 
+				mcal_seq
+				,user_type
+  				,comp_seq
+				,org_type
+				,org_seq
+				,group_seq
+				,dept_seq
+				,use_yn
+				,create_seq
+				,create_date	
+		)
+		VALUES
+		(		
+				#mcalSeq#
+				,'30'
+				,#compSeq#
+				,'E'
+				,#empSeq#
+				,#groupSeq#
+				,#deptSeq#
+				,'Y'
+				,#empSeq#
+				,now()
+		)
+	 </insert>
+	 
+	 
+	 <insert id="OrgAdapterManage.insertEmpMcalUserOwner" parameterClass="hashMap">
+	 	insert into $DB_NEOS$t_sc_mcal_user
+	 	( 
+				mcal_seq
+				,user_type
+  				,comp_seq
+				,org_type
+				,org_seq
+				,group_seq
+				,dept_seq
+				,use_yn
+				,create_seq
+				,create_date	
+		)
+		VALUES
+		(		
+				#mcalSeq#
+				,'90'
+				,#compSeq#
+				,'E'
+				,#empSeq#
+				,#groupSeq#
+				,#deptSeq#
+				,'Y'
+				,#empSeq#
+				,now()
+		)
+	 </insert>
+	 
+	 <insert id="OrgAdapterManage.insertEmpMcalUserStyle" parameterClass="hashMap">
+	 	insert into $DB_NEOS$t_sc_mcal_emp_style
+	 	( 
+				mcal_seq
+				,emp_seq
+			  	,cal_color
+				,window_type	
+				,group_seq
+				,comp_seq
+				,use_yn
+				,create_seq
+				,create_date	
+				,sorting_order
+		)
+		VALUES
+		(		
+				#mcalSeq#
+				,#empSeq#
+				,'##b2e1ff'
+				,'1'
+				,#groupSeq#
+				,#compSeq#
+				,'Y'
+				,#empSeq#
+				,now()
+				,''
+		)
+	 </insert>	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+    
+	<insert id="OrgAdapterManage.insertMsgLink" parameterClass="hashmap">
+		insert ignore into $DB_NEOS$t_msg_tcmg_link (link_seq, link_upper_seq, link_position, group_seq, comp_seq, link_kind, link_nm_kr, link_nm_en, link_nm_jp, link_nm_cn, menu_no, gnb_menu_no, lnb_menu_no, msg_target, target_url, link_param, encrypt_seq, map_key, use_yn, icon_nm, icon_path, icon_ver, order_num, create_seq, create_date) 
+		select concat(b.comp_seq, '_',a.link_seq), case when a.link_upper_seq = '0' then '0' else concat(b.comp_seq, '_',a.link_upper_seq) end, a.link_position, b.group_seq, b.comp_seq, a.link_kind, a.link_nm_kr, a.link_nm_en, a.link_nm_jp, a.link_nm_cn, a.menu_no, a.gnb_menu_no, a.lnb_menu_no, a.msg_target,  a.target_url, a.link_param, a.encrypt_seq, a.map_key,  a.use_yn,  a.icon_nm, a.icon_path, 1, a.order_num, 'MIG', now() 
+		from $DB_NEOS$t_msg_tcmg_link a
+		join $DB_NEOS$t_co_comp b on a.comp_seq='0'
+		where b.comp_seq not in (select comp_seq from $DB_NEOS$t_msg_tcmg_link);	
+	</insert>
+	
+	<insert id="OrgAdapterManage.insertAlertMaster" parameterClass="hashmap">
+		insert ignore into $DB_NEOS$t_alert_master(comp_seq, group_seq, alert_yn, push_yn, talk_yn, mail_yn, sms_yn, portal_yn, timeline_yn, use_yn, create_seq, create_date)
+		select comp_seq, group_seq, 'B','B','B','B','N','B','B','Y','SYSTEM',now() from $DB_NEOS$t_co_comp where comp_seq not in (select comp_seq from $DB_NEOS$t_alert_master);
+	</insert>
+	
+	<insert id="OrgAdapterManage.insertAlertAdmin" parameterClass="hashmap">
+		insert ignore into $DB_NEOS$t_alert_admin(comp_seq, group_seq, alert_type, alert_yn, push_yn, talk_yn, mail_yn, sms_yn, portal_yn, timeline_yn, use_yn, create_seq, create_date, divide_type, link_event)
+		select b.comp_seq, b.group_seq, a.alert_type, a.alert_yn, a.push_yn, a.talk_yn, a.mail_yn, a.sms_yn, a.portal_yn, a.timeline_yn, a.use_yn, 'SYSTEM', now(), 'CM', a.link_event 
+		from $DB_NEOS$t_alert_setting a
+		join $DB_NEOS$t_co_comp b on b.use_yn = 'Y'
+		where b.comp_seq not in (select comp_seq from $DB_NEOS$t_alert_admin);
+	</insert>
+		
+	<insert id="OrgAdapterManage.insertAttCodeItem" parameterClass="hashmap">
+		INSERT IGNORE INTO $DB_NEOS$t_at_att_code_item(comp_seq, att_item_code, att_item_name, annv_use_yn, elet_appv_link_yn, elet_appv_process_id, elet_appv_interface_key, att_req_popup_code, use_yn, delete_yn, create_seq, create_dt)
+		SELECT b.comp_seq, a.att_item_code, a.att_item_name, a.annv_use_yn, a.elet_appv_link_yn, a.elet_appv_process_id, a.elet_appv_interface_key, a.att_req_popup_code, a.use_yn, a.delete_yn, 'SYSTEM', now()
+		FROM $DB_NEOS$t_at_att_code_item a
+		JOIN $DB_NEOS$t_co_comp b on a.comp_seq='SYSTEM'
+		WHERE b.comp_seq not in (select comp_seq from $DB_NEOS$t_at_att_code_item);
+	</insert>
+	
+	<insert id="OrgAdapterManage.insertAttCodeDiv" parameterClass="hashmap">
+		INSERT IGNORE INTO $DB_NEOS$t_at_att_code_div(comp_seq, att_div_code, att_item_code, att_div_name_kr, att_div_name_en, att_div_name_cn, att_div_name_jp, use_day_cnt, vacate_base_day_cnt, day_cnt_add_yn, annv_exhaust_yn, annv_exhaust_day_cnt, legal_holiday_include_yn, sat_include_yn, sun_include_yn, attach_surely_yn, approve_linkage_code, erp_att_code, use_yn, delete_yn, create_seq, create_dt)
+		SELECT b.comp_seq, a.att_div_code, a.att_item_code, a.att_div_name_kr, a.att_div_name_en, a.att_div_name_cn, a.att_div_name_jp, a.use_day_cnt, a.vacate_base_day_cnt, a.day_cnt_add_yn, a.annv_exhaust_yn, a.annv_exhaust_day_cnt, a.legal_holiday_include_yn, a.sat_include_yn, a.sun_include_yn, a.attach_surely_yn, a.approve_linkage_code, a.erp_att_code, a.use_yn, a.delete_yn, 'SYSTEM', now()
+		FROM $DB_NEOS$t_at_att_code_div a
+		JOIN $DB_NEOS$t_co_comp b on a.comp_seq='SYSTEM'
+		WHERE b.comp_seq not in (select comp_seq from $DB_NEOS$t_at_att_code_div);
+	</insert>	
+	
+	<insert id="OrgAdapterManage.insertAttConfig" parameterClass="hashmap">
+		INSERT IGNORE INTO $DB_NEOS$t_at_config(comp_seq, co_code, co_detail_code, create_seq, create_dt, co_in_detail_code, co_code_nm_kr, co_code_nm_en, co_code_nm_jp, co_code_nm_cn, co_code_desc)
+		SELECT b.comp_seq, co_code, co_detail_code, 'SYSTEM', now(), co_in_detail_code, co_code_nm_kr, co_code_nm_en, co_code_nm_jp, co_code_nm_cn, co_code_desc
+		FROM $DB_NEOS$t_at_config a
+		JOIN $DB_NEOS$t_co_comp b on a.comp_seq='SYSTEM'
+		WHERE b.comp_seq not in (select comp_seq from $DB_NEOS$t_at_config);
+	</insert>		
+	
+    <update id="OrgAdapterManage.resignEmpDept" parameterClass="hashmap">
+		update $DB_NEOS$t_co_emp_dept 
+		set 		
+		orgchart_display_yn='N'
+		,messenger_display_yn='N'
+		,use_yn='N'
+		,modify_date=NOW()
+		<isNotNull property="createSeq">
+		,modify_seq=#createSeq#
+		</isNotNull>
+		where emp_seq=#empSeq#
+		<isNotEmpty property="compSeq">
+		and comp_seq=#compSeq#
+		</isNotEmpty>		
+    </update>
+    
+    <update id="OrgAdapterManage.resignEmpDeptMulti" parameterClass="hashmap">
+		update $DB_NEOS$t_co_emp_dept_multi
+		set 
+		use_yn='N'
+		,modify_date=NOW()
+		<isNotNull property="createSeq">
+		,modify_seq=#createSeq#
+		</isNotNull>
+		where emp_seq=#empSeq#
+		<isNotEmpty property="compSeq">
+		and comp_seq=#compSeq#
+		</isNotEmpty>		
+    </update>
+	
+    <update id="OrgAdapterManage.resignEmpComp" parameterClass="hashmap">
+		update $DB_NEOS$t_co_emp_comp
+		set
+		modify_date=NOW()
+		<isNotNull property="createSeq">
+		,modify_seq=#createSeq#
+		</isNotNull>
+		<isNotNull property="resignDay">
+			<isNotEmpty property="resignDay">,resign_day=#resignDay#</isNotEmpty>
+			<isEmpty property="resignDay">,resign_day=null</isEmpty>
+		</isNotNull>
+		,work_status='001'
+		,use_yn='N'
+		,check_work_yn = 'N'
+		<isEqual property="mailDelYn" compareValue="Y">
+		,mail_del_yn = 'Y'
+		</isEqual>
+		where emp_seq=#empSeq#		
+		<isNotEmpty property="compSeq">
+		and comp_seq=#compSeq#
+		</isNotEmpty>
+    </update>
+    
+    <update id="OrgAdapterManage.updateDocAdm" parameterClass="hashmap">
+        UPDATE $DB_EDMS$DOC_ADM SET MBR_ID = #targetSeq#  WHERE COMP_ID = #groupSeq# AND MBR_ID= #empSeq# AND DIR_CD = #docPk# ;
+    </update>
+    
+    <update id="OrgAdapterManage.updateBoardAdm" parameterClass="hashmap">
+        UPDATE $DB_EDMS$BOARD_ADM SET MBR_ID = #targetSeq#  WHERE COMP_ID = #groupSeq# AND MBR_ID= #empSeq# AND CAT_SEQ_NO = #boardPk#;
+    </update>
+    
+    <delete id="OrgAdapterManage.deleteDocAdm" parameterClass="hashmap">
+        DELETE FROM $DB_EDMS$DOC_ADM where comp_id = #groupSeq# and mbr_id = #empSeq#;
+    </delete>
+    
+    <delete id="OrgAdapterManage.deleteBoardAdm" parameterClass="hashmap">
+        DELETE FROM $DB_EDMS$BOARD_ADM where comp_id = #groupSeq# and mbr_id = #empSeq#;
+    </delete>
+    
+    <select id="OrgAdapterManage.getDocAdmCnt" parameterClass="hashmap" resultClass="string">
+    	SELECT count(*) as cnt  FROM $DB_EDMS$DOC_ADM WHERE MBR_ID= #targetSeq# AND dir_cd = #docPk#;
+    </select>    
+    
+    <select id="OrgAdapterManage.getBoardAdmCnt" parameterClass="hashmap" resultClass="string">
+    	SELECT count(*) as cnt  FROM $DB_EDMS$BOARD_ADM WHERE MBR_ID= #targetSeq# AND CAT_SEQ_NO = #boardPk#;
+    </select>
+    
+    <select id="OrgAdapterManage.getEmpOptionCnt" parameterClass="hashmap" resultClass="string">
+    	SELECT count(*) as cnt  FROM $DB_NEOS$t_co_emp_option where emp_seq=#empSeq#
+    </select>
+    
+    <select id="OrgAdapterManage.getEmpMasterCnt" parameterClass="hashmap" resultClass="string">
+		select count(e.emp_seq) as cnt
+		from $DB_NEOS$t_co_emp e
+		join $DB_NEOS$t_co_emp_comp ec on e.emp_seq = ec.emp_seq and ec.work_status IN ('999','004') and ec.use_yn = 'Y'
+		join $DB_NEOS$t_co_dept d on ec.dept_seq = d.dept_seq and d.use_yn = 'Y'
+		join $DB_NEOS$t_co_comp c on ec.comp_seq = c.comp_seq and c.use_yn = 'Y'
+		join $DB_NEOS$t_co_emp_option eo on e.emp_seq = eo.emp_seq and eo.master_use_yn = 'Y'
+		join $DB_NEOS$t_co_auth_relate ar on ec.comp_seq = ar.comp_seq and ec.emp_seq = ar.emp_seq
+		join $DB_NEOS$t_co_authcode a on ar.author_code = a.author_code and a.author_type = '001' and a.author_use_yn = 'Y'
+		where e.emp_seq != #empSeq#
+    </select>
+    
+    <insert id="OrgAdapterManage.insertEmpOption" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_emp_option
+		(
+			emp_seq
+			<isNotNull property="masterUseYn">, master_use_yn</isNotNull>
+			<isNotNull property="adminUseYn">, admin_use_yn</isNotNull>
+			<isNotNull property="cusUseYn">, cus_use_yn</isNotNull>
+			<isNotNull property="createSeq">, create_seq</isNotNull>
+			, create_date
+			<isNotNull property="createSeq">, modify_seq</isNotNull>
+			, modify_date
+		) VALUES
+		(
+			#empSeq#
+			<isNotNull property="masterUseYn">, #masterUseYn#</isNotNull>
+			<isNotNull property="adminUseYn">, #adminUseYn#</isNotNull>
+			<isNotNull property="cusUseYn">, #cusUseYn#</isNotNull>
+			<isNotNull property="createSeq">, #createSeq#</isNotNull>
+			, NOW()
+			<isNotNull property="createSeq">, #createSeq#</isNotNull>
+			, NOW()
+		);
+    </insert>    
+	
+    <update id="OrgAdapterManage.updateEmpOption" parameterClass="hashmap">
+		update $DB_NEOS$t_co_emp_option
+		set
+		modify_date=NOW()
+		<isNotNull property="masterUseYn">,master_use_yn=#masterUseYn#</isNotNull>
+		<isNotNull property="adminUseYn">,admin_use_yn=#adminUseYn#</isNotNull>
+		<isNotNull property="cusUseYn">,cus_use_yn=#cusUseYn#</isNotNull>
+		<isNotNull property="createSeq">,modify_seq=#createSeq#</isNotNull>
+		where emp_seq=#empSeq#
+    </update>
+    
+    <delete id="OrgAdapterManage.deleteEmpOption" parameterClass="hashmap">
+		delete from $DB_NEOS$t_co_emp_option where emp_seq=#empSeq#
+    </delete>
+    
+    <update id="OrgAdapterManage.updateEaProgressDoc" parameterClass="hashmap">
+		update $DB_NEOS$teag_appdoc doc
+		join $DB_NEOS$t_co_emp_dept ced on doc.user_id=ced.emp_seq and doc.dept_id=#deptSeq# and ced.dept_seq=#deptSeqNew# and ced.emp_seq=#empSeq#
+		
+		<isEqual property="deptChange" compareValue="Y">
+		left join $DB_NEOS$t_co_dept_multi dept_kr on ced.dept_seq = dept_kr.dept_seq and dept_kr.lang_code='kr'
+		left join $DB_NEOS$t_co_dept_multi dept_en on ced.dept_seq = dept_en.dept_seq and dept_en.lang_code='en'
+		left join $DB_NEOS$t_co_dept_multi dept_jp on ced.dept_seq = dept_jp.dept_seq and dept_jp.lang_code='jp'
+		left join $DB_NEOS$t_co_dept_multi dept_cn on ced.dept_seq = dept_cn.dept_seq and dept_cn.lang_code='cn'
+		</isEqual>
+		
+		<isEqual property="positionChange" compareValue="Y">
+		left join $DB_NEOS$t_co_comp_duty_position_multi posi_kr on ced.position_code = posi_kr.dp_seq and posi_kr.dp_type='POSITION' and  posi_kr.lang_code='kr'
+		left join $DB_NEOS$t_co_comp_duty_position_multi posi_en on ced.position_code = posi_en.dp_seq and posi_en.dp_type='POSITION' and  posi_en.lang_code='en'
+		left join $DB_NEOS$t_co_comp_duty_position_multi posi_jp on ced.position_code = posi_jp.dp_seq and posi_jp.dp_type='POSITION' and  posi_jp.lang_code='jp'
+		left join $DB_NEOS$t_co_comp_duty_position_multi posi_cn on ced.position_code = posi_cn.dp_seq and posi_cn.dp_type='POSITION' and  posi_cn.lang_code='cn'
+		</isEqual>
+		
+		<isEqual property="dutyChange" compareValue="Y">
+		left join $DB_NEOS$t_co_comp_duty_position_multi duty_kr on ced.duty_code = duty_kr.dp_seq and duty_kr.dp_type='DUTY' and  duty_kr.lang_code='kr'
+		left join $DB_NEOS$t_co_comp_duty_position_multi duty_en on ced.duty_code = duty_en.dp_seq and duty_en.dp_type='DUTY' and  duty_en.lang_code='en'
+		left join $DB_NEOS$t_co_comp_duty_position_multi duty_jp on ced.duty_code = duty_jp.dp_seq and duty_jp.dp_type='DUTY' and  duty_jp.lang_code='jp'
+		left join $DB_NEOS$t_co_comp_duty_position_multi duty_cn on ced.duty_code = duty_cn.dp_seq and duty_cn.dp_type='DUTY' and  duty_cn.lang_code='cn'
+		</isEqual>
+		
+		set doc.modify_dt=NOW()
+		<isNotNull property="createSeq">
+		,doc.modify_by=#createSeq#
+		</isNotNull>				
+		
+		<isEqual property="deptChange" compareValue="Y">
+		,doc.dept_id=ced.dept_seq
+		,doc.dept_nm=dept_kr.dept_name
+		,doc.dept_nm_en=ifnull(dept_en.dept_name,dept_kr.dept_name)
+		,doc.dept_nm_jp=ifnull(dept_jp.dept_name,dept_kr.dept_name)
+		,doc.dept_nm_cn=ifnull(dept_cn.dept_name,dept_kr.dept_name)
+		</isEqual>
+		
+		<isEqual property="positionChange" compareValue="Y">
+		,doc.grade_nm=posi_kr.dp_name
+		,doc.grade_nm_en=ifnull(posi_en.dp_name,posi_kr.dp_name)
+		,doc.grade_nm_jp=ifnull(posi_jp.dp_name,posi_kr.dp_name)
+		,doc.grade_nm_cn=ifnull(posi_cn.dp_name,posi_kr.dp_name)
+		</isEqual>
+		
+		<isEqual property="dutyChange" compareValue="Y">
+		,doc.duty_nm=duty_kr.dp_name
+		,doc.duty_nm_en=ifnull(duty_en.dp_name,duty_kr.dp_name)
+		,doc.duty_nm_jp=ifnull(duty_jp.dp_name,duty_kr.dp_name)
+		,doc.duty_nm_cn=ifnull(duty_cn.dp_name,duty_kr.dp_name)
+		</isEqual>
+		
+		where doc.doc_sts not in ('40','70','80','90','100')
+    </update>
+    
+    <update id="OrgAdapterManage.updateEaProgressLine" parameterClass="hashmap">
+		update $DB_NEOS$teag_appdoc_line line
+		join $DB_NEOS$t_co_emp_dept ced on line.user_id=ced.emp_seq and line.dept_id=#deptSeq# and ced.dept_seq=#deptSeqNew# and ced.emp_seq=#empSeq#
+		
+		<isEqual property="deptChange" compareValue="Y">
+		left join $DB_NEOS$t_co_dept_multi dept_kr on ced.dept_seq = dept_kr.dept_seq and dept_kr.lang_code='kr'
+		left join $DB_NEOS$t_co_dept_multi dept_en on ced.dept_seq = dept_en.dept_seq and dept_en.lang_code='en'
+		left join $DB_NEOS$t_co_dept_multi dept_jp on ced.dept_seq = dept_jp.dept_seq and dept_jp.lang_code='jp'
+		left join $DB_NEOS$t_co_dept_multi dept_cn on ced.dept_seq = dept_cn.dept_seq and dept_cn.lang_code='cn'
+		</isEqual>
+		
+		<isEqual property="positionChange" compareValue="Y">
+		left join $DB_NEOS$t_co_comp_duty_position_multi posi_kr on ced.position_code = posi_kr.dp_seq and posi_kr.dp_type='POSITION' and  posi_kr.lang_code='kr'
+		left join $DB_NEOS$t_co_comp_duty_position_multi posi_en on ced.position_code = posi_en.dp_seq and posi_en.dp_type='POSITION' and  posi_en.lang_code='en'
+		left join $DB_NEOS$t_co_comp_duty_position_multi posi_jp on ced.position_code = posi_jp.dp_seq and posi_jp.dp_type='POSITION' and  posi_jp.lang_code='jp'
+		left join $DB_NEOS$t_co_comp_duty_position_multi posi_cn on ced.position_code = posi_cn.dp_seq and posi_cn.dp_type='POSITION' and  posi_cn.lang_code='cn'
+		</isEqual>
+		
+		<isEqual property="dutyChange" compareValue="Y">
+		left join $DB_NEOS$t_co_comp_duty_position_multi duty_kr on ced.duty_code = duty_kr.dp_seq and duty_kr.dp_type='DUTY' and  duty_kr.lang_code='kr'
+		left join $DB_NEOS$t_co_comp_duty_position_multi duty_en on ced.duty_code = duty_en.dp_seq and duty_en.dp_type='DUTY' and  duty_en.lang_code='en'
+		left join $DB_NEOS$t_co_comp_duty_position_multi duty_jp on ced.duty_code = duty_jp.dp_seq and duty_jp.dp_type='DUTY' and  duty_jp.lang_code='jp'
+		left join $DB_NEOS$t_co_comp_duty_position_multi duty_cn on ced.duty_code = duty_cn.dp_seq and duty_cn.dp_type='DUTY' and  duty_cn.lang_code='cn'
+		</isEqual>
+		
+		set line.modify_dt=NOW()
+		<isNotNull property="createSeq">
+		,line.modify_by=#createSeq#
+		</isNotNull>		
+
+		<isEqual property="deptChange" compareValue="Y">
+		,line.dept_id=ced.dept_seq
+		,line.dept_nm=dept_kr.dept_name
+		,line.dept_nm_en=ifnull(dept_en.dept_name,dept_kr.dept_name)
+		,line.dept_nm_jp=ifnull(dept_jp.dept_name,dept_kr.dept_name)
+		,line.dept_nm_cn=ifnull(dept_cn.dept_name,dept_kr.dept_name)
+		</isEqual>
+		
+		<isEqual property="positionChange" compareValue="Y">
+		,line.grade_cd=ced.position_code
+		,line.grade_nm=posi_kr.dp_name
+		,line.grade_nm_en=ifnull(posi_en.dp_name,posi_kr.dp_name)
+		,line.grade_nm_jp=ifnull(posi_jp.dp_name,posi_kr.dp_name)
+		,line.grade_nm_cn=ifnull(posi_cn.dp_name,posi_kr.dp_name)
+		</isEqual>
+		
+		<isEqual property="dutyChange" compareValue="Y">
+		,line.duty_cd=ced.duty_code
+		,line.duty_nm=duty_kr.dp_name
+		,line.duty_nm_en=ifnull(duty_en.dp_name,duty_kr.dp_name)
+		,line.duty_nm_jp=ifnull(duty_jp.dp_name,duty_kr.dp_name)
+		,line.duty_nm_cn=ifnull(duty_cn.dp_name,duty_kr.dp_name)
+		</isEqual>
+		
+		where line.app_yn='0'
+    </update>
+    
+    <update id="OrgAdapterManage.updateEaProgressProxy" parameterClass="hashmap">
+		update $DB_NEOS$teag_appdoc_line line
+		join $DB_NEOS$t_co_emp_dept ced on line.proxy_app_user_id=ced.emp_seq and line.proxy_app_dept_id=#deptSeq# and ced.dept_seq=#deptSeqNew# and ced.emp_seq=#empSeq#
+		
+		<isEqual property="deptChange" compareValue="Y">
+		left join $DB_NEOS$t_co_dept_multi dept_kr on ced.dept_seq = dept_kr.dept_seq and dept_kr.lang_code='kr'
+		left join $DB_NEOS$t_co_dept_multi dept_en on ced.dept_seq = dept_en.dept_seq and dept_en.lang_code='en'
+		left join $DB_NEOS$t_co_dept_multi dept_jp on ced.dept_seq = dept_jp.dept_seq and dept_jp.lang_code='jp'
+		left join $DB_NEOS$t_co_dept_multi dept_cn on ced.dept_seq = dept_cn.dept_seq and dept_cn.lang_code='cn'
+		</isEqual>
+		
+		<isEqual property="positionChange" compareValue="Y">
+		left join $DB_NEOS$t_co_comp_duty_position_multi posi_kr on ced.position_code = posi_kr.dp_seq and posi_kr.dp_type='POSITION' and  posi_kr.lang_code='kr'
+		left join $DB_NEOS$t_co_comp_duty_position_multi posi_en on ced.position_code = posi_en.dp_seq and posi_en.dp_type='POSITION' and  posi_en.lang_code='en'
+		left join $DB_NEOS$t_co_comp_duty_position_multi posi_jp on ced.position_code = posi_jp.dp_seq and posi_jp.dp_type='POSITION' and  posi_jp.lang_code='jp'
+		left join $DB_NEOS$t_co_comp_duty_position_multi posi_cn on ced.position_code = posi_cn.dp_seq and posi_cn.dp_type='POSITION' and  posi_cn.lang_code='cn'
+		</isEqual>
+		
+		<isEqual property="dutyChange" compareValue="Y">
+		left join $DB_NEOS$t_co_comp_duty_position_multi duty_kr on ced.duty_code = duty_kr.dp_seq and duty_kr.dp_type='DUTY' and  duty_kr.lang_code='kr'
+		left join $DB_NEOS$t_co_comp_duty_position_multi duty_en on ced.duty_code = duty_en.dp_seq and duty_en.dp_type='DUTY' and  duty_en.lang_code='en'
+		left join $DB_NEOS$t_co_comp_duty_position_multi duty_jp on ced.duty_code = duty_jp.dp_seq and duty_jp.dp_type='DUTY' and  duty_jp.lang_code='jp'
+		left join $DB_NEOS$t_co_comp_duty_position_multi duty_cn on ced.duty_code = duty_cn.dp_seq and duty_cn.dp_type='DUTY' and  duty_cn.lang_code='cn'
+		</isEqual>
+		
+		set line.modify_dt=NOW()
+		<isNotNull property="createSeq">
+		,line.modify_by=#createSeq#
+		</isNotNull>
+		
+		<isEqual property="deptChange" compareValue="Y">
+		,line.proxy_app_dept_id=ced.dept_seq
+		,line.proxy_app_dept_nm=dept_kr.dept_name
+		,line.proxy_app_dept_nm_en=ifnull(dept_en.dept_name,dept_kr.dept_name)
+		,line.proxy_app_dept_nm_jp=ifnull(dept_jp.dept_name,dept_kr.dept_name)
+		,line.proxy_app_dept_nm_cn=ifnull(dept_cn.dept_name,dept_kr.dept_name)
+		</isEqual>
+		
+		<isEqual property="positionChange" compareValue="Y">
+		,line.proxy_app_grade_cd=ced.position_code
+		,line.proxy_app_grade_nm=posi_kr.dp_name
+		,line.proxy_app_grade_nm_en=ifnull(posi_en.dp_name,posi_kr.dp_name)
+		,line.proxy_app_grade_nm_jp=ifnull(posi_jp.dp_name,posi_kr.dp_name)
+		,line.proxy_app_grade_nm_cn=ifnull(posi_cn.dp_name,posi_kr.dp_name)
+		</isEqual>
+		
+		<isEqual property="dutyChange" compareValue="Y">
+		,line.proxy_app_duty_cd=ced.duty_code
+		,line.proxy_app_duty_nm=duty_kr.dp_name
+		,line.proxy_app_duty_nm_en=ifnull(duty_en.dp_name,duty_kr.dp_name)
+		,line.proxy_app_duty_nm_jp=ifnull(duty_jp.dp_name,duty_kr.dp_name)
+		,line.proxy_app_duty_nm_cn=ifnull(duty_cn.dp_name,duty_kr.dp_name)
+		</isEqual>
+		
+		where line.app_yn='0'
+    </update>
+    
+	<select id="OrgAdapterManage.selectEmpPasswdCheck" parameterClass="hashmap" resultClass="egovMap">
+		select 
+		a.group_seq,
+		a.native_lang_code as lang_code,
+		a.login_id,
+		ifnull(a.erp_emp_num,'▦') as erp_emp_num,
+		ifnull(a.mobile_tel_num,'▦') as mobile_tel_num,
+		ifnull(DATE_FORMAT(a.bday, '%Y-%m-%d'),'0000-00-00') as bday,
+		ifnull(prev_login_passwd,'▦') as prev_login_passwd,
+		c.emp_seq,
+		c.comp_seq,
+		b.dept_seq,
+		<isEqual property="type" compareValue="find">
+		'Y' as checkYn		 
+		</isEqual>
+		<isNotEqual property="type" compareValue="find">
+		case when (case #type# when 'def' then a.login_passwd
+		when 'app' then (case when ifnull(a.appr_passwd,'')='' then a.login_passwd else a.appr_passwd end)
+		else (case when ifnull(a.pay_passwd,'')='' then a.login_passwd else a.pay_passwd end)end) = #encPasswdOld# then 'Y' else 'N' end as checkYn		 
+		</isNotEqual>				
+		from $DB_NEOS$t_co_emp a
+		join $DB_NEOS$t_co_emp_dept b on a.emp_seq = b.emp_seq
+		join $DB_NEOS$t_co_emp_comp c on b.emp_seq = c.emp_seq and b.comp_seq = c.comp_seq
+		where
+		
+		<isNotEmpty property="empSeq">
+		a.emp_seq=#empSeq#
+		</isNotEmpty>
+		
+		<isEmpty property="empSeq">
+		a.login_id=#loginId#
+		</isEmpty>		
+		
+		order by c.use_yn desc, c.work_status desc, (a.main_comp_seq = c.comp_seq) desc
+		limit 1
+	</select>
+	
+	
+	
+	<select id="OrgAdapterManage.selectChildDeptCount" parameterClass="hashmap" resultClass="Integer">
+    	select 
+    		count(dept_seq)
+    	from 
+    		$DB_NEOS$t_co_dept 
+    	where 
+    		path like concat('%|', #deptSeq#, '|%')
+    </select>
+    
+    <update id="OrgAdapterManage.updateEmpDeptDisplayInfo" parameterClass="hashmap">
+    	update
+    		$DB_NEOS$t_co_emp_dept
+    	set
+    		ea_display_yn = 'Y',
+    		orgchart_display_yn = 'N',
+    		messenger_display_yn = 'N'
+    	where
+    		dept_seq = #deptSeq#
+    </update>
+    
+    <select id="OrgAdapterManage.selectEmpDeptInfoForEaYn" parameterClass="hashmap" resultClass="egovMap">
+    	select *From $DB_NEOS$t_co_emp_dept a
+		inner join $DB_NEOS$t_co_dept b on a.dept_seq = b.dept_seq and a.comp_seq = b.comp_seq
+		where a.use_yn = 'Y' and b.ea_yn = 'N' and a.emp_seq = #empSeq#    	
+    </select>
+    
+    <select id="OrgAdapterManage.selectEmpSessionChangeInfo" parameterClass="hashmap" resultClass="egovMap">
+		select
+		ed.comp_seq,
+		$DB_NEOS$FN_GetMultiLang(e.native_lang_code, cm.comp_name_multi) as comp_name,
+		ed.biz_seq,
+		ed.dept_seq,
+		$DB_NEOS$FN_GetMultiLang(e.native_lang_code, dm.dept_name_multi) as dept_name,
+		ec.erp_emp_seq,
+		ce.erp_comp_seq,
+		IF(IF(IFNULL(c.email_domain,'') = '', IFNULL(e.out_mail,''), e.email_addr )='',e.email_addr, IF(IFNULL(c.email_domain,'') = '', IFNULL(e.out_mail,''), e.email_addr )) as email_addr,
+		IF( IFNULL(c.email_domain,'') = '', IFNULL(e.out_domain,''), c.email_domain ) as email_domain,
+		ed.position_code,
+		$DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.position_code, 'POSITION', e.native_lang_code) as position_name,
+		ed.duty_code,
+		$DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.duty_code, 'DUTY', e.native_lang_code) as duty_name
+		from $DB_NEOS$t_co_emp e
+		join $DB_NEOS$t_co_emp_dept ed on e.emp_seq = ed.emp_seq
+		join $DB_NEOS$t_co_emp_comp ec on ed.comp_seq = ec.comp_seq and ed.emp_seq = ec.emp_seq
+		join $DB_NEOS$t_co_comp c on ed.comp_seq = c.comp_seq
+		left join $DB_NEOS$t_co_erp ce on ed.comp_seq = ce.comp_seq
+		join $DB_NEOS$v_t_co_comp_multi cm on ed.comp_seq = cm.comp_seq
+		join $DB_NEOS$v_t_co_dept_multi dm on ed.dept_seq = dm.dept_seq
+		where e.emp_seq = #empSeq#
+		and ed.dept_seq = #deptSeq#
+		limit 1; 	
+    </select>
+    
+    <select id="OrgAdapterManage.getEmpMainComp" parameterClass="hashmap" resultClass="String">
+		select ed.comp_seq from $DB_NEOS$t_co_emp e
+		join $DB_NEOS$t_co_emp_dept ed on e.emp_seq = ed.emp_seq and ed.use_yn = 'Y' and ed.main_dept_yn = 'Y'
+		join $DB_NEOS$t_co_emp_comp ec on ed.emp_seq = ec.emp_seq and ed.comp_seq = ec.comp_seq and ec.use_yn = 'Y' and ec.work_status != '001'
+		where e.emp_seq=#empSeq#
+		order by 
+		<isEqual property="mainCompYn" compareValue="Y">
+		 ec.comp_seq = #compSeq# desc, 
+		</isEqual>
+		<isEqual property="mainCompYn" compareValue="N">
+		ec.comp_seq != #compSeq# desc,
+		</isEqual>
+		ifnull(ed.main_comp_yn,'N') desc, e.main_comp_seq = ec.comp_seq desc
+		limit 1    
+    </select>    
+    
+    <update id="OrgAdapterManage.setEmpMainCompYn" parameterClass="hashmap">
+    	update $DB_NEOS$t_co_emp_dept
+    	set main_comp_yn = (case when comp_seq=#mainCompSeq# then 'Y' else 'N' end)
+    	where emp_seq = #empSeq#
+    </update>
+    
+    <update id="OrgAdapterManage.setEmpMainCompN" parameterClass="hashmap">    	
+		update 
+    		$DB_NEOS$t_co_emp_dept
+    	set
+    		main_comp_yn = 'N'
+    	where
+    		comp_seq in (select comp_seq from $DB_NEOS$t_co_emp_comp where emp_seq = #empSeq#)
+    		and emp_seq = #empSeq#
+    </update>
+    
+    <update id="OrgAdapterManage.setEmpMainCompY" parameterClass="hashmap">    	
+		update 
+    		$DB_NEOS$t_co_emp_dept
+    	set
+    		main_comp_yn = 'Y'
+    	where
+    		comp_seq = (select comp_seq from $DB_NEOS$t_co_emp_comp where emp_seq = #empSeq# and comp_seq != #compSeq# and work_status IN ('999','004') and use_yn = 'Y' limit 1)
+    		and emp_seq = #empSeq#
+    </update>
+
+    <select id="OrgAdapterManage.getEmpCompWorkUseY" parameterClass="hashmap" resultClass="string">
+        SELECT COUNT(*)
+        FROM $DB_NEOS$t_co_emp_comp
+        WHERE emp_seq = #empSeq#
+        AND comp_seq != #compSeq#
+        AND use_yn = 'Y'
+        AND work_status IN ('999','004')
+    </select>
+    
+	<select id="OrgAdapterManage.selectSSOParamInfo" parameterClass="hashmap" resultClass="egovMap">
+		select
+		e.group_seq as group_code
+		,ifnull(c.ea_type,'eap') as ea_type
+		,c.comp_seq as comp_seq
+		,c.comp_cd as comp_code
+		,replace(c.comp_regist_num,'-','') as venderno
+		,cm.comp_name as company
+		,cm.owner_name as ceo_name
+		,cm.biz_condition as uptae
+		,cm.item as upjong
+		,replace(c.zip_code,'-','') as zip_code
+		,cm.addr as address
+		,c.fax_num as fax_no
+		,c.comp_domain as webService
+		,ifnull(
+		  (select distinct group_concat(gct.comp_seq SEPARATOR ',') from $DB_NEOS$t_co_groupping g
+		  join $DB_NEOS$t_co_groupping_comp gc on g.groupping_seq = gc.groupping_seq and g.use_yn = 'Y' and gc.use_yn = 'Y'
+		  join $DB_NEOS$t_co_groupping_comp gct on g.groupping_seq = gct.groupping_seq and gct.use_yn = 'Y'
+		  join $DB_NEOS$t_co_comp gcc on gct.comp_seq = gcc.comp_seq and gcc.use_yn = 'Y'
+		  where gc.comp_seq = c.comp_seq), c.comp_seq) as comp_seq_list
+		,d.dept_seq as dept_seq
+		,d.dept_cd as dept_code
+		,dm.dept_name as dept_name
+		,ifnull(ec.erp_emp_seq,'') as erp_seq
+		,e.emp_seq as emp_seq
+		,e.login_id as userid
+		,em.emp_name as user_name
+		,ed.tel_num as tel_no
+		,e.mobile_tel_num as hp_no
+		,case when ifnull(e.email_addr,'') != '' and ifnull(c.email_domain,'') != '' then concat(e.email_addr, '@', c.email_domain)
+		when  ifnull(e.out_mail,'') != '' and ifnull(e.out_domain,'') != '' then concat(e.out_mail, '@', e.out_domain)
+		else '' end as email
+		from $DB_NEOS$t_co_emp e
+		join $DB_NEOS$t_co_emp_multi em on e.emp_seq = em.emp_seq and em.lang_code='kr'
+		join $DB_NEOS$t_co_emp_dept ed on e.emp_seq = ed.emp_seq
+		join $DB_NEOS$t_co_dept d on ed.dept_seq = d.dept_seq
+		join $DB_NEOS$t_co_dept_multi dm on d.dept_seq = dm.dept_seq and dm.lang_code='kr'
+		join $DB_NEOS$t_co_comp c on ed.comp_seq = c.comp_seq
+		join $DB_NEOS$t_co_comp_multi cm on c.comp_seq = cm.comp_seq and cm.lang_code='kr'
+		join $DB_NEOS$t_co_emp_comp ec on ed.comp_seq=ec.comp_seq and ed.emp_seq=ec.emp_seq
+		where e.emp_seq=#empSeq# and ed.dept_seq=#deptSeq#
+		limit 1;
+    </select>
+    
+	<select id="OrgAdapterManage.selectEmpMultiLangName" parameterClass="hashmap" resultClass="egovMap">
+		select
+		e.group_seq,
+		e.emp_seq,
+		g.messenger_url,
+		kr.emp_name as emp_name_kr,
+		ifnull(en.emp_name,kr.emp_name) as emp_name_en,
+		ifnull(jp.emp_name,kr.emp_name) as emp_name_jp,
+		ifnull(cn.emp_name,kr.emp_name) as emp_name_cn
+		from $DB_NEOS$t_co_emp e
+		join $DB_NEOS$t_co_group g on e.group_seq = g.group_seq
+		join $DB_NEOS$t_co_emp_multi kr on e.emp_seq = kr.emp_seq and kr.lang_code = 'kr'
+		left join $DB_NEOS$t_co_emp_multi en on e.emp_seq = en.emp_seq and en.lang_code = 'en' and ifnull(en.emp_name,'') != ''
+		left join $DB_NEOS$t_co_emp_multi jp on e.emp_seq = jp.emp_seq and jp.lang_code = 'jp' and ifnull(jp.emp_name,'') != ''
+		left join $DB_NEOS$t_co_emp_multi cn on e.emp_seq = cn.emp_seq and cn.lang_code = 'cn' and ifnull(cn.emp_name,'') != ''
+		where e.group_seq = #groupSeq# and e.emp_seq = #empSeq#
+		limit 1;
+	</select>
+	
+    <update id="OrgAdapterManage.empLoginPasswdResetProc" parameterClass="hashmap">
+    	update $DB_NEOS$t_co_emp set
+    	modify_date=NOW()
+    	,modify_seq = #createSeq#
+		,login_passwd = #loginPasswd#
+		,pay_passwd = null
+		,appr_passwd = null
+		,passwd_date = NOW()
+		,passwd_input_fail_count = 0
+		,last_login_date = null
+    	<isEqual property="loginSetCheck" compareValue="Y">
+    	,passwd_status_code = 'R'
+    	</isEqual>
+    	<isEqual property="loginSetCheck" compareValue="N">
+    	,passwd_status_code = 'P'
+    	</isEqual>      	
+    	where emp_seq = #empSeq#
+    </update>
+    
+    <update id="OrgAdapterManage.updateEmpResignInfo" parameterClass="hashmap">
+		update $DB_NEOS$t_co_emp e
+		join $DB_NEOS$v_t_co_emp_multi em on e.emp_seq = em.emp_seq
+		join $DB_NEOS$v_t_co_dept_multi dm on dm.dept_seq = #deptSeq#
+		set
+		e.last_emp_name = em.emp_name_multi,
+		e.last_dept_seq = dm.dept_seq,
+		e.last_dept_name = dm.dept_name_multi,
+		e.last_dept_path = concat(dm.path_name,'▦▦▦'),
+		<isNotEmpty property="resignDay">
+		e.last_resign_day = #resignDay#
+		</isNotEmpty>
+		<isEmpty property="resignDay">
+		e.last_resign_day = (case when e.last_resign_day is null or DATE_FORMAT(e.last_resign_day, '%Y') = '0000' then now() else e.last_resign_day end)
+		</isEmpty>		
+		where e.emp_seq = #empSeq#;    	
+    </update>
+    
+    <insert id="OrgAdapterManage.insertDutyPosition" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_comp_duty_position
+		(
+		
+			dp_seq,
+			group_seq,
+			comp_seq,
+			dp_type,
+			use_yn,
+			order_num,
+			create_seq,
+			create_date
+		) VALUES
+		(
+			#dpSeq#
+			,#groupSeq#
+			,#compSeq#
+			,#dpType#
+			<isNotEmpty property="useYn">,#useYn#</isNotEmpty><isEmpty property="useYn">,'Y'</isEmpty>
+			<isNotEmpty property="orderNum">,#orderNum#</isNotEmpty><isEmpty property="orderNum">,null</isEmpty>
+			,#createSeq#
+			,NOW()
+		);
+    </insert>
+    
+    <update id="OrgAdapterManage.updateDutyPosition" parameterClass="hashmap">
+			update $DB_NEOS$t_co_comp_duty_position set
+			modify_date = NOW()
+			<isNotEmpty property="createSeq">,modify_seq = #createSeq#</isNotEmpty>
+			<isNotEmpty property="compSeq">,comp_seq = #compSeq#</isNotEmpty>
+			<isNotEmpty property="useYn">,use_yn = #useYn#</isNotEmpty>
+			<isNotEmpty property="orderNum">,order_num = #orderNum#</isNotEmpty>
+			where dp_seq=#dpSeq# and dp_type=#dpType#
+    </update>
+    
+    <delete id="OrgAdapterManage.deleteDutyPosition" parameterClass="hashmap">
+    
+        	<isEqual property="allDeleteYn" compareValue="Y">
+    		delete from $DB_NEOS$t_co_comp_duty_position where comp_seq=#compSeq# and dp_type=#dpType#
+    		</isEqual>
+    		
+        	<isNotEqual property="allDeleteYn" compareValue="Y">
+    		delete from $DB_NEOS$t_co_comp_duty_position where dp_seq=#dpSeq# and dp_type=#dpType#
+    		</isNotEqual>
+			
+    </delete>
+    
+    <insert id="OrgAdapterManage.insertDutyPositionMulti" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_comp_duty_position_multi
+		(
+			dp_seq
+			, lang_code
+			, group_seq
+			, comp_seq
+			, dp_type
+			, dp_name
+			, desc_text
+			, comment_text
+			, use_yn
+			, create_seq
+			, create_date
+		) VALUES
+		(
+			#dpSeq#
+			,#langCode#
+			,#groupSeq#
+			,#compSeq#
+			,#dpType#
+			,#dpName#
+			<isNotEmpty property="descText">,#descText#</isNotEmpty><isEmpty property="descText">,''</isEmpty>
+			<isNotEmpty property="commentText">,#commentText#</isNotEmpty><isEmpty property="commentText">,''</isEmpty>
+			,#useYn#
+			,#createSeq#
+			,NOW()
+		);
+    </insert>
+    
+    <delete id="OrgAdapterManage.deleteDutyPositionMulti" parameterClass="hashmap">
+    
+        	<isEqual property="allDeleteYn" compareValue="Y">
+    		delete from $DB_NEOS$t_co_comp_duty_position_multi where comp_seq=#compSeq# and dp_type=#dpType#
+    		</isEqual>
+    		
+        	<isNotEqual property="allDeleteYn" compareValue="Y">
+				delete from $DB_NEOS$t_co_comp_duty_position_multi where dp_seq=#dpSeq# and dp_type=#dpType#
+				<isNotEmpty property="langCode"> and lang_code=#langCode#</isNotEmpty>
+    		</isNotEqual>    
+
+    </delete>    
+    
+    <select id="OrgAdapterManage.getDutyPositionCnt" parameterClass="hashmap" resultClass="string">
+		select count(*) as cnt 
+		from $DB_NEOS$t_co_comp_duty_position where dp_seq=#dpSeq# and dp_type=#dpType#
+    </select>
+    
+	<select id="OrgAdapterManage.selectFtpProfileSyncList" parameterClass="hashmap" resultClass="egovMap">
+	
+		select
+		concat(gp.absol_path,fd.file_stre_cours) as img_path
+		,concat(fd.stre_file_name,'.',fd.file_extsn) as img_name
+		,e.emp_seq
+		,e.login_id
+		,ec.erp_emp_seq
+		from $DB_NEOS$t_co_emp e
+		join $DB_NEOS$t_co_emp_comp ec on e.emp_seq = ec.emp_seq
+		join $DB_NEOS$t_co_atch_file_detail fd on fd.path_seq = '910' and e.pic_file_id = fd.file_id
+		join $DB_NEOS$t_co_group_path gp on fd.path_seq = gp.path_seq and gp.os_type = #osType#
+		where ifnull(e.pic_file_id,'') != ''
+		
+		<isNotEmpty property="compSeq">
+		and ec.comp_seq = #compSeq#
+		</isNotEmpty>
+		
+		<isNotEmpty property="empSeq">
+		and ec.emp_seq = #empSeq#
+		</isNotEmpty>
+		
+	</select>
+	
+	<select id="OrgAdapterManage.selectLiveEmp" parameterClass="hashmap" resultClass="egovMap">
+		select
+		g.mail_url
+		,g.out_smtp_use_yn
+		,e.emp_seq
+		,em.emp_name
+		,e.out_mail
+		,e.out_domain
+		,e.passwd_status_code
+		,c.email_domain
+		,c.comp_seq
+		,c.group_seq
+		from $DB_NEOS$t_co_emp e
+		join $DB_NEOS$t_co_group g on e.group_seq = g.group_seq
+		join $DB_NEOS$t_co_emp_multi em on e.emp_seq = em.emp_seq and em.lang_code = 'kr'	
+		join $DB_NEOS$t_co_emp_comp ec on e.emp_seq = ec.emp_seq and ec.work_status IN ('999','004') and ec.use_yn = 'Y'
+		join $DB_NEOS$t_co_comp c on ec.comp_seq = c.comp_seq
+		where 1=1
+		<isNotEmpty property="empSeq">
+		and e.emp_seq=#empSeq#
+		</isNotEmpty>
+		<isNotEmpty property="loginId">
+		and e.login_id=#loginId#
+		</isNotEmpty>
+		order by c.comp_email_yn desc, c.email_domain desc
+		limit 1
+	</select>
+	
+	<update id="OrgAdapterManage.updateEmpFindPasswdInfo" parameterClass="hashmap">
+		
+		update
+		$DB_NEOS$t_co_emp
+		set
+		passwd_status_code = #passwdStatusCode#
+		,login_passwd = #clientIp#
+		,appr_passwd = ''
+		,pay_passwd = ''
+		,passwd_date = NOW()
+		where emp_seq=#empSeq#
+		
+	</update>
+	
+	<select id="OrgAdapterManage.selectFindPasswdEmpList" parameterClass="hashmap" resultClass="egovMap">
+	
+		select
+		e.emp_seq
+		,$DB_NEOS$FN_GetMultiLang(#langCode#, cm.comp_name_multi) as comp_name
+		,$DB_NEOS$FN_GetMultiLang(#langCode#, dm.dept_name_multi) as dept_name
+		,concat($DB_NEOS$FN_GetMultiLang(#langCode#, em.emp_name_multi),'(',e.login_id,')') as emp_name
+		,date_format(e.passwd_date,'%Y-%m-%d %H:%i') as req_date 
+		,e.login_passwd
+		from $DB_NEOS$t_co_emp e
+		join $DB_NEOS$v_t_co_emp_multi em on e.emp_seq = em.emp_seq
+		join $DB_NEOS$t_co_emp_comp ec on e.emp_seq = ec.emp_seq and ec.work_status IN ('999','004') and ec.use_yn = 'Y'
+		join $DB_NEOS$v_t_co_comp_multi cm on ec.comp_seq = cm.comp_seq
+		join $DB_NEOS$v_t_co_dept_multi dm on ec.dept_seq = dm.dept_seq
+		where e.passwd_status_code = 'F'
+		
+       	<isEqual property="userSe" compareValue="ADMIN">
+		and ec.comp_seq = #compSeq#
+		and 
+		(select count(*) from $DB_NEOS$t_co_authcode a
+		join $DB_NEOS$t_co_auth_relate r on a.author_type = '005' and a.author_use_yn = 'Y' and a.author_code = r.author_code
+		join $DB_NEOS$t_co_menu_auth m on a.author_code = m.author_code and m.menu_no = '902010000'
+		where r.comp_seq = #compSeq# and r.emp_seq = #empSeq#) <![CDATA[>]]> 0
+   		</isEqual>
+		
+		<isEqual property="userSe" compareValue="MASTER">
+		and e.main_comp_seq = ec.comp_seq
+		</isEqual>
+		
+		order by e.passwd_date	
+	
+	</select>
+	
+	<select id="OrgAdapterManage.selectEmpFindPasswdAdminList" parameterClass="hashmap" resultClass="egovMap">		
+		select distinct
+		ec.emp_seq  
+		from $DB_NEOS$t_co_authcode a
+		join $DB_NEOS$t_co_auth_relate r on a.author_type = '005' and a.author_use_yn = 'Y' and a.author_code = r.author_code
+		join $DB_NEOS$t_co_menu_auth m on a.author_code = m.author_code and m.menu_no = '902010000'
+		join $DB_NEOS$t_co_emp_comp ec on r.comp_seq = ec.comp_seq and r.emp_seq = ec.emp_seq and ec.work_status IN ('999','004') and ec.use_yn = 'Y'
+		where r.comp_seq = #compSeq#
+		union
+		select ec.emp_seq
+		from $DB_NEOS$t_co_emp_option eo
+		join $DB_NEOS$t_co_emp_comp ec on eo.emp_seq = ec.emp_seq and ec.work_status IN ('999','004') and ec.use_yn = 'Y'
+		where eo.master_use_yn = 'Y'
+	</select>
+	
+	<select id="OrgAdapterManage.selectBackupServiceInfo" parameterClass="hashmap" resultClass="egovMap">		
+		select * 
+		from $DB_NEOS$t_co_cloud_backup_info
+		where date_format(now(),'%Y%m%d') between down_from_dt and down_to_dt and ifnull(down_zip_path,'') != ''
+		order by req_date desc
+		limit 1
+	</select>		
+
+	
+	<select id="OrgAdapterManage.selectEmpMainDeptInfo" parameterClass="hashmap" resultClass="egovMap">		
+		select * 
+		from $DB_NEOS$t_co_emp_comp
+		where comp_seq = #compSeq# and emp_seq = #empSeq#
+		limit 1
+	</select>
+	
+	<update id="OrgAdapterManage.updateDeptPathName" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_dept_multi SET path_name = $DB_NEOS$get_dept_pathNm('|',dept_seq,group_seq,lang_code)
+		WHERE path_name != $DB_NEOS$get_dept_pathNm('|',dept_seq,group_seq,lang_code)
+	</update>
+    
+</sqlMap>

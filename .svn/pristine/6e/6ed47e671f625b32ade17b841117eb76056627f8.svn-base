@@ -1,0 +1,3384 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="EmpManage">
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	
+	<select id="EmpManage.selectEmp" parameterClass="hashmap" resultClass="egovMap">
+		SELECT *
+			FROM $DB_NEOS$t_co_emp
+			WHERE
+				group_seq = #groupSeq#
+				AND emp_seq = #empSeq#
+		LIMIT 1
+	</select>
+
+	<select id="EmpManage.selectUserInfo_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+		SELECT count(e.emp_seq) as TOTAL_COUNT  
+		FROM $DB_NEOS$t_co_emp e
+		JOIN $DB_NEOS$v_t_co_emp_multi em on e.emp_seq = em.emp_seq
+		JOIN $DB_NEOS$t_co_emp_comp ec on e.emp_seq = ec.emp_seq
+		JOIN $DB_NEOS$t_co_emp_dept ed on ec.emp_seq = ed.emp_seq and ec.comp_seq = ed.comp_seq
+		JOIN $DB_NEOS$t_co_emp_dept_multi edm on edm.lang_code = 'kr' and ed.emp_seq = edm.emp_seq and ed.dept_seq = edm.dept_seq
+		JOIN $DB_NEOS$t_co_comp c on c.comp_seq = ec.comp_seq
+		JOIN $DB_NEOS$v_t_co_comp_multi cm on cm.comp_seq = c.comp_seq
+		JOIN $DB_NEOS$t_co_dept d on d.dept_seq = ed.dept_seq
+		JOIN $DB_NEOS$v_t_co_dept_multi dm on dm.dept_seq = d.dept_seq
+		WHERE
+			e.group_seq = #groupSeq#
+			<isNotEmpty property="licenseCheckYn">
+				AND e.license_check_yn = #licenseCheckYn#
+			</isNotEmpty>
+			<isEqual property="compSeq" compareValue="NONE">
+				AND (ed.dept_seq = '' OR ed.dept_seq IS NULL OR ed.comp_seq = '' OR ed.comp_seq IS NULL)
+				AND (e.use_yn != 'D')
+			</isEqual>
+			
+			<isNotEqual property="grouppingUserSe" compareValue="MASTER"> 
+				<isNotEmpty property="targetEmpSeq">
+				AND ec.comp_seq in(
+					SELECT	DISTINCT 
+						IGC.comp_seq 
+						FROM 	(
+							SELECT	comp_seq
+							FROM	$DB_NEOS$t_co_emp_comp
+							WHERE 	emp_seq = #targetEmpSeq#
+
+							AND 	use_yn			= 'Y'
+							AND     work_status IN ('999','004')
+						)	IUC
+							INNER JOIN 	(
+								SELECT	GC.comp_seq		'user_comp_seq'
+									, GC.groupping_seq	'groupping_seq'
+									, AG.comp_seq		'comp_seq'
+								FROM	$DB_NEOS$t_co_groupping_comp	GC
+									INNER JOIN	$DB_NEOS$t_co_groupping_comp	AG
+									ON 	GC.groupping_seq = AG.groupping_seq	
+								WHERE	GC.use_yn	= 'Y'
+								AND	AG.use_yn	= 'Y'
+							)	IGC
+							ON	IUC.comp_seq = IGC.user_comp_seq
+						UNION
+	
+						SELECT	comp_seq
+						FROM	$DB_NEOS$t_co_emp_comp
+						WHERE 	emp_seq = #targetEmpSeq#
+						AND 	use_yn			= 'Y'
+						AND     work_status IN ('999','004')
+				)								
+				</isNotEmpty>
+			</isNotEqual>
+			
+
+			<isNotEqual property="compSeq" compareValue="NONE">
+	
+				<isNotEmpty property="compSeq">
+				AND ec.comp_seq = #compSeq#
+				</isNotEmpty>
+
+				<isEmpty property="flagMainDeptYn">
+				<isNotEmpty property="eaType">
+					<isEqual property="eaType" compareValue="eap">
+						AND ed.main_dept_yn = 'Y'
+					</isEqual>
+				</isNotEmpty>
+				<isEmpty property="eaType">
+					AND ed.main_dept_yn = 'Y'
+				</isEmpty>
+				
+				</isEmpty>			
+				
+				<isNotEmpty property="empSeq">
+					AND e.emp_seq = #empSeq#
+				</isNotEmpty>
+				<isNotEmpty property="deptSeq">
+					AND ed.dept_seq = #deptSeq#
+				</isNotEmpty>
+				
+				<isNotEmpty property="bizSeq">
+					AND ed.biz_seq = #bizSeq#
+				</isNotEmpty>
+				<isNotEmpty property="empName">
+					AND em.emp_name_multi LIKE CONCAT('%',ifnull(#empName#,''),'%')
+				</isNotEmpty>
+				<isNotEmpty property="loginId">
+					AND e.login_id = #loginId#
+				</isNotEmpty>
+				
+				<isNotEmpty property="mainDeptYn">
+					AND ed.main_dept_yn = #mainDeptYn#
+				</isNotEmpty>
+				<isNotEmpty property="dutyCode">
+					AND ed.duty_code = #dutyCode#
+				</isNotEmpty>
+				<isNotEmpty property="positionCode">
+					AND ed.position_code = #positionCode#
+				</isNotEmpty>
+				<isNotEmpty property="deptName">
+					AND dm.dept_name_multi LIKE CONCAT('%',ifnull(#deptName#,''),'%')
+				</isNotEmpty>
+				<isNotEmpty property="telNo">
+					AND ed.tel_num LIKE CONCAT('%',ifnull(#telNo#,''),'%')
+				</isNotEmpty>
+				<isNotEmpty property="mobileNo">
+					AND e.mobile_tel_num LIKE CONCAT('%',ifnull(#mobileNo#,''),'%')
+				</isNotEmpty>
+				<isNotEmpty property="workStatus">
+					AND ec.work_status IN (#workStatus#, '004')
+				</isNotEmpty>
+				<isNotEmpty property="useYn">
+					AND ec.use_yn = #useYn#
+				</isNotEmpty>
+				
+				<isNotEmpty property="deptSeqList">
+					AND ed.dept_seq <iterate prepend="IN" property="deptSeqList" open="(" close=")" conjunction=",">#deptSeqList[].deptSeq#</iterate> 
+				</isNotEmpty>
+				<isNotEmpty property="empSeqList">
+					AND e.emp_seq <iterate prepend="IN" property="empSeqList" open="(" close=")" conjunction=",">#empSeqList[].empSeq#</iterate> 
+				</isNotEmpty> 
+				
+				<isNotEmpty property="emailAddr">
+					AND e.email_addr LIKE CONCAT('%',ifnull(#emailAddr#,''),'%')'%$$%
+				</isNotEmpty>
+				
+				<isNotEmpty property="compNameORdeptName">
+					AND ( cm.comp_name_multi LIKE CONCAT('%',ifnull(#compNameORdeptName#,''),'%')'%$$% OR dm.dept_name_multi LIKE CONCAT('%',ifnull(#compNameORdeptName#,''),'%'))
+				</isNotEmpty>
+				
+				<isNotEmpty property="compORdeptORempORemail">
+					AND ( cm.comp_name_multi LIKE CONCAT('%',ifnull(#compORdeptORempORemail#,''),'%') OR dm.dept_name_multi LIKE CONCAT('%',ifnull(#compORdeptORempORemail#,''),'%') OR e.email_addr LIKE CONCAT('%',ifnull(#compORdeptORempORemail#,''),'%') OR em.emp_name_multi LIKE CONCAT('%',ifnull(#compORdeptORempORemail#,''),'%'))
+				</isNotEmpty>
+				
+				<isNotEmpty property="userSe">
+					<isEqual property="userSe" compareValue="USER">
+					AND c.use_yn = 'Y'
+					AND d.use_yn = 'Y'
+					AND ec.use_yn = 'Y'
+					AND ed.orgchart_display_yn = 'Y'
+					</isEqual>
+				</isNotEmpty>
+				
+				<isNotEmpty property="positionDutyName">
+					AND ( $DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.duty_code, 'DUTY', #langCode#) LIKE CONCAT('%',ifnull(#positionDutyName#,''),'%') OR $DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.position_code, 'POSITION', #langCode#) LIKE CONCAT('%',ifnull(#positionDutyName#,''),'%'))
+				</isNotEmpty>
+
+			</isNotEqual>				
+			
+			<isNotEmpty property="nameAndLoginId">
+				AND ( em.emp_name_multi LIKE CONCAT('%',ifnull(#nameAndLoginId#,''),'%') OR e.login_id LIKE CONCAT('%',ifnull(#nameAndLoginId#,''),'%'))
+			</isNotEmpty>
+			
+			<isNotEmpty property="nameAndLoginIdAndDeptName">
+				AND ( em.emp_name_multi LIKE CONCAT('%',ifnull(#nameAndLoginIdAndDeptName#,''),'%') OR e.login_id LIKE CONCAT('%',ifnull(#nameAndLoginIdAndDeptName#,''),'%') OR dm.dept_name_multi LIKE CONCAT('%',ifnull(#nameAndLoginIdAndDeptName#,''),'%'))
+			</isNotEmpty>	
+			
+			<isNotEmpty property="positionName">
+				AND ($DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.position_code, 'POSITION', #langCode#) LIKE CONCAT('%',ifnull(#positionName#,''),'%'))
+			</isNotEmpty>	
+			
+			<isNotEmpty property="dutyName">
+				AND ($DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.duty_code, 'DUTY', #langCode#) LIKE CONCAT('%',ifnull(#dutyName#,''),'%'))
+			</isNotEmpty>	
+			
+			<isNotEmpty property="erpEmpSeq">
+				AND ec.erp_emp_seq = #erpEmpSeq#
+			</isNotEmpty>
+						
+	</select>
+
+	<select id="EmpManage.selectUserInfo" parameterClass="hashmap" resultClass="egovMap" remapResults="true">
+		/* EmpManage.selectUserInfo - mariadb */
+		
+		SELECT 
+			d.group_seq
+			,d.comp_seq
+			,d.dept_seq
+			,d.biz_seq
+			,e.emp_seq
+			,$DB_NEOS$FN_GetMultiLang(#langCode#,cm.comp_name_multi) as comp_name
+			,$DB_NEOS$FN_GetMultiLang(#langCode#,dm.dept_name_multi) as dept_name
+			,ed.duty_code
+			,ed.position_code
+			, $DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.position_code, 'POSITION', #langCode#) AS position_code_name
+			, $DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.duty_code, 'DUTY', #langCode#) AS duty_code_name			
+			,e.login_id
+			,e.private_yn
+			,e.mobile_tel_num	
+			,$DB_NEOS$get_dept_pathNm('|',ed.dept_Seq,ed.group_seq,#langCode#) path_name
+			,e.email_addr
+			,c.email_domain			
+			,date_format(e.bday,'%Y-%m-%d') as bday
+			,e.pic_file_id
+			,em.main_work
+			,ifnull(e.out_mail,'') as out_mail
+			,ifnull(e.out_domain,'') as out_domain
+			,ifnull(e.sign_type, 'stamp_de_div') as sign_type
+			,ec.mail_del_yn
+			,CASE WHEN ed.tel_num = '' OR ed.tel_num IS NULL THEN med.tel_num ELSE ed.tel_num END AS tel_num
+			,CASE WHEN ed.fax_num = '' OR ed.fax_num IS NULL THEN med.fax_num ELSE ed.fax_num END AS fax_num
+			,med.zip_code as dept_zip_code
+			,medm.addr as dept_addr
+			,medm.detail_addr as dept_detail_addr
+			,e.passwd_status_code
+			<isNotEmpty property="liteYn">
+			,e.emp_seq as seq
+			,'' as parentSeq
+			,#depth# as depth
+			,'m' as gbn
+			,$DB_NEOS$FN_GetMultiLang(#langCode#,em.emp_name_multi) as name
+			</isNotEmpty>
+			
+			<isEmpty property="liteYn">
+			,cm.comp_name_multi
+			,e.emp_num
+			,ec.erp_emp_seq as erp_emp_num
+			,ifnull(e.license_check_yn,'') license_check_yn
+			,c.homepg_addr
+			,cm.comp_display_name
+			,$DB_NEOS$FN_GetMultiLang(#langCode#,em.emp_name_multi) as emp_name
+			,em.emp_name as emp_name_kr
+			,ifnull(em_en.emp_name,'') as emp_name_en
+			,ifnull(em_jp.emp_name,'') as emp_name_jp
+			,ifnull(em_cn.emp_name,'') as emp_name_cn
+			,em.emp_name_multi
+			,e.login_passwd
+			,e.pay_passwd
+			,e.appr_passwd
+			,e.gender_code
+			,e.home_tel_num
+			,e.zip_code
+			,em.addr
+			,em.detail_addr
+			,e.lunar_yn
+			,e.wedding_yn
+			,date_format(e.wedding_day,'%Y-%m-%d') as wedding_day
+			,ifnull(ec.work_status,'') work_status
+			,ec.job_code
+			,ec.status_code
+			,date_format(e.join_day,'%Y-%m-%d') as join_day
+			,date_format(ec.resign_day,'%Y-%m-%d') as resign_day
+			,em.lang_code as emp_lang_code
+			,dm.lang_code as dept_lang_code
+			,cm.lang_code as comp_lang_code
+			,ed.main_dept_yn
+			,dm.dept_name_multi
+			,ed.orgchart_display_yn
+			,ed.messenger_display_yn
+			,e.mobile_use_yn
+			,e.messenger_use_yn
+			,ec.check_work_yn
+			,ec.shift
+			,e.native_lang_code
+			,e.sign_file_id
+			,e.ls_role_id
+			,ed.duty_code as dept_duty_code
+			,ed.position_code as dept_position_code
+			,e.create_date
+			,ifnull(e.use_yn,'N') use_yn
+			,ec.use_yn as e_use_yn
+			,ed.use_yn as ed_use_yn
+			,edm.use_yn as emd_use_yn
+			,c.use_yn as cm_use_yn
+			,d.use_yn as dm_use_yn
+			,e.main_comp_seq
+			,dm.dept_display_name
+			,ed.order_num
+			,e.main_comp_login_yn
+			,$DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.duty_code, 'DUTY', #langCode#) AS dept_duty_code_name
+			,$DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.position_code, 'POSITION', #langCode#) AS dept_position_code_name
+			,concat($DB_NEOS$FN_GetMultiLang(#langCode#,em.emp_name_multi),'(',e.login_id,')') emp_Name2
+			,ifnull(e.prev_login_passwd,'') AS prev_login_passwd
+			</isEmpty>
+		FROM $DB_NEOS$t_co_emp e
+		JOIN $DB_NEOS$v_t_co_emp_multi em on e.emp_seq = em.emp_seq
+		JOIN $DB_NEOS$t_co_emp_comp ec on e.emp_seq = ec.emp_seq
+		JOIN $DB_NEOS$t_co_emp_dept ed on ec.emp_seq = ed.emp_seq and ec.comp_seq = ed.comp_seq
+		JOIN $DB_NEOS$t_co_emp_dept_multi edm on edm.lang_code = 'kr' and ed.emp_seq = edm.emp_seq and ed.dept_seq = edm.dept_seq
+		JOIN $DB_NEOS$t_co_emp_dept med on ec.emp_seq = med.emp_seq and ec.dept_seq = med.dept_seq
+		JOIN $DB_NEOS$t_co_emp_dept_multi medm on medm.lang_code = 'kr' and med.emp_seq = medm.emp_seq and med.dept_seq = medm.dept_seq
+		JOIN $DB_NEOS$t_co_comp c on c.comp_seq = ec.comp_seq
+		JOIN $DB_NEOS$v_t_co_comp_multi cm on cm.comp_seq = c.comp_seq
+		JOIN $DB_NEOS$t_co_dept d on d.dept_seq = ed.dept_seq
+		JOIN $DB_NEOS$v_t_co_dept_multi dm on dm.dept_seq = d.dept_seq
+		
+		<isEmpty property="liteYn">
+		LEFT JOIN $DB_NEOS$t_co_emp_multi em_en on e.emp_seq = em_en.emp_seq AND em_en.lang_code='en'
+		LEFT JOIN $DB_NEOS$t_co_emp_multi em_jp on e.emp_seq = em_jp.emp_seq AND em_jp.lang_code='jp'
+		LEFT JOIN $DB_NEOS$t_co_emp_multi em_cn on e.emp_seq = em_cn.emp_seq AND em_cn.lang_code='cn'
+		</isEmpty>
+
+		WHERE
+			e.group_seq = #groupSeq#
+			<isNotEmpty property="licenseCheckYn">
+				AND e.license_check_yn = #licenseCheckYn#
+			</isNotEmpty>
+			<isEqual property="compSeq" compareValue="NONE">
+				AND (ed.dept_seq = '' OR ed.dept_seq IS NULL OR ed.comp_seq = '' OR ed.comp_seq IS NULL)
+				AND (e.use_yn != 'D')
+			</isEqual>
+			
+			<isNotEqual property="grouppingUserSe" compareValue="MASTER"> 
+				<isNotEmpty property="targetEmpSeq">
+				AND ec.comp_seq in(
+					SELECT	DISTINCT 
+						IGC.comp_seq 
+						FROM 	(
+							SELECT	comp_seq
+							FROM	$DB_NEOS$t_co_emp_comp
+							WHERE 	emp_seq = #targetEmpSeq#
+
+							AND 	use_yn			= 'Y'
+							AND     work_status IN ('999','004')
+						)	IUC
+							INNER JOIN 	(
+								SELECT	GC.comp_seq		'user_comp_seq'
+									, GC.groupping_seq	'groupping_seq'
+									, AG.comp_seq		'comp_seq'
+								FROM	$DB_NEOS$t_co_groupping_comp	GC
+									INNER JOIN	$DB_NEOS$t_co_groupping_comp	AG
+									ON 	GC.groupping_seq = AG.groupping_seq	
+								WHERE	GC.use_yn	= 'Y'
+								AND	AG.use_yn	= 'Y'
+							)	IGC
+							ON	IUC.comp_seq = IGC.user_comp_seq
+						UNION
+	
+						SELECT	comp_seq
+						FROM	$DB_NEOS$t_co_emp_comp
+						WHERE 	emp_seq = #targetEmpSeq#
+						AND 	use_yn			= 'Y'
+						AND     work_status IN ('999','004')
+				)								
+				</isNotEmpty>
+			</isNotEqual>
+			
+
+			<isNotEqual property="compSeq" compareValue="NONE">
+	
+				<isNotEmpty property="compSeq">
+				AND ec.comp_seq = #compSeq#
+				</isNotEmpty>
+
+				<isEmpty property="flagMainDeptYn">
+				<isNotEmpty property="eaType">
+					<isEqual property="eaType" compareValue="eap">
+						AND ed.main_dept_yn = 'Y'
+					</isEqual>
+				</isNotEmpty>
+				<isEmpty property="eaType">
+					AND ed.main_dept_yn = 'Y'
+				</isEmpty>
+				
+				</isEmpty>			
+				
+				<isNotEmpty property="empSeq">
+					AND e.emp_seq = #empSeq#
+				</isNotEmpty>
+				<isNotEmpty property="deptSeq">
+					AND ed.dept_seq = #deptSeq#
+				</isNotEmpty>
+				
+				<isNotEmpty property="bizSeq">
+					AND ed.biz_seq = #bizSeq#
+				</isNotEmpty>
+				<isNotEmpty property="empName">
+					AND em.emp_name_multi LIKE CONCAT('%',ifnull(#empName#,''),'%')
+				</isNotEmpty>
+				<isNotEmpty property="loginId">
+					AND e.login_id = #loginId#
+				</isNotEmpty>
+				
+				<isNotEmpty property="mainDeptYn">
+					AND ed.main_dept_yn = #mainDeptYn#
+				</isNotEmpty>
+				<isNotEmpty property="dutyCode">
+					AND ed.duty_code = #dutyCode#
+				</isNotEmpty>
+				<isNotEmpty property="positionCode">
+					AND ed.position_code = #positionCode#
+				</isNotEmpty>
+				<isNotEmpty property="deptName">
+					AND dm.dept_name_multi LIKE CONCAT('%',ifnull(#deptName#,''),'%')
+				</isNotEmpty>
+				<isNotEmpty property="telNo">
+					AND ed.tel_num LIKE CONCAT('%',ifnull(#telNo#,''),'%')
+				</isNotEmpty>
+				<isNotEmpty property="mobileNo">
+					AND e.mobile_tel_num LIKE CONCAT('%',ifnull(#mobileNo#,''),'%')
+				</isNotEmpty>
+				<isNotEmpty property="workStatus">
+					AND ec.work_status IN (#workStatus#, '004')
+				</isNotEmpty>
+				<isNotEmpty property="useYn">
+					AND ec.use_yn = #useYn#
+				</isNotEmpty>
+				
+				<isNotEmpty property="deptSeqList">
+					AND ed.dept_seq <iterate prepend="IN" property="deptSeqList" open="(" close=")" conjunction=",">#deptSeqList[].deptSeq#</iterate> 
+				</isNotEmpty>
+				<isNotEmpty property="empSeqList">
+					AND e.emp_seq <iterate prepend="IN" property="empSeqList" open="(" close=")" conjunction=",">#empSeqList[].empSeq#</iterate> 
+				</isNotEmpty> 
+				
+				<isNotEmpty property="emailAddr">
+					AND e.email_addr LIKE CONCAT('%',ifnull(#emailAddr#,''),'%')'%$$%
+				</isNotEmpty>
+				
+				<isNotEmpty property="compNameORdeptName">
+					AND ( cm.comp_name_multi LIKE CONCAT('%',ifnull(#compNameORdeptName#,''),'%')'%$$% OR dm.dept_name_multi LIKE CONCAT('%',ifnull(#compNameORdeptName#,''),'%'))
+				</isNotEmpty>
+				
+				<isNotEmpty property="compORdeptORempORemail">
+					AND ( cm.comp_name_multi LIKE CONCAT('%',ifnull(#compORdeptORempORemail#,''),'%') OR dm.dept_name_multi LIKE CONCAT('%',ifnull(#compORdeptORempORemail#,''),'%') OR e.email_addr LIKE CONCAT('%',ifnull(#compORdeptORempORemail#,''),'%') OR em.emp_name_multi LIKE CONCAT('%',ifnull(#compORdeptORempORemail#,''),'%'))
+				</isNotEmpty>
+				
+				<isNotEmpty property="userSe">
+					<isEqual property="userSe" compareValue="USER">
+					AND c.use_yn = 'Y'
+					AND d.use_yn = 'Y'
+					AND ec.use_yn = 'Y'
+					AND ed.orgchart_display_yn = 'Y'
+                    AND d.display_yn = 'Y'
+					</isEqual>
+				</isNotEmpty>
+				
+				<isNotEmpty property="positionDutyName">
+					AND ( $DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.duty_code, 'DUTY', #langCode#) LIKE CONCAT('%',ifnull(#positionDutyName#,''),'%') OR $DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.position_code, 'POSITION', #langCode#) LIKE CONCAT('%',ifnull(#positionDutyName#,''),'%'))
+				</isNotEmpty>
+
+			</isNotEqual>				
+			
+			<isNotEmpty property="nameAndLoginId">
+				AND ( em.emp_name_multi LIKE CONCAT('%',ifnull(#nameAndLoginId#,''),'%') OR e.login_id LIKE CONCAT('%',ifnull(#nameAndLoginId#,''),'%'))
+			</isNotEmpty>
+			
+			<isNotEmpty property="nameAndLoginIdAndDeptName">
+				AND ( em.emp_name_multi LIKE CONCAT('%',ifnull(#nameAndLoginIdAndDeptName#,''),'%') OR e.login_id LIKE CONCAT('%',ifnull(#nameAndLoginIdAndDeptName#,''),'%') OR dm.dept_name_multi LIKE CONCAT('%',ifnull(#nameAndLoginIdAndDeptName#,''),'%'))
+			</isNotEmpty>	
+			
+			<isNotEmpty property="positionName">
+				AND ($DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.position_code, 'POSITION', #langCode#) LIKE CONCAT('%',ifnull(#positionName#,''),'%'))
+			</isNotEmpty>	
+			
+			<isNotEmpty property="dutyName">
+				AND ($DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.duty_code, 'DUTY', #langCode#) LIKE CONCAT('%',ifnull(#dutyName#,''),'%'))
+			</isNotEmpty>	
+			
+			<isNotEmpty property="erpEmpSeq">
+				AND ec.erp_emp_seq = #erpEmpSeq#
+			</isNotEmpty>		
+		
+		ORDER BY ed.order_text
+		
+		<isNotEmpty property="startNum">
+		 	<isNotEmpty property="endNum">
+		 		<isNotEqual property="endNum" compareValue="0">
+		 			LIMIT $startNum$, $endNum$
+		 		</isNotEqual>
+		 	</isNotEmpty>
+		</isNotEmpty>
+		
+	</select>
+	
+	<select id="EmpManage.selectUserInfoNew_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+		<isEqual property="compSeq" compareValue="NONE">
+			select count(distinct tce.emp_seq) as TOTAL_COUNT
+			from $DB_NEOS$t_co_emp tce
+			join $DB_NEOS$v_t_co_emp_multi tcem on tce.emp_seq = tcem.emp_seq
+			where
+			tce.group_seq = #groupSeq# and tce.use_yn != 'D'
+			
+			<isNotEmpty property="nameAndLoginId">
+				and ( tcem.emp_name_multi like CONCAT('%',ifnull(#nameAndLoginId#,''),'%') ESCAPE '▩' OR tce.login_id like CONCAT('%',ifnull(#nameAndLoginId#,''),'%') ESCAPE '▩' OR tce.email_addr like CONCAT('%',ifnull(#nameAndLoginId#,''),'%') ESCAPE '▩' )
+			</isNotEmpty>
+			
+			<isNotEmpty property="licenseCheckYn">
+				and tce.license_check_yn = #licenseCheckYn#
+			</isNotEmpty>				
+			
+			and tce.emp_seq not in
+			(select distinct a.emp_seq from $DB_NEOS$t_co_emp_comp a join $DB_NEOS$t_co_dept b on a.dept_seq = b.dept_seq)
+
+		</isEqual>
+		
+		<isNotEqual property="compSeq" compareValue="NONE">
+
+			select count(*) as TOTAL_COUNT
+			from $DB_NEOS$t_co_emp tce
+			join $DB_NEOS$v_t_co_emp_multi tcem on tce.emp_seq = tcem.emp_seq
+			join $DB_NEOS$t_co_emp_dept tced on tced.emp_seq = tce.emp_seq
+			join $DB_NEOS$t_co_emp_comp tcec on tcec.emp_seq = tce.emp_seq and tcec.comp_seq=tced.comp_seq and tced.dept_seq = tcec.dept_seq      
+			join $DB_NEOS$v_t_co_comp_multi tccm on tccm.comp_seq = tced.comp_seq
+			join $DB_NEOS$v_t_co_dept_multi tcdm on tcdm.dept_seq = tced.dept_seq
+			join $DB_NEOS$t_co_comp cc on tced.comp_seq = cc.comp_seq and cc.use_yn = 'Y'
+			left join $DB_NEOS$v_t_co_comp_duty_position_multi duty on duty.dp_type = 'DUTY' and tced.duty_code = duty.dp_seq
+			left join $DB_NEOS$v_t_co_comp_duty_position_multi posi on posi.dp_type = 'POSITION' and tced.position_code = posi.dp_seq			
+			where
+			tce.group_seq = #groupSeq# and tce.use_yn != 'D'
+			
+			<isNotEmpty property="compSeq">
+				and tced.comp_seq = #compSeq#
+			</isNotEmpty>
+			
+			<isNotEmpty property="deptSeq">
+				and tced.dept_seq = #deptSeq#
+			</isNotEmpty>
+			
+			<isNotEmpty property="searchDeptSeq">
+				and tced.dept_seq = #searchDeptSeq#
+			</isNotEmpty>
+			
+			<isEmpty property="deptSeq">
+				<isNotEmpty property="deptName">
+					and tcdm.dept_name_multi like CONCAT('%',ifnull(#deptName#,''),'%')
+				</isNotEmpty>			
+			</isEmpty>		
+	
+			<isNotEmpty property="useYn">
+				and tcec.use_yn = #useYn#
+			</isNotEmpty>
+			
+			<isNotEmpty property="licenseCheckYn">
+				and tce.license_check_yn = #licenseCheckYn#
+			</isNotEmpty>							
+			
+			<isNotEmpty property="workStatus">
+				and tcec.work_status = #workStatus#
+			</isNotEmpty>
+			
+			<isNotEmpty property="nameAndLoginId">
+				and ( tcem.emp_name_multi like CONCAT('%',ifnull(#nameAndLoginId#,''),'%') ESCAPE '▩' OR tce.login_id like CONCAT('%',ifnull(#nameAndLoginId#,''),'%') ESCAPE '▩' OR tce.email_addr like CONCAT('%',ifnull(#nameAndLoginId#,''),'%') ESCAPE '▩')
+			</isNotEmpty>		
+	
+			<isNotEmpty property="positionDutyName">
+				and ( duty.dp_name like CONCAT('%',ifnull(#positionDutyName#,''),'%') OR posi.dp_name like CONCAT('%',ifnull(#positionDutyName#,''),'%'))
+			</isNotEmpty>
+
+		</isNotEqual>				
+	</select>	
+	
+	<select id="EmpManage.selectUserInfoNew" parameterClass="hashmap" resultClass="egovMap">
+
+		<isEqual property="compSeq" compareValue="NONE">
+			select
+			'' as comp_seq,
+			'' as dept_seq,
+			emp_seq,
+			login_id,
+			'' as comp_name,
+			'' as dept_name,
+			$DB_NEOS$FN_GetMultiLang(#langCode#,emp_name_multi) as emp_name,
+			'' as dept_position_code_name,
+			'' as dept_duty_code_name,
+			concat($DB_NEOS$FN_GetMultiLang(#langCode#,emp_name_multi), '(', login_id, ')') as emp_name2,
+			email_addr,
+			$DB_NEOS$get_code_detail_info('0','COM517','001',#langCode#) as work_status_nm,
+			'' as use_yn2,
+			$DB_NEOS$get_code_detail_info('0','COM530',license_check_yn,#langCode#) as license_check,
+			group_seq
+			from
+			(
+			select distinct
+			tce.emp_seq,
+			tce.login_id,
+			tce.email_addr,
+			tce.license_check_yn,
+			tcem.emp_name_multi,
+			tce.group_seq
+			from $DB_NEOS$t_co_emp tce
+			join $DB_NEOS$v_t_co_emp_multi tcem on tce.emp_seq = tcem.emp_seq
+			where
+			tce.group_seq = #groupSeq# and tce.use_yn != 'D'
+			
+			<isNotEmpty property="nameAndLoginId">
+				and ( tcem.emp_name_multi like CONCAT('%',ifnull(#nameAndLoginId#,''),'%') ESCAPE '▩' OR tce.login_id like CONCAT('%',ifnull(#nameAndLoginId#,''),'%') ESCAPE '▩' OR tce.email_addr like CONCAT('%',ifnull(#nameAndLoginId#,''),'%') ESCAPE '▩' )
+			</isNotEmpty>
+			
+			<isNotEmpty property="licenseCheckYn">
+				and tce.license_check_yn = #licenseCheckYn#
+			</isNotEmpty>
+			
+			and tce.emp_seq not in
+			(select distinct a.emp_seq from $DB_NEOS$t_co_emp_comp a join $DB_NEOS$t_co_dept b on a.dept_seq = b.dept_seq)
+			
+			<isNotEmpty property="startNum">
+			 	<isNotEmpty property="endNum">
+			 		<isNotEqual property="endNum" compareValue="0">
+			 			LIMIT $startNum$, $endNum$
+			 		</isNotEqual>
+			 	</isNotEmpty>
+			</isNotEmpty>				
+			
+			) result
+			order by emp_name
+		</isEqual>
+		
+		<isNotEqual property="compSeq" compareValue="NONE">
+
+			select
+			comp_seq,
+			dept_seq,
+			emp_seq,
+			login_id,
+			$DB_NEOS$FN_GetMultiLang(#langCode#,comp_name_multi) as comp_name,
+			$DB_NEOS$FN_GetMultiLang(#langCode#,dept_name_multi) as dept_name,
+			$DB_NEOS$FN_GetMultiLang(#langCode#,emp_name_multi) as emp_name,
+			ifnull($DB_NEOS$FN_GetMultiLang(#langCode#,posi_name_multi),'') as dept_position_code_name,
+			ifnull($DB_NEOS$FN_GetMultiLang(#langCode#,duty_name_multi),'') as dept_duty_code_name,
+			concat($DB_NEOS$FN_GetMultiLang(#langCode#,emp_name_multi), '(', login_id, ')') as emp_name2,
+			email_addr,
+			$DB_NEOS$get_code_detail_info('0','COM517',work_status,#langCode#) as work_status_nm,
+			$DB_NEOS$get_code_detail_info('0','COM521',use_yn,#langCode#) as use_yn2,
+			$DB_NEOS$get_code_detail_info('0','COM530',license_check_yn,#langCode#) as license_check,
+			group_seq
+			from
+			(
+				select
+				tcec.comp_seq,
+				tcec.dept_seq,
+				tce.emp_seq,
+				tce.login_id,
+				tce.email_addr,
+				tccm.comp_name_multi,
+				tcdm.dept_name_multi,
+				tcem.emp_name_multi,
+				duty.dp_name_multi as duty_name_multi,
+				posi.dp_name_multi as posi_name_multi,
+				tcec.work_status,
+				tcec.use_yn,
+				tce.license_check_yn,
+				tce.group_seq,
+				tced.order_text
+				from $DB_NEOS$t_co_emp tce
+				join $DB_NEOS$v_t_co_emp_multi tcem on tce.emp_seq = tcem.emp_seq
+				join $DB_NEOS$t_co_emp_dept tced on tced.emp_seq = tce.emp_seq
+				join $DB_NEOS$t_co_emp_comp tcec on tcec.emp_seq = tce.emp_seq and tcec.comp_seq=tced.comp_seq and tced.dept_seq = tcec.dept_seq      
+				join $DB_NEOS$v_t_co_comp_multi tccm on tccm.comp_seq = tced.comp_seq
+				join $DB_NEOS$v_t_co_dept_multi tcdm on tcdm.dept_seq = tced.dept_seq
+				join $DB_NEOS$t_co_comp cc on tced.comp_seq = cc.comp_seq and cc.use_yn = 'Y'
+				left join $DB_NEOS$v_t_co_comp_duty_position_multi duty on duty.dp_type = 'DUTY' and tced.duty_code = duty.dp_seq
+				left join $DB_NEOS$v_t_co_comp_duty_position_multi posi on posi.dp_type = 'POSITION' and tced.position_code = posi.dp_seq			
+				where
+				tce.group_seq = #groupSeq# and tce.use_yn != 'D'
+				
+				<isNotEmpty property="compSeq">
+					and tced.comp_seq = #compSeq#
+				</isNotEmpty>
+				
+				<isNotEmpty property="deptSeq">
+					and tced.dept_seq = #deptSeq#
+				</isNotEmpty>
+				
+				<isNotEmpty property="searchDeptSeq">
+					and tced.dept_seq = #searchDeptSeq#
+				</isNotEmpty>
+				
+				<isEmpty property="deptSeq">
+					<isNotEmpty property="deptName">
+						and tcdm.dept_name_multi like CONCAT('%',ifnull(#deptName#,''),'%')
+					</isNotEmpty>			
+				</isEmpty>		
+		
+				<isNotEmpty property="useYn">
+					and tcec.use_yn = #useYn#
+				</isNotEmpty>
+				
+				<isNotEmpty property="licenseCheckYn">
+					and tce.license_check_yn = #licenseCheckYn#
+				</isNotEmpty>			
+				
+				<isNotEmpty property="workStatus">
+					and tcec.work_status = #workStatus#
+				</isNotEmpty>
+				
+				<isNotEmpty property="nameAndLoginId">
+					and ( tcem.emp_name_multi like CONCAT('%',ifnull(#nameAndLoginId#,''),'%') ESCAPE '▩' OR tce.login_id like CONCAT('%',ifnull(#nameAndLoginId#,''),'%') ESCAPE '▩' OR tce.email_addr like CONCAT('%',ifnull(#nameAndLoginId#,''),'%') ESCAPE '▩')
+				</isNotEmpty>		
+		
+				<isNotEmpty property="positionDutyName">
+					and ( duty.dp_name like CONCAT('%',ifnull(#positionDutyName#,''),'%') OR posi.dp_name like CONCAT('%',ifnull(#positionDutyName#,''),'%'))
+				</isNotEmpty>
+				
+				order by tced.order_text
+								
+				<isNotEmpty property="startNum">
+				 	<isNotEmpty property="endNum">
+				 		<isNotEqual property="endNum" compareValue="0">
+				 			LIMIT $startNum$, $endNum$
+				 		</isNotEqual>
+				 	</isNotEmpty>
+				</isNotEmpty>			
+			
+			) result
+			
+			order by order_text
+
+		</isNotEqual>	
+		
+	</select>	
+	
+	<select id="EmpManage.selectEmpDuplicate" parameterClass="hashmap" resultClass="string">
+		SELECT
+		CASE WHEN e.emp_seq IS NOT NULL THEN 1
+		<isNotEmpty property="loginId">
+		WHEN IFNULL(ov200.option_value,'0')='1' AND CONCAT('|', IFNULL(ov206.option_value,''),'|') LIKE '%|$loginId$|%' THEN 2
+		</isNotEmpty>
+		<isNotEmpty property="emailAddr">
+		WHEN IFNULL(ov200.option_value,'0')='1' AND CONCAT('|', IFNULL(ov206.option_value,''),'|') LIKE '%|$emailAddr$|%' THEN 2
+		</isNotEmpty>			
+		ELSE 0 END AS result
+		FROM $DB_NEOS$t_co_group g
+		<isNotEmpty property="loginId">
+		LEFT JOIN $DB_NEOS$t_co_emp e on e.login_id = #loginId#
+		</isNotEmpty>
+		<isNotEmpty property="emailAddr">
+		LEFT JOIN $DB_NEOS$t_co_emp e on e.email_addr = #emailAddr#
+		</isNotEmpty>		
+		LEFT JOIN $DB_NEOS$tcmg_optionvalue ov200 on ov200.option_id='cm200'
+		LEFT JOIN $DB_NEOS$tcmg_optionvalue ov206 on ov206.option_id='cm206'
+		LIMIT 1
+	</select>
+	
+	<update id="EmpManage.updateEmpLoginId" parameterClass="hashmap">
+		UPDATE
+			$DB_NEOS$t_co_emp
+		SET
+			emp_num = emp_num
+			<isEqual property="ID_check" compareValue="true">
+			, login_id = #loginId# 
+			</isEqual>
+			<isEqual property="Email_check" compareValue="true">
+			, email_addr = #emailId# 
+			</isEqual>
+		WHERE
+			group_seq = #groupSeq#
+			AND
+				emp_seq = #empSeq#
+	</update>
+	
+	<select id="EmpManage.selectUserAuthList" parameterClass="hashmap" resultClass="egovMap">
+	    /* EmpManage.selectUserAuthList - mariadb */
+		SELECT *, ($DB_NEOS$`get_code_detail_info`('0', 'COM505', B.author_type, #langCode#)) AS codeTypeName 
+		FROM 
+			(
+				SELECT detail_code AS seq, author_code
+				FROM $DB_NEOS$`t_co_auth_class_relate` 
+				WHERE detail_code = #dutyCode#
+				AND   code_type   = '003'
+				UNION
+				SELECT detail_code AS seq, author_code
+				FROM $DB_NEOS$`t_co_auth_class_relate` 
+				WHERE detail_code = #positionCode#
+				AND   code_type   = '004'
+				UNION
+				SELECT author_type AS seq , author_code 
+				FROM $DB_NEOS$t_co_auth_relate
+				WHERE  (author_type = '002' and dept_seq = #deptSeq#) 
+		            or (author_type <![CDATA[ <> ]]> '002' and emp_seq = #empSeq#
+		            	<isNotEmpty property="deptSeq">
+		            	
+			            	<isNotEmpty property="compSeq">
+					        	AND (dept_seq = #deptSeq# or comp_seq = #compSeq#)
+					        </isNotEmpty>
+					        
+				        	<isEmpty property="compSeq">\
+				        		AND dept_seq = #deptSeq#
+				        	</isEmpty>
+				        </isNotEmpty>
+				        
+		            )
+			) A 
+			LEFT OUTER JOIN $DB_NEOS$`t_co_authcode` B
+			ON A.author_code = B.author_code
+			AND B.author_use_yn = 'Y'
+			INNER JOIN $DB_NEOS$t_co_authcode_multi M
+			ON B.author_code = M.author_code
+			WHERE B.comp_Seq = #compSeq#
+			<isEqual property="userSe" compareValue="USER">
+				AND author_type != '005'
+			</isEqual>
+		ORDER BY B.author_type, A.author_code
+	</select>
+	
+	
+	<select id="EmpManage.selectUserCurAuthList" resultClass="hashMap" parameterClass="hashMap">
+	<![CDATA[		
+	    /* EmpManage.selectUserCurAuthList - mariadb */
+        SELECT
+		       t.AUTHOR_CODE as authorCode
+		     , $DB_NEOS$FN_GetMultiLang(#langCode#,tm.AUTHOR_NM_MULTI) as authorNm
+		     , tm.AUTHOR_DC as authorDc
+		     , t.AUTHOR_TYPE as authorTypeCode
+		     , $DB_NEOS$get_code_detail_info('0', 'COM505', t.AUTHOR_TYPE, #langCode#) AS authorType
+		     , $DB_NEOS$get_code_detail_info('0', 'COM514', IFNULL(AUTHOR_BASE_YN,'N'), #langCode#) as authorBaseYn
+		     , $DB_NEOS$get_code_detail_info('0', 'COM521', IFNULL(AUTHOR_USE_YN,'N'), #langCode#) as authorUseYn
+		     , IFNULL(T.COMP_SEQ, 0 ) AS compSeq
+		     , H.author_code as userAuth
+		  FROM $DB_NEOS$t_co_authcode T
+		  JOIN $DB_NEOS$v_t_co_authcode_multi tm
+		    ON t.AUTHOR_CODE = tm.AUTHOR_CODE
+		  JOIN $DB_NEOS$V_T_CO_COMP_MULTI CM
+		    ON T.COMP_SEQ   = CM.COMP_SEQ
+		   AND CM.USE_YN    = 'Y' 
+		  JOIN $DB_NEOS$T_CO_GROUP G
+		    ON T.GROUP_SEQ   = G.GROUP_SEQ
+		   AND G.USE_YN    = 'Y'   
+	   	  LEFT JOIN $DB_NEOS$t_co_auth_relate H
+		  	ON T.author_code = H.author_code
+		   AND H.emp_seq = #empSeq#
+		   AND H.dept_seq = #deptSeq#
+		   AND H.comp_seq = #compSeq#
+		 WHERE (IFNULL(T.GROUP_SEQ, '0') = '0' or T.GROUP_SEQ = #groupSeq#)
+		  -- AND T.author_type = '001'
+	]]>
+			<isNotEmpty property="authFlag">		<!-- 사용자, 부서권한만 가져오기위한 플레그 -->
+		   AND T.author_type in ('001','005')
+		   </isNotEmpty>	
+          AND T.COMP_SEQ  = #compSeq#  
+          AND   AUTHOR_USE_YN = 'Y'															
+	<![CDATA[						                 
+         ORDER BY -T.order_num DESC, authorNm ASC  	
+	]]>
+	</select>
+	
+
+	
+	<delete id="EmpManage.deleteEmpMulti" parameterClass="egovMap">
+		DELETE FROM $dbNeos$`t_co_emp_multi` 
+		WHERE
+			emp_seq = #empSeq#
+	</delete>		
+	
+	<delete id="EmpManage.deleteEmpDept" parameterClass="egovMap">
+		DELETE FROM $dbNeos$`t_co_emp_dept` 
+		WHERE
+			dept_seq = #deptSeq# AND emp_seq = #empSeq#
+	</delete>
+	 
+	<delete id="EmpManage.deleteEmpDeptMulti" parameterClass="egovMap">
+		DELETE FROM $dbNeos$`t_co_emp_dept_multi` 
+		WHERE
+			dept_seq = #deptSeq# AND emp_seq = #empSeq#
+	</delete>
+	
+	<delete id="EmpManage.DeleteEmpComp" parameterClass="hashMap">
+		DELETE FROM $DB_NEOS$`t_co_emp_comp` 
+		WHERE
+			emp_seq = #empSeq#
+	</delete>		
+	
+	<delete id="EmpManage.deleteEmpTemp" parameterClass="hashMap">
+		DELETE FROM $DB_NEOS$t_co_emp 
+		WHERE
+			emp_seq = #empSeq#
+	</delete>	
+	
+	<delete id="EmpManage.deleteEmpMultiTemp" parameterClass="hashMap">
+		DELETE FROM $DB_NEOS$t_co_emp_multi` 
+		WHERE
+			emp_seq = #empSeq#
+	</delete>		
+	
+	<delete id="EmpManage.deleteEmpDeptTemp" parameterClass="hashMap">
+		DELETE FROM $DB_NEOS$`t_co_emp_dept` 
+		WHERE
+			emp_seq = #empSeq#
+	</delete>
+	 
+	<delete id="EmpManage.deleteEmpDeptMultiTemp" parameterClass="hashMap">
+		DELETE FROM $DB_NEOS$`t_co_emp_dept_multi` 
+		WHERE
+			emp_seq = #empSeq#
+	</delete>	
+	
+ 	<delete id="EmpManage.DeleteUserAuthTemp" parameterClass="hashMap">
+	    DELETE FROM $DB_NEOS$t_co_auth_relate
+	    WHERE emp_seq = #empSeq#
+	</delete>	
+	
+	<update id="EmpManage.updatemyInfo" parameterClass="hashmap">
+	<![CDATA[
+		UPDATE 
+			$DB_NEOS$t_co_emp
+		SET
+			gender_code = #mf#
+			,bday = #birthday_date#
+			,wedding_day = #wedding_date#
+			,lunar_yn = #lunarYn#
+			,wedding_yn = #weddingYn#
+			,zip_code = #zipCode#
+			,native_lang_code = #nativeLangCode#
+			,mobile_tel_num = #phone#
+			,home_tel_num = #hometel#
+			,pic_file_id = #picFileId#
+			,sign_file_id = #signFileId#
+			,main_comp_seq = #mainCompSeq#
+			,main_comp_login_yn = #mainCompLoginYn#
+			,private_yn = #privateYn#
+			,out_mail = #outEmail#
+			,out_domain = #outDomainText#
+			,sign_type = #signType#
+		WHERE
+			emp_seq = #emp_seq#
+	]]>
+	</update>
+	
+	
+	
+	
+	<update id="EmpManage.updatemyInfoMulti" parameterClass="hashMap">
+		INSERT INTO $DB_NEOS$`t_co_emp_multi` 
+				SET
+					`emp_seq` = #emp_seq# , 
+					`lang_code` = #langCode# , 
+					`group_seq` = #groupSeq# , 
+					`emp_name` = #empNameMulti# , 
+					`addr` = #home_addr# ,
+					`detail_addr` = #home_detailaddr# , 
+					`main_work` = #mainWork# , 
+					`create_seq` = #emp_seq# ,  
+					`create_date` = NOW()
+				ON DUPLICATE KEY UPDATE
+					`emp_name` = #empNameMulti# , 
+					`addr` = #home_addr# ,
+					`detail_addr` = #home_detailaddr# , 
+					`main_work` = #mainWork# , 
+					`modify_seq` = #emp_seq# ,
+					`modify_date` = NOW()	
+	
+	
+	
+<!-- 		UPDATE  -->
+<!-- 			t_co_emp_multi -->
+<!-- 		SET -->
+<!-- 			main_work = #mainWork# -->
+<!-- 			,addr = #home_addr# -->
+<!-- 			,detail_addr = #home_detailaddr#						 -->
+<!-- 			,emp_name = #empName# -->
+
+<!-- 		WHERE -->
+<!-- 			emp_seq = #emp_seq# -->
+<!-- 			AND lang_code = #langCode# -->
+	</update>
+	
+
+	<update id="EmpManage.updatemyInfodeptMulti" parameterClass="hashmap">
+	<![CDATA[
+		UPDATE 
+			$DB_NEOS$t_co_emp_dept
+		SET
+			tel_num = #comptel#
+			,fax_num = #fax#
+			,zip_code = #compZipCode#
+		WHERE
+			dept_seq = #dept_seq#
+			AND emp_seq = #emp_seq#
+	]]>
+	</update>
+	
+	<update id="EmpManage.updatemyInfodeptDetail" parameterClass="hashmap">
+	<![CDATA[
+		UPDATE 
+			$DB_NEOS$t_co_emp_dept_multi
+		SET
+			addr = #comp_addr#
+			,detail_addr = #comp_detailaddr#
+		WHERE
+			dept_seq = #dept_seq#
+			AND emp_seq = #emp_seq#
+			AND lang_code = #langCode#
+	]]>
+	</update>
+	
+	<update id="EmpManage.erpEmpResignProc" parameterClass="java.util.HashMap">
+        UPDATE $DB_NEOS$t_co_emp_comp
+        SET
+<!--              check_work_yn = 'N' -->
+			<isEmpty property="resignDate">
+				resign_day = NOW()
+			</isEmpty>
+			<isNotEmpty property="resignDate">
+				resign_day = #resignDate#
+			</isNotEmpty>            
+            ,work_status = '001'
+            ,use_yn = 'N'
+        WHERE
+            emp_seq = #empSeq#
+            <isNotEmpty property="isAll">
+            <isEqual property="isAll" compareValue="N" > 
+			     AND comp_seq = #compSeq#
+			</isEqual>
+			</isNotEmpty>
+                      
+    </update>
+    
+    
+    <update id="EmpManage.empDeptResign" parameterClass="java.util.HashMap">
+        UPDATE $DB_NEOS$t_co_emp_dept
+        SET
+        	use_yn = 'N'
+        WHERE
+            emp_seq = #empSeq#
+            <isNotEmpty property="isAll">
+            <isEqual property="isAll" compareValue="N" > 
+			     AND comp_seq = #compSeq#
+			</isEqual>
+			</isNotEmpty>
+                      
+    </update>
+    
+    <update id="EmpManage.empDeptMultiResign" parameterClass="java.util.HashMap">
+        UPDATE $DB_NEOS$t_co_emp_dept_multi
+        SET
+        	use_yn = 'N'
+        WHERE
+            emp_seq = #empSeq#
+            <isNotEmpty property="isAll">
+            <isEqual property="isAll" compareValue="N" > 
+			     AND comp_seq = #compSeq#
+			</isEqual>
+			</isNotEmpty>
+                      
+    </update>
+	
+	
+	<update id="EmpManage.empResignProc" parameterClass="java.util.HashMap">
+		UPDATE
+			$DB_NEOS$t_co_emp
+		SET
+			use_yn = 'N'
+			,mobile_use_yn = 'N'
+			,messenger_use_yn = 'N'
+<!-- 			,check_work_yn = 'N' -->
+			<isNotEmpty property="resignDate">
+			,resign_day = #resignDate#
+			</isNotEmpty>
+			,work_status = '001'
+			<isNotEmpty property="modifySeq">
+			,modify_seq = #modifySeq#
+			</isNotEmpty>			
+			,modify_date = now()
+		WHERE
+			emp_seq = #empSeq#
+			AND group_seq = #groupSeq#
+            <isNotEmpty property="allResignCheckYn">
+            <isEqual property="allResignCheckYn" compareValue="Y" > 
+			     AND emp_seq not in (select emp_seq from t_co_emp_comp where emp_seq=#empSeq# and work_status IN ('999','004'))
+			</isEqual>
+			</isNotEmpty>			
+	</update>
+	
+	<delete id="EmpManage.empDeptDel" parameterClass="java.util.HashMap">
+        delete from $DB_NEOS$t_co_emp_dept         
+			WHERE emp_seq = #empSeq#
+			<isNotEmpty property="isAll">
+            <isEqual property="isAll" compareValue="N" > 
+                 AND comp_seq = #compSeq#
+            </isEqual>
+            </isNotEmpty>
+    </delete>
+    
+    
+    <delete id="EmpManage.empDeptMultiDel" parameterClass="java.util.HashMap">
+        delete from $DB_NEOS$t_co_emp_dept_multi        
+			WHERE emp_seq = #empSeq#
+			<isNotEmpty property="isAll">
+            <isEqual property="isAll" compareValue="N" > 
+                 AND comp_seq = #compSeq#
+            </isEqual>
+            </isNotEmpty>
+    </delete>
+    
+    <update id="EmpManage.empDeptResignProc" parameterClass="java.util.HashMap">
+        UPDATE $DB_NEOS$t_co_emp_dept
+            SET use_yn = 'N', orgchart_display_yn = 'N', messenger_display_yn = 'N'
+			WHERE emp_seq = #empSeq#			 
+                 AND comp_seq = #compSeq#
+    </update>
+    
+    <update id="EmpManage.empDeptMultiResignProc" parameterClass="java.util.HashMap">
+        UPDATE $DB_NEOS$t_co_emp_dept
+            SET use_yn = 'N'
+			WHERE emp_seq = #empSeq#			 
+                 AND comp_seq = #compSeq#
+    </update>
+    
+    
+	
+	<select id="EmpManage.getErpEmpResignProc" parameterClass="hashmap" resultClass="Integer">
+        /* EmpManage.getErpEmpResignProc - mariadb */
+        SELECT 
+			COUNT(*) AS isDept
+			 FROM $DB_NEOS$t_co_emp_comp WHERE emp_seq = #empSeq#
+			AND work_status IN ('999', '004')
+        
+    </select>
+	
+	
+	<insert id="EmpManage.InsertBaseAuth" parameterClass="java.util.HashMap">
+	    /* EmpManage.InsertBaseAuth - mariadb */
+<!-- 		INSERT INTO t_co_auth_user_relate -->
+<!-- 		VALUES (#empSeq#, #authorCode#, #deptSeq#) -->
+		INSERT INTO $DB_NEOS$t_co_auth_relate
+		VALUES (#authorCode#, (SELECT author_type FROM $DB_NEOS$t_co_authcode WHERE author_code = #authorCode#) , #compSeq#, #deptSeq#, #empSeq#)		
+	</insert>
+	
+	<delete id="EmpManage.DeleteBaseAuth" parameterClass="java.util.HashMap">
+	    /* EmpManage.DeleteBaseAuth - mariadb */
+<!-- 	    DELETE FROM t_co_auth_user_relate -->
+<!-- 	    WHERE emp_seq = #empSeq# -->
+<!-- 	    	AND author_dept = #deptSeq# -->
+	    DELETE FROM $DB_NEOS$t_co_auth_relate
+	    WHERE emp_seq = #empSeq#
+	    AND dept_seq = #deptSeq#	    	
+	</delete>
+	
+	
+	<select id="EmpManage.selectEmpInfoList" parameterClass="hashmap" resultClass="egovMap">
+		/* EmpManage.selectEmpInfoList - mariadb */		
+		SELECT
+			  c.email_domain
+			, e.email_addr
+			, get_emp_duty_position_name(e.group_seq, c.comp_seq, e.duty_code, 'DUTY', #langCode#) AS duty_code_name
+			, get_emp_duty_position_name(e.group_seq, c.comp_seq, e.position_code, 'POSITION', #langCode#) AS position_code_name
+			, get_emp_duty_position_name(e.group_seq, c.comp_seq, ed.duty_code, 'DUTY', #langCode#) AS dept_duty_code_name
+			, get_emp_duty_position_name(e.group_seq, c.comp_seq, ed.position_code, 'POSITION', #langCode#) AS dept_position_code_name
+			, CASE WHEN ec.work_status = '999' THEN $DB_NEOS$get_code_detail_info('0', 'COM517', '999', #langCode#) 
+			       WHEN ec.work_status = '001' THEN $DB_NEOS$get_code_detail_info('0', 'COM517', '001', #langCode#) 
+			       WHEN ec.work_status = '002' THEN $DB_NEOS$get_code_detail_info('0', 'COM517', '004', #langCode#) 
+			       WHEN ec.work_status = '004' THEN $DB_NEOS$get_code_detail_info('0', 'COM517', '004', #langCode#) ELSE '' END work_status_nm
+	        , concat($DB_NEOS$FN_GetMultiLang(#langCode#,(select emp_name_multi from $DB_NEOS$v_t_co_emp_multi where emp_seq = e.emp_seq)),'(',e.login_id,')') emp_Name2
+	        , CASE WHEN ec.use_yn = 'Y' THEN $DB_NEOS$get_code_detail_info('0', 'cm0004', '1', #langCode#)
+	       		   WHEN ec.use_yn = 'N' THEN $DB_NEOS$get_code_detail_info('0', 'cm0004', '0', #langCode#) ELSE '' END useYn2
+		
+		FROM $DB_NEOS$t_co_emp e
+		LEFT JOIN $DB_NEOS$t_co_emp_dept ed
+			ON	e.emp_seq = ed.emp_seq AND e.group_seq = ed.group_seq
+		LEFT JOIN $DB_NEOS$t_co_comp c
+			ON	e.group_seq = c.group_seq AND ed.comp_seq = c.comp_seq
+		LEFT JOIN $DB_NEOS$t_co_emp_comp ec
+			ON	ec.comp_seq = c.comp_seq AND e.emp_seq = ec.emp_seq
+		LEFT JOIN $DB_NEOS$t_co_comp_multi cm
+			ON c.comp_seq = cm.comp_seq AND cm.lang_code = 'kr'
+		LEFT JOIN $DB_NEOS$t_co_dept_multi dm
+			ON dm.group_seq = e.group_seq AND c.comp_seq = dm.comp_seq AND ed.dept_Seq = dm.dept_Seq AND dm.lang_code = 'kr'
+		LEFT JOIN $DB_NEOS$t_co_emp_multi em
+			ON em.emp_seq = e.emp_seq AND e.group_seq = em.group_seq AND em.lang_code = 'kr'
+		WHERE
+			e.group_seq = #groupSeq#
+			AND e.use_yn != 'D'
+			<isNotEmpty property="compSeq">
+			<isEqual property="compSeq" compareValue="NONE">
+				AND (ed.dept_seq = '' OR ed.dept_seq IS NULL OR c.comp_seq = '' OR c.comp_seq IS NULL)
+			</isEqual>
+			<isNotEqual property="compSeq" compareValue="NONE">
+				<isEmpty property="empSeq">
+				AND c.comp_seq = #compSeq#
+				</isEmpty>	
+			</isNotEqual>					
+			</isNotEmpty>
+			<isNotEmpty property="empSeq">
+				<isEqual property="userSe" compareValue="MASTER">
+				AND e.emp_seq = #empSeq# AND ed.dept_seq IS NOT NULL AND ed.dept_seq != ''				
+				</isEqual>
+				<isEqual property="userSe" compareValue="ADMIN">
+				AND e.emp_seq = #empSeq# AND ed.dept_seq IS NOT NULL AND ed.dept_seq != '' AND c.comp_seq = #compSeq#
+				
+				</isEqual>				
+			</isNotEmpty>
+			<isNotEmpty property="deptSeq">
+				AND ed.dept_seq = #deptSeq#
+			</isNotEmpty>					
+			<isNotEmpty property="nameAndLoginId">
+				AND ( em.emp_name LIKE CONCAT('%',ifnull(#nameAndLoginId#,''),'%') OR e.login_id LIKE CONCAT('%',ifnull(#nameAndLoginId#,''),'%'))
+			</isNotEmpty>
+			<isNotEmpty property="deptName">
+				AND dm.dept_name LIKE CONCAT('%',ifnull(#deptName#,''),'%')
+			</isNotEmpty>
+			<isNotEmpty property="workStatus">
+				AND ec.work_status = #workStatus#
+			</isNotEmpty>
+			<isNotEmpty property="useYn">
+				AND ec.use_yn = #useYn#
+			</isNotEmpty>			
+			<isNotEmpty property="positionDutyName">
+				AND ( $DB_NEOS$get_emp_duty_position_name(e.group_seq, c.comp_seq, ed.duty_code, 'DUTY', #langCode#) LIKE CONCAT('%',ifnull(#positionDutyName#,''),'%') OR $DB_NEOS$get_emp_duty_position_name(e.group_seq, c.comp_seq, ed.position_code, 'POSITION', #langCode#) LIKE CONCAT('%',ifnull(#positionDutyName#,''),'%'))
+			</isNotEmpty>
+			<isEmpty property="empSeq">
+				group by e.emp_seq				
+			</isEmpty>
+			order by c.comp_seq, ed.main_dept_yn desc
+	</select>
+	
+	<select id="EmpManage.selectGroupData" parameterClass="hashmap" resultClass="egovMap">
+        /* EmpManage.selectGroupData - mariadb */
+        SELECT * FROM $DB_NEOS$t_co_group WHERE group_seq = #groupSeq#
+        
+    </select>
+	
+	
+	<insert id="EmpManageService.createUser" parameterClass="hashmap">
+		INSERT INTO 
+			$DB_NEOS$t_co_emp
+		VALUES
+			(#empSeq#, null, #id#, null, null, #id#, #pw#, #pw#, null, 0, #pw#, null, null, null, null, null, null, null, null, null, null, null, null, now(), null, null, null, null, "999", null, null, null, null, null, null, null, null, 'Y', null, null, now(), null, null)
+	
+	</insert>
+	
+	<insert id="EmpManageService.createUserMulti" parameterClass="hashmap">
+		INSERT INTO 
+			$DB_NEOS$t_co_emp_multi
+		VALUES
+			(#empSeq#, 'kr', null, #empName#, null, null, null, 'Y', null, now(), null, null)
+	
+	</insert>
+	
+	<update id="EmpManageService.resignUser" parameterClass="hashmap">
+	UPDATE
+			$DB_NEOS$t_co_emp
+		SET
+			<isEqual property="flag" compareValue="001">
+			mobile_use_yn = 'N'
+			,messenger_use_yn = 'N'
+			,check_work_yn = 'N'
+			,resign_day = now()
+			,work_status = '001'			
+			</isEqual>
+			<isEqual property="flag" compareValue="999">
+<!-- 			mobile_use_yn = 'Y' -->
+<!-- 			,messenger_use_yn = 'Y' -->
+			check_work_yn = 'Y'
+			,resign_day = null
+			,work_status = '999'
+			</isEqual>
+		WHERE
+			emp_seq = #empSeq#
+	</update>
+	
+	
+	
+	<update id="EmpManageService.deleteUser" parameterClass="hashmap">
+		UPDATE
+			$DB_NEOS$t_co_emp
+		SET
+			use_yn = #useYn#
+		WHERE
+			emp_seq = #empSeq#
+	</update>
+	
+	
+	
+	
+	<update id="EmpManageService.changeUserId" parameterClass="hashmap">
+		UPDATE
+			$DB_NEOS$t_co_emp
+		SET
+			email_addr = #changeId#
+		WHERE
+			emp_seq = #empSeq#
+			AND email_addr = #id#
+	</update>
+	
+	<update id="EmpManageService.updateMailAddr" parameterClass="hashmap">
+        UPDATE
+            $DB_NEOS$t_co_emp
+        SET
+            email_addr = #emailAddr#
+        WHERE
+            emp_seq = #empSeq#
+            AND login_id = #beforeId#
+    </update>
+    
+    <select id="EmpManage.getWorkTeamMst" parameterClass="hashmap" resultClass="hashmap">
+        /* EmpManage.getWorkTeamMst - mariadb */
+        SELECT    group_seq AS "groupSeq"        
+                    ,comp_seq AS "compSeq"
+                    ,work_team_sqno AS "workTeamSqno"        
+                    ,work_team_div_code AS "workTeamDivCode"
+                    ,work_team_name AS "workTeamName"
+                FROM $DB_NEOS$t_at_work_team_mst 
+                WHERE use_yn = "Y"
+                AND comp_seq = #compSeq#
+                AND work_team_div_code = '110'
+                ORDER BY work_team_sqno
+        
+    </select>
+    
+    <select id="EmpManage.getWorkTeamMem" parameterClass="hashmap" resultClass="hashmap">
+        /* EmpManage.getWorkTeamMem - mariadb */
+        SELECT    comp_seq
+	          , work_team_sqno
+	          , group_seq
+	          , dept_seq
+	          , emp_seq
+	          , create_seq
+	          , create_dt
+                FROM $DB_NEOS$t_at_work_team_member 
+                WHERE comp_seq = #teamCompSeq#
+                AND emp_seq = #teamEmpSeq#
+        
+    </select>
+    
+    <insert id="EmpManage.insertTeamWork" parameterClass="hashmap">
+        /* EmpManage.insertTeamWork - mariadb */
+        INSERT INTO $DB_NEOS$t_at_work_team_member (
+            comp_seq
+          , work_team_sqno
+          , group_seq
+          , dept_seq
+          , emp_seq
+          , create_seq
+          , create_dt
+        ) VALUE (
+            #teamCompSeq#
+          , #workTeamSqno#
+          , #teamGroupSeq#
+          , #teamDeptSeq#
+          , #teamEmpSeq#
+          , #empSeq#
+          , SYSDATE()
+        )
+    </insert>
+    
+    <insert id="EmpManage.updateTeamWork" parameterClass="hashmap">
+        /* EmpManage.insertTeamWork - mariadb */
+        UPDATE $DB_NEOS$t_at_work_team_member
+            SET work_team_sqno = #workTeamSqno#
+            WHERE comp_seq = #teamCompSeq#
+            AND   emp_seq = #teamEmpSeq#
+    </insert>
+    
+    <select id="EmpManage.getCompList" parameterClass="hashmap" resultClass="hashmap">
+        /* EmpManage.getCompList */
+		SELECT c.comp_seq AS compSeq
+		      ,ed.dept_seq AS deptSeq
+		      ,ed.biz_seq AS bizSeq
+		      ,ed.emp_seq AS empSeq
+		      ,cm.comp_name AS compName
+		      ,dm.dept_name AS deptName
+		      ,CASE WHEN ed.main_dept_yn = 'Y' THEN $DB_NEOS$get_code_detail_info('0', 'TX000006209', '1', #langCode#)
+		       ELSE $DB_NEOS$get_code_detail_info('0', 'TX000006210', '1', #langCode#)
+		       END AS mainDeptYn
+		      , $DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, e.duty_code, 'DUTY', #langCode#) AS duty_code_name
+              , $DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, e.position_code, 'POSITION', #langCode#) AS position_code_name
+              , $DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.duty_code, 'DUTY', #langCode#) AS dept_duty_code_name
+              , $DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.position_code, 'POSITION', #langCode#) AS dept_position_code_name
+			 FROM $DB_NEOS$t_co_emp e
+			 LEFT JOIN $DB_NEOS$t_co_emp_dept ed
+				ON	e.emp_seq = ed.emp_seq AND e.group_seq = ed.group_seq
+			 LEFT JOIN $DB_NEOS$t_co_comp c
+				ON	e.group_seq = c.group_seq AND ed.comp_seq = c.comp_seq
+			 LEFT JOIN $DB_NEOS$t_co_emp_comp ec
+				ON	ec.comp_seq = c.comp_seq AND e.emp_seq = ec.emp_seq
+			 LEFT JOIN $DB_NEOS$t_co_comp_multi cm
+				ON c.comp_seq = cm.comp_seq AND cm.lang_code = 'kr'
+			 LEFT JOIN $DB_NEOS$t_co_dept_multi dm
+				ON dm.group_seq = e.group_seq AND c.comp_seq = dm.comp_seq AND ed.dept_Seq = dm.dept_Seq AND dm.lang_code = 'kr'
+			 LEFT JOIN $DB_NEOS$t_co_emp_multi em
+				ON em.emp_seq = e.emp_seq AND e.group_seq = em.group_seq AND em.lang_code = 'kr'
+			 WHERE e.emp_seq = #empSeq#	
+				ORDER BY c.comp_seq,ed.main_dept_yn DESC,ed.order_num
+    </select>
+    
+    <select id="EmpManage.getEaDocMustList" parameterClass="hashmap" resultClass="hashmap">
+        /* EmpManage.getEaDocMustList */        
+        SELECT  
+            FOUND_ROWS() TOTAL_COUNT 
+         ,  EA.MENU_CODE
+         ,  AD.DOC_ID               AS DOC_ID
+         ,  AD.FORM_ID              AS FORM_ID
+         ,  $DB_NEOS$FN_GETLANGUAGENAME(#loginVo.langCode#, FORM.FORM_NM,FORM.FORM_NM_EN,FORM.FORM_NM_JP,FORM.FORM_NM_CN )  AS FORM_NM
+         ,  FORM.FORM_MODE AS FORM_MODE
+         ,  IF (FORM.FORM_MODE = '1', '900', '1024' )  AS DOC_WIDTH
+         ,  AD.DOC_NO               AS DOC_NO
+         ,  AD.DEPT_ID
+         ,  DATE_FORMAT(AD.REP_DT,'%Y-%m-%d')       AS REP_DT
+         ,  DATE_FORMAT(AD.END_DT, '%Y-%m-%d')  AS END_DT
+         ,  AD.CO_ID                AS CO_ID
+         ,  COM.COMP_NAME				AS CO_NAME
+         ,  AD.DEPT_ID              AS DEPT_ID
+         ,  $DB_NEOS$FN_GETLANGUAGENAME(#loginVo.langCode#, AD.DEPT_NM,AD.DEPT_NM_EN,AD.DEPT_NM_JP,AD.DEPT_NM_CN) AS DEPT_NM 
+         ,  AD.USER_ID              AS USER_ID
+         ,  $DB_NEOS$FN_GETLANGUAGENAME(#loginVo.langCode#, AD.USER_NM,AD.USER_NM_EN,AD.USER_NM_JP,AD.USER_NM_CN) AS USER_NM
+         ,  AD.DOC_TITLE
+         ,  AD.DOC_STS              AS DOC_STS
+         ,  $DB_NEOS$GET_CODE_DETAIL_Info('0', 'ea0015', AD.DOC_STS ,#loginVo.langCode#) AS DOC_STSNM
+         ,  IFNULL((SELECT $DB_NEOS$FN_GETLANGUAGENAME(#loginVo.langCode#, LINE.USER_NM,LINE.USER_NM_EN,LINE.USER_NM_JP,LINE.USER_NM_CN)
+                    FROM $DB_NEOS$TEAG_APPDOC_LINE LINE
+                    WHERE AD.DOC_ID = LINE.DOC_ID
+                    AND LINE.ACTION_TIME IS NOT NULL
+                    ORDER BY LINE.DOC_LINE_M_SEQ DESC LIMIT 1), $DB_NEOS$FN_GETLANGUAGENAME(#loginVo.langCode#, AD.USER_NM,AD.USER_NM_EN,AD.USER_NM_JP,AD.USER_NM_CN)) AS LINE_NM
+         ,  FORM.FORM_MODE              AS FORM_MODE
+         ,  IF (FORM.FORM_MODE = '1', '900', '1024' )  AS DOC_WIDTH
+         ,  $DB_NEOS$GET_CODE_DETAIL_Info('0', 'ea0021', readYN ,#loginVo.langCode#) AS READYN
+         ,  $DB_NEOS$GET_CODE_DETAIL_Info('0', 'ea0034', operYN ,#loginVo.langCode#) AS OPERYN
+         ,  $DB_NEOS$F_GETUSERINFO('1',AD.CREATED_BY, #loginVo.langCode#)        AS CREATED_NM
+         ,  DATE_FORMAT(AD.CREATED_DT,'%Y-%m-%d')       AS CREATED_DT
+         ,  $DB_NEOS$F_GETUSERINFO('1',AD.MODIFY_BY, #loginVo.langCode#)         AS MODIFY_NM
+         ,  DATE_FORMAT(AD.MODIFY_DT,'%Y-%m-%d')        AS MODIFY_DT
+         ,  DATE_FORMAT(AD.REP_DT,'%Y-%m-%d')       AS REP_DT_120
+         ,  AD.END_DT 
+         ,  AD.CREATED_DT
+    FROM (
+          SELECT DOC_ID , MIN(readYN) AS readYN ,MIN(operYN) AS operYN, MENU_CODE FROM (
+                SELECT '' doc_id , '' readYN , '' operYN, '' MENU_CODE FROM DUAL 
+                UNION ALL  /* 미결내역 */
+                SELECT  DISTINCT A.doc_id
+                      , CASE WHEN (B.VIEW_TIME IS NOT NULL) THEN '10' ELSE '20' END
+                      , ''   
+                      , '20' AS MENU_CODE
+                FROM  $DB_NEOS$TEAG_APPDOC A
+                INNER JOIN (
+                        SELECT X.doc_id, X.VIEW_TIME
+                        FROM  $DB_NEOS$TEAG_APPDOC_LINE X
+                        LEFT  OUTER JOIN $DB_NEOS$TEAG_PROXY_APP Y 
+                        ON    X.co_id = Y.co_id  
+                        AND   X.user_id = Y.user_id  
+                        AND   (NOW() <![CDATA[ >= ]]>  Y.proxy_app_start_dt AND NOW() <![CDATA[  <= ]]>  Y.proxy_app_end_dt)
+                        WHERE X.doc_line_sts = '20'
+                        AND ( (
+                        <isNotEmpty property="allComp">
+					      X.co_id <iterate prepend="IN" property="allComp" open="(" close=")" conjunction=",">#allComp[]#</iterate>
+					      AND x.user_id = #empSeq# 
+					    </isNotEmpty>
+					    ) OR (
+					    <isNotEmpty property="allComp">
+                          Y.proxy_app_co_id <iterate prepend="IN" property="allComp" open="(" close=")" conjunction=",">#allComp[]#</iterate>
+                          AND y.proxy_app_user_id = #empSeq# 
+                        </isNotEmpty>
+                        ) )
+                        GROUP BY doc_id, VIEW_TIME ) B 
+                ON    (A.DOC_ID = B.DOC_ID)
+                WHERE A.USE_YN = '1'
+                AND   A.doc_sts IN ('20', '30', '40', '50', '60')
+                
+                UNION ALL  /* 예결내역  */       
+                SELECT  A.doc_id  
+                      , CASE WHEN (B.view_time) IS NOT NULL THEN '10' ELSE '20' END   
+                      , '' 
+                      , '70' AS MENU_CODE
+                FROM  $DB_NEOS$TEAG_APPDOC A
+                INNER JOIN (
+                        SELECT X.doc_id, X.VIEW_TIME  
+                        FROM   $DB_NEOS$TEAG_APPDOC_LINE X
+                        LEFT OUTER JOIN $DB_NEOS$TEAG_PROXY_APP Y ON (X.co_id = Y.co_id
+                        AND X.user_id = Y.user_id
+                        AND (NOW() <![CDATA[ >= ]]> Y.proxy_app_start_dt AND NOW() <![CDATA[ <= ]]> Y.proxy_app_end_dt))
+                        WHERE X.doc_line_sts = '70'
+                        AND ( (
+                        <isNotEmpty property="allComp">
+                          X.co_id <iterate prepend="IN" property="allComp" open="(" close=")" conjunction=",">#allComp[]#</iterate>
+                          AND x.user_id = #empSeq# 
+                        </isNotEmpty>
+                        ) OR (
+                        <isNotEmpty property="allComp">
+                          Y.proxy_app_co_id <iterate prepend="IN" property="allComp" open="(" close=")" conjunction=",">#allComp[]#</iterate>
+                          AND y.proxy_app_user_id = #empSeq# 
+                        </isNotEmpty>
+                        ) )
+                        GROUP BY doc_id, VIEW_TIME ) B 
+                ON (A.DOC_ID = B.DOC_ID)
+                WHERE A.use_yn = '1'
+                AND A.doc_sts IN ('20', '30', '40', '50', '60')
+
+                UNION ALL  /* 후결내역  */
+                SELECT  A.doc_id  
+                      , CASE WHEN (B.view_time) IS NOT NULL THEN '10' ELSE '20' END   
+                      , '' 
+                      , '80' AS MENU_CODE
+                FROM $DB_NEOS$TEAG_APPDOC A
+                INNER JOIN (
+                        SELECT doc_id, view_time  
+                        FROM $DB_NEOS$TEAG_APPDOC_LINE
+                        WHERE doc_line_sts = '60'
+                        AND ( (
+                        <isNotEmpty property="allComp">
+                          co_id <iterate prepend="IN" property="allComp" open="(" close=")" conjunction=",">#allComp[]#</iterate>
+                        </isNotEmpty>
+                        ) OR (
+                        <isNotEmpty property="allComp">
+                          proxy_app_co_id <iterate prepend="IN" property="allComp" open="(" close=")" conjunction=",">#allComp[]#</iterate>
+                        </isNotEmpty>
+                        ) )
+                        AND user_id = #empSeq#  
+                        GROUP BY doc_id, view_time) B 
+                ON (A.DOC_ID = B.DOC_ID)
+                WHERE A.use_yn = '1'
+                AND A.doc_sts IN ('20', '30', '40', '50', '60', '70', '80', '90')                
+
+                UNION ALL  /* 수신내역  */
+                SELECT  A.doc_id  
+                      , CASE WHEN (B.firstcheck_time) IS NOT NULL THEN '10' ELSE '20' END   
+                      , '' 
+                      , '100' AS MENU_CODE
+                FROM  $DB_NEOS$TEAG_APPDOC A
+                INNER JOIN $DB_NEOS$TEAG_APPDOC_RECEIVEUSER B ON (A.doc_id = B.doc_id)
+                LEFT  OUTER JOIN $DB_NEOS$TEAG_APPDOC C ON (A.doc_id = C.related_doc_no)
+                WHERE A.use_yn = '1'  
+                AND   B.user_id = #empSeq# 
+                AND   B.receive_div = '20' 
+                AND   A.doc_sts = '40'
+                AND   C.doc_id IS NULL
+                UNION
+                -- 협조전
+                SELECT  A.doc_id  
+                      , CASE WHEN (B.firstcheck_time) IS NOT NULL THEN '10' ELSE '20' END   
+                      , '' 
+                      , '100' AS MENU_CODE
+                FROM $DB_NEOS$TEAG_APPDOC A
+                INNER JOIN $DB_NEOS$TEAG_APPDOC_CONTENTS CON ON A.DOC_ID = CON.DOC_ID  
+                INNER JOIN $DB_NEOS$TEAG_FORM FORM ON A.FORM_ID = FORM.FORM_ID
+                INNER JOIN $DB_NEOS$TEAG_APPDOC_RECEIVEUSER B ON (A.doc_id = B.doc_id)
+                LEFT OUTER JOIN $DB_NEOS$TEAG_APPDOC C ON (A.doc_id = C.related_doc_no AND b.user_id = c.user_id)
+                WHERE A.use_yn = '1'  
+                AND B.user_id = #empSeq#  
+                AND B.receive_div = '30'
+                AND A.doc_sts = '90'
+                AND C.doc_id IS NULL       
+         
+          ) W
+          GROUP BY DOC_ID
+    ) EA     
+    INNER JOIN $DB_NEOS$TEAG_APPDOC AD ON AD.DOC_ID = EA.DOC_ID
+    <isNotEmpty property="allComp">
+    INNER JOIN (SELECT COMP_SEQ FROM $DB_NEOS$t_co_comp WHERE comp_seq <iterate prepend="IN" property="allComp" open="(" close=")" conjunction=",">#allComp[]#</iterate> ) CO ON AD.CO_ID = CO.COMP_SEQ
+    </isNotEmpty>
+    <isNotEmpty property="allComp">
+    INNER JOIN (SELECT COMP_SEQ, COMP_NAME, LANG_CODE FROM $DB_NEOS$t_co_comp_multi WHERE comp_seq <iterate prepend="IN" property="allComp" open="(" close=")" conjunction=",">#allComp[]#</iterate> ) COM ON COM.comp_seq = CO.COMP_SEQ AND COM.lang_code = 'kr' 
+    </isNotEmpty>
+    INNER JOIN $DB_NEOS$TEAG_APPDOC_CONTENTS CON ON AD.DOC_ID = CON.DOC_ID
+    INNER JOIN $DB_NEOS$TEAG_FORM FORM ON  AD.FORM_ID = FORM.FORM_ID 
+    ORDER BY REP_DT DESC , AD.DOC_ID DESC
+    </select>
+    
+    <select id="EmpManage.getEa320Option" resultClass="java.util.HashMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+        /* 계열사 상신옵션 */
+        SELECT IFNULL(b.option_value, a.option_d_value)  as optionvalue
+            FROM $DB_NEOS$TCMG_OPTIONSET a 
+            LEFT JOIN $DB_NEOS$TCMG_OPTIONVALUE b ON a.option_id=b.option_id  and b.co_id= #compSeq#
+            WHERE a.option_id = 'ea320'
+    ]]>
+    </select>
+    
+    
+    <select id="EmpManage.getEmpInfoList" parameterClass="hashmap" resultClass="egovMap">
+		/* EmpManage.getEmpInfoList - mariadb */
+		SELECT 		
+			ed.main_dept_yn mainDeptYn
+			, c.comp_seq compSeq
+			, tcd.path path
+			, ed.dept_Seq deptSeq
+			, e.emp_seq empSeq
+			, (select count(emp_seq) from $DB_NEOS$t_co_emp_dept where emp_seq = #empSeq# and comp_seq = c.comp_seq) empDeptCnt
+			, (select count(emp_seq) from $DB_NEOS$t_co_emp_dept where emp_seq = #empSeq#) empCnt
+			, e.group_seq groupSeq
+			, e.login_id loginId
+			, IFNULL(cm_lc.comp_name, cm.comp_name) AS compName
+			, IFNULL(dm_lc.dept_name, dm.dept_name) AS deptName
+			, em.emp_name empName
+			, $DB_NEOS$get_emp_duty_position_name(e.group_seq, c.comp_seq, ed.duty_code, 'DUTY', #langCode#) AS deptDutyCodeName
+			, $DB_NEOS$get_emp_duty_position_name(e.group_seq, c.comp_seq, ed.position_code, 'POSITION', #langCode#) AS deptPositionCodeName
+			, ed.main_comp_yn mainCompYn
+			, e.license_check_yn licenseCheckYn
+			, e.main_comp_seq mainCompSeq
+			, ec.work_status workStatus
+			, ec.check_work_yn checkWorkYn	
+			, $DB_NEOS$get_emp_duty_position_name(e.group_seq, c.comp_seq, e.duty_code, 'DUTY', #langCode#) AS duty_code_name
+			, $DB_NEOS$get_emp_duty_position_name(e.group_seq, c.comp_seq, e.position_code, 'POSITION', #langCode#) AS position_code_name
+			, CASE WHEN ec.work_status = '999' THEN $DB_NEOS$get_code_detail_info('0', 'COM517', '999', #langCode#)
+			       WHEN ec.work_status = '001' THEN $DB_NEOS$get_code_detail_info('0', 'COM517', '001', #langCode#) 
+			       WHEN ec.work_status = '002' THEN $DB_NEOS$get_code_detail_info('0', 'COM517', '004', #langCode#)
+			       WHEN ec.work_status = '004' THEN $DB_NEOS$get_code_detail_info('0', 'COM517', '004', #langCode#) ELSE '' END work_status_nm
+	        , concat($DB_NEOS$FN_GetMultiLang(#langCode#,(SELECT emp_name_multi FROM $DB_NEOS$v_t_co_emp_multi WHERE emp_seq = e.emp_seq)),'(',e.login_id,')') emp_Name2
+	        , CASE WHEN ec.use_yn = 'Y' THEN $DB_NEOS$get_code_detail_info('0', 'cm0004', '1', #langCode#)
+	       		   WHEN ec.use_yn = 'N' THEN $DB_NEOS$get_code_detail_info('0', 'cm0004', '0', #langCode#) ELSE '' END useYn2
+	        , (select ea_yn from $DB_NEOS$t_co_dept where dept_seq = ed.dept_seq) ea_yn
+	        , ed.ea_display_yn
+	        , ed.zip_code as deptZipCode
+	        , ed.duty_code deptDutyCode
+	        , ed.position_code deptPositionCode
+	        , edm.addr deptAddr
+	        , edm.detail_addr deptDetailAddr
+	        , ed.tel_num
+	        , ed.fax_num
+	        , ed.orgchart_display_yn
+	        , ed.messenger_display_yn
+		FROM $DB_NEOS$t_co_emp e
+		LEFT JOIN $DB_NEOS$t_co_emp_dept ed
+			ON	e.emp_seq = ed.emp_seq AND e.group_seq = ed.group_seq
+		LEFT JOIN $DB_NEOS$t_co_comp c
+			ON	e.group_seq = c.group_seq AND ed.comp_seq = c.comp_seq
+		LEFT JOIN $DB_NEOS$t_co_emp_comp ec
+			ON	ec.comp_seq = c.comp_seq AND e.emp_seq = ec.emp_seq
+		LEFT JOIN $DB_NEOS$t_co_comp_multi cm
+			ON c.comp_seq = cm.comp_seq AND cm.lang_code = 'kr'
+        LEFT JOIN $DB_NEOS$t_co_comp_multi cm_lc
+            ON c.comp_seq = cm_lc.comp_seq AND cm_lc.lang_code = #langCode#
+		LEFT JOIN $DB_NEOS$t_co_dept_multi dm
+			ON dm.group_seq = e.group_seq AND c.comp_seq = dm.comp_seq AND ed.dept_Seq = dm.dept_Seq AND dm.lang_code = 'kr'
+        LEFT JOIN $DB_NEOS$t_co_dept_multi dm_lc
+            ON dm_lc.group_seq = e.group_seq AND c.comp_seq = dm_lc.comp_seq AND ed.dept_Seq = dm_lc.dept_Seq AND dm_lc.lang_code = #langCode#
+		LEFT JOIN $DB_NEOS$t_co_emp_multi em
+			ON em.emp_seq = e.emp_seq AND e.group_seq = em.group_seq AND em.lang_code = 'kr'
+		INNER JOIN $DB_NEOS$t_co_dept tcd 
+			ON ed.dept_seq = tcd.dept_seq 		
+		LEFT JOIN $DB_NEOS$t_co_emp_comp B 
+			ON e.emp_seq = B.emp_seq AND c.comp_seq = B.comp_seq
+		LEFT JOIN $DB_NEOS$t_co_emp_dept_multi edm
+			ON ed.emp_seq = edm.emp_seq and ed.dept_seq = edm.dept_seq and edm.lang_code = 'kr'
+		WHERE
+			e.group_seq = #groupSeq#	and e.use_yn != 'D'
+			<isEqual property="compSeq" compareValue="NONE">
+				AND (ed.dept_seq = '' OR ed.dept_seq IS NULL OR c.comp_seq = '' OR c.comp_seq IS NULL)
+				AND (e.use_yn != 'D')
+				<isNotEmpty property="nameAndLoginId">
+					AND ( em.emp_name LIKE CONCAT('%',ifnull(#nameAndLoginId#,''),'%') OR e.login_id LIKE CONCAT('%',ifnull(#nameAndLoginId#,''),'%'))
+				</isNotEmpty>
+				<isNotEmpty property="empDeptFlag">
+					AND cm.use_yn = 'Y'
+                    AND ed.use_yn = 'Y'
+				</isNotEmpty>
+			</isEqual>
+
+			<isNotEqual property="compSeq" compareValue="NONE">
+				<isNotEmpty property="empDeptFlag">
+					AND cm.use_yn = 'Y'
+				</isNotEmpty>
+				<isEmpty property="empSeq">
+				AND c.comp_seq = #compSeq#
+				</isEmpty>				
+				
+				<isNotEmpty property="empSeq">
+					<isEqual property="userSe" compareValue="MASTER">
+					AND e.emp_seq = #empSeq# AND ed.dept_seq IS NOT NULL AND ed.dept_seq != ''
+					order by ed.main_comp_yn desc, ed.main_dept_yn desc, c.comp_seq 
+					</isEqual>
+					<isEqual property="userSe" compareValue="ADMIN">
+					AND e.emp_seq = #empSeq# AND ed.dept_seq IS NOT NULL AND ed.dept_seq != '' AND c.comp_seq = #compSeq#
+					order by ed.main_comp_yn desc, ed.main_dept_yn desc, c.comp_seq 
+					</isEqual>				
+				</isNotEmpty>
+				<isNotEmpty property="deptSeq">
+					AND ed.dept_seq = #deptSeq#
+				</isNotEmpty>					
+				<isNotEmpty property="nameAndLoginId">
+					AND ( em.emp_name LIKE CONCAT('%',ifnull(#nameAndLoginId#,''),'%') OR e.login_id LIKE CONCAT('%',ifnull(#nameAndLoginId#,''),'%'))
+				</isNotEmpty>
+				<isNotEmpty property="deptName">
+					AND dm.dept_name LIKE CONCAT('%',ifnull(#deptName#,''),'%')
+				</isNotEmpty>
+				<isNotEmpty property="workStatus">
+					AND IF(B.work_status is null, ec.work_status=#workStatus#, B.work_status=#workStatus#)
+				</isNotEmpty>
+				<isNotEmpty property="useYn">
+					AND B.use_yn = #useYn#
+				</isNotEmpty>			
+				<isNotEmpty property="positionDutyName">
+					AND ( $DB_NEOS$get_emp_duty_position_name(e.group_seq, c.comp_seq, ed.duty_code, 'DUTY', #langCode#) LIKE CONCAT('%',ifnull(#positionDutyName#,''),'%') OR $DB_NEOS$get_emp_duty_position_name(e.group_seq, c.comp_seq, ed.position_code, 'POSITION', #langCode#) LIKE CONCAT('%',ifnull(#positionDutyName#,''),'%'))
+				</isNotEmpty>				
+				<isEmpty property="empSeq">
+					group by e.emp_seq
+					order by ed.order_text					
+				</isEmpty>			
+			</isNotEqual>
+	</select>
+	
+    <select id="EmpManage.getEmpInfoListAccess" parameterClass="hashmap" resultClass="egovMap">
+		select
+		ed.emp_seq,
+		ed.comp_seq,
+		ed.dept_seq,
+		ed.main_dept_yn,
+		d.path
+		from $DB_NEOS$t_co_emp e
+		join $DB_NEOS$t_co_emp_dept ed on e.emp_seq = ed.emp_seq
+		join $DB_NEOS$t_co_emp_comp ec on ed.emp_seq = ec.emp_seq and ed.comp_seq = ec.comp_seq and ec.use_yn = 'Y' and ec.work_status in ('999','004')
+		join $DB_NEOS$t_co_dept d on ed.dept_seq = d.dept_seq
+		where e.emp_seq = #empSeq#
+	</select>
+	
+    <select id="EmpManage.getEmpInfoListNew" parameterClass="hashmap" resultClass="egovMap">
+    
+		<isEqual property="compSeq" compareValue="NONE">
+			select * from
+			(
+			select distinct
+			tce.emp_seq,
+			tce.login_id,
+			$DB_NEOS$FN_GetMultiLang(#langCode#,tcem.emp_name_multi) as emp_name
+			from $DB_NEOS$t_co_emp tce
+			join $DB_NEOS$v_t_co_emp_multi tcem on tce.emp_seq = tcem.emp_seq
+			where
+			tce.group_seq = #groupSeq# and tce.use_yn != 'D'
+			
+			<isNotEmpty property="nameAndLoginId">
+				and ( tcem.emp_name_multi like CONCAT('%',ifnull(#nameAndLoginId#,''),'%') OR tce.login_id like CONCAT('%',ifnull(#nameAndLoginId#,''),'%'))
+			</isNotEmpty>
+			
+			and tce.emp_seq not in
+			(select distinct a.emp_seq from $DB_NEOS$t_co_emp_comp a join $DB_NEOS$t_co_dept b on a.dept_seq = b.dept_seq)
+			) result
+			order by emp_name
+		</isEqual>
+		
+		<isNotEqual property="compSeq" compareValue="NONE">
+
+			select * from
+			(
+			select distinct
+			tce.emp_seq,
+			tce.login_id,
+			$DB_NEOS$FN_GetMultiLang(#langCode#,tcem.emp_name_multi) as emp_name
+			from $DB_NEOS$t_co_emp tce
+			join $DB_NEOS$v_t_co_emp_multi tcem on tce.emp_seq = tcem.emp_seq
+			join $DB_NEOS$t_co_emp_dept tced on tced.emp_seq = tce.emp_seq
+			join $DB_NEOS$v_t_co_dept_multi tcdm on tcdm.dept_seq = tced.dept_seq
+			join $DB_NEOS$t_co_comp cc on tced.comp_seq = cc.comp_seq and cc.use_yn = 'Y'
+			left join $DB_NEOS$t_co_emp_comp tcec on tcec.emp_seq = tce.emp_seq and tcec.comp_seq=tced.comp_seq
+			left join $DB_NEOS$v_t_co_comp_duty_position_multi duty on duty.dp_type = 'DUTY' and tced.duty_code = duty.dp_seq
+			left join $DB_NEOS$v_t_co_comp_duty_position_multi posi on posi.dp_type = 'POSITION' and tced.position_code = posi.dp_seq			
+			where
+			tce.group_seq = #groupSeq# and tce.use_yn != 'D'
+			
+			<isNotEmpty property="compSeq">
+				and tced.comp_seq = #compSeq#
+			</isNotEmpty>
+			
+			<isNotEmpty property="deptSeq">
+				and tced.dept_seq = #deptSeq#
+			</isNotEmpty>
+			
+			<isEmpty property="deptSeq">
+				<isNotEmpty property="deptName">
+					and tcdm.dept_name_multi like CONCAT('%',ifnull(#deptName#,''),'%')
+				</isNotEmpty>			
+			</isEmpty>		
+	
+			<isNotEmpty property="useYn">
+				and tcec.use_yn = #useYn#
+			</isNotEmpty>			
+			
+			<isNotEmpty property="workStatus">
+				and tcec.work_status = #workStatus#
+			</isNotEmpty>
+			
+			<isNotEmpty property="nameAndLoginId">
+				and ( tcem.emp_name_multi like CONCAT('%',ifnull(#nameAndLoginId#,''),'%') OR tce.login_id like CONCAT('%',ifnull(#nameAndLoginId#,''),'%'))
+			</isNotEmpty>		
+	
+			<isNotEmpty property="positionDutyName">
+				and ( duty.dp_name like CONCAT('%',ifnull(#positionDutyName#,''),'%') OR duty.dp_name like CONCAT('%',ifnull(#positionDutyName#,''),'%'))
+			</isNotEmpty>
+			
+			) result
+			order by emp_name  
+
+		</isNotEqual>		
+   
+	</select>	
+	
+	<select id="EmpManage.getMustLine" resultClass="java.util.HashMap" parameterClass="java.util.HashMap">
+        /* EmpManage.getMustLine */
+        SELECT TF.FORM_ID , TF.FORM_NM
+             , A.ACT_ID
+             , B.ACT_NM
+             , LINE_SEQ
+             , '' AS OBJECT_ID 
+             , CASE 
+               WHEN LINESET_DEPT_USER_GB = 'c' THEN (SELECT  FN_GetMultiLang(#langCode#,comp_name_multi) FROM v_t_co_comp_multi where comp_seq=A.LINESET_ID limit 1)
+               WHEN LINESET_DEPT_USER_GB = 'd' THEN (SELECT  FN_GetMultiLang(#langCode#,dept_name_multi) FROM v_t_co_dept_multi where dept_seq=A.LINESET_ID limit 1)
+               WHEN LINESET_DEPT_USER_GB = 'm' THEN (SELECT  FN_GetMultiLang(#langCode#,emp_name_multi) FROM v_t_co_emp_multi where emp_seq=A.LINESET_ID limit 1)
+               ELSE (SELECT s.ls_role_nm FROM TEAG_LINESET_ROLE S WHERE S.ls_role_id = A.ls_role_id) END AS OBJECT_NM
+             , LOGIC
+             , A.LINESET_ID
+             , LS_ROLE_ID
+             , LINESET_DEPT_USER_GB
+          FROM $DB_NEOS$TEAG_LINESET_RULE A , $DB_NEOS$TEAG_FORM TF,
+          (SELECT A.ACT_ID
+             , $DB_NEOS$FN_GetLanguageName(#langCode#, b.act_nm, b.act_nm_en, b.act_nm_jp, b.act_nm_cn) AS ACT_NM
+             , A.EDIT_YN 
+          FROM $DB_NEOS$TEAG_LINESET A
+          JOIN $DB_NEOS$TWFG_ACTIVITY B  ON  A.ACT_ID = B.ACT_ID
+         WHERE A.FORM_ID = '1'
+           AND B.ACT_TYPE IN ('10','40','50','60')
+         ORDER BY A.ACT_ID ASC ) B
+         WHERE TF.FORM_ID = A.FORM_ID
+           AND A.ACT_ID = B.ACT_ID         
+           AND lineset_id = #empSeq#
+           AND lineset_dept_user_gb = 'm'
+           <isNotEmpty property="allComp">
+    	   AND A.comp_seq <iterate prepend="IN" property="allComp" open="(" close=")" conjunction=",">#allComp[]#</iterate>
+    	   </isNotEmpty>        
+         ORDER BY A.LINE_SEQ ASC
+    </select>
+    
+	<update id="EmpManage.updateMustKyuljae" parameterClass="hashmap">
+        UPDATE $DB_NEOS$TEAG_LINESET_RULE
+		    SET lineset_id = #targetSeq#
+		    WHERE form_id = #formID#
+		    AND act_id = #actID#
+		    AND lineset_id = #empSeq#
+    </update>
+    
+    <delete id="EmpManage.deleteMustKyuljae" parameterClass="hashmap">
+        DELETE FROM $DB_NEOS$TEAG_LINESET_RULE
+            WHERE lineset_id = #empSeq#
+    </delete>
+    
+    <select id="EmpManage.getDocAdm" resultClass="java.util.HashMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+        /* EmpManage.getDocAdm */
+        SELECT A.comp_id, A.dir_cd, D.dir_nm,
+            (SELECT dir_nm FROM $DB_EDMS$doc_directory WHERE comp_id=A.comp_id AND dir_type='W' AND dir_cd=SUBSTR(A.dir_cd, 1, LENGTH(A.dir_cd)-3)) AS parent_dir_nm
+        FROM $DB_EDMS$doc_adm A, $DB_EDMS$doc_directory D
+        WHERE A.comp_id= #groupSeq# AND A.mbr_id= #empSeq#
+            AND A.comp_id=D.comp_id AND A.dir_cd=D.dir_cd AND D.dir_type='W';
+    ]]>
+    </select>
+    
+    <select id="EmpManage.getBoardAdm" resultClass="java.util.HashMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+        /* EmpManage.getBoardAdm */
+        SELECT *, (CASE WHEN parent_dir_nm IS NULL THEN cat_title
+               ELSE CONCAT(parent_dir_nm, ' > ', cat_title)
+               END) AS cat_nm
+			FROM (               
+			SELECT TBL_A.*,
+			    (CASE WHEN LENGTH(dir_cd)>3
+			    THEN
+			        (SELECT dir_nm FROM $DB_EDMS$Board_DIRECTORY WHERE comp_id=TBL_A.comp_id AND dir_cd=SUBSTR(TBL_A.dir_cd, 1, LENGTH(TBL_A.dir_cd)-3))
+			    ELSE
+			        NULL
+			    END) AS parent_dir_nm
+			FROM (
+			    SELECT B.comp_id, B.cat_seq_no, C.cat_title, C.project_id,
+			        (SELECT dir_cd FROM $DB_EDMS$Board_DIRECTORY WHERE comp_id=B.comp_id AND cat_seq_no=B.cat_seq_no) AS dir_cd
+			    FROM $DB_EDMS$board_adm    B, $DB_EDMS$BOARD_CATEGORY C
+			    WHERE B.comp_id= #groupSeq# AND B.mbr_id= #empSeq# 
+			        AND B.comp_id=C.comp_id AND B.cat_seq_no=C.cat_seq_no AND C.project_id = 'N'
+			) TBL_A ) a
+    ]]>
+    </select>
+    
+    <select id="EmpManage.isMasterYn" resultClass="java.util.HashMap" parameterClass="java.util.HashMap">
+    SELECT admin_use_yn, cus_use_yn, master_use_yn FROM $DB_NEOS$t_co_emp_option
+    WHERE emp_seq = #empSeq#
+    </select>
+    
+    <update id="EmpManage.updateDocAdm" parameterClass="hashmap">
+        UPDATE $DB_EDMS$DOC_ADM  SET  MBR_ID = #targetSeq#  WHERE COMP_ID = #groupSeq# AND MBR_ID= #empSeq# AND DIR_CD = #docPk# ;
+    </update>
+    
+    <update id="EmpManage.updateBoardAdm" parameterClass="hashmap">
+        UPDATE $DB_EDMS$BOARD_ADM  SET  MBR_ID = #targetSeq#  WHERE COMP_ID = #groupSeq# AND MBR_ID= #empSeq# AND CAT_SEQ_NO = #boardPk#;
+    </update>
+    
+    <select id="EmpManage.selectBoardAdmCnt" parameterClass="hashmap" resultClass="String">
+    	SELECT COUNT(cat_seq_no) FROM $DB_EDMS$BOARD_ADM WHERE MBR_ID= #targetSeq# AND CAT_SEQ_NO = #boardPk#;
+    </select>
+    
+    
+    <delete id="EmpManage.deleteDocAdm" parameterClass="hashmap">
+        DELETE FROM $DB_EDMS$DOC_ADM    where comp_id = #groupSeq# and mbr_id = #empSeq# ;
+    </delete>
+    
+    <delete id="EmpManage.deleteBoardAdm" parameterClass="hashmap">
+            DELETE FROM $DB_EDMS$BOARD_ADM    where comp_id = #groupSeq# and mbr_id = #empSeq# ;
+    </delete>    
+    
+    <select id="EmpManage.isMailUse" parameterClass="hashmap" resultClass="String">
+        select comp_email_yn from $DB_NEOS$t_co_comp where comp_seq = #compSeq#
+    </select>
+    
+    <select id="EmpManage.getMailDomain" parameterClass="hashmap" resultClass="String">
+        SELECT email_domain FROM $DB_NEOS$t_co_comp where comp_seq = #compSeq#
+    </select>
+    
+    <select id="EmpManage.getValidateList" resultClass="java.util.HashMap" parameterClass="java.util.HashMap">
+	
+		select ifnull(b.emp_seq,'') as emp_seq, ifnull(b.email_addr,'') as email_addr, a.*,c.pic_file_dir,
+		case when b.emp_seq is null then '-1' when c.pic_file_dir is null then '-2' else '1' end as check_code
+		from
+		(
+		select '' as seq,'' as login_id,'' as emp_name,'' as pic_file_id
+       		<iterate property="excelContentList" prepend=" union select " open="" close=""  conjunction=" union select " >
+	   	   		#excelContentList[].C0#, #excelContentList[].C1#, #excelContentList[].C2#, #excelContentList[].C3#
+       		</iterate>
+		) a
+		left join $DB_NEOS$t_co_emp b on a.login_id=b.login_id
+		left join 
+		(
+		  select '' as pic_file_dir
+			<iterate property="imgList" prepend=" union select " open="" close=""  conjunction=" union select " >
+				#imgList[]#
+			</iterate>		  
+		) c on a.pic_file_id=SUBSTRING(c.pic_file_dir,INSTR(c.pic_file_dir,'/') + 1,LENGTH(c.pic_file_dir))
+		where a.seq != ''
+		order by a.seq	
+
+    </select>   
+    
+	<delete id="EmpManage.deleteBatchList" parameterClass="java.util.HashMap">
+		DELETE FROM $DB_NEOS$t_co_emp_batch 
+		WHERE
+			created_seq = #createdSeq#
+	</delete>     
+    
+	<insert id="EmpManage.insertValidateList" parameterClass="java.util.HashMap">
+		insert into $DB_NEOS$t_co_emp_batch
+			(batch_key, created_seq, seq, login_id, email_addr, login_passwd, emp_name_kr, emp_name_en, emp_name_jp, emp_name_cn, sy_type, join_day, comp_seq, dept_seq, position_code, duty_code, erp_emp_num, job_code, status_code, mobile_tel_num, tel_num, fax_num, zip_code, addr, detail_addr, home_tel_num, home_zip_code, home_addr, home_detail_addr, bday, wedding_day, gender_code, check_work_yn) VALUES
+       		<iterate property="excelContentList" prepend="" open="" close=""  conjunction="," >
+	   	   		(#batch_key#, #createdSeq#, #excelContentList[].num#,
+	   	   		#excelContentList[].C1#,
+	   	   		LOWER(#excelContentList[].C2#),
+	   	   		#excelContentList[].C3#,
+	   	   		#excelContentList[].C4#,
+	   	   		#excelContentList[].C5#,
+	   	   		#excelContentList[].C6#,
+	   	   		#excelContentList[].C7#,
+	   	   		#excelContentList[].C8#,
+	   	   		#excelContentList[].C9#,
+	   	   		#excelContentList[].C10#,
+	   	   		#excelContentList[].C12#,
+	   	   		#excelContentList[].C14#,
+	   	   		#excelContentList[].C16#,
+	   	   		#excelContentList[].C18#,
+	   	   		#excelContentList[].C19#,
+	   	   		#excelContentList[].C20#,
+	   	   		#excelContentList[].C21#,
+	   	   		#excelContentList[].C22#,
+	   	   		#excelContentList[].C23#,
+	   	   		#excelContentList[].C24#,
+	   	   		#excelContentList[].C25#,
+	   	   		#excelContentList[].C26#,
+	   	   		#excelContentList[].C27#,
+	   	   		#excelContentList[].C28#,
+	   	   		#excelContentList[].C29#,
+	   	   		#excelContentList[].C30#,
+	   	   		#excelContentList[].C31#,
+	   	   		#excelContentList[].C32#,
+	   	   		#excelContentList[].C33#,
+	   	   		#excelContentList[].C34#
+	   	   		)
+       		</iterate>
+	
+
+    </insert>    
+    
+	<select id="EmpManage.getEmpValidateList" resultClass="java.util.HashMap" parameterClass="java.util.HashMap">
+	
+		select batch.seq, batch.emp_name_kr, batch.login_id, batch.email_addr, 
+		case when comp.group_seq is not null then 0 else -1 end as check_comp,
+    	case when comp_auth.comp_seq is not null then 0 else -1 end as check_auth,
+    	case when dept.dept_seq is not null then 0 else -1 end as check_dept,
+		case when ifnull(batch.emp_name_kr,'') != '' then 0 else -1 end as check_emp_name,
+		case when (select count(*) from $DB_NEOS$t_co_emp where login_id = batch.login_id) = 0 and (select count(*) from $DB_NEOS$t_co_emp_batch where t_co_emp_batch.batch_key = #batch_key# and login_id = batch.login_id) = 1 and ifnull(batch.login_id,'') != '' then 0 else -1 end as check_login_id,
+		case when (select count(*) from $DB_NEOS$t_co_emp where email_addr = batch.email_addr) = 0 and (select count(*) from $DB_NEOS$t_co_emp_batch where t_co_emp_batch.batch_key = #batch_key# and email_addr = batch.email_addr) = 1 and ifnull(batch.email_addr,'') != '' then 0 else -1 end as check_mail,		
+		case when cd1.dp_seq is not null then 0 else -1 end as check_position,
+		case when cd2.dp_seq is not null then 0 else -1 end as check_duty,
+		case when batch.join_day is not null AND batch.join_day != '' then 0 else -1 end as check_join_day,
+		case when length(ifnull(batch.login_passwd,'')) > 0 then 0 else -1 end as check_pw,
+    	case when op1.option_value='1' and concat('|',op2.option_value,'|') like concat('%|',batch.login_id,'|%') then -1 else 0 end as check_block_login_id,
+    	case when op1.option_value='1' and concat('|',op2.option_value,'|') like concat('%|',batch.email_addr,'|%') then -1 else 0 end as check_block_mail,		
+		case when batch.sy_type = $DB_NEOS$get_code_detail_info('0', 'COM518', 'gw', #langCode#) then '1' 
+		when batch.sy_type = $DB_NEOS$get_code_detail_info('0', 'COM518', 'mail', #langCode#) then '2'  
+		when batch.sy_type = $DB_NEOS$get_code_detail_info('0', 'COM530', '3', #langCode#) then '3' else '' end as license_check_yn
+		from $DB_NEOS$t_co_emp_batch batch
+		left join $DB_NEOS$t_co_comp comp on batch.comp_seq = comp.comp_cd
+    	left join $DB_NEOS$t_co_comp comp_auth on batch.comp_seq = comp_auth.comp_cd and (''=#compSeq# or comp_auth.comp_seq=#compSeq#)
+    	left join $DB_NEOS$t_co_dept dept on comp.comp_seq = dept.comp_seq and batch.dept_seq = dept.dept_cd and dept.use_yn = 'Y'
+		left join $DB_NEOS$t_co_comp_duty_position cd1 on cd1.use_yn='Y' and cd1.dp_type='POSITION' and batch.position_code = cd1.dp_seq and ((select comp_seq from $DB_NEOS$t_co_comp where comp_cd = batch.comp_seq limit 1) = cd1.comp_seq or cd1.comp_seq = 0)
+		left join $DB_NEOS$t_co_comp_duty_position cd2 on cd2.use_yn='Y' and cd2.dp_type='DUTY' and batch.duty_code = cd2.dp_seq and ((select comp_seq from $DB_NEOS$t_co_comp where comp_cd = batch.comp_seq limit 1) = cd2.comp_seq or cd2.comp_seq = 0)
+    	left join $DB_NEOS$tcmg_optionvalue op1 on op1.co_id='0' and op1.option_id='cm200'
+    	left join $DB_NEOS$tcmg_optionvalue op2 on op2.co_id='0' and op2.option_id='cm206'		
+		where batch.batch_key = #batch_key#	
+		order by CONVERT(batch.seq,INT)
+
+    </select>
+    
+	<select id="EmpManage.getEmpBatchList" resultClass="java.util.HashMap" parameterClass="java.util.HashMap">
+		select
+		batch.batch_key, batch.created_seq, batch.seq,
+		batch.emp_name_kr as empName,
+		batch.emp_name_en as empNameEn,
+		batch.emp_name_jp as empNameJp,
+		batch.emp_name_cn as empNameCn,
+		batch.login_passwd as loginPassword,
+		batch.login_passwd as loginPasswdNew,
+		ifnull(batch.check_work_yn,'Y') as checkWorkYn,
+		batch.bday as bday,
+		batch.duty_code as dutyCode,
+		batch.email_addr as emailAddr,
+		'' as empNum,
+		batch.erp_emp_num as erpEmpNum,
+		case when batch.gender_code = '여' then 'F' else 'M' end as genderCode,
+		batch.home_tel_num as homeTelNum,
+		case batch.job_code when $DB_NEOS$get_code_detail_info('0', 'COM503', '1', #langCode#) then '1' 
+		when $DB_NEOS$get_code_detail_info('0', 'COM503', '3', #langCode#) then '3' else '2' end as jobCode,
+		batch.join_day as joinDay,
+		case batch.sy_type when $DB_NEOS$get_code_detail_info('0', 'COM518', 'gw', #langCode#) then '1' 
+		when $DB_NEOS$get_code_detail_info('0', 'COM518', 'mail', #langCode#) then '2' 
+		when $DB_NEOS$get_code_detail_info('0', 'COM530', '3', #langCode#) then '3' else '1' end as licenseCheckYn,
+		batch.login_id as loginId,
+		case when batch.bday like '%음%' then 'N' else 'Y' end as lunarYn,
+		cc.comp_seq as mainCompSeq,
+		case batch.sy_type when $DB_NEOS$get_code_detail_info('0', 'COM518', 'gw', #langCode#) then 'Y' else 'N' end as messengerUseYn,
+		batch.mobile_tel_num as mobileTelNum,
+		case batch.sy_type when $DB_NEOS$get_code_detail_info('0', 'COM518', 'gw', #langCode#) then 'Y' else 'N' end as mobileUseYn,
+		ifnull(cc.native_lang_code,'kr') as nativeLangCode,
+		batch.position_code as positionCode,
+		'10' as shift,
+		case batch.status_code when $DB_NEOS$get_code_detail_info('0', 'COM504', '2', #langCode#) then '2' 
+		when $DB_NEOS$get_code_detail_info('0', 'COM504', '3', #langCode#) then '3' else '1' end as statusCode,
+		batch.wedding_day as weddingDay,
+		case when ifnull(batch.wedding_day,'') = '' then 'N' else 'Y' end as weddingYn,
+		'999' as workStatus,
+		batch.home_zip_code as zipCode,
+		batch.home_addr as addr,
+		batch.home_detail_addr as detailAddr,
+		cc.comp_seq as compSeq,
+		cd.dept_seq as deptSeq,
+		batch.fax_num as faxNum,
+		batch.tel_num as telNum,
+		batch.zip_code as deptZipCode,
+		batch.addr as deptAddr,
+		batch.detail_addr as deptDetailAddr,
+		'Y' as orgchartDisplayYn,
+		'Y' as messengerDisplayYn
+		from $DB_NEOS$t_co_emp_batch batch
+		join $DB_NEOS$t_co_comp cc on batch.comp_seq=cc.comp_cd
+		join $DB_NEOS$t_co_dept cd on batch.dept_seq=cd.dept_cd and cd.comp_seq = cc.comp_seq
+		where batch.batch_key = #batchKey# and batch.seq in 
+   		<iterate property="saveList" prepend="" open="(" close=")"  conjunction="," >
+	   		#saveList[].seq#
+   		</iterate>		
+    </select>               
+    
+    <select id="ApprovalLineDAO.selectDraftDocKyuljaeline" parameterClass="hashMap" resultClass="egovMap">
+    	SELECT * FROM
+    	$DB_NEOS$teag_appdoc
+    	WHERE user_id = #klUserKey#
+    	AND doc_sts in ('20','30') AND doc_sts is not null AND use_yn='1'
+    
+    </select>
+        
+    <update id="EmpManage.updateEmpPicFileId" parameterClass="hashMap">
+    	UPDATE 	$DB_NEOS$t_co_emp
+    	SET
+    		<isEqual property="imgSeq" compareValue="profile">
+    		pic_file_id = #fileId#
+    		</isEqual>
+    		<isEqual property="imgSeq" compareValue="sign">
+    		sign_file_id = #fileId#
+    		</isEqual>
+   		WHERE
+   			emp_seq = #empSeq#
+    </update>
+    
+    <select id="EmpManage.getAttendTimeInfo" parameterClass="hashMap" resultClass="egovMap">
+		select *From $DB_NEOS$t_at_att_base_time
+		where comp_seq = #compSeq#
+		<isEqual property="weekYn" compareValue="Y">
+			and week_sqno = '7'
+		</isEqual>
+    	<isEqual property="weekYn" compareValue="N">
+			and week_sqno = '10'
+		</isEqual>
+		
+		
+    </select>
+    
+    
+	<select id="EmpManage.getGwCntInfo" parameterClass="hashMap" resultClass="egovMap">
+    	select
+			(select count(A.emp_seq) from $DB_NEOS$t_co_emp_dept A
+			inner join $DB_NEOS$t_co_emp_comp B on A.emp_seq = B.emp_seq AND A.comp_seq = B.comp_seq
+			inner join $DB_NEOS$t_co_emp C ON A.emp_seq = C.emp_seq
+			where A.main_dept_yn='Y' AND B.use_yn='Y' AND (B.work_status IN ('999','004') or B.work_status = '004') AND B.use_yn='Y' AND (C.license_check_yn = '1' or C.license_check_yn is null) and A.comp_seq = #compSeq# AND A.group_seq = #groupSeq#
+			)cntGw,
+			(select count(A.emp_seq) from $DB_NEOS$t_co_emp_dept A
+			inner join $DB_NEOS$t_co_emp_comp B on A.emp_seq = B.emp_seq AND A.comp_seq = B.comp_seq
+			inner join $DB_NEOS$t_co_emp C ON A.emp_seq = C.emp_seq
+			where A.main_dept_yn='Y' AND B.use_yn='Y' AND (B.work_status IN ('999','004') or B.work_status = '004') AND B.use_yn='Y' AND (C.license_check_yn = '2') and A.comp_seq = #compSeq# AND A.group_seq = #groupSeq#
+			)cntMail,
+			(select count(A.emp_seq) from $DB_NEOS$t_co_emp_dept A
+			inner join $DB_NEOS$t_co_emp_comp B on A.emp_seq = B.emp_seq AND A.comp_seq = B.comp_seq
+			inner join $DB_NEOS$t_co_emp C ON A.emp_seq = C.emp_seq
+			where A.main_dept_yn='Y' AND B.use_yn='N' AND B.use_yn='N' AND (C.license_check_yn = '3') and A.comp_seq = #compSeq# AND A.group_seq = #groupSeq#
+			)cntNoneLicense
+    </select>
+
+
+
+
+
+    <select id="EmpManage.getMailInfo" parameterClass="hashmap" resultClass="egovMap">
+    	SELECT
+    		a.email_domain
+    		,b.mail_url
+    		,a.comp_email_yn
+   		FROM
+   			$DB_NEOS$t_co_comp a
+   		INNER JOIN
+   			$DB_NEOS$t_co_group b on a.group_seq = b.group_seq
+   		WHERE
+   			a.comp_seq = #compSeq#  
+   		limit 1
+    </select>
+    
+    
+    <select id="EmpManage.getEmpBatchCompList" parameterClass="hashmap" resultClass="egovMap">
+    	SELECT DISTINCT
+    		comp_seq
+    	FROM
+    		$DB_NEOS$t_co_emp_batch
+    	WHERE
+    		batch_key = #retKey#    
+    </select>
+    
+    <select id="EmpManage.selectEmpMailUseYn" parameterClass="hashmap" resultClass="egovMap">
+    	SELECT comp_email_yn
+    	FROM $DB_NEOS$t_co_comp
+    	WHERE comp_seq = #compSeq#
+    	limit 1
+    </select>
+    
+    
+    <select id="EmpManage.getEmpMasterAuth" parameterClass="hashmap" resultClass="String">
+    	select
+    		count(emp_seq)
+   		from
+   			$DB_NEOS$t_co_emp_option
+  		where
+  			emp_seq = #empSeq#
+  			and master_use_yn = 'Y'
+    </select>
+    
+    
+    <select id="EmpMange.getEmpCompList" parameterClass="hashmap" resultClass="egovMap">			
+		select distinct 
+    		c.comp_seq, c.email_domain, b.mail_url
+   		from 
+   			$DB_NEOS$t_co_emp e
+   			LEFT JOIN $DB_NEOS$t_co_emp_dept ed
+				ON	e.emp_seq = ed.emp_seq AND e.group_seq = ed.group_seq
+			LEFT JOIN $DB_NEOS$t_co_comp c
+				ON	ed.comp_seq = c.comp_seq AND e.group_seq = c.group_seq
+   		inner join
+   			$DB_NEOS$t_co_group b on e.group_seq = b.group_seq	
+   		where 
+ 			e.emp_seq = #empSeq#
+ 			and e.use_yn != 'D'
+ 			<isNotEmpty property="isAll">
+            <isEqual property="isAll" compareValue="N" > 
+			     AND c.comp_seq = #compSeq#
+			</isEqual>
+			</isNotEmpty>	
+    
+    </select>
+    
+    <delete id="EmpManage.empCompDel" parameterClass="hashmap">
+    	delete from $DB_NEOS$t_co_emp_comp
+    	where emp_seq = #empSeq# 
+    	<isNotEmpty property="isAll">
+            <isEqual property="isAll" compareValue="N" > 
+            	and comp_seq = #compSeq# 
+			</isEqual>
+		</isNotEmpty>
+    </delete>
+    
+    
+    <delete id="EmpManage.deleteEmpMasterAuth" parameterClass="hashmap">
+    	delete from $DB_NEOS$t_co_emp_option    	
+    	where
+    	emp_seq = #empSeq#    
+    </delete>
+    
+    <insert id="EmpManage.insertSubUserMasterAuth" parameterClass="hashmap">
+    	INSERT INTO $DB_NEOS$`t_co_emp_option`
+			SET 
+				emp_seq 				    = 			#masterSubEmpSeq#,
+				admin_use_yn 				= 			null,
+				cus_use_yn					= 			null,				
+				master_use_yn 				= 			'Y',
+				create_seq 					= 			#modifySeq#,
+				create_date					=			now()			
+			ON DUPLICATE KEY UPDATE
+				master_use_yn				= 			'Y',
+				modify_seq					=			#modifySeq#,
+				modify_date					=			now()
+    
+    </insert>
+    
+    
+    <select id="EmpManage.getMainCompSeq" parameterClass="hashmap" resultClass="String">
+    	select
+    		main_comp_seq
+    	from
+    		$DB_NEOS$t_co_emp
+    	where emp_seq = #empSeq#
+    
+    </select>
+    
+    
+    <update id="EmpManage.updateEmpMainCompSeq" parameterClass="hashmap">
+    	update
+    		$DB_NEOS$t_co_emp
+    	set
+    		main_comp_seq = (select distinct comp_seq from $DB_NEOS$t_co_emp_dept where emp_seq = #empSeq# AND comp_seq != #compSeq# limit 1)
+    	where
+    		emp_seq = #empSeq#
+    </update>
+    
+    
+    <select id="EmpManage.getCompMailDomainList" parameterClass="hashmap" resultClass="egovMap">				
+		SELECT c.comp_seq 
+		      ,c.email_domain		      
+			 FROM $DB_NEOS$t_co_emp e
+			 LEFT JOIN $DB_NEOS$t_co_emp_dept ed
+				ON	e.emp_seq = ed.emp_seq AND e.group_seq = ed.group_seq
+			 LEFT JOIN $DB_NEOS$t_co_comp c
+				ON	e.group_seq = c.group_seq AND ed.comp_seq = c.comp_seq
+			 LEFT JOIN $DB_NEOS$t_co_emp_comp ec
+				ON	ec.comp_seq = c.comp_seq AND e.emp_seq = ec.emp_seq
+			LEFT JOIN $DB_NEOS$t_co_comp_multi cm
+				ON c.comp_seq = cm.comp_seq AND cm.lang_code = 'kr'
+			LEFT JOIN $DB_NEOS$t_co_dept_multi dm
+				ON dm.group_seq = e.group_seq AND c.comp_seq = dm.comp_seq AND ed.dept_Seq = dm.dept_Seq AND dm.lang_code = 'kr'
+			LEFT JOIN $DB_NEOS$t_co_emp_multi em
+				ON em.emp_seq = e.emp_seq AND e.group_seq = em.group_seq AND em.lang_code = 'kr'
+			WHERE emp_seq = #empSeq#
+				AND ec.work_status IN ('999','004')
+				AND ec.use_yn = 'Y'
+				AND e.use_yn = 'Y'
+				AND ed.use_yn = 'Y'				
+				AND cm.use_yn = 'Y'
+				AND dm.use_yn = 'Y'
+				AND ed.main_dept_yn = 'Y'
+				ORDER BY c.comp_seq,ed.main_dept_yn DESC,ed.order_num  	
+    </select>
+    
+    <select id="EmpManage.selectEmpInfo" parameterClass="hashmap" resultClass="egovMap">
+    	SELECT emp_seq, group_seq, login_id, email_addr
+    	FROM $DB_NEOS$t_co_emp
+    	WHERE emp_seq = #empSeq#
+    	limit 1
+    </select>
+    
+    
+    <select id="EmpManage.getEmpMainCompSeq" parameterClass="hashmap" resultClass="egovMap">
+    	SELECT
+    		e.main_comp_seq,
+    		CASE WHEN (SELECT COUNT(*) FROM $DB_NEOS$t_co_emp_comp WHERE use_yn = 'Y' AND work_status != '001' AND emp_seq=e.emp_seq) = 1 THEN 'Y' ELSE e.main_comp_login_yn END AS main_comp_login_yn
+    	FROM
+    		$DB_NEOS$t_co_emp e
+    	WHERE
+    		e.emp_seq = #empSeq#    
+    	LIMIT 1	
+    </select>
+    
+    <select id="EmpManage.getEmpJobList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT detail_code,$DB_NEOS$FN_GetMultiLang(#langCode#,detail_name_multi) as detail_name
+		FROM $DB_NEOS$v_t_co_code_detail_multi 
+		WHERE code='COM503'
+		ORDER BY order_num
+	</select>
+	
+	<select id="EmpManage.getEmpStatusList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT detail_code,$DB_NEOS$FN_GetMultiLang(#langCode#,detail_name_multi) as detail_name
+		FROM $DB_NEOS$v_t_co_code_detail_multi 
+		WHERE code='COM504'
+		ORDER BY order_num
+	</select>
+    
+    <select id="Empmanage.getEmpInfo" parameterClass="hashmap" resultClass="egovMap">
+	    select
+	    (select comp_name from $DB_NEOS$t_co_comp_multi where comp_seq=d.comp_seq order by case when lang_code = #langCode# then 'zz' else lang_code end desc limit 1) as compName,
+	    (select biz_name from $DB_NEOS$t_co_biz_multi where biz_seq=d.biz_seq order by case when lang_code = #langCode# then 'zz' else lang_code end desc limit 1) as bizName,
+	    (select dept_name from $DB_NEOS$t_co_dept_multi where dept_seq=d.dept_seq order by case when lang_code = #langCode# then 'zz' else lang_code end desc limit 1) as deptName,
+	    REPLACE($DB_NEOS$get_dept_pathNm('|',#deptSeq#,#groupSeq#,#langCode#),'|','-') path_name,
+	    (select dept_name from $DB_NEOS$t_co_dept_multi where dept_seq=ifnull(d.display_dept_seq, d.dept_seq) order by (case when lang_code = #langCode# then 'zz' else lang_code end) desc limit 1) as displayDeptName,
+	    d.vir_dept_yn,
+	    d.team_yn
+	    from $DB_NEOS$t_co_dept d
+	    where d.dept_seq = #deptSeq#
+    </select>
+    
+    <select id="Empmanage.getEmpAuthCheck" parameterClass="hashmap" resultClass="egovMap">
+		select c.comp_seq, ed.dept_seq, e.emp_seq, ec.erp_emp_seq, e.login_id, b.absol_path
+    	from $DB_NEOS$t_co_emp e
+    	LEFT JOIN $DB_NEOS$t_co_emp_dept ed
+				ON	e.emp_seq = ed.emp_seq AND e.group_seq = ed.group_seq
+		LEFT JOIN $DB_NEOS$t_co_comp c
+				ON	e.group_seq = c.group_seq AND ed.comp_seq = c.comp_seq
+		LEFT JOIN $DB_NEOS$t_co_emp_comp ec
+				ON	ec.comp_seq = c.comp_seq AND e.emp_seq = ec.emp_seq
+    	join $DB_NEOS$t_co_group_path b on b.path_seq = '0' and e.group_seq = b.group_seq and b.os_type = #osType#
+		<isNotEmpty property="kicpaNum">
+		join $DB_NEOS$t_custom_kicpa k on e.emp_seq = k.emp_seq and k.kicpa_num = #kicpaNum#
+		</isNotEmpty>
+		where ec.work_status IN ('999','004') and ec.use_yn = 'Y' and ed.main_dept_yn = 'Y' and e.use_yn != 'D'
+		<isNotEmpty property="compSeq">
+			and c.comp_seq = #compSeq#		
+		</isNotEmpty>
+		<isNotEmpty property="compCd">
+			and c.comp_cd = #compCd#		
+		</isNotEmpty>		
+		<isNotEmpty property="erpSeq">
+			and ec.erp_emp_seq = #erpSeq#
+		</isNotEmpty>
+		<isNotEmpty property="loginId">
+			and e.login_id = #loginId#
+		</isNotEmpty>
+		<isNotEmpty property="empSeq">
+			and e.emp_seq = #empSeq#
+		</isNotEmpty>
+		limit 1
+    </select>    
+    
+    <select id="Empmanage.getLoginVOInfo" parameterClass="hashmap" resultClass="egovMap">
+    	SELECT M.LOGIN_ID AS USER_ID, M.EMP_SEQ AS PASSWORD, 1 ENABLED, $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(M.emp_seq, null),O.EMP_NAME_MULTI) AS USER_NM
+                                , M.EMAIL_ADDR AS USER_EMAIL, 'USER' AS USER_SE, N.DEPT_SEQ AS ORGNZT_ID, M.EMP_SEQ AS ESNTL_ID
+                                , (SELECT $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(M.emp_seq,null),A.dept_name_multi)
+                                     FROM $DB_NEOS$v_t_co_dept_multi A
+                                    WHERE A.DEPT_SEQ = N.DEPT_SEQ LIMIT 1) ORGNZT_NM
+                                , N.duty_code AS CLASS_CODE
+                                , N.position_code as POSITION_CODE
+                                , $DB_NEOS$get_emp_duty_position_name(N.GROUP_SEQ, N.comp_seq, N.duty_code, 'DUTY', $DB_NEOS$get_lang_code(M.emp_seq, null)) as CLASS_NM
+                                , $DB_NEOS$get_emp_duty_position_name(N.GROUP_SEQ, N.comp_seq, N.position_code, 'POSITION', $DB_NEOS$get_lang_code(M.emp_seq, null)) as POSITION_NM
+                                , N.COMP_SEQ AS ORGAN_ID
+                                , (SELECT $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(M.emp_seq, null),F.COMP_NAME_MULTI)
+                                     FROM $DB_NEOS$v_t_co_comp_multi F WHERE N.COMP_SEQ=F.COMP_SEQ LIMIT 1) AS ORGAN_NM
+                                , $DB_NEOS$get_auth_group_concat(N.COMP_SEQ, N.DEPT_SEQ, M.EMP_SEQ, N.DUTY_CODE, N.POSITION_CODE) AS AUTHOR_CODE
+                                ,(SELECT erp_emp_seq FROM $DB_NEOS$t_co_emp_comp WHERE comp_seq = N.COMP_SEQ AND emp_seq = N.EMP_SEQ LIMIT 1) AS ERP_EMP_CD
+                                , '' AS ERP_EMP_NM
+                                ,IFNULL((SELECT erp_comp_seq FROM $DB_NEOS$t_co_erp_comp WHERE comp_seq = N.COMP_SEQ LIMIT 1), '') AS ERP_CO_CD
+                                ,M.EMP_NUM AS EMPL_NO
+                                ,$DB_NEOS$get_lang_code(M.emp_seq,null) as LANG_CODE
+                                ,N.GROUP_SEQ
+                                ,N.COMP_SEQ
+                                ,N.BIZ_SEQ
+                                ,PIC_FILE_ID
+                                ,N.DEPT_SEQ
+                                , IF( IFNULL(TCC.email_domain,'') = '', IFNULL(M.out_domain,''), TCC.email_domain ) AS EMAIL_DOMAIN
+                                ,TCC.EA_TYPE
+                                ,IFNULL((SELECT erp_biz_seq FROM $DB_NEOS$t_co_erp_biz WHERE comp_seq = N.COMP_SEQ AND biz_seq = N.BIZ_SEQ LIMIT 1), '') AS ERP_BIZ_CD
+                                ,IFNULL((SELECT erp_dept_seq FROM $DB_NEOS$t_co_erp_dept WHERE comp_seq = N.COMP_SEQ AND biz_seq = N.BIZ_SEQ AND dept_seq = N.DEPT_SEQ LIMIT 1), '') AS ERP_DEPT_CD
+                                ,M.MAIN_COMP_SEQ = N.COMP_SEQ AS OrderFlag  
+                                ,NOW() AS last_login_date             
+                                ,license_check_yn AS licenseCheckYn
+                                ,IFNULL(M.passwd_date, NOW()) AS passwdChangeDate
+                                ,date_format(now(6),'%Y-%m-%d %H:%i:%s.%f') AS lastLoginDateTime
+                                ,tcd.path as orgnztPath                                           
+                           FROM $DB_NEOS$T_CO_EMP M, $DB_NEOS$T_CO_EMP_DEPT N, $DB_NEOS$V_T_CO_EMP_MULTI O, $DB_NEOS$T_CO_COMP TCC, $DB_NEOS$t_co_dept tcd
+                           WHERE M.EMP_SEQ = N.EMP_SEQ
+                           AND M.EMP_SEQ = O.EMP_SEQ
+                           AND M.WORK_STATUS IN ('999','004')
+                           AND N.dept_seq = tcd.dept_seq
+                           AND N.COMP_SEQ = TCC.COMP_SEQ
+                           AND M.GROUP_SEQ = #groupSeq#
+						   AND M.LOGIN_ID = #loginId#
+						   <isNotEmpty property="deptSeq">
+						   AND N.dept_seq = #deptSeq#
+						   </isNotEmpty>
+						   <isEmpty property="deptSeq">
+						   AND N.MAIN_DEPT_YN = 'Y'
+						   </isEmpty>                           
+                           AND M.USE_YN = 'Y'
+                           AND N.USE_YN = 'Y'
+                           AND O.USE_YN = 'Y'
+                           AND TCC.USE_YN = 'Y'
+                           AND TCC.COMP_SEQ = #compSeq#
+                           LIMIT 1
+    </select>
+    
+    
+    <select id="Empmanage.getEmpCheckWorkYn" parameterClass="hashMap" resultClass="String">
+    	SELECT
+    		IFNULL(ec.check_work_yn,'N')
+    	FROM
+    	 	$DB_NEOS$t_Co_emp e
+    	 	LEFT JOIN $DB_NEOS$t_co_emp_dept ed
+				ON	e.emp_seq = ed.emp_seq AND e.group_seq = ed.group_seq
+			LEFT JOIN $DB_NEOS$t_co_comp c
+				ON	e.group_seq = c.group_seq AND ed.comp_seq = c.comp_seq	
+			LEFT JOIN $DB_NEOS$t_co_emp_comp ec
+				ON	ec.comp_seq = c.comp_seq AND e.emp_seq = ec.emp_seq			
+		WHERE e.use_yn != 'D' AND e.group_seq = #groupSeq# AND c.comp_seq = #compSeq# AND ed.dept_seq = #deptSeq# AND e.emp_seq = #empSeq#  
+		limit 1
+    </select>    
+    
+    <select id="Empmanage.getEmpCheckJoinDay" parameterClass="hashMap" resultClass="String">
+    		SELECT
+    			count(*)
+ 			FROM
+ 				$DB_NEOS$t_co_emp
+ 			WHERE
+ 				emp_seq = #empSeq# AND  replace(ifnull(join_day,'0000-00-00'),'-','') <![CDATA[ < ]]> #sToDay#
+    </select>   
+    
+    <select id="Empmanage.getEmpComAttInfo" parameterClass="hashMap" resultClass="egovMap">
+    	SELECT
+    		IFNULL(come_dt, '') come_dt
+    	from
+    		$DB_NEOS$t_at_att
+    	where
+    		comp_seq = #compSeq# and att_date = #sToDay# and emp_seq = #empSeq# and dept_seq = #deptSeq# and att_item_code = '10' 
+    	limit 1    
+    </select>
+    
+   	<select id = "EmpManage.getErpInfo" resultClass="hashmap" parameterClass="hashmap">
+		/* EmpManage.getErpInfo - mariaDB */
+		SELECT 		A.group_seq, 
+					A.comp_seq, 
+					A.erp_seq, 
+					A.erp_type_code, 
+					A.database_type, 
+					A.driver, 
+					A.url, 
+					A.userid, 
+					A.password, 
+					A.erp_comp_seq, 
+					A.erp_comp_name, 
+					A.use_yn
+		FROM  		$DB_NEOS$t_co_erp A
+		WHERE  		A.group_seq = #groupSeq#
+		AND			A.comp_seq = #compSeq#
+		AND 		A.achr_gbn = #erpGubun#
+		AND			A.use_yn = 'Y'
+	</select>
+	
+	 <select id="EmpManage.GetLicenseCheck" parameterClass="hashMap" resultClass="String">
+	 	/* EmpManage.GetGwLicenseCheck - mariaDB*/
+	 	SELECT		count(*) 		AS		licenseCnt
+	 	FROM		$DB_NEOS$t_co_emp
+	 	WHERE		group_seq = #groupSeq#
+	 	AND		    work_status IN ('999','004')
+	 	AND			use_yn = 'Y'
+	 	<isEqual property="licenseGubun" compareValue="gw">
+	 	AND			license_check_yn = '1'
+	 	</isEqual>
+	 	<isEqual property="licenseGubun" compareValue="mail">
+	 	AND			license_check_yn = '2'
+	 	</isEqual>
+	 </select>
+	 
+	 <select id="EmpManage.GetEmpCompList" parameterClass="hashMap" resultClass="egovMap">
+		SELECT
+	 		c.comp_seq
+	 	FROM
+	 		$DB_NEOS$t_co_emp e
+	 		LEFT JOIN $DB_NEOS$t_co_emp_dept ed
+				ON	e.emp_seq = ed.emp_seq AND e.group_seq = ed.group_seq
+			LEFT JOIN $DB_NEOS$t_co_comp c
+				ON	e.group_seq = c.group_seq AND ed.comp_seq = c.comp_seq
+			LEFT JOIN $DB_NEOS$t_co_emp_comp ec
+				ON	ec.comp_seq = c.comp_seq AND e.emp_seq = ec.emp_seq
+		WHERE e.use_yn != 'D' and e.emp_seq = #empSeq# 
+	 </select>
+	 
+	 <select id="EmpManage.getEmpCalendarSeq" parameterClass="hashMap" resultClass="String">
+	 	SELECT IFNULL(max(a.mcal_seq * 1),0)+1 as "mcalSeq"
+		FROM $DB_NEOS$t_sc_mcalendar a		
+		WHERE 1=1	
+	 </select>
+	 
+	 
+	 <insert id="EmpManage.InsertEmpMcalendar" parameterClass="hashMap">
+	 	insert into $DB_NEOS$t_sc_mcalendar
+	 	( 
+				mcal_seq
+		, 		cal_title
+		, 		cal_title_eng
+  		, 		cal_title_jp
+  		, 		cal_title_cn		
+		, 		cal_type		
+		, 		contents
+		, 		open_yn
+		, 		window_type
+		,		cal_type_seq
+		, 		group_seq
+		,		comp_seq
+		, 		use_yn
+		, 		create_seq
+		, 		create_date	)
+		VALUES(		
+				#mcalSeq#
+		, 		concat('개인캘린더.',#empName#)
+		, 		concat('Private calendar.',#empName#)
+		, 		concat('個人カレンダー.',#empName#)
+		, 		concat('个人日历.',#empName#)
+		, 		'E'
+		, 		''
+		,		'Y'
+		, 		'1'
+		,		''
+		, 		#groupSeq#
+		, 		#compSeq#
+		,		'Y'
+		, 		#empSeq#
+		, 		now()		
+				);
+	 </insert>
+	 
+	 
+	 
+	 <insert id="EmpManage.InsertEmpMcalUserCreate" parameterClass="hashMap">
+	 	insert into $DB_NEOS$t_sc_mcal_user
+	 	( 
+				mcal_seq
+				,user_type
+  				,comp_seq
+				,org_type
+				,org_seq
+				,group_seq
+				,dept_seq
+				,use_yn
+				,create_seq
+				,create_date	
+		)
+		VALUES
+		(		
+				#mcalSeq#
+				,'30'
+				,#compSeq#
+				,'E'
+				,#empSeq#
+				,#groupSeq#
+				,#deptSeq#
+				,'Y'
+				,#empSeq#
+				,now()
+		)
+	 </insert>
+	 
+	 
+	 <insert id="EmpManage.InsertEmpMcalUserOwner" parameterClass="hashMap">
+	 	insert into $DB_NEOS$t_sc_mcal_user
+	 	( 
+				mcal_seq
+				,user_type
+  				,comp_seq
+				,org_type
+				,org_seq
+				,group_seq
+				,dept_seq
+				,use_yn
+				,create_seq
+				,create_date	
+		)
+		VALUES
+		(		
+				#mcalSeq#
+				,'90'
+				,#compSeq#
+				,'E'
+				,#empSeq#
+				,#groupSeq#
+				,#deptSeq#
+				,'Y'
+				,#empSeq#
+				,now()
+		)
+	 </insert>
+	 
+	 
+	 
+	 
+	 <insert id="EmpManage.InsertEmpMcalUserStyle" parameterClass="hashMap">
+	 	insert into $DB_NEOS$t_sc_mcal_emp_style
+	 	( 
+				mcal_seq
+				,emp_seq
+			  	,cal_color
+				,window_type	
+				,group_seq
+				,comp_seq
+				,use_yn
+				,create_seq
+				,create_date	
+				,sorting_order
+		)
+		VALUES
+		(		
+				#mcalSeq#
+				,#empSeq#
+				,'##b2e1ff'
+				,'1'
+				,#groupSeq#
+				,#compSeq#
+				,'Y'
+				,#empSeq#
+				,now()
+				,''
+		)
+	 </insert>
+	 
+	 
+	 <select id="EmpManage.checkEmpInsertValidation" parameterClass="hashMap" resultClass="egovMap">
+	 	select 
+		(select count(*) from $DB_NEOS$t_co_comp_duty_position where dp_type ='POSITION' AND dp_seq = #positionCode# AND comp_seq in('0',#compSeq#)) checkPosi,
+		(select count(*) from $DB_NEOS$t_co_comp_duty_position where dp_type ='DUTY' AND dp_seq = #dutyCode# AND comp_seq in('0',#compSeq#)) checkDuty,
+		(select count(*) from $DB_NEOS$t_co_comp where comp_seq = #compSeq#) checkComp,
+		(select count(*) from $DB_NEOS$t_co_dept where dept_seq = #deptSeq# and biz_seq = #bizSeq#) checkdeptBiz,
+		(select count(*) from $DB_NEOS$t_co_emp where login_id = #loginId#) checkId,
+		(select count(*) from $DB_NEOS$t_co_emp where email_addr = #emailAddr#) checkEmailAddr
+		,(select count(*) from $DB_NEOS$t_co_emp where emp_seq = #empSeq#) checkEmpSeq
+		,(select count(*) from $DB_NEOS$t_co_dept where dept_seq = #oldDeptSeq#) checkOldDeptSeq
+	 </select>
+	 
+ 	 <update id="EmpManageService.initPasswordFailcount" parameterClass="hashMap">
+	 	update $DB_NEOS$t_co_emp set passwd_input_fail_count = 0, last_login_date = NOW(), block_date = NULL
+	 	where  emp_seq = #empSeq#
+	 </update>
+	 
+	 
+	 <insert id="EmpManageService.setUserPortlet" parameterClass="hashMap">
+	 	insert into $DB_NEOS$t_co_portlet_user_set
+	 	SET
+	 	 
+				portal_id = #portalId#
+				,portlet_tp = #portletTp#
+			  	,portlet_key = #portletKey#
+				,position = #position#	 
+				,emp_seq = #empSeq#
+				,custom_value0 = #custValue0#
+				,comp_seq = #compSeq#
+		ON DUPLICATE KEY UPDATE
+				portal_id = #portalId#
+				,portlet_tp = #portletTp#
+			  	,portlet_key = #portletKey#
+				,position = #position#	 
+				,emp_seq = #empSeq#
+				,custom_value0 = #custValue0#
+				,comp_seq = #compSeq#
+	 </insert>
+	 
+	 
+	 <delete id="EmpManageService.delEmpMulti" parameterClass="hashmap">
+	 	delete from $DB_NEOS$t_co_emp_multi
+	 	where emp_seq = #empSeq# and lang_code = #langCode#
+	 </delete>
+	 
+	 
+	 <select id="EmpManage.selectExEmpErpNoList" parameterClass="hashmap" resultClass="egovMap">
+		select 
+			count(A.erp_emp_seq) cnt, 
+			e.login_id,
+			$DB_NEOS$FN_GetMultiLang('kr', (SELECT emp_name_multi FROM $DB_NEOS$v_t_co_emp_multi WHERE emp_seq = e.emp_seq)) AS emp_name
+		from $DB_NEOS$t_co_emp_comp A
+		LEFT JOIN $DB_NEOS$t_co_emp e 
+				ON e.emp_seq = A.emp_seq and e.use_yn != 'D'
+		LEFT JOIN $DB_NEOS$t_co_emp_dept ed
+				ON	e.emp_seq = ed.emp_seq AND e.group_seq = ed.group_seq
+		LEFT JOIN $DB_NEOS$t_co_comp c
+				ON	e.group_seq = c.group_seq AND ed.comp_seq = c.comp_seq
+		LEFT JOIN $DB_NEOS$t_co_emp_comp ec
+				ON	ec.comp_seq = c.comp_seq AND e.emp_seq = ec.emp_seq
+		WHERE A.comp_seq = c.comp_seq AND A.dept_seq = ed.dept_seq AND a.group_seq = e.group_seq
+		      AND ec.erp_emp_seq = #empErpNo# and c.comp_seq = #compSeq# 
+			  <isNotEmpty property="empSeq">
+			  	and e.emp_seq != #empSeq#
+			  </isNotEmpty>
+		limit 1		
+	</select>
+	
+	<select id="EmpManage.selectGerpUserInfo" parameterClass="hashmap" resultClass="egovMap">
+		select 
+		case when ifnull(b.comp_mail_url,'') = '' then d.mail_url else b.comp_mail_url end as email_url,
+		c.email_addr,
+		b.email_domain
+		from $DB_NEOS$t_co_emp_comp a
+		join $DB_NEOS$t_co_comp b on a.comp_seq = b.comp_seq and b.comp_email_yn = 'Y'
+		join $DB_NEOS$t_co_emp c on a.emp_seq = c.emp_seq
+		join $DB_NEOS$t_co_group d on a.group_seq = d.group_seq
+		where a.gerp_no_gemp=#gerpId# and ifnull(b.email_domain,'') != '' and ifnull(c.email_addr,'') != ''
+		limit 1;
+	</select>
+	
+	<update id="EmpManage.updateEmpOutMailInfo" parameterClass="hashmap">
+		update 
+			$DB_NEOS$t_co_emp
+		set
+			out_mail = #outEmail#,
+			out_domain = #outDomainText#
+		where
+			emp_seq = #empSeq#
+	</update>
+	 
+	 
+	<select id="EmpManage.selectTotalSearchEmpInfo" parameterClass="hashmap" resultClass="egovMap">
+		select 
+			e.group_seq as groupSeq
+			,e.emp_seq as empSeq
+			,c.comp_seq as compSeq
+			,ed.dept_seq as deptSeq
+			,ed.position_code as positionCode
+			,ed.duty_code as dutyCode
+			,ifnull($DB_NEOS$FN_GetMultiLang(#langCode#,(select comp_name_multi from $DB_NEOS$v_t_co_comp_multi where comp_Seq = c.comp_seq)), '') as compName
+			,ifnull($DB_NEOS$FN_GetMultiLang(#langCode#,(select emp_name_multi from $DB_NEOS$v_t_co_emp_multi where emp_seq = e.emp_seq)), '') as empName
+			,ifnull($DB_NEOS$FN_GetMultiLang(#langCode#,(select dept_name_multi from $DB_NEOS$v_t_co_dept_multi where dept_seq = ed.dept_seq)), '') as deptName
+			,concat('[',ifnull($DB_NEOS$FN_GetMultiLang(#langCode#,(select comp_name_multi from $DB_NEOS$v_t_co_comp_multi where comp_Seq = c.comp_seq)), ''),']',ifnull($DB_NEOS$FN_GetMultiLang(#langCode#,(select dept_name_multi from $DB_NEOS$v_t_co_dept_multi where dept_seq = ed.dept_seq)), '')) as compDeptName
+			,$DB_NEOS$get_emp_duty_position_name(ed.group_seq,ed.comp_seq,ed.position_code,'POSITION',#langCode#) as positionName
+			,$DB_NEOS$get_emp_duty_position_name(ed.group_seq,ed.comp_seq,ed.duty_code,'DUTY',#langCode#) as dutyName
+			<isNotEmpty property="bDayOptionValue">
+				<isEqual property="bDayOptionValue" compareValue="0">
+				,if(e.private_yn = 'N','',ifnull(date_format(e.bday,'%Y.%m.%d'),'')) as bday	
+				</isEqual>
+				<isEqual property="bDayOptionValue" compareValue="1">
+				,if(e.private_yn = 'N','',substring(ifnull(date_format(e.bday,'%Y.%m.%d'),''), 6)) as bday	
+				</isEqual>
+			</isNotEmpty>
+			<isEmpty property="bDayOptionValue">
+				,if(e.private_yn = 'N','',ifnull(date_format(e.bday,'%Y.%m.%d'),'')) as bday
+			</isEmpty>			
+			,if(instr(e.mobile_tel_num,'--')=0,e.mobile_tel_num,'') as mobileTelNum
+			,if(instr(ed.tel_num,'--')=0,ed.tel_num,'') as telNum
+			,if(instr(ed.fax_num,'--')=0,ed.fax_num,'') as faxNum
+			,CASE e.email_addr
+				WHEN '' THEN ''
+				ELSE 
+					CASE c.email_domain
+						WHEN '' THEN ''
+					ELSE concat(e.email_addr,'@',c.email_domain)
+				END
+			END as emailAddr
+			,ifnull(em.main_work,'') as mainWork
+			,(select voc.path from $DB_NEOS$v_org_chart voc where voc.dept_seq=ed.dept_seq) as orgnztPath
+		from $DB_NEOS$t_co_emp e 
+		LEFT JOIN $DB_NEOS$t_co_emp_dept ed
+				ON	e.emp_seq = ed.emp_seq AND e.group_seq = ed.group_seq
+		LEFT JOIN $DB_NEOS$t_co_comp c
+				ON	e.group_seq = c.group_seq AND ed.comp_seq = c.comp_seq
+		LEFT JOIN $DB_NEOS$t_co_emp_comp ec
+				ON	ec.comp_seq = c.comp_seq AND e.emp_seq = ec.emp_seq
+		LEFT JOIN $DB_NEOS$t_co_comp_multi cm
+				ON c.comp_seq = cm.comp_seq AND cm.lang_code = 'kr'
+		LEFT JOIN $DB_NEOS$t_co_dept_multi dm
+				ON dm.group_seq = e.group_seq AND c.comp_seq = dm.comp_seq AND ed.dept_Seq = dm.dept_Seq AND dm.lang_code = 'kr'
+		LEFT JOIN $DB_NEOS$t_co_emp_multi em
+				ON em.emp_seq = e.emp_seq AND e.group_seq = em.group_seq AND em.lang_code = 'kr'
+		where ec.use_yn='Y' and ec.work_status='999' and ed.main_dept_yn='Y' and e.use_yn != 'D'		
+		<isNotEqual property="termsQueryStr" compareValue="nokeyword">
+			<isEqual property="hrSearchYn" compareValue="N">
+ 				<isEqual property="langCode" compareValue="kr">
+ 					and em.emp_name REGEXP #termsQueryStr#
+ 				</isEqual>
+ 				<isNotEqual property="langCode" compareValue="kr">
+ 					and (select emp_name_multi from $DB_NEOS$v_t_co_emp_multi where emp_seq = e.emp_seq) REGEXP #termsQueryStr#
+ 				</isNotEqual>
+ 			</isEqual>
+ 		</isNotEqual>
+		<isEqual property="termsQueryStr" compareValue="nokeyword">
+			and em.emp_name = ''
+		</isEqual>
+		<isEqual property="hrSearchYn" compareValue="Y">
+			and e.emp_seq = #hrEmpSeq#
+			and e.main_comp_seq = c.comp_seq
+		</isEqual>		
+		order by em.emp_name asc		
+		LIMIT $hrFrom$, $hrSize$
+		
+	</select>
+	
+	<select id="EmpManage.selectTotalSearchEmpInfoCnt" parameterClass="hashmap" resultClass="Integer">
+		select 
+			count(e.emp_seq)
+		from $DB_NEOS$t_co_emp e 
+		LEFT JOIN $DB_NEOS$t_co_emp_dept ed
+				ON	e.emp_seq = ed.emp_seq AND e.group_seq = ed.group_seq
+		LEFT JOIN $DB_NEOS$t_co_comp c
+				ON	e.group_seq = c.group_seq AND ed.comp_seq = c.comp_seq
+		LEFT JOIN $DB_NEOS$t_co_emp_comp ec
+				ON	ec.comp_seq = c.comp_seq AND e.emp_seq = ec.emp_seq
+			LEFT JOIN $DB_NEOS$t_co_emp_multi em
+				ON em.emp_seq = e.emp_seq AND e.group_seq = em.group_seq AND em.lang_code = 'kr'		
+		where ec.use_yn='Y' and ec.work_status='999' and ed.main_dept_yn='Y' and e.use_yn != 'D'		
+		<isNotEqual property="termsQueryStr" compareValue="nokeyword">
+			<isEqual property="hrSearchYn" compareValue="N">
+ 				<isEqual property="langCode" compareValue="kr">
+ 					and em.emp_name REGEXP #termsQueryStr#
+ 				</isEqual>
+ 				<isNotEqual property="langCode" compareValue="kr">
+ 					and (SELECT emp_name_multi FROM $DB_NEOS$v_t_co_emp_multi WHERE emp_seq = e.emp_seq) REGEXP #termsQueryStr#
+ 				</isNotEqual>
+ 			</isEqual>
+ 		</isNotEqual>
+		<isEqual property="termsQueryStr" compareValue="nokeyword">
+			and em.emp_name = ''
+		</isEqual>
+		<isEqual property="hrSearchYn" compareValue="Y">
+			and e.emp_seq = #hrEmpSeq#
+			and e.main_comp_seq = vui.comp_seq
+		</isEqual>
+		
+	</select>
+	
+	<select id="EmpManage.selectEmpInfoByLoginId" parameterClass="hashmap" resultClass="egovMap">
+		select * from
+		$DB_NEOS$t_co_emp
+		where login_id = #loginId#
+		limit 1
+	</select>
+	
+	<select id="EmpManage.selectEmpInfoByEmpSeq" parameterClass="hashmap" resultClass="egovMap">
+		select * from
+		$DB_NEOS$t_co_emp
+		where emp_seq = #empSeq#
+		limit 1
+	</select>
+	
+    <update id="EmpManage.setEmpCalibrate" parameterClass="hashmap">
+		update $DB_NEOS$t_co_emp ce
+		join 
+		(select c.emp_seq, c.use_yn, c.work_status, c.comp_seq from $DB_NEOS$t_co_emp a
+		join $DB_NEOS$t_co_emp_dept b on a.emp_seq = b.emp_seq
+		join $DB_NEOS$t_co_emp_comp c on b.emp_seq = c.emp_seq and b.comp_seq = c.comp_seq
+		where a.emp_seq=#empSeq#
+		order by c.use_yn desc, c.work_status desc, (a.main_comp_seq = c.comp_seq) desc
+		limit 1) info on ce.emp_seq = info.emp_seq
+		set ce.main_comp_seq=info.comp_seq, ce.use_yn=info.use_yn, ce.work_status=info.work_status;
+    </update>
+	 
+	 
+	 <select id="EmpManage.selectResignEmpInfo" parameterClass="hashmap" resultClass="egovMap">	 	
+	 	select
+	 		  c.comp_seq
+	 		, ed.biz_seq
+	 		, ed.dept_seq
+	 		, e.emp_seq
+	 	from
+	 		$DB_NEOS$t_co_emp e
+	 		LEFT JOIN $DB_NEOS$t_co_emp_dept ed
+				ON	e.emp_seq = ed.emp_seq AND e.group_seq = ed.group_seq
+			LEFT JOIN $DB_NEOS$t_co_comp c
+				ON	e.group_seq = c.group_seq AND ed.comp_seq = c.comp_seq
+		where
+			e.use_yn != 'D' and e.emp_seq = #empSeq# and c.comp_seq = #compSeq#
+			<isEqual property="eaType" compareValue="eap">
+		 		and ed.main_dept_yn = 'Y'
+		 	</isEqual>
+	 	limit 1
+	 	
+	 </select>
+	 
+	 
+	 <select id="EmpManage.selectEmpWorkTeamTime" parameterClass="hashmap" resultClass="egovMap">
+	 	select
+	 		a.work_team_sqno,
+	 		a.group_seq
+	 	from $DB_NEOS$v_at_work_team_member a, $DB_NEOS$t_at_work_team_mst b 
+	 		where a.work_team_sqno=b.work_team_sqno and b.work_team_div_code='110' and  a.emp_seq=#empSeq# and b.comp_seq=#compSeq#
+	 	limit 1
+	 </select> 
+	 
+	 <select id="EmpManage.selectEmpWorkTeamTimeInfo" parameterClass="hashmap" resultClass="egovMap">
+	 	select 
+	 		come_pass_time_start,
+	 		come_pass_time_end as commPassTimeEnd,
+	 		leave_pass_time_start,
+	 		leave_pass_time_end 
+	 	from 
+	 		$DB_NEOS$t_at_work_team_base_time ti 
+	 	where 
+	 		ti.work_team_sqno = #workTeamSqno# and ti.week_sqno = dayofweek(date_format(now(),'%Y%m%d'))-1
+	 		and ti.comp_seq = #compSeq#	 
+	 </select>
+	 
+    <select id="Empmanage.getMentionList" parameterClass="hashmap" resultClass="egovMap">
+    
+		select distinct
+		concat($DB_NEOS$FN_GetMultiLang(#langCode#, em.emp_name_multi), ' (', $DB_NEOS$FN_GetMultiLang(#langCode#, ccm.comp_name_multi), '-', $DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.position_code, 'POSITION', #langCode#), ')') as disp_emp_name,
+		$DB_NEOS$get_dept_pathNm('-', ed.dept_seq, ed.group_seq, #langCode#) as disp_dept_name,
+		$DB_NEOS$FN_GetMultiLang(#langCode#, em.emp_name_multi) as emp_name,
+		if(ifnull(e.pic_file_id,'') = '','N','Y') as pic_file_yn,
+		e.group_seq,
+		ed.comp_seq,
+		ed.dept_seq,
+		ed.emp_seq
+		from $DB_NEOS$t_co_emp e
+		join $DB_NEOS$v_t_co_emp_multi em on e.emp_seq=em.emp_seq
+		join $DB_NEOS$t_co_emp_dept ed on e.emp_seq=ed.emp_seq and ed.main_dept_yn='Y' and ed.use_yn='Y' and ed.orgchart_display_yn='Y'
+		join $DB_NEOS$t_co_emp_comp ec on ed.emp_seq=ec.emp_seq and ed.comp_seq=ec.comp_seq and ec.use_yn='Y' and ec.work_status != '001'
+		join $DB_NEOS$t_co_comp c on c.comp_seq=ed.comp_seq and c.use_yn='Y'
+		join $DB_NEOS$v_t_co_comp_multi ccm on c.comp_seq=ccm.comp_seq
+		
+		<isNotEmpty property="compFilter">
+		left join $DB_NEOS$t_co_comp comp_filter on comp_filter.comp_seq = ed.comp_seq and concat(';', #compFilter# ,';') like concat('%;',comp_filter.comp_seq,';%')
+		</isNotEmpty>
+
+		<isNotEmpty property="deptFilter">
+		left join
+		(
+		  select distinct b.dept_seq
+		  from $DB_NEOS$t_co_dept a
+		  join $DB_NEOS$t_co_dept b on concat('|',b.path,'|') like concat('%|',a.dept_seq,'|%') and b.use_yn='Y'
+		  where concat(';',#deptFilter#,';') like concat('%;',a.dept_seq,';%') and a.use_yn='Y'
+		) dept_filter on ed.dept_seq=dept_filter.dept_seq
+		</isNotEmpty>
+		
+		<isNotEmpty property="empFilter">
+		left join 
+		(
+		  select distinct comp_seq,emp_seq
+		  from $DB_NEOS$t_co_emp_comp where concat(';',#empFilter#,';') like concat('%;',comp_seq,'_',emp_seq,';%')
+		) emp_filter on ed.comp_seq = emp_filter.comp_seq and ed.emp_seq = emp_filter.emp_seq
+		</isNotEmpty>					
+
+		where
+		(
+		1=0
+		<isNotEmpty property="compFilter">
+		or comp_filter.comp_seq is not null
+		</isNotEmpty>
+		<isNotEmpty property="deptFilter">
+		or dept_filter.dept_seq is not null
+		</isNotEmpty>
+		<isNotEmpty property="empFilter">
+		or emp_filter.emp_seq is not null
+		</isNotEmpty>				
+		)
+		and em.emp_name_multi like CONCAT('%',ifnull(#empName#,''),'%')
+		order by em.emp_name
+
+    </select>
+    
+    <select id="Empmanage.getCommentRecvEmpList" parameterClass="hashmap" resultClass="egovMap">
+    
+		select 
+		e.group_seq,
+		ed.comp_seq,
+		ed.dept_seq,
+		ed.emp_seq,
+	    e.native_lang_code as lang_code,
+	    'Y' as push_yn
+		from $DB_NEOS$t_co_emp e
+		join $DB_NEOS$t_co_emp_dept ed on e.emp_seq=ed.emp_seq and ed.main_dept_yn='Y' and ed.use_yn='Y' and ed.orgchart_display_yn='Y'
+		join $DB_NEOS$t_co_emp_comp ec on ed.emp_seq=ec.emp_seq and ed.comp_seq=ec.comp_seq and ec.use_yn='Y' and ec.work_status != '001'
+		join $DB_NEOS$t_co_comp c on c.comp_seq=ed.comp_seq and c.use_yn='Y'
+
+		<isNotEmpty property="compFilter">
+		left join $DB_NEOS$t_co_comp comp_filter on comp_filter.comp_seq = ed.comp_seq and concat(';', #compFilter# ,';') like concat('%;',comp_filter.comp_seq,';%')
+		</isNotEmpty>
+
+		<isNotEmpty property="deptFilter">
+		left join
+		(
+		  select distinct b.dept_seq
+		  from $DB_NEOS$t_co_dept a
+		  join $DB_NEOS$t_co_dept b on concat('|',b.path,'|') like concat('%|',a.dept_seq,'|%') and b.use_yn='Y'
+		  where concat(';',#deptFilter#,';') like concat('%;',a.dept_seq,';%') and a.use_yn='Y'
+		) dept_filter on ed.dept_seq=dept_filter.dept_seq
+		</isNotEmpty>
+		
+		<isNotEmpty property="empFilter">
+		left join 
+		(
+		  select distinct comp_seq,emp_seq
+		  from $DB_NEOS$t_co_emp_comp where concat(';',#empFilter#,';') like concat('%;',comp_seq,'_',emp_seq,';%')
+		) emp_filter on ed.comp_seq = emp_filter.comp_seq and ed.emp_seq = emp_filter.emp_seq
+		</isNotEmpty>					
+
+		where
+		(
+		1=0
+		<isNotEmpty property="compFilter">
+		or comp_filter.comp_seq is not null
+		</isNotEmpty>
+		<isNotEmpty property="deptFilter">
+		or dept_filter.dept_seq is not null
+		</isNotEmpty>
+		<isNotEmpty property="empFilter">
+		or emp_filter.emp_seq is not null
+		</isNotEmpty>				
+		)
+		
+	 	and e.emp_seq != #empSeq#
+
+    </select>    
+    
+    <update id="EmpManage.UpdateEmpEtcInfo" parameterClass="hashmap">
+    	update
+    		$DB_NEOS$t_co_emp
+    	set
+    		wedding_day = #weddingDay#, bday = #bday#
+    	where
+    		emp_seq = #empSeq#
+	 </update> 
+	 
+	 
+	 <select id="EmpManage.getEaCntForNp" parameterClass="hashmap" resultClass="string">
+	 	SELECT  COUNT(*) as cnt
+         FROM       $DB_NEOS$A_DRAFTINFO df
+         INNER JOIN $DB_NEOS$A_KYULJAELINEINFO ki
+                 ON df.c_dikeycode = ki.c_dikeycode
+         INNER JOIN $DB_NEOS$A_RECORDINFO ri 
+                 ON df.c_dikeycode = ri.c_dikeycode
+         INNER JOIN $DB_NEOS$A_DOCINFO di 
+                 ON df.c_dikeycode = di.c_dikeycode
+         WHERE 1=1
+         AND   df.c_diseqnum            = '0000000001'
+         AND   df.c_ditkeycode          = '*'
+         AND   df.c_distatus           IN ('002','003','004')
+         AND   ki.c_klusertype         > '001'
+         AND   ki.c_klstatus          IN ('1','2')
+         AND   ki.c_klsignday   IS NULL 
+         AND   ki.C_KLORGCODE = #deptSeq#   
+         AND   ki.C_KLUSERKEY = #empSeq#   
+	 </select>
+	 
+	 
+	 <select id="EmpManage.getCompMailDomainCntInfo" parameterClass="hashmap" resultClass="egovMap">
+		select
+		(
+			select count(email_domain) 
+			from $DB_NEOS$t_co_comp 
+			where email_domain = 
+				(
+					select 
+						c.email_domain 
+					from 
+						$DB_NEOS$t_co_emp e 
+						LEFT JOIN $DB_NEOS$t_co_emp_dept ed
+							ON	e.emp_seq = ed.emp_seq AND e.group_seq = ed.group_seq
+						LEFT JOIN $DB_NEOS$t_co_comp c
+							ON	e.group_seq = c.group_seq AND ed.comp_seq = c.comp_seq
+						LEFT JOIN $DB_NEOS$t_co_emp_comp ec
+							ON	ec.comp_seq = c.comp_seq AND e.emp_seq = ec.emp_seq						
+					where 
+						e.emp_seq = #empSeq# and c.comp_seq = #compSeq# and ed.dept_seq = #deptSeq#  and e.use_yn != 'D'
+						<isEmpty property="workStatusFlag">
+						and ec.work_status != '001'
+						</isEmpty>
+				)
+			and comp_seq in 
+				(
+					select 
+						c.comp_seq 
+					from 
+						$DB_NEOS$t_co_emp e 
+						LEFT JOIN $DB_NEOS$t_co_emp_dept ed
+							ON	e.emp_seq = ed.emp_seq AND e.group_seq = ed.group_seq
+						LEFT JOIN $DB_NEOS$t_co_comp c
+							ON	e.group_seq = c.group_seq AND ed.comp_seq = c.comp_seq
+						LEFT JOIN $DB_NEOS$t_co_emp_comp ec
+							ON	ec.comp_seq = c.comp_seq AND e.emp_seq = ec.emp_seq	
+					where 
+						e.emp_seq = #empSeq# and c.comp_email_yn = 'Y' and e.use_yn != 'D'
+						<isEmpty property="workStatusFlag">
+						and ec.work_status != '001'
+						</isEmpty>
+				)
+		) email_domain_cnt ,
+		(
+			select 
+				count(comp_seq)
+			from 
+				$DB_NEOS$t_co_emp_comp
+			where 
+				emp_seq = #empSeq#
+				<isEmpty property="workStatusFlag">
+				and work_status != '001'
+				</isEmpty>
+		) emp_dept_cnt,
+		(
+			select work_status from $DB_NEOS$t_co_emp_comp where emp_Seq = #empSeq# and dept_seq = #deptSeq# and comp_seq = #compSeq# limit 1
+		) targetWorkStatus 
+	 </select>
+	 
+	 
+	 <update id="EmpManage.SetEmpMailDelYn" parameterClass="hashmap">
+	 	update 
+	 		$DB_NEOS$t_co_emp_comp
+	 	set
+	 		mail_del_yn = #mailDelYn#
+	 	where
+	 		emp_seq = #empSeq# and comp_seq = #compSeq#
+	 </update>
+	 
+	 <select id="EmpManage.checkEmpPasswd" parameterClass="hashmap" resultClass="egovMap">
+		select
+		ec.comp_seq,
+		ec.dept_seq,
+		e.emp_seq,
+		e.login_id,
+    	em.emp_name,
+    	$DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.position_code, 'POSITION', 'kr') as position_name,
+    	$DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.duty_code, 'DUTY', 'kr') as duty_name,
+    	concat(#gwDomain#, '/upload/img/profile/', e.group_seq, '/', e.emp_seq, '.jpg') as pic_url
+		from $DB_NEOS$t_co_emp e
+		join $DB_NEOS$t_co_emp_multi em on em.lang_code = 'kr' and e.emp_seq = em.emp_seq
+		join $DB_NEOS$t_co_emp_comp ec on e.emp_seq = ec.emp_seq and ec.work_status IN ('999','004') and ec.use_yn = 'Y'
+		join $DB_NEOS$t_co_emp_dept ed on ec.comp_seq = ed.comp_seq and ec.dept_seq = ed.dept_seq and ec.emp_seq = ed.emp_seq
+		where
+		(
+			case #passwdTp#
+			when 'apprPasswd' then if(ifnull(e.appr_passwd,'')='',e.login_passwd,e.appr_passwd)
+			when 'payPasswd' then if(ifnull(e.pay_passwd,'')='',e.login_passwd,e.pay_passwd)
+			else e.login_passwd end = #encPasswd#
+		)
+		<isNotEmpty property="empSeq">
+		and e.emp_seq=#empSeq#
+		</isNotEmpty>		
+		<isNotEmpty property="loginId">
+		and e.login_id=#loginId#
+		</isNotEmpty>	
+		<isNotEmpty property="erpNo">
+		and ec.erp_emp_seq=#erpNo#
+		</isNotEmpty>
+		order by e.main_comp_seq = ec.comp_seq desc
+		limit 1;	
+	 </select>
+	 
+	 <delete id="EmpManageService.deleteOldToken" parameterClass="hashMap">
+	 
+		<isNotEmpty property="delToken">
+		delete from $DB_NEOS$t_co_token_info where token_cd=#delToken#;
+		</isNotEmpty>
+		
+		<isEmpty property="delToken">
+		delete from $DB_NEOS$t_co_token_info where (emp_seq=#empSeq# and os_type=#osType# and app_type=#appType#) 
+			<isNotEmpty property="token">
+				or token_cd = #token# 
+			</isNotEmpty>
+		</isEmpty>
+	 	
+	 </delete>
+	 
+	 <insert id="EmpManageService.insertNewToken" parameterClass="hashMap">
+		insert ignore into $DB_NEOS$t_co_token_info
+		(token_cd, emp_seq, os_type, app_type, session_dt, insert_dt) VALUES
+		(#token#, #empSeq#, #osType#, #appType#, NULL, NOW());
+	 </insert>
+	 
+
+	 
+	 <select id="EmpManage.checkSecondCert" parameterClass="hashmap" resultClass="egovMap">
+	 	select 
+	 		emp_seq
+	 		,second_cert_status_code
+	 	from
+	 		$DB_NEOS$t_co_emp
+	 	where
+	 		second_cert_key = #secondCertKey#
+	 </select>
+	 
+	 <select id="EmpManage.selectEmpInfoByIdPwd" parameterClass="hashmap" resultClass="egovMap">
+	 	select
+	 		*
+	 	from
+	 		$DB_NEOS$t_co_emp
+	 	where
+	 		login_id = #loginId#
+	 		and login_passwd = #loginPasswd#
+	 		and use_yn = 'Y'
+	 </select>
+	 
+	 <select id="EmpManage.getEmpProfileInfo" parameterClass="hashmap" resultClass="egovMap">
+	 
+		select
+		emp_seq,
+		case when ifnull(position_name,'')='' then emp_name	else concat('[',position_name,']',emp_name) end as emp_name,
+		case when dept_path_name like concat(comp_name,'%') then dept_path_name else concat(comp_name,'-',dept_path_name) end as dept_path_name,
+		login_id,
+		mobile_tel_num,
+		tel_num,
+		fax_num,
+		main_work,
+		case when ifnull(bday,'')='' then '' when option_value='0' then (case when #langCode# = 'kr' then DATE_FORMAT(bday, '%Y년 %m월 %d일') else DATE_FORMAT(bday, '%Y-%m-%d') end) else (case when #langCode# = 'kr' then DATE_FORMAT(bday, '%m월 %d일') else DATE_FORMAT(bday, '%m-%d') end) end bday,
+		case when ifnull(email_addr,'')!='' and ifnull(email_domain,'')!='' then concat(email_addr,'@',email_domain) else '' end as in_email_addr,
+		case when ifnull(out_mail,'')!='' and ifnull(out_domain,'')!='' then concat(out_mail,'@',out_domain) else '' end as out_email_addr,
+		concat((case when ifnull(zip_code,'')!='' then concat('(',zip_code,') ') else '' end),ifnull(addr,''),' ',ifnull(detail_addr,'')) as addr
+		from
+		(
+			select
+			e.emp_seq,
+			e.login_id,
+			$DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.position_code, 'POSITION', #langCode#) as position_name,
+			$DB_NEOS$FN_GetMultiLang(#langCode#,em.emp_name_multi) as emp_name,
+			$DB_NEOS$get_dept_pathNm('-', ed.dept_seq, ed.group_seq, #langCode#) as dept_path_name,
+			e.mobile_tel_num,
+			e.bday as bday,
+			ed.tel_num,
+			ed.fax_num,
+			em.main_work,
+			e.email_addr,
+			c.email_domain,
+			e.out_mail,
+			e.out_domain,
+			ed.zip_code,
+			edm.addr,
+			edm.detail_addr,
+			$DB_NEOS$FN_GetMultiLang(#langCode#,cm.comp_name_multi) as comp_name,
+			e.main_comp_seq,c.comp_seq,
+			ifnull(op.option_value,'1') as option_value
+			from $DB_NEOS$t_co_emp e
+			join $DB_NEOS$v_t_co_emp_multi em on e.emp_seq = em.emp_seq
+			join $DB_NEOS$t_co_emp_dept ed on e.emp_seq = ed.emp_seq and ed.use_yn = 'Y'
+			join $DB_NEOS$t_co_emp_dept_multi edm on ed.emp_seq=edm.emp_seq and ed.dept_seq = edm.dept_seq
+			join $DB_NEOS$t_co_emp_comp ec on ed.emp_seq = ec.emp_seq and ed.comp_seq = ec.comp_seq and ec.work_status != '001'
+			join $DB_NEOS$t_co_dept d on ed.dept_seq = d.dept_seq and d.use_yn = 'Y'
+			join $DB_NEOS$t_co_comp c on ed.comp_seq = c.comp_seq and c.use_yn = 'Y'
+			join $DB_NEOS$v_t_co_comp_multi cm on c.comp_seq = cm.comp_seq
+			left join $DB_NEOS$tcmg_optionvalue op on op.co_id = '0' and op.option_id = 'cm2200'
+			where e.emp_seq=#empSeq#
+			order by
+			<isNotEmpty property="compSeq">
+			ed.comp_seq!=#compSeq#,
+			</isNotEmpty>
+			<isNotEmpty property="deptSeq">
+			ed.dept_seq!=#deptSeq#,
+			</isNotEmpty>		
+			e.main_comp_seq!=c.comp_seq, ed.main_dept_yn desc
+			limit 1
+		) result;	 
+	 </select>	
+	 
+	 <select id="EmpManage.getEmpEmailInfo" parameterClass="hashmap" resultClass="egovMap">
+	 	select
+			IF(IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_mail,''), a.email_addr )='',a.email_addr,IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_mail,''), a.email_addr )) AS email
+			, IF( IFNULL(d.email_domain,'') = '', IFNULL(a.out_domain,''), d.email_domain ) as emailDomain
+		from $DB_NEOS$t_co_emp a
+		inner join $DB_NEOS$t_co_comp d on d.comp_seq = #compSeq# and a.emp_seq = #empSeq#
+		limit 1
+	 </select>
+	 
+	 <select id="EmpManage.selectEmpDeptList" parameterClass="hashmap" resultClass="egovMap">
+	 	select
+	 		emp_seq, dept_Seq, comp_Seq, main_comp_yn, main_Dept_yn, use_yn 
+	 	from
+	 		$DB_NEOS$t_co_emp_dept
+	 	where
+	 		emp_seq = #empSeq#
+	 </select> 
+	 
+    <select id="Empmanage.empDeptInfoList" parameterClass="hashmap" resultClass="egovMap">
+    
+		<isEqual property="orgDiv" compareValue="U">
+		select 
+		ed.dept_seq,
+		ed.comp_seq,
+		ed.biz_seq,
+		$DB_NEOS$fn_getmultilang(#langCode#,cm.comp_name_multi) comp_name,
+		$DB_NEOS$get_dept_pathNm(#delimiter#, ed.dept_seq, e.group_seq, #langCode#) as dept_path_name
+		from $DB_NEOS$t_co_emp e
+		join $DB_NEOS$t_co_emp_dept ed on e.emp_seq = ed.emp_seq
+			<isEqual property="mainDeptYn" compareValue="Y">
+			and ed.main_dept_yn = 'Y'
+			</isEqual>
+		join $DB_NEOS$t_co_emp_comp ec on ed.comp_seq = ec.comp_seq and ed.emp_seq = ec.emp_seq and ec.use_yn = 'Y' and ec.work_status != '001'
+		join $DB_NEOS$t_co_comp c on ec.comp_seq=c.comp_seq and c.use_yn = 'Y'
+		join $DB_NEOS$v_t_co_comp_multi cm on c.comp_seq = cm.comp_seq
+		where e.emp_seq = #orgSeq#
+		</isEqual>
+		
+		<isEqual property="orgDiv" compareValue="D">
+		select 
+		d.dept_seq,
+		d.comp_seq,
+		d.biz_seq,
+		$DB_NEOS$fn_getmultilang(#langCode#,cm.comp_name_multi) comp_name,
+		$DB_NEOS$get_dept_pathNm(#delimiter#, d.dept_seq, d.group_seq, #langCode#) as dept_path_name
+		from $DB_NEOS$t_co_dept d
+		join $DB_NEOS$t_co_comp c on d.comp_seq=c.comp_seq and c.use_yn = 'Y'
+		join $DB_NEOS$v_t_co_comp_multi cm on c.comp_seq = cm.comp_seq
+		where d.dept_seq = #orgSeq#
+		</isEqual>		
+
+    </select>
+    
+    
+    <select id="EmpManage.searchUserInfo" parameterClass="hashmap" resultClass="hashmap">
+		SELECT a.login_id AS id
+			     , $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(a.emp_seq, a.login_id), b.emp_name_multi) AS NAME
+			     , a.emp_seq AS uniqId
+			     , c.comp_seq AS organId
+			     , a.group_seq as groupSeq
+                 , a.native_lang_code AS langCode
+                 , a.license_check_yn AS licenseCheckYn
+			     , d.ea_type as eaType
+			     , $DB_NEOS$get_auth_group_concat(c.comp_seq, c.dept_seq, a.emp_seq, c.DUTY_CODE, c.POSITION_CODE) AS authorCode
+			  FROM $DB_NEOS$t_co_group g, $DB_NEOS$t_co_emp a, $DB_NEOS$v_t_co_emp_multi b, $DB_NEOS$t_co_emp_dept c, $DB_NEOS$t_co_comp d, $DB_NEOS$t_co_emp_comp e, $DB_NEOS$t_co_dept tcd
+			  WHERE a.login_id = #loginId#
+			   AND g.group_seq = a.group_seq
+			   AND a.emp_seq = b.emp_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND c.comp_seq = d.comp_seq		
+			   AND c.dept_seq = tcd.dept_seq
+			   AND d.comp_seq = #compSeq# 
+               AND e.emp_seq = c.emp_seq
+               AND e.comp_seq = d.comp_seq
+			   AND e.work_status IN ('999','004')
+			   AND c.main_dept_yn = 'Y'
+			   AND a.use_yn = 'Y'
+			   AND b.use_yn = 'Y'
+			   AND c.use_yn = 'Y'
+			   AND d.use_yn = 'Y'
+			   AND e.use_yn = 'Y'
+			   AND tcd.use_yn = 'Y'
+			   AND a.license_check_yn != '3'
+         	   ORDER BY CASE WHEN e.COMP_SEQ = a.main_comp_seq THEN 0 ELSE 1 END
+         	   LIMIT 1 
+	</select>
+	
+	<update id="EmpManage.setUserLangCode" parameterClass="hashmap">
+		UPDATE
+			$DB_NEOS$t_co_emp
+		SET
+			native_lang_code = #langCode#
+		WHERE
+			login_id = #loginId#
+	</update>
+	
+	<select id="EmpManage.getUserMenuList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT 
+			a.menu_no 
+		FROM 
+			$DB_NEOS$t_co_menu_auth a
+		INNER JOIN $DB_NEOS$t_co_menu b
+		ON a.menu_no = b.menu_no
+		WHERE author_Code IN (
+			SELECT 
+				author_code 
+			FROM 
+				$DB_NEOS$t_Co_auth_relate 
+			WHERE 
+				emp_seq = #empSeq# AND comp_seq = #compSeq# AND dept_Seq = #deptSeq# AND author_type = '001'
+		) and b.use_yn = 'Y' and (b.delete_yn != 'Y' or b.delete_yn is null)
+	</select>
+	
+	
+	<select id="EmpManage.selectEmpMailDomainCount" parameterClass="hashmap" resultClass="string">
+		SELECT COUNT(*) as empMailDomainCount
+		FROM $DB_NEOS$t_co_comp
+		WHERE email_domain IN (
+			SELECT email_domain FROM 
+			$DB_NEOS$t_co_emp_comp a INNER JOIN $DB_NEOS$t_co_comp b ON a.comp_seq = b.comp_seq
+			WHERE a.emp_seq = #empSeq# AND a.comp_seq != #compSeq# AND a.work_status != '001'
+		)
+		AND comp_seq IN (
+			SELECT a.comp_seq FROM 
+			$DB_NEOS$t_co_emp_comp a INNER JOIN $DB_NEOS$t_co_comp b ON a.comp_seq = b.comp_seq
+			WHERE a.emp_seq = #empSeq# AND a.comp_seq != #compSeq# AND a.work_status != '001'
+		)
+	</select>
+	
+	<select id="EmpManage.selectWehagoInfo" parameterClass="hashmap" resultClass="egovMap">
+		SELECT 
+			IFNULL(e.wehago_id, '') AS wehagoId,
+			IFNULL(g.wehago_server, '') AS wehagoDomainUrl,
+			IFNULL(g.wehago_token, '') AS wehagoServerToken,
+			IFNULL(g.wehago_software_key, '') AS wehagoSoftwareKey,
+			IFNULL(c.wehago_key, '') AS wehagoCno,
+			IFNULL(c.wehago_domain_service_key, '') AS wehagoDomainServiceKey,
+			IFNULL(g.gw_url, '') AS domain
+		FROM $DB_NEOS$t_co_emp AS e
+		INNER JOIN $DB_NEOS$t_co_group AS g ON g.group_seq = e.group_seq
+		INNER JOIN $DB_NEOS$t_co_emp_comp AS ec ON ec.emp_seq = #empSeq# AND ec.comp_seq = #compSeq#
+		INNER JOIN $DB_NEOS$t_co_comp AS c ON c.comp_seq = ec.comp_seq
+		WHERE 
+			e.emp_seq = #empSeq#
+	</select>
+</sqlMap>

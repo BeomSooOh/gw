@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="AuthorManageDAO">
+	<typeAlias alias="NeosAuthorManage" type="neos.cmm.systemx.author.vo.AuthorManage"/>
+	<typeAlias alias="SearchVo" type="neos.cmm.systemx.author.vo.SearchVo"/>
+	
+	<select id="AuthorManageDAO.selectAuthorList" resultClass="hashMap" parameterClass="hashMap">
+	<![CDATA[		
+		SELECT A.*
+		  FROM ( 
+				SELECT ( SELECT COUNT(AUTHOR_CODE) FROM COMTNAUTHORINFO ) AS resultCount
+                       , @rownum:=@rownum + 1 AS RN
+                       , IR.*
+                FROM (
+                       SELECT
+		                         AUTHOR_CODE as AUTHORCODE
+		                       , AUTHOR_NM as AUTHORNM
+		                       , AUTHOR_DC as AUTHORDC
+		                       , DATE_FORMAT(AUTHOR_CREAT_DE,'%Y-%m-%d') AS AUTHORCREATDE
+		                       , AUTHOR_TYPE as AUTHORTYPECODE
+		                       , CASE  WHEN AUTHOR_TYPE = '001' THEN '사용자'
+					     		       WHEN AUTHOR_TYPE = '002' THEN '부서'
+					     		       WHEN AUTHOR_TYPE = '003' THEN '직책'
+					     		       WHEN AUTHOR_TYPE = '004' THEN '직급'
+				                       END AS AUTHORTYPE
+		                       , CASE  WHEN AUTHOR_BASE_YN = 'Y' THEN '예'
+					     		       WHEN AUTHOR_BASE_YN = 'N' THEN '아니오'
+					     		       ELSE '-'
+				                       END AS AUTHORBASEYN				                       	     
+		                       , CASE  WHEN AUTHOR_USE_YN = 'Y' THEN '사용'
+					     		       WHEN AUTHOR_USE_YN = 'N' THEN '미사용'
+				                       ELSE '-'
+				                       END AS AUTHORUSEYN			                       	                                   
+		                  FROM COMTNAUTHORINFO, ( SELECT @rownum:=0 ) TMP    
+		                 WHERE AUTHOR_NM LIKE CONCAT('%' , ifnull(#searchKeyword#,'') , '%')
+	]]>		                 
+			<isNotEmpty prepend="AND" property="authorChgType" >
+				<![CDATA[	AUTHOR_TYPE = #authorChgType# 		]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="authorChgUseYn" >
+				<![CDATA[	AUTHOR_USE_YN = #authorChgUseYn# 		]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="searchAuthorType" >
+				<![CDATA[	AUTHOR_TYPE = #searchAuthorType# 		]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="searchAuthorBaseYn" >
+				<![CDATA[	AUTHOR_BASE_YN = #searchAuthorBaseYn# 		]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="searchAuthorUseYn" >
+				<![CDATA[	AUTHOR_USE_YN = #searchAuthorUseYn# 		]]>
+			</isNotEmpty>													
+	<![CDATA[						                 
+		                 ORDER BY AUTHOR_CODE
+		             ) IR
+				) A            	
+	]]>
+	</select>
+	
+	<select id="AuthorManageDAO.selectAuthorList_TOTALCOUNT" resultClass="Integer" parameterClass="hashMap">
+	<![CDATA[		
+                       SELECT
+		                         count(AUTHOR_CODE) as totalCount                           
+		                  FROM COMTNAUTHORINFO
+		                 WHERE AUTHOR_NM LIKE CONCAT('%' , ifnull(#searchKeyword#,'') , '%')
+	]]>		                 
+			<isNotEmpty prepend="AND" property="authorChgType" >
+				<![CDATA[	AUTHOR_TYPE = #authorChgType# 		]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="authorChgUseYn" >
+				<![CDATA[	AUTHOR_USE_YN = #authorChgUseYn# 		]]>
+			</isNotEmpty>			
+	<![CDATA[			                 
+		                 ORDER BY AUTHOR_CODE           	
+	]]>
+	</select>	
+		
+	<select id="AuthorManageDAO.selectAuthorInfo" parameterClass="NeosAuthorManage" resultClass="NeosAuthorManage">
+	<![CDATA[
+		SELECT AUTHOR_CODE AS authorCode,
+		            AUTHOR_NM AS authorNm,
+		            AUTHOR_DC AS authorDc,
+		            DATE_FORMAT(AUTHOR_CREAT_DE,'%Y-%m-%d') AS authorCreatDe,
+		            AUTHOR_TYPE AS authorType,
+		            AUTHOR_BASE_YN AS authorBaseYn,
+		            AUTHOR_USE_YN AS authorUseYn
+		  FROM COMTNAUTHORINFO
+		WHERE AUTHOR_CODE = #authorCode#	
+	]]>
+	</select>
+	
+	<delete id="AuthorManageDAO.deleteAuthorInfo" parameterClass="NeosAuthorManage">
+        <![CDATA[
+            DELETE FROM COMTNAUTHORINFO 
+             WHERE AUTHOR_CODE = #authorCode#
+        ]]>
+    </delete>
+    
+    <insert id="AuthorManageDAO.insertAuthor" parameterClass="NeosAuthorManage">
+        <![CDATA[    
+            INSERT INTO COMTNAUTHORINFO 
+                  ( AUTHOR_CODE
+                  , AUTHOR_NM
+                  , AUTHOR_DC
+                  , AUTHOR_TYPE
+                  , AUTHOR_CREAT_DE
+                  , AUTHOR_BASE_YN
+                  , AUTHOR_USE_YN )
+           VALUES ( #authorCode#
+                  , #authorNm#
+                  , #authorDc#
+                  , #authorType#
+                  , NOW()
+                  , #authorBaseYn#
+                  , #authorUseYn# )
+        ]]>  
+    </insert>
+
+    <update id="AuthorManageDAO.updateAuthor" parameterClass="NeosAuthorManage">
+        <![CDATA[
+            UPDATE COMTNAUTHORINFO 
+               SET AUTHOR_NM=#authorNm#
+                 , AUTHOR_DC=#authorDc#
+                 , AUTHOR_TYPE=#authorType#
+                 , AUTHOR_BASE_YN = #authorBaseYn#
+                 , AUTHOR_USE_YN = #authorUseYn#
+             WHERE AUTHOR_CODE=#authorCode#
+        ]]>
+    </update>
+    
+	<select id="AuthorManageDAO.selectMaxAuthorCode" resultClass="java.lang.String">
+    <![CDATA[
+		SELECT CONCAT('A', nextval('authorCode') ) as authorCode from dual
+    ]]>
+    </select>    
+
+
+	<select id="AuthorManageDAO.selectAuthorUserList" resultClass="hashMap" parameterClass="hashMap">
+		<![CDATA[
+			SELECT 
+		    	    b.author_code AS AUTHORCODE		
+                  , a.emp_seq AS EMP_SEQ
+                  , a.emp_name AS EMP_NAME
+                  , c.dept_name AS DEPT_NAME 
+                  , c.dept_seq AS DEPT_SEQ
+                  , a.duty_code AS DUTY_CODE
+                  , a.position_code AS POSITION_CODE
+                  , ( SELECT dp_name FROM t_co_comp_duty_position_multi WHERE a.duty_code = dp_seq AND dp_type = 'DUTY' LIMIT 1 ) AS DUTY_NM
+				  , ( SELECT dp_name FROM t_co_comp_duty_position_multi WHERE a.position_code = dp_seq AND dp_type = 'POSITION' LIMIT 1 ) AS POSITION_NM                 
+			FROM v_user_info a, t_co_auth_user_relate b, t_co_dept_multi c
+			WHERE a.emp_seq = b.emp_seq
+			AND a.work_status = '999'
+			AND a.main_dept_yn = 'Y'
+			AND a.dept_seq = c.dept_seq
+			AND a.dept_seq = b.author_dept
+			AND c.lang_code = #langCode#
+		]]>				
+		<isNotEmpty prepend="AND" property="authorCode" >
+			<![CDATA[	b.AUTHOR_CODE = #authorCode# 		]]>
+		</isNotEmpty>		
+		
+	</select>
+
+
+	<select id="AuthorManageDAO.selectAuthorClassList" resultClass="hashMap" parameterClass="hashMap">
+		<![CDATA[
+			SELECT
+				    b.dp_seq AS CODE_ID 
+                  , b.dp_name AS CODE_NM
+                  , CASE WHEN c.AUTHOR_CODE IS NULL THEN 'N'
+	                     ELSE 'Y'
+                    END CHECK_YN
+			FROM t_co_comp_duty_position a, t_co_comp_duty_position_multi b 
+			LEFT OUTER JOIN t_co_auth_class_relate c ON b.dp_seq = c.detail_code
+			WHERE 1=1
+				AND a.dp_seq = b.dp_seq
+		]]>			
+
+		<isEqual property="authorTypeCode" compareValue="003">
+			<![CDATA[	AND a.dp_type = 'DUTY' 		]]>
+		</isEqual>	
+		<isEqual property="authorTypeCode" compareValue="004">
+			<![CDATA[	AND a.dp_type = 'POSITION' 		]]>
+		</isEqual>	
+					
+		<![CDATA[					
+				AND b.lang_code = #langCode#
+				AND a.comp_seq = #compSeq#
+			ORDER BY order_num		
+		]]>				
+	</select>
+
+	<delete id="AuthorManageDAO.deleteAuthorUserInfo" parameterClass="hashMap">
+        <![CDATA[
+            DELETE FROM t_co_auth_user_relate 
+             WHERE AUTHOR_CODE = #authorCode#
+               AND EMP_SEQ = #authorUser#
+               AND AUTHOR_DEPT = #authorUserDept# 	
+        ]]>
+    </delete>
+
+	<delete id="AuthorManageDAO.deleteAuthorGrp" parameterClass="hashMap">
+        <![CDATA[
+            DELETE FROM t_co_auth_dept_relate 
+             WHERE AUTHOR_CODE = #authorCode#	
+        ]]>
+    </delete>
+
+	<delete id="AuthorManageDAO.deleteAuthorClass" parameterClass="hashMap">
+        <![CDATA[
+            DELETE FROM t_co_auth_class_relate 
+             WHERE AUTHOR_CODE = #authorCode#	
+        ]]>
+		<isNotEmpty prepend="AND" property="authorTypeCode" >
+			<![CDATA[	CODE_TYPE = #authorTypeCode# 		]]>
+		</isNotEmpty>	        
+    </delete>
+
+
+	<insert id="AuthorManageDAO.insertUserAuthor" parameterClass="hashMap">
+        <![CDATA[
+            INSERT INTO t_co_auth_user_relate 
+                  ( EMP_SEQ
+                  , AUTHOR_CODE
+                  , AUTHOR_DEPT )
+           VALUES ( #authorUser#
+                  , #authorCode#
+                  , #authorUserDept# )
+        ]]>
+    </insert>
+
+    <insert id="AuthorManageDAO.insertGrpAuthor" parameterClass="hashMap">
+        <![CDATA[    
+            INSERT INTO t_co_auth_dept_relate 
+                  ( DEPT_ID
+                  , AUTHOR_CODE )
+           VALUES ( #deptId#
+                  , #authorCode# )
+        ]]>  
+    </insert>    
+
+
+
+    <insert id="AuthorManageDAO.insertClassAuthor" parameterClass="hashMap">
+        <![CDATA[    
+            INSERT INTO t_co_auth_class_relate 
+                  ( DETAIL_CODE
+                  , AUTHOR_CODE
+                  , CODE_TYPE )
+           VALUES ( #authClass#
+                  , #authorCode#
+                  , #authorTypeCode# )
+        ]]>  
+    </insert>    
+
+
+	<insert id="AuthorManageDAO.insertAuthorMenu" parameterClass="hashMap" >		
+		<![CDATA[
+
+			INSERT INTO t_co_menu_auth
+			(
+				MENU_NO, AUTHOR_CODE
+			)
+			VALUES
+			( 			  
+				#menuNo#, #authorCode#
+			)						
+		]]>
+	</insert>	
+
+ 	<delete id="AuthorManageDAO.deleteAuthorMenu" parameterClass="hashMap">
+ 		<![CDATA[
+ 			DELETE FROM t_co_menu_auth
+ 			 WHERE MENU_NO	in (
+ 			 	SELECT MENU_NO FROM t_co_menu WHERE MENU_GUBUN = #menuGubun#
+ 			   )
+ 			   AND AUTHOR_CODE = #authorCode#
+ 		]]>
+ 	</delete>
+
+
+	<select id="AuthorManageDAO.selectMenuAuthList" resultClass="hashMap" parameterClass="hashMap">
+	<![CDATA[		
+
+       SELECT
+               a.AUTHOR_CODE as AUTHORCODE
+             , AUTHOR_NM as AUTHORNM
+             , AUTHOR_DC as AUTHORDC
+             , DATE_FORMAT(AUTHOR_CREAT_DE,'%Y-%m-%d') AS AUTHORCREATDE
+             , AUTHOR_TYPE as AUTHORTYPECODE
+             , CASE  WHEN AUTHOR_TYPE = '001' THEN '사용자'
+		       WHEN AUTHOR_TYPE = '002' THEN '부서'
+		       WHEN AUTHOR_TYPE = '003' THEN '직책'
+		       WHEN AUTHOR_TYPE = '004' THEN '직급'
+               END AS AUTHORTYPE
+             , CASE  WHEN AUTHOR_BASE_YN = 'Y' THEN '예'
+		       WHEN AUTHOR_BASE_YN = 'N' THEN '아니오'
+		       ELSE '-'
+               END AS AUTHORBASEYN				                       	     
+             , CASE  WHEN AUTHOR_USE_YN = 'Y' THEN '사용'
+       		   WHEN AUTHOR_USE_YN = 'N' THEN '미사용'
+               ELSE '-'
+               END AS AUTHORUSEYN
+			 , CASE WHEN b.AUTHOR_CODE IS NULL THEN 'N'
+			   ELSE 'Y'
+			   END CHECK_YN               			                       	                                   
+       FROM COMTNAUTHORINFO a
+       LEFT OUTER JOIN t_co_menu_auth b ON a.AUTHOR_CODE = b.AUTHOR_CODE AND b.MENU_NO = #menuNo# 
+       WHERE AUTHOR_NM LIKE CONCAT('%' , ifnull(#searchKeyword#,'') , '%') 
+	]]>		                 
+			<isNotEmpty prepend="AND" property="authorChgType" >
+				<![CDATA[	AUTHOR_TYPE = #authorChgType# 		]]>
+			</isNotEmpty>
+	<![CDATA[						                 
+       ORDER BY a.AUTHOR_CODE
+	]]>			
+
+	</select>
+
+
+        
+</sqlMap>

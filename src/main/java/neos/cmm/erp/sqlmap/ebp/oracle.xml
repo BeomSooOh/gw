@@ -1,0 +1,859 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="neos.cmm.erp.sqlmap.ebp.oracle">
+
+    <select id="selectCompList" resultType="hashmap">
+        /* selectCompList - oracle */
+        SELECT t.* FROM (
+            SELECT #{groupSeq}                         AS "groupSeq"
+                 , t1.COMPANY_CD                       AS "compSeq"
+                 , t1.COMPANY_CD                       AS "compSeqDef"
+                 , t1.COMPANY_CD                       AS "compCd"
+                 , '0'                                 AS "parentCompSeq"
+                 , 'B'                                 AS "loginType"
+                 , t1.BIZR_NO                          AS "compRegistNum"
+                 , t1.COR_NO                           AS "compNum"
+                 , ''                                  AS "standardCode"
+                 , ''                                  AS "standardCompSeq"
+                 , 'Y'                                 AS "erpUse"
+                 , t1.TEL_NO                           AS "telNum"
+                 , t1.FAX_NO                           AS "faxNum"
+                 , ''                                  AS "homepgAddr"
+                 , ''                                  AS "compMailUrl"
+                 , #{serverDomain}                     AS "compDomain"
+                 , t2.EMAIL_NM                         AS "emailAddr"
+                 , ''                                  AS "emailDomain"
+                 , t1.POST_NO                          AS "zipCode"
+                 , ''                                  AS "smsUse"
+                 , ''                                  AS "smsId"
+                 , ''                                  AS "smsPasswd"
+                 , 'kr'                                AS "nativeLangCode"
+                 , RANK()OVER (ORDER BY t1.COMPANY_CD) AS "orderNum"
+                 , 'Y'                                 AS "useYn"
+                 , 'eap'                               AS "eaType"
+                 , t1.INSERT_ID                        AS "createSeq"
+                 , t1.INSERT_DTS                       AS "createDate"
+                 , t1.UPDATE_ID                        AS "modifySeq"
+                 , t1.UPDATE_DTS                       AS "modifyDate"
+                 , 'N'                                 AS "compEmailYn"
+                 , 'Y'                                 AS "erpUseYn"
+                 , 'N'                                 AS "smsUseYn"
+
+                 , 'kr'                                AS "langCode"
+                 , t1.COMPANY_NM                       AS "compName"
+                 , t1.COMPANY_NM                       AS "compDisplayName"
+                 , t1.CEO_NM                           AS "ownerName"
+                 , ''                                  AS "senderName"
+                 , ''                                  AS "bizCondition"
+                 , ''                                  AS "item"
+                 , t1.BASE_ADDR                        AS "addr"
+                 , t1.DTL_ADDR                         AS "detailAddr"
+                 , ''                                  AS "compNickname"
+                 , t1.COMPANY_CD
+              FROM CI_COMPANY t1
+              JOIN MA_COMPANY t2 ON t1.COMPANY_CD = t2.COMPANY_CD
+              <if test='erpCompSeq != null and erpCompSeq != ""'>
+	          	where t1.COMPANY_CD = #{erpCompSeq}
+	          </if>
+         ) t
+         WHERE 1=1
+
+       <choose>
+         <when test='evntKeyValTxt != null and evntKeyValTxt != ""'>
+           AND t.COMPANY_CD = #{evntKeyValTxt}
+         </when>
+       </choose>
+       <if test='custCompQuery != null and custCompQuery != ""'>
+         ${custCompQuery}
+       </if>
+
+         ORDER BY t.COMPANY_CD
+    </select>
+
+    <select id="selectBizList" resultType="hashmap">
+        /* selectBizList - oracle */
+        SELECT t.* FROM (
+            SELECT COMPANY_CD || '-' || BIZAREA_CD                           AS "deptSeq"
+                 , COMPANY_CD || '-' || BIZAREA_CD                           AS "deptSeqDef"
+                 , COMPANY_CD || '-' || BIZAREA_CD                           AS "bizCd"
+                 , #{groupSeq}                                               AS "groupSeq"
+                 , COMPANY_CD                                                AS "compSeq"
+                 , BIZR_NO                                                   AS "compRegistNum"
+                 , ''                                                        AS "compNum"
+                 , TEL_NO                                                    AS "telNum"
+                 , FAX_NO                                                    AS "faxNum"
+                 , ''                                                        AS "homepgAddr"
+                 , POST_NO                                                   AS "zipCode"
+                 , 'kr'                                                      AS "nativeLangCode"
+                 , RANK()OVER(PARTITION BY COMPANY_CD ORDER BY BIZAREA_CD)   AS "orderNum"
+                 , USE_YN                                                    AS "useYn"
+                 , NULL                                                      AS "sealFileId"
+                 , INSERT_ID                                                 AS "createSeq"
+                 , INSERT_DTS                                                AS "createDate"
+                 , UPDATE_ID                                                 AS "modifySeq"
+                 , UPDATE_DTS                                                AS "modifyDate"
+
+                 , 'kr'                                                      AS "langCode"
+                 , BIZAREA_NM                                                AS "deptName"
+                 , CEO_NM                                                    AS "ownerName"
+                 , BIZC_NM                                                   AS "bizCondition"
+                 , ''                                                        AS "senderName"
+                 , ''                                                        AS "bizNickname"
+                 , JOBTYPE_NM                                                AS "item"
+                 , ADDR_TP                                                   AS "addr"
+                 , BASE_ADDR                                                 AS "detailAddr"
+                 , 'B'                                                       AS "deptType"
+                 , BIZAREA_CD
+                 , COMPANY_CD
+              FROM MA_BIZAREA_MST
+              <if test='erpCompSeq != null and erpCompSeq != ""'>
+	          	where COMPANY_CD = #{erpCompSeq}
+	          </if>
+         ) t
+         WHERE 1=1
+
+       <choose>
+         <when test='evntKeyValTxt != null and evntKeyValTxt != ""'>
+           AND t.BIZAREA_CD = #{evntKeyValTxt}
+           AND t.COMPANY_CD = #{companyCd}
+         </when>
+       </choose>
+       <if test='custBizQuery != null and custBizQuery != ""'>
+         ${custBizQuery}
+       </if>
+
+         ORDER BY t.BIZAREA_CD
+    </select>
+
+    <select id="selectDeptList" resultType="hashmap">
+        /* selectDeptList - oracle */
+         
+        SELECT t.* FROM (
+            SELECT a.COMPANY_CD || '-' || a.DEPT_CD        AS "deptSeq"
+                 , a.COMPANY_CD || '-' || a.DEPT_CD        AS "deptSeqDef"
+                 , a.COMPANY_CD || '-' || a.DEPT_CD        AS "deptCd"
+                 , #{groupSeq}                             AS "groupSeq"
+                 , a.COMPANY_CD                            AS "compSeq"
+                 , a.COMPANY_CD || '-' || a.BIZAREA_CD     AS "bizSeq"
+                 , CASE WHEN a.DEPT_LV = 1 THEN '0'
+                        WHEN a.DEPT_LV <![CDATA[<>]]> 1 AND a.UP_DEPT_CD IS NOT NULL THEN a.COMPANY_CD || '-' || a.UP_DEPT_CD
+                        ELSE NULL
+                   END                                     AS "parentDeptSeq"
+                 , a.DEPT_CD                               AS "displayDeptSeq"
+                 , a.TEL_NO                                AS "telNum"
+                 , a.FAX_NO                                AS "faxNum"
+                 , ''                                      AS "homepgAddr"
+                 , ''                                      AS "zipCode"
+                 , ''                                      AS "susinYn"
+                 , 'N'                                     AS "virDeptYn"
+                 , 'N'                                     AS "teamYn"
+                 , 'N'                                     AS "eaYn"
+                 , 'kr'                                    AS "nativeLangCode"
+                 , ''                                      AS "path"
+                 , '1'                                     AS "ptype"
+                 , ''                                      AS "deptLevel"
+                 , CASE WHEN a.SORT_SQ IS NOT NULL THEN a.SORT_SQ
+                        ELSE RANK()OVER(PARTITION BY a.COMPANY_CD ORDER BY a.DEPT_CD)
+                   END                                     AS "orderNum"
+                 , case when (to_char(sysdate,'YYYYMMDD') <![CDATA[<=]]> a.dept_end_dt or NVL(a.dept_end_dt,' ') = ' ') then 'Y' else 'N' end as "useYn"
+                 , 'Y'                                     AS "innerReceiveYn"
+                 , a.INSERT_ID                             AS "createSeq"
+                 , a.INSERT_DTS                            AS "createDate"
+                 , a.UPDATE_ID                             AS "modifySeq"
+                 , a.UPDATE_DTS                            AS "modifyDate"
+                 , a.HOD_NO                                AS "deptManager"
+                 , ''                                      AS "syncType"
+                 , 'Y'                                     AS "displayYn"
+                 , ''                                      AS "standardCode"
+
+                 , 'kr'                                    AS "langCode"
+                 , a.DEPT_NM                               AS "deptName"
+                 , a.DEPT_NM                               AS "deptDisplayName"
+                 , ''                                      AS "senderName"
+                 , ''                                      AS "addr"
+                 , ''                                      AS "detailAddr"
+                 , ''                                      AS "pathName"
+                 , ''                                      AS "deptNickname"
+                 , a.COMPANY_CD, a.DEPT_CD, a.DEPT_START_DT, a.DEPT_END_DT, a.DEPT_LV, a.INSERT_DTS, a.UP_DEPT_CD
+              FROM ( SELECT t1.*
+                          , RANK () OVER (PARTITION BY t1.COMPANY_CD, t1.DEPT_CD ORDER BY t1.DEPT_START_DT DESC) AS DEPT_RNK
+                       FROM MA_DEPT_MST t1
+                   ) a
+              LEFT JOIN ( SELECT COMPANY_CD
+                               , DEPT_CD
+                               , COUNT(DEPT_CD) AS DEPT_CNT
+                            FROM HR_EMP_MST  -- 확인필요 CI_EMP_MST
+                           GROUP BY COMPANY_CD, DEPT_CD
+                        ) b ON a.COMPANY_CD = b.COMPANY_CD AND a.DEPT_CD = b.DEPT_CD
+             WHERE 1=1
+               AND a.DEPT_RNK = 1
+             -- AND b.DEPT_CNT > 0 -- 상위 부서에 사용자 없으면 안들고와서 하위 부서 안들어가는 경우가 있음
+              AND a.DEPT_CD = ( SELECT x.DEPT_CD
+                                  FROM ( SELECT *
+                                           FROM MA_DEPT_MST
+                                          ORDER BY INSERT_DTS DESC
+                                       ) x
+                                 WHERE x.COMPANY_CD = a.COMPANY_CD
+                                   AND x.DEPT_CD    = a.DEPT_CD
+                                   AND ROWNUM <![CDATA[<]]> 2
+                              )
+        ) t
+        WHERE 1=1
+		<if test='deptDisableFlag != null and deptDisableFlag == "Y"'>
+    		and (case when (to_char(sysdate,'YYYYMMDD') <![CDATA[<=]]> t.dept_end_dt or NVL(t.dept_end_dt,' ') = ' ') then 'Y' else 'N' end) = 'N'
+        </if>
+        <if test='erpCompSeq != null and erpCompSeq != ""'>
+        	and t.COMPANY_CD = #{erpCompSeq}
+        </if>
+
+       <choose>
+         <when test='evntKeyValTxt != null and evntKeyValTxt != ""'>
+           AND t.COMPANY_CD    = #{companyCd}
+           AND t.DEPT_CD       = #{deptCd}
+         </when>
+       </choose>
+
+       <if test='custDeptQuery != null and custDeptQuery != ""'>
+         ${custDeptQuery}
+       </if>
+
+         ORDER BY t.DEPT_LV NULLS FIRST, t.INSERT_DTS, t.UP_DEPT_CD NULLS FIRST, t.DEPT_CD
+    </select>
+
+    <select id="selectDutyPositionList" resultType="hashmap">
+        /* selectDutyPositionList - oracle */
+        SELECT t.* FROM (
+            SELECT COMPANY_CD || '-' || SYSDEF_CD                   AS "dpSeq"
+                 , COMPANY_CD || '-' || SYSDEF_CD                   AS "dpSeqDef"
+                 , #{groupSeq}                                      AS "groupSeq"
+                 , COMPANY_CD                                       AS "compSeq"
+                 , 'DUTY'                                           AS "dpType"
+                 , 'Y'                                              AS "useYn"
+                 , CASE WHEN DISP_SQ IS NOT NULL THEN DISP_SQ
+                        ELSE RANK()OVER(PARTITION BY COMPANY_CD ORDER BY SYSDEF_CD)
+                   END                                              AS "orderNum"
+                 , INSERT_ID                                        AS "createSeq"
+                 , INSERT_DTS                                       AS "createDate"
+                 , UPDATE_ID                                        AS "modifySeq"
+                 , UPDATE_DTS                                       AS "modifyDate"
+                 , 'kr'                                             AS "langCode"
+                 , SYSDEF_NM                                        AS "dpName"
+                 , NVL(FLAG_CD,'')                                  AS "descText"
+                 , ''                                               AS "commentText"
+                 , FIELD_CD, SYSDEF_CD, COMPANY_CD
+              FROM MA_CODEDTL
+             WHERE 1=1
+               AND FIELD_CD = (CASE #{dutyOption} WHEN '1' THEN 'P00980' WHEN '2' THEN 'P00650' WHEN '3' THEN 'P00640' ELSE 'P00980' END)
+               AND MODULE_CD = NVL(#{moduleCd}, 'HR')
+            UNION ALL
+            SELECT COMPANY_CD || '-' || SYSDEF_CD                   AS "dpSeq"
+                 , COMPANY_CD || '-' || SYSDEF_CD                   AS "dpSeqDef"
+                 , #{groupSeq}                                      AS "groupSeq"
+                 , COMPANY_CD                                       AS "compSeq"
+                 , 'POSITION'                                       AS "dpType"
+                 , 'Y'                                              AS "useYn"
+                 , CASE WHEN DISP_SQ IS NOT NULL THEN DISP_SQ
+                        ELSE RANK()OVER(PARTITION BY COMPANY_CD ORDER BY SYSDEF_CD)
+                   END                                              AS "orderNum"
+                 , INSERT_ID                                        AS "createSeq"
+                 , INSERT_DTS                                       AS "createDate"
+                 , UPDATE_ID                                        AS "modifySeq"
+                 , UPDATE_DTS                                       AS "modifyDate"
+                 , 'kr'                                             AS "langCode"
+                 , SYSDEF_NM                                        AS "dpName"
+                 , NVL(FLAG_CD,'')                                  AS "descText"
+                 , ''                                               AS "commentText"
+                 , FIELD_CD, SYSDEF_CD, COMPANY_CD
+              FROM MA_CODEDTL
+             WHERE 1=1
+               AND FIELD_CD = (CASE #{poitionOption} WHEN '1' THEN 'P00980' WHEN '2' THEN 'P00650' WHEN '3' THEN 'P00640' ELSE 'P00650' END)
+               AND MODULE_CD = NVL(#{moduleCd}, 'HR')
+        ) t
+        WHERE 1=1
+       <choose>
+         <when test='sysdefCd != null and sysdefCd != "" and fieldCd != null and fieldCd != ""'>
+           AND t.FIELD_CD   = #{fieldCd}
+           AND t.SYSDEF_CD  = #{sysdefCd}
+           AND t.COMPANY_CD = #{companyCd}
+         </when>
+       </choose>
+       <if test='erpCompSeq != null and erpCompSeq != ""'>
+       	and t.COMPANY_CD = #{erpCompSeq}
+       </if>
+       <if test='custDPQuery != null and custDPQuery != ""'>
+         ${custDPQuery}
+       </if>
+
+    </select>
+
+    <select id="selectEmpList" resultType="hashmap">
+        /* selectEmpList - oracle */
+       
+        SELECT #{groupSeq}                                      AS "groupSeq"
+             <choose>
+               <when test='custEmpSeq != null and custEmpSeq != ""'>
+                 <choose>
+                   <when test='custEmpSeq.equals("GE")'>
+                     , a.GEMP_NO || '_' || a.COMPANY_CD || '_' || a.EMP_NO     AS "empSeq"
+                     , a.GEMP_NO || '_' || a.COMPANY_CD || '_' || a.EMP_NO     AS "empSeqDef"
+                   </when>
+                   <when test='custEmpSeq.equals("G")'>
+                     , a.GEMP_NO                                               AS "empSeq"
+                     , a.GEMP_NO                                               AS "empSeqDef"
+                   </when>
+                   <otherwise>
+                     , a.GEMP_NO || '_' || a.USER_ID                           AS "empSeq"
+                     , a.GEMP_NO || '_' || a.USER_ID                           AS "empSeqDef"
+                   </otherwise>
+                 </choose>
+               </when>
+               <otherwise>
+                 , a.GEMP_NO || '_' || a.USER_ID                               AS "empSeq"
+                 , a.GEMP_NO || '_' || a.USER_ID                               AS "empSeqDef"
+               </otherwise>
+             </choose>
+             , a.USER_ID                                        AS "loginId"
+             , ''                                               AS "empNum"
+             , a.GEMP_NO                                        AS "erpEmpNum"
+             , LOWER(SUBSTR(a.EMAIL_NM, 0, INSTR(a.EMAIL_NM, '@')-1))  AS "emailAddr"
+             , ''                                               AS "outMail"
+             , ''                                               AS "outDomain"
+             , '1111'                                           AS "loginPasswdNew"
+             , '1111'                                           AS "apprPasswdNew"
+             , NULL                                             AS "passwdDate"
+             , 0                                                AS "passwdInputFailCount"
+             , '1111'                                           AS "payPasswdNew"
+             , 'P'                                              AS "passwdStatusCode"
+             , CASE WHEN a.HLOF_FG_CD = '3' THEN 'N' else 'Y' end AS "mobileUseYn"
+             , CASE WHEN a.HLOF_FG_CD = '3' THEN 'N' else 'Y' end AS "messengerUseYn"
+             , 'Y'                                              AS "checkWorkYn"
+             , ''                                               AS "shift"
+             , '4'                                              AS "jobCode"
+             <choose>
+             	<when test='erp10StatusCode != null'>
+             		, '1'                                       AS "statusCode"
+             	</when>
+             	<otherwise>             	
+		            , '4'                                       AS "statusCode"
+             	</otherwise>
+             </choose>
+             , a.COMPANY_CD                                     AS "mainCompSeq"
+             , 'Y'                                              AS "mainCompLoginYn"
+             , a.COMPANY_CD || '-' || NVL(CASE #{dutyOption} WHEN '1' THEN a.ODTY_CD
+                                                             WHEN '2' THEN a.PSTN_CD
+                                                             WHEN '3' THEN a.POSI_CD
+                                                             ELSE a.ODTY_CD END
+                                        , 'DUTY') AS "dutyCode"
+             , a.COMPANY_CD || '-' || NVL(CASE #{poitionOption} WHEN '1' THEN a.ODTY_CD
+                                                                WHEN '2' THEN a.PSTN_CD
+                                                                WHEN '3' THEN a.POSI_CD
+                                                                ELSE a.PSTN_CD END
+                                        , 'POSITION') AS "positionCode"
+             , 'kr'                                             AS "nativeLangCode"
+             , '1'                                              AS "licenseCheckYn"
+             , a.JNCO_DT                                        AS "joinDay"
+             , a.RETR_DT                                        AS "resignDay"
+             , CASE WHEN a.SEX_CD ='1' THEN 'M'
+                    ELSE 'F'
+               END                                              AS "genderCode"
+             , a.BIRYYMM_DT                                     AS "bday"
+             , CASE WHEN a.ATSCOLC_CD = '1' THEN 'Y' -- 양력
+                    WHEN a.ATSCOLC_CD = '2' THEN 'N' -- 음력
+               END                                              AS "lunarYn"
+             , CASE WHEN a.HLOF_FG_CD = '1' THEN '999' -- 재직
+                    WHEN a.HLOF_FG_CD = '2' THEN '004' -- 휴직
+                    WHEN a.HLOF_FG_CD = '3' THEN '001' -- 퇴직
+               END                                              AS "workStatus"
+             <choose>
+             	<when test='erp10HomeTelNum != null'>
+             		,CASE WHEN a.TEL_NO IS NOT NULL THEN a.TEL_NO
+	                    ELSE a.EMGNC_CNTC_NO
+	               	 END                                        AS "homeTelNum"
+             	</when>
+             	<otherwise>
+             		, ''                                        AS "homeTelNum"
+             	</otherwise>
+             </choose>
+             , CASE WHEN a.TEL_NO IS NOT NULL THEN a.TEL_NO
+                    ELSE a.EMGNC_CNTC_NO
+               END                                              AS "mobileTelNum"
+             , a.MRRG_YN                                        AS "weddingYn"
+             , a.MRRG_DT                                        AS "weddingDay"
+             , 'Y'                                              AS "privateYn"
+             , a.RES_POST_NO                                    AS "zipCode"
+             , c1.ATCH_FILE_NM                                  AS "picFileId"
+             , c2.ATCH_FILE_NM                                  AS "signFileId"
+             , CASE WHEN a.HLOF_FG_CD = '3' THEN 'N' else 'Y' end AS "useYn"
+             , ''                                               AS "lsRoleId"
+             , a.INSERT_ID                                      AS "createSeq"
+             , a.INSERT_DTS                                     AS "createDate"
+             , a.UPDATE_ID                                      AS "modifySeq"
+             , a.UPDATE_DTS                                     AS "modifyDate"
+             , ''                                               AS "springSecu"
+             , NULL                                             AS "springDate"
+             , ''                                               AS "signType"
+             , NULL                                             AS "blockDate"
+             , NULL                                             AS "lastLoginDate"
+             , ''                                               AS "prevLoginPasswd"
+             , ''                                               AS "juminNb"
+             , NULL                                             AS "lastResignDay"
+             , ''                                               AS "lastEmpName"
+             , ''                                               AS "lastDeptSeq"
+             , ''                                               AS "lastDeptName"
+             , ''                                               AS "lastDeptPath"
+
+             , 'kr'                                             AS "langCode"
+             , a.USER_NM                                        AS "empName"
+             , a.BASE_RES_ADDR                                  AS "addr"
+             , a.DTL_RES_ADDR                                   AS "detailAddr"
+             , ''                                               AS "mainWork"
+             , a.COMPANY_CD                                     AS "compSeq"
+             , a.COMPANY_CD || '-' || a.BIZAREA_CD              AS "bizSeq"
+             , a.GEMP_NO                                        AS "erpEmpSeq"
+             , a.COMPANY_CD                                     AS "erpCompSeq"
+             , a.BIZAREA_CD                                     AS "erpBizSeq"
+             , CASE WHEN b.CTS_DEPT_CD IS NULL THEN a.DEPT_CD
+                    ELSE b.CTS_DEPT_CD
+               END                                              AS "erpDeptSeq"
+             , NULL                                             AS "gerpNoGemp"
+             , 'N'                                              AS "mailDelYn"
+
+             , CASE WHEN b.CTS_DEPT_CD IS NULL THEN a.COMPANY_CD || '-' || a.DEPT_CD
+                    ELSE a.COMPANY_CD || '-' || b.CTS_DEPT_CD
+               END                                              AS "deptSeq"
+             , CASE WHEN b.COMPANY_CD = a.COMPANY_CD THEN 'Y'
+                    ELSE 'N'
+               END                                              AS "mainCompYn"
+             , CASE WHEN b.CTS_DEPT_CD = a.DEPT_CD THEN 'Y'
+                    ELSE 'N'
+               END                                              AS "mainDeptYn"
+             <choose>
+             	<when test='erp10SKpinx != null and erp10SKpinx != ""'>
+             		, a.MNG_DC                                  AS "telNum"
+             	</when>
+             	<otherwise>
+             		, ''                                        AS "telNum"
+             	</otherwise>
+             </choose>
+             , ''                                               AS "faxNum"
+             , CASE WHEN a.HLOF_FG_CD = '3' THEN 'N' else 'Y' end AS "orgchartDisplayYn"
+             , CASE WHEN a.HLOF_FG_CD = '3' THEN 'N' else 'Y' end AS "messengerDisplayYn"
+             , 'N'                                              AS "eaDisplayYn"
+             , NULL                                             AS "orderNum"
+             , NULL                                             AS "orderText"
+             , a.ENG_LNM_NM2 || ' ' || a.ENG_FNM_NM2                   AS "empNameEn"
+          FROM ( SELECT a1.*
+                      , a2.USER_ID, a2.USER_NM, a2.EMAIL_NM, a2.HP_NO
+                  --    , RANK() OVER (PARTITION BY a2.GEMP_NO ORDER BY a2.INSERT_DTS DESC, a2.UPDATE_DTS DESC, a2.USER_ID DESC) AS RNUM -- 확인필요
+                      , a3.TEL_NO                 -- 전화번호
+                      , a3.BIRYYMM_DT             -- 생일
+                      , a3.ATSCOLC_CD             -- 생일구분(1:양력,2:음력)
+                      , a3.MRRG_YN                -- 결혼여부(1:미혼,2:기혼)
+                      , a3.MRRG_DT                -- 결혼일 (YYYY-MM-DD)                       
+                      , a3.EMGNC_CNTC_NO          -- 비상연락번호
+                      , a3.BASE_RES_ADDR          -- 주소   	                
+					  , a3.DTL_RES_ADDR 		  -- 상세주소 
+					  , a3.RES_POST_NO            -- 우편번
+					  <if test='erp10SKpinx != null and erp10SKpinx != ""'>
+					  	,a5.MNG_DC     -- 회사 전화번호
+					  </if>
+                   FROM HR_EMP_MST a1
+                   JOIN CI_USER_MST a2 ON a1.GEMP_NO = a2.GEMP_NO
+                   LEFT JOIN HR_EMPINFO_DTL a3 ON a1.COMPANY_CD = a3.COMPANY_CD
+                                              AND a1.EMP_NO     = a3.EMP_NO
+                   <if test='ebpSyncFlage != null and ebpSyncFlage != ""'>                   
+	                   JOIN HR_EMP_SDTL a4 on a1.emp_no = a4.emp_no
+	                   where
+							a1.COMPANY_CD='1000'
+							and a4.MCLS_CD='005'
+							and a4.MNG_DC   = '1'
+					</if>
+					
+					<if test='erp10SKpinx != null and erp10SKpinx != ""'>
+						LEFT JOIN HR_EMP_SDTL a5 ON a1.COMPANY_CD = a5.COMPANY_CD
+					   							AND a1.EMP_NO  = a5.EMP_NO
+					   							AND a5.MCLS_CD  = 'SK02'
+					</if>
+               ) a
+          JOIN ( SELECT b1.GEMP_NO, b1.COMPANY_CD, b1.EMP_NO, b1.DEPT_CD as CTS_DEPT_CD
+                   FROM HR_EMP_MST b1
+                 UNION ALL
+                 SELECT b3.GEMP_NO, b2.COMPANY_CD, b2.EMP_NO, b2.CTS_DEPT_CD
+                   FROM HR_HUANCON_HST b2
+                   LEFT JOIN HR_EMP_MST b3 ON b2.COMPANY_CD = b3.COMPANY_CD
+                                          AND b2.EMP_NO     = b3.EMP_NO
+                                          AND NVL(b2.end_dt, TO_CHAR(SYSDATE,'YYYYMMDD')) >= TO_CHAR(SYSDATE,'YYYYMMDD')
+               ) b ON a.COMPANY_CD = b.COMPANY_CD
+                  AND a.GEMP_NO    = b.GEMP_NO
+          LEFT JOIN CI_PHOTO_MST c1 ON a.GEMP_NO  = c1.GEMP_NO
+                                   AND c1.FILE_TP = '1' -- profile
+          LEFT JOIN CI_PHOTO_MST c2 ON a.GEMP_NO  = c2.GEMP_NO
+                                   AND c2.FILE_TP = '2' -- sign
+          LEFT JOIN ( SELECT d1.USER_ID               -- 로그인아이디
+                      , d1.COMPANY_CD            -- 로그인회사코드
+                      , d1.MENUGRP_CD            -- 메뉴그룹정보
+                      , d1.LANG_CD               -- 언어코드
+                      , d1.GMT_CD                -- 타임존코드(국가표준시간코드)국내:'KOR10'
+                   FROM CM_LOGIN_INFO d1
+                   JOIN ( SELECT da.USER_ID, MAX(da.LOGIN_DTS) AS LOGIN_DTS
+                            FROM CM_LOGIN_INFO da
+                            JOIN CI_USER_MST db ON da.USER_ID = db.USER_ID
+                            LEFT JOIN HR_EMP_MST dc ON da.COMPANY_CD = dc.COMPANY_CD
+                                                   AND db.GEMP_NO    = dc.GEMP_NO
+                           WHERE ( dc.RETR_DT IS NULL OR dc.RETR_DT = '' OR dc.RETR_DT > TO_CHAR(SYSDATE,'YYYYMMDD') )
+                           GROUP BY da.USER_ID
+                        ) d2 ON d1.USER_ID   = d2.USER_ID
+                            AND d1.LOGIN_DTS = d2.LOGIN_DTS
+               ) d ON a.USER_ID = d.USER_ID
+         WHERE 1=1
+        <choose>
+          <when test='evntKeyValTxt != null and evntKeyValTxt != ""'>
+            AND a.GEMP_NO = #{evntKeyValTxt}
+          </when>
+        </choose>
+        <if test='erpCompSeq != null and erpCompSeq != ""'>
+         	and a.COMPANY_CD = #{erpCompSeq}
+        </if>
+       <if test='custEmpQuery != null and custEmpQuery != ""'>
+         ${custEmpQuery}
+       </if>
+
+       <choose>
+         <when test='custEmpSeq != null and custEmpSeq != ""'>
+           <choose>
+             <when test='custEmpSeq.equals("GE")'>
+               ORDER BY a.GEMP_NO, a.EMP_NO, a.COMPANY_CD
+             </when>
+             <otherwise>
+               ORDER BY a.GEMP_NO, a.USER_ID
+             </otherwise>
+           </choose>
+         </when>
+         <otherwise>
+           ORDER BY a.GEMP_NO, a.USER_ID
+         </otherwise>
+       </choose>
+    </select>
+
+    <select id="selectAuthList" resultType="hashmap">
+        /* selectAuthList - oracle */
+        <![CDATA[
+        SELECT DISTINCT CASE WHEN t.author_tp = 'U' THEN t.COMPANY_CD || '-U-' || t.MENUGRP_CD
+                    WHEN t.author_tp = 'M' THEN t.COMPANY_CD || '-M-' || t.MENUGRP_CD
+                    ELSE t.COMPANY_CD || '-A-' || t.MENUGRP_CD
+               END                                           AS "authorCode"
+             , CASE WHEN t.author_tp = 'U' THEN '001'
+                    ELSE '005'
+               END                                           AS "authorType"
+             , CASE WHEN t.author_tp = 'U' THEN 'Y'
+                    ELSE 'N'
+               END                                           AS "authorBaseYn"
+             , 'Y'                                           AS "authorUseYn"
+             , #{groupSeq}                                   AS "groupSeq"
+             , t.COMPANY_CD                                  AS "compSeq"
+             , t.INSERT_ID                                   AS "createSeq"
+             , t.INSERT_DTS                                  AS "createDate"
+             , t.UPDATE_ID                                   AS "modifySeq"
+             , t.UPDATE_DTS                                  AS "modifyDate"
+             , NULL                                          AS "orderNum"
+             , ''                                            AS "deptSeq"
+             , 'kr'                                          AS "langCode"
+             , t.GRP_NM                                      AS "authorNm"
+             , ''                                            AS "authorDc"
+          FROM ( SELECT 'U' AS author_tp
+                      , a.COMPANY_CD
+                      , a.MENUGRP_CD
+                      , a.INSERT_ID
+                      , a.INSERT_DTS
+                      , a.UPDATE_ID
+                      , a.UPDATE_DTS
+                      , a.GRP_NM
+                   FROM MA_GROUP_MST a
+                  WHERE a.MENUGRP_CD IN ( SELECT DISTINCT x.MENUGRP_CD
+                                            FROM MA_GROUPUSER_INFO x
+                                           WHERE x.COMPANY_CD = a.COMPANY_CD
+                                             AND x.MENUGRP_CD = a.MENUGRP_CD
+                                        )
+                    AND 0 < ( SELECT count(y.MODULE_CD)
+                                FROM MA_GROUPMENU_MST y
+                               WHERE y.COMPANY_CD = a.COMPANY_CD
+                                 AND y.MENUGRP_CD = a.MENUGRP_CD
+                                 AND y.MODULE_CD IN ('EA','ML','CL','PW','BD','DC','EX')
+                            )
+                 UNION ALL
+                 SELECT 'A' AS author_tp
+                      , a.COMPANY_CD
+                      , a.MENUGRP_CD
+                      , a.INSERT_ID
+                      , a.INSERT_DTS
+                      , a.UPDATE_ID
+                      , a.UPDATE_DTS
+                      , a.GRP_NM
+                   FROM MA_GROUP_MST a
+                  WHERE a.MENUGRP_CD IN ( SELECT DISTINCT x.MENUGRP_CD
+                                            FROM MA_GROUPUSER_INFO x
+                                           WHERE x.COMPANY_CD = a.COMPANY_CD
+                                             AND x.MENUGRP_CD = a.MENUGRP_CD
+                                        )
+                    AND 0 < ( SELECT count(y.MODULE_CD)
+                                FROM MA_GROUPMENU_MST y
+                               WHERE y.COMPANY_CD = a.COMPANY_CD
+                                 AND y.MENUGRP_CD = a.MENUGRP_CD
+                                 AND y.MODULE_CD  = 'UA'
+                            )
+                 UNION ALL
+                 SELECT 'M' AS author_tp
+                      , a.COMPANY_CD
+                      , a.MENUGRP_CD
+                      , a.INSERT_ID
+                      , a.INSERT_DTS
+                      , a.UPDATE_ID
+                      , a.UPDATE_DTS
+                      , a.GRP_NM
+                   FROM MA_GROUP_MST a
+                  WHERE a.MENUGRP_CD IN ( SELECT DISTINCT x.MENUGRP_CD
+                                            FROM MA_GROUPUSER_INFO x
+                                           WHERE x.COMPANY_CD = a.COMPANY_CD
+                                             AND x.MENUGRP_CD = a.MENUGRP_CD
+                                        )
+                    AND 0 < ( SELECT count(y.MODULE_CD)
+                                FROM MA_GROUPMENU_MST y
+                               WHERE y.COMPANY_CD = a.COMPANY_CD
+                                 AND y.MENUGRP_CD = a.MENUGRP_CD
+                                 AND y.MODULE_CD  = 'UM'
+                            )
+               ) t
+            WHERE 1=1
+        ]]>
+
+            <choose>
+              <when test='evntKeyValTxt != null and evntKeyValTxt != ""'>
+                AND t.COMPANY_CD = #{companyCd}
+                AND t.MENUGRP_CD = #{evntKeyValTxt}
+              </when>
+            </choose>
+
+    </select>
+
+    <select id="selectAuthRelateList" resultType="hashmap">
+        /* selectAuthRelateList - oracle */
+        <![CDATA[
+        SELECT DISTINCT CASE WHEN t.author_tp = 'U' THEN t.COMPANY_CD || '-U-' || t.MENUGRP_CD
+                    WHEN t.author_tp = 'M' THEN t.COMPANY_CD || '-M-' || t.MENUGRP_CD
+                    ELSE t.COMPANY_CD || '-A-' || t.MENUGRP_CD
+               END                                                   AS "authorCode"
+             , CASE WHEN t.author_tp = 'U' THEN '001'
+                    ELSE '005'
+               END                                                   AS "authorType"
+             , t.COMPANY_CD                                          AS "compSeq"
+             , t.COMPANY_CD || '-' || t.DEPT_CD                      AS "deptSeq"
+             , t.GEMP_NO                                             AS "empSeq"
+             , t.author_tp                                           AS "authorTp"
+             , #{groupSeq}                                           AS "groupSeq"
+          FROM ( SELECT 'U' AS author_tp
+                      , a.COMPANY_CD
+                      , a.MENUGRP_CD
+                      , a.GEMP_NO
+                      , b.DEPT_CD
+                   FROM MA_GROUPUSER_INFO a
+                   JOIN HR_EMP_MST b ON b.COMPANY_CD = a.COMPANY_CD
+                                    AND b.GEMP_NO    = a.GEMP_NO
+                  WHERE 0 < ( SELECT count(MODULE_CD)
+                                FROM MA_GROUPMENU_MST
+                               WHERE COMPANY_CD = a.COMPANY_CD
+                                 AND MENUGRP_CD = a.MENUGRP_CD
+                                 AND MODULE_CD IN ('EA','ML','CL','PW','BD','DC','EX')
+                            )
+                  UNION ALL
+                  SELECT 'A' AS author_tp
+                       , a.COMPANY_CD
+                       , a.MENUGRP_CD
+                       , a.GEMP_NO
+                       , b.DEPT_CD
+                    FROM MA_GROUPUSER_INFO a
+                    JOIN HR_EMP_MST b ON b.COMPANY_CD = a.COMPANY_CD
+                                     AND b.GEMP_NO    = a.GEMP_NO
+                   WHERE 0 < ( SELECT count(MODULE_CD)
+                                FROM MA_GROUPMENU_MST
+                               WHERE COMPANY_CD = a.COMPANY_CD
+                                 AND MENUGRP_CD = a.MENUGRP_CD
+                                 AND MODULE_CD  ='UA'
+                             )
+                  UNION ALL
+                  SELECT 'M' AS author_tp
+                       , a.COMPANY_CD
+                       , a.MENUGRP_CD
+                       , a.GEMP_NO
+                       , b.DEPT_CD
+                    FROM MA_GROUPUSER_INFO a
+                    JOIN HR_EMP_MST b ON b.COMPANY_CD = a.COMPANY_CD
+                                     AND b.GEMP_NO    = a.GEMP_NO
+                   WHERE 0 < ( SELECT count(MODULE_CD)
+                                 FROM MA_GROUPMENU_MST
+                                WHERE COMPANY_CD = a.COMPANY_CD
+                                  AND MENUGRP_CD = a.MENUGRP_CD
+                                  AND MODULE_CD  ='UM'
+                             )
+               ) t
+            WHERE 1=1
+        ]]>
+
+            <choose>
+              <when test='evntKeyValTxt != null and evntKeyValTxt != ""'>
+                AND t.COMPANY_CD = #{companyCd}
+                AND t.MENUGRP_CD = #{evntKeyValTxt}
+              </when>
+            </choose>
+
+    </select>
+
+    <select id="selectMenuAuthList" resultType="hashmap">
+        /* selectMenuAuthList - oracle */
+        <![CDATA[
+        SELECT UC.GWMENU_NO                                                                 AS "menuNo"
+             , CASE WHEN UC.author_tp = 'U' THEN UC.COMPANY_CD || '-U-' || UC.MENUGRP_CD
+                    WHEN UC.author_tp = 'M' THEN UC.COMPANY_CD || '-M-' || UC.MENUGRP_CD
+                    ELSE UC.COMPANY_CD || '-A-' || UC.MENUGRP_CD
+               END                                                                          AS "authorCode"
+             , #{groupSeq}                                                                  AS "groupSeq"
+          FROM ( SELECT 'U' author_tp
+                      , d1.GWMENU_NO
+                      , a1.COMPANY_CD
+                      , a1.MENUGRP_CD
+                   FROM MA_GROUPMENU_MST a1
+                   LEFT JOIN MA_GWMENU_MST d1 ON a1.MENU_CD   = d1.MENU_CD
+                                             AND a1.MODULE_CD = d1.MODULE_CD
+                  WHERE a1.MENUGRP_CD IN ( SELECT DISTINCT b1.MENUGRP_CD
+                                             FROM  MA_GROUPUSER_INFO b1
+                                            WHERE b1.COMPANY_CD = a1.COMPANY_CD
+                                              AND b1.MENUGRP_CD = a1.MENUGRP_CD
+                                              AND a1.MODULE_CD IN ('EA','ML','CL','PW','BD','DC','EX')
+                                         )
+                    AND 0 < ( SELECT COUNT(c1.MODULE_CD)
+                                FROM MA_GROUPMENU_MST c1
+                               WHERE c1.COMPANY_CD = a1.COMPANY_CD
+                                 AND c1.MENUGRP_CD = a1.MENUGRP_CD
+                                 AND c1.MODULE_CD IN ('EA','ML','CL','PW','BD','DC','EX')
+                            )
+                 UNION ALL
+                 SELECT 'A' author_tp
+                      , d2.GWMENU_NO
+                      , a2.COMPANY_CD
+                      , a2.MENUGRP_CD
+                   FROM MA_GROUPMENU_MST a2
+                   LEFT JOIN MA_GWMENU_MST d2 ON a2.MENU_CD   = d2.MENU_CD
+                                             AND a2.MODULE_CD = d2.MODULE_CD
+                 WHERE a2.MENUGRP_CD IN ( SELECT DISTINCT b2.MENUGRP_CD
+                                            FROM MA_GROUPUSER_INFO b2
+                                           WHERE b2.COMPANY_CD = a2.COMPANY_CD
+                                             AND b2.MENUGRP_CD = a2.MENUGRP_CD
+                                             AND a2.MODULE_CD  ='UA'
+                                        )
+                   AND 0 < ( SELECT COUNT(c2.MODULE_CD)
+                               FROM MA_GROUPMENU_MST c2
+                              WHERE c2.COMPANY_CD = a2.COMPANY_CD
+                                AND c2.MENUGRP_CD = a2.MENUGRP_CD
+                                AND c2.MODULE_CD  ='UA'
+                           )
+                 UNION ALL
+                 SELECT 'M' author_tp
+                      , d3.GWMENU_NO
+                      , a3.COMPANY_CD
+                      , a3.MENUGRP_CD
+                   FROM MA_GROUPMENU_MST a3
+                   LEFT JOIN MA_GWMENU_MST d3 ON a3.MENU_CD   = d3.MENU_CD
+                                             AND a3.MODULE_CD = d3.MODULE_CD
+                  WHERE a3.MENUGRP_CD IN ( SELECT DISTINCT b3.MENUGRP_CD
+                                             FROM  MA_GROUPUSER_INFO b3
+                                            WHERE b3.COMPANY_CD = a3.COMPANY_CD
+                                              AND b3.MENUGRP_CD = a3.MENUGRP_CD
+                                              AND a3.MODULE_CD  ='UM'
+                                         )
+                    AND 0 < ( SELECT COUNT(c3.MODULE_CD)
+                                FROM MA_GROUPMENU_MST c3
+                               WHERE c3.COMPANY_CD = a3.COMPANY_CD
+                                 AND c3.MENUGRP_CD = a3.MENUGRP_CD
+                                 AND a3.MODULE_CD  ='UM'
+                            )
+               ) UC
+         WHERE 1=1
+           AND UC.GWMENU_NO IS NOT NULL
+        ]]>
+
+           <choose>
+             <when test='evntKeyValTxt != null and evntKeyValTxt != ""'>
+               AND UC.COMPANY_CD = #{companyCd}
+               AND UC.MENUGRP_CD = #{evntKeyValTxt}
+             </when>
+           </choose>
+
+    </select>
+
+    <select id="selectSyncList" resultType="hashmap">
+        /* selectSyncList - oracle */
+        SELECT a.RECORD_SQ                                                 AS "recordSq"
+             , a.TABLE_ID                                                  AS "tableId"
+             , a.EVNT_FG                                                   AS "evntFg"
+             , a.COMPANY_CD                                                AS "companyCd"
+             , SUBSTR(a.EVNT_KEY_VAL_TXT, 0, LENGTH(a.EVNT_KEY_VAL_TXT)-1) AS "evntKeyValTxt"
+             , a.EVNT_KEY_VAL_TXT                                          AS "orgEvntKeyValTxt"
+             , TO_CHAR(a.EVNT_OCRN_DTS, 'YYYYMMDDHH24MISS')                AS "evntOcrnDts"
+             , a.EVNT_OCRN_FG_CD                                           AS "evntOcrnFgCd"
+             , a.APLY_YN                                                   AS "aplyYn"
+          FROM ( SELECT RECORD_SQ, TABLE_ID, EVNT_FG, COMPANY_CD, EVNT_KEY_VAL_TXT, EVNT_OCRN_DTS, EVNT_OCRN_FG_CD, APLY_YN
+                      , RANK () OVER (PARTITION BY TABLE_ID, COMPANY_CD, EVNT_KEY_VAL_TXT, ( CASE EVNT_OCRN_FG_CD WHEN 'BASORG00100' THEN 'ORGCOP00200' -- 회사
+                                                                                                                  WHEN 'ORGCOP00300' THEN 'PAMPHM00100' -- 사용자
+                                                                                                                  WHEN 'ORGCOP00400' THEN 'PAMPHM00100' -- 사용자
+                                                                                                                  WHEN 'BASAUT00600' THEN 'BASAUT00200' -- 메뉴권한매핑
+                                                                                                                  ELSE EVNT_OCRN_FG_CD
+                                                                                             END ) ORDER BY EVNT_OCRN_DTS DESC ) AS RNK
+                   FROM CI_TBHST_INFO
+                  WHERE APLY_YN = 'N'
+               ) a
+         WHERE 1=1
+         <if test='erpCompSeq != null and erpCompSeq != ""'>
+         and a.COMPANY_CD = #{erpCompSeq}
+         </if>
+         ORDER BY a.RECORD_SQ
+    </select>
+
+    <select id="selectSyncListMaxSq" resultType="hashmap">
+        /* selectSyncListMaxSq - oracle */
+        SELECT MAX(RECORD_SQ) AS "maxRecordSq"
+          FROM CI_TBHST_INFO
+         <if test='erpCompSeq != null and erpCompSeq != ""'>
+             WHERE COMPANY_CD = #{erpCompSeq}
+         </if>
+    </select>
+
+    <update id="updateSyncAplyComplete" parameterType="hashmap">
+        /* updateSyncAplyComplete - oracle */
+        UPDATE CI_TBHST_INFO
+           SET APLY_YN          = 'Y'
+             , APLY_DTS         = SYSDATE
+             , UPDATE_ID        = #{updateId}
+             , UPDATE_IP        = ''
+             , UPDATE_MCADDR_NM = ''
+             , UPDATE_DTS       = SYSDATE
+         WHERE RECORD_SQ       <![CDATA[ <= ]]> #{recordSq}
+           AND APLY_YN          = 'N'
+
+           <if test='erpCompSeq != null and erpCompSeq != ""'>
+               AND COMPANY_CD = #{erpCompSeq}
+           </if>
+           <if test='syncAll != "" and syncAll != null and syncAll.equals("N")'>
+               AND TABLE_ID         = #{tableId}
+               AND EVNT_KEY_VAL_TXT = #{orgEvntKeyValTxt}
+           </if>
+
+    </update>
+
+    <select id="selectFindGempnoToLoginid" resultType="hashmap">
+        /* selectFindGempnoToLoginid - oracle */
+        SELECT GEMP_NO
+          FROM CI_USER_MST
+         WHERE USER_ID = #{loginId}
+    </select>
+
+</mapper>

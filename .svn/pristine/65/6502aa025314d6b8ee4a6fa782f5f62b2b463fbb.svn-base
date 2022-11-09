@@ -1,0 +1,29 @@
+package ebp.portalView.constants;
+
+public class RelatedSearchConstants {
+	/**
+	 * 연관검색어, 연관메뉴 인덱스명
+	 * 대문자가 포함되면 안됨.
+	 * 인덱스 관련해서는 prefix 문구로 사용됨. (인덱스명 구조 : related_search_201905, related_search_201906 ... ) 
+	 * 별칭명으로 사용됨.
+	 */
+	public static final String EL_ALIAS_NAME_RELATED_SEARCH = "related_search";
+	
+	/**
+	 * 타입 별 이름들
+	 */
+	public static final String EL_TYPE_RELATED_SEARCH = "related_search";
+	
+	/**
+	 * 연관메뉴, 연관검색어 저장/조회 타입
+	 */
+	public static final String TYPE_RELATED_MENU = "0";//연관메뉴 저장/조회
+	
+	public static final String TYPE_RELATED_SEARCH_WORD = "1";//연관검색어 저장/조회
+	
+	/**
+	 * 연관검색어/메뉴 갱신 공통 코드
+	 */
+	public static final String RELATED_UPDATE_COMMON_CODE_BASE_DAY = "REL001";//기준일수
+	public static final String RELATED_UPDATE_COMMON_CODE_MAX_COUNT = "REL002";//기준 MAX COUNT
+}

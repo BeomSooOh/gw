@@ -1,0 +1,148 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<meta http-equiv="expires" content="0" />
+<meta http-equiv="expires" content="now" />
+<meta http-equiv="Cache-Control" content="private" />
+<meta http-equiv="Cache-Control" content="No-Cache" />
+<meta http-equiv="Pragma" content="No-Cache" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<title>더존웹에디터 샘플</title>
+
+<!-- 더존웹에디터 include 파일 : iframe 방식 -->
+<script src="./js/dze_iframe_function.js"></script>
+
+<script>
+
+function getEditorHtml(dzeditor_no) {
+	var objWin = getEditorIframeWindow(dzeditor_no);
+	if(null == objWin) return;
+
+	var html = objWin.dzeEnvConfig.fnGetEditorHTMLCode(false, dzeditor_no);
+	alert(html);
+}
+
+function getEditorImage(dzeditor_no) {
+	var objWin = getEditorIframeWindow(dzeditor_no);
+	if(null == objWin) return;
+	console.log(objWin.dzeEnvConfig.fnGetEditorImageUrl(dzeditor_no));
+}
+
+function setEditorHtml(dzeditor_no) {
+	var contents = document.getElementById("content_" + dzeditor_no).value;
+
+	var objWin = getEditorIframeWindow(dzeditor_no);
+	if(null == objWin) return;
+
+	objWin.dzeEnvConfig.fnSetEditorHTMLCode(contents, false, dzeditor_no);
+}
+
+//파일 선택해서, set editor html (2020-08-10)
+function setEditorHtmlFromFile(dzeditor_no) {
+	var fileInput = document.getElementById("fileInput");
+	if(!fileInput) return;
+
+	var file = fileInput.files[0];
+	var textType = /text.*/;
+
+	if (file.type.match(textType)) {
+		var reader = new FileReader();
+
+		reader.onload = function(e) {
+			var contents = reader.result;
+
+			var objWin = getEditorIframeWindow(dzeditor_no);
+			if(null == objWin) return;
+
+			objWin.dzeEnvConfig.fnSetEditorHTMLCode(contents, false, dzeditor_no);
+		}
+
+		reader.readAsText(file);
+	} else {
+		alert("File not supported!");
+	}
+}
+
+function getUploadedFiles(dzeditor_no) {
+	var fileListArray = getUploadedFileListIframe(dzeditor_no);
+
+	if(fileListArray.length == 0) {
+		alert(ID_RES_CONST_STRING_NO_FILES_UPLOADED);
+		return;
+	}
+
+	var ListArray = [];
+	for(var i = 0; i < fileListArray.length; i++) {
+		ListArray.push((i+1)+". name: "+fileListArray[i].filename+", type: "+fileListArray[i].type+", url: "+fileListArray[i].url);
+	}
+	
+	var strListArray = ListArray.join("\n\n");
+
+	alert(strListArray);
+}
+
+function getEditorFonts(dzeditor_no) {
+
+	var objWin = getEditorIframeWindow(dzeditor_no);
+
+	if(null == objWin) return;
+
+	return objWin.dzeEnvConfig.fnGetEditorFonts();
+}
+
+function setEditorFonts(dzeditor_no, strFontName, nCode) {
+
+	var objWin = getEditorIframeWindow(dzeditor_no);
+
+	if(null === objWin) return;
+
+	return objWin.dzeEnvConfig.fnSetEditorFonts(strFontName, nCode) ;
+	
+}
+
+</script>
+
+<script>
+// 더존웹에디터 로딩 완료 시점에 호출되는 함수
+// 함수 호출은 sample_suite_iframe.html 파일에서 선언함
+function dzeditorLoadComplete(dzeditor_no) {
+	setEditorHtml(dzeditor_no);
+}
+
+</script>
+</head>
+
+<body>
+
+<h1 style="text-align:center;">Sample dzeditor</h1>
+
+<div style="text-align:center; margin: 10px 0;">
+    <input type="button" value="컨텐츠 내용 가져오기(get)" onclick="getEditorHtml(0)"/>
+    <div style="display: inline-flex; flex-direction: column;">
+	    <input type="button" value="컨텐츠 내용 설정하기(set)" onclick="setEditorHtml(0)" style="margin-bottom: 5px;"/>	
+		<input id="fileInput" type="file" style="display:none;" onchange="setEditorHtmlFromFile(0)"/>
+		<label for="fileInput" style="border: 1px solid rgb(118, 118, 118); border-radius: 2px; display: inline-block; padding: 3px 6px; font-size: 12px; background-color: rgb(239, 239, 239);">
+		    컨텐츠 내용 설정하기(from file)
+		</label>
+	</div>
+</div>
+
+<div style="text-align:center; margin: 10px 0;">
+    <input type="button" value="업로드 파일 목록 가져오기" onclick="getUploadedFiles(0)" />
+    <input type="button" value="업로드 파일 목록 가져오기-URL" onclick="getEditorImage(0)" />
+</div>
+
+<div style="text-align:center; margin: 10px 0;">
+    <input type="button" value="폰트 추가" onclick="setEditorFonts(0, '폰트추가')"/>
+    <input type="button" value="폰트 삭제" onclick="setEditorFonts(0, '궁서', 1)"/>
+</div>
+
+<div style="margin:auto;width:700px;height:600px;">
+	<iframe dzeditor_no="0" frameborder="0" scrolling="no" width="100%" height="100%" src="sample_suite_iframe.html" style="width:100%;height:100%;" title="에디터영역"></iframe>
+</div>
+
+<textarea id="content_0" cols="0" rows="0" style="display:none"><center><p><br></p></center></textarea>
+
+</body>
+</html>

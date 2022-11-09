@@ -1,0 +1,1121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="DeptManage">
+	
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+		<select id="DeptManage.selectDept" parameterClass="hashmap" resultClass="egovMap">
+			/* DeptManage.selectDept - oracle */
+			
+			SELECT  A.*
+                  , B.*
+                  , (SELECT dept_name FROM t_co_dept_multi WHERE dept_seq = a.parent_dept_seq AND lang_code = #langCode#) AS parentDeptName
+              FROM  t_co_dept a ,
+                    t_co_dept_multi b 
+             WHERE a.dept_seq = b.dept_seq 
+               AND a.dept_seq = #deptSeq#
+               AND b.lang_code =#langCode#
+			<isNotEmpty property="compSeq">
+			   AND a.comp_seq = #compSeq#
+			</isNotEmpty>
+		</select>
+		
+		<select id="DeptManage.selectParentDept" parameterClass="hashmap" resultClass="egovMap">
+			/* DeptManage.selectParentDept - oracle */
+			<isEqual property="qType" compareValue="D">
+				<![CDATA[
+				SELECT 
+					a.group_seq,
+					a.comp_seq,
+					a.biz_seq,
+					a.dept_seq,
+					a.parent_dept_seq,
+					$DB_NEOS$FN_GetMultiLang(#langCode#,b.dept_name_multi) as dept_name
+				 FROM $DB_NEOS$t_co_dept a, $DB_NEOS$v_t_co_dept_multi b 
+				WHERE a.dept_seq = b.dept_seq 
+				  AND a.parent_dept_seq = (select aa.parent_dept_seq from $DB_NEOS$t_co_dept aa where aa.dept_seq = #deptSeq# AND ROWNUM = 1)
+				  AND a.comp_seq = #compSeq#
+				  order by a.order_num asc
+				]]>
+			</isEqual>
+			<isEqual property="qType" compareValue="C">
+				<![CDATA[
+				SELECT 
+					'' AS group_seq,
+					comp_seq,
+					'' AS biz_seq,
+					'0' AS dept_seq,
+					'0' AS parent_dept_seq,
+					$DB_NEOS$FN_GetMultiLang(#langCode#,comp_name_multi) AS dept_name
+				  FROM $DB_NEOS$v_t_co_comp_multi 
+				 WHERE comp_seq = #compSeq# 
+				   AND ROWNUM = 1
+				]]>
+			</isEqual>
+		</select>
+		
+		<select id="DeptManage.getDeptBizInfoLangMulti" parameterClass="hashmap" resultClass="egovMap">
+			/* DeptManage.getDeptBizInfoLangMulti - oracle */
+			select a.dept_name,
+      			NVL(en.dept_name,'') as dept_name_en,
+      			NVL(jp.dept_name,'') as dept_name_jp,
+      			NVL(cn.dept_name,'') as dept_name_cn,
+      			a.dept_nickname,
+      			a.sender_name
+			from $DB_NEOS$t_co_dept_multi a
+      			left join $DB_NEOS$t_co_dept_multi en on a.dept_seq = en.dept_seq and en.lang_code = 'en'
+      			left join $DB_NEOS$t_co_dept_multi jp on a.dept_seq = jp.dept_seq and jp.lang_code = 'jp'
+      			left join $DB_NEOS$t_co_dept_multi cn on a.dept_seq = cn.dept_seq and cn.lang_code = 'cn'
+			where
+				a.lang_code = 'kr'
+				and a.dept_seq = #deptSeq#
+		</select>
+		
+		<select id="DeptManage.getDeptBizInfo" parameterClass="hashmap" resultClass="egovMap">
+			/* DeptManage.getDeptBizInfo - oracle */
+			<isEqual property="gbnOrg" compareValue="d">
+				
+				SELECT 
+					a.group_seq,
+					a.comp_seq,
+					a.dept_cd,
+					a.biz_seq,
+					a.dept_seq,
+					a.parent_dept_seq,
+					a.vir_dept_yn,
+					a.team_yn,
+					CASE WHEN a.vir_dept_yn = 'Y' THEN 'V'
+				    	 WHEN a.team_yn = 'Y' THEN 'T'
+				         ELSE 'D' 
+				    END AS "deptType",
+					a.path,
+					a.dept_level, 
+					a.order_num,
+					a.use_yn,
+					$DB_NEOS$FN_GetMultiLang(#langCode#,b.dept_name_multi) as dept_name,
+					b.dept_display_name,
+					CASE WHEN a.parent_dept_seq = '0' THEN (SELECT $DB_NEOS$FN_GetMultiLang(#langCode#,comp_name_multi) FROM $DB_NEOS$v_t_co_comp_multi WHERE comp_seq = a.comp_seq AND ROWNUM = 1)
+				         ELSE (SELECT $DB_NEOS$FN_GetMultiLang(#langCode#,dept_name_multi) FROM $DB_NEOS$v_t_co_dept_multi WHERE dept_seq = a.parent_dept_seq) 
+				    END AS "parentDeptName",
+				    a.display_yn,
+				    c.seal_file_id,
+				    c.zip_code,
+				    c.comp_regist_num,
+				    c.comp_num,
+				    d.addr,
+				    d.detail_addr,
+				    d.owner_name
+				    <isEqual property="deptCaptain" compareValue="Y">
+				    , dept_manager
+				    </isEqual>
+				 FROM $DB_NEOS$t_co_dept a
+				 inner join $DB_NEOS$v_t_co_dept_multi b on a.dept_seq = b.dept_seq and b.lang_code = #langCode#
+				 left join $DB_NEOS$t_co_biz c on a.biz_seq = c.biz_seq
+				 left join $DB_NEOS$t_co_biz_multi d on a.biz_seq = d.biz_seq and d.lang_code=#langCode# 
+				WHERE a.dept_seq = b.dept_seq 
+				  AND a.dept_seq = #deptSeq#
+			</isEqual>
+			<isEqual property="gbnOrg" compareValue="b">
+				<![CDATA[
+				SELECT 
+					a.group_seq,
+					a.comp_seq,
+					a.biz_seq,
+					'0' AS dept_seq,
+					'0' AS parent_dept_seq,
+					'N' AS vir_dept_yn,
+					'N' AS team_yn,
+					'B' AS "deptType",
+					'' AS path,
+					'' AS dept_level,
+					a.order_num,
+					a.use_yn,
+					$DB_NEOS$FN_GetMultiLang(#langCode#,b.biz_name_multi) AS dept_name,
+					'' AS dept_display_name,
+					b.owner_name,
+					a.comp_num,
+					a.comp_regist_num,
+					a.zip_code,
+					b.addr || ' ' || b.detail_addr AS addr, 
+					(SELECT $DB_NEOS$FN_GetMultiLang(#langCode#,comp_name_multi) FROM $DB_NEOS$v_t_co_comp_multi WHERE comp_seq = a.comp_seq AND ROWNUM = 1) AS "parentDeptName"
+				 FROM $DB_NEOS$t_co_biz a, $DB_NEOS$v_t_co_biz_multi b 
+				WHERE a.biz_seq = b.biz_seq 
+				  AND a.biz_seq = #deptSeq#
+				]]>
+			</isEqual>
+		</select>
+
+		<insert id="DeptManage.insertDept" parameterClass="hashmap">
+			/* DeptManage.insertDept - oracle */
+			MERGE INTO $DB_NEOS$t_co_dept
+		    USING DUAL
+		       ON (dept_seq = #deptSeq#)
+             WHEN MATCHED THEN
+                  UPDATE SET dept_cd = #deptCd#
+				           , group_seq = #groupSeq#  
+				           , comp_seq = #compSeq#  
+				           , biz_seq = #bizSeq#  
+				           , parent_dept_seq = #parentDeptSeq#  
+				           , tel_num = #telNum#  
+				           , fax_num = #faxNum#  
+				           , homepg_addr = #homepgAddr#  
+				           , zip_code = #zipCode#   
+				           , vir_dept_yn = #virDeptYn#  
+				           , team_yn = #teamYn#  
+				           , path = CASE WHEN #parentDeptSeq# = '0' THEN #deptSeq# ELSE $DB_NEOS$get_dept_path('|', #parentDeptSeq#, #groupSeq#) || '|' || #deptSeq# END 
+				           , ptype = #ptype#  
+				           , dept_level = $DB_NEOS$get_dept_level(#deptSeq#, #groupSeq#)  
+				           , order_num = #orderNum#  
+				           , use_yn = #useYn#  
+				           , modify_seq = #modifySeq#  
+				           , modify_date = SYSDATE
+				           , display_yn = #displayYn#
+				             <isEqual property="deptCaptain" compareValue="Y">
+				           , dept_manager = #captainSeqInfo#	
+				             </isEqual>
+             WHEN NOT MATCHED THEN
+                  INSERT (
+                          dept_seq  
+				        , dept_cd
+				        , group_seq  
+				        , comp_seq  
+				        , biz_seq  
+				        , parent_dept_seq  
+				        , tel_num  
+				        , fax_num  
+				        , homepg_addr  
+				        , zip_code  
+				        , susin_yn  
+				        , vir_dept_yn  
+				        , team_yn  
+				        , native_lang_code  
+				        , path  
+				        , dept_level
+				        , ptype  
+				        , order_num  
+				        , use_yn  
+				        , create_seq  
+				        , create_date 
+				        , modify_seq  
+				        , modify_date
+				        , display_yn
+				          <isEqual property="deptCaptain" compareValue="Y">
+				        , dept_manager	
+				          </isEqual>	
+		    		     )
+		    		    
+		          VALUES (
+		                  #deptSeq#  
+				        , #deptCd#
+				        , #groupSeq#  
+				        , #compSeq#  
+				        , #bizSeq#  
+				        , #parentDeptSeq#  
+				        , #telNum#  
+				        , #faxNum#  
+				        , #homepgAddr#  
+				        , #zipCode#  
+				        , #susinYn#  
+				        , #virDeptYn#  
+				        , #teamYn#  
+				        , #nativeLangCode#  
+				        , $DB_NEOS$get_dept_path('|',#deptSeq#, #groupSeq#)  
+				        , $DB_NEOS$get_dept_level(#deptSeq#, #groupSeq#)
+				        , #ptype#  
+				        , #orderNum#  
+				        , #useYn#  
+				        , #createSeq#  
+				        , SYSDATE
+				        , #modifySeq#  
+				        , SYSDATE
+				        , #displayYn#
+				          <isEqual property="deptCaptain" compareValue="Y">
+				        , #captainSeqInfo#	
+				          </isEqual>	
+		                 )  
+			
+		</insert>
+		
+		
+		<insert id="DeptManage.insertDeptMulti" parameterClass="hashmap">
+			/* DeptManage.insertDeptMulti - oracle */
+			MERGE INTO $DB_NEOS$t_co_dept_multi
+		    USING DUAL
+		       ON (dept_seq  = #deptSeq#
+		      AND  lang_code = #langCode#)
+             WHEN MATCHED THEN
+                  UPDATE SET group_seq     = #groupSeq#  
+				           , comp_seq      = #compSeq#  
+				           , biz_seq       = #bizSeq#  
+				           , dept_name     = #deptName#  
+				           , dept_nickname = #deptNickname# 
+				           , sender_name   = #senderName#  
+				           , addr          = #addr#  
+				           , detail_addr   = #detailAddr#  
+				           <isNotEmpty property="pathName">
+				             , path_name  = #pathName# 
+				           </isNotEmpty>
+				           <isEmpty property="pathName">					
+				             , path_name  = CASE WHEN #parentDeptSeq# = '0' THEN #deptName# ELSE $DB_NEOS$get_dept_pathNm('|',#parentDeptSeq#,#groupSeq#,#langCode#) || '|' || #deptName# END
+				           </isEmpty>				
+				           , use_yn        = #useYn#  
+				           , modify_seq    = #modifySeq#  
+				           , modify_date   = SYSDATE
+             WHEN NOT MATCHED THEN
+                  INSERT (
+                          dept_seq  
+				        , lang_code  
+				        , group_seq  
+				        , comp_seq  
+				        , biz_seq 
+				        , dept_name  
+				        , dept_nickname  
+				        , sender_name
+				        , addr   
+				        , detail_addr   
+				        , path_name   
+				        , use_yn   
+				        , create_seq   
+				        , create_date
+				        , modify_seq   
+				        , modify_date		
+		    		     )
+		    		    
+		          VALUES (
+		                  #deptSeq#  
+				        , #langCode#  
+				        , #groupSeq#  
+				        , #compSeq#  
+				        , #bizSeq#  
+				        , #deptName#  
+				        , #deptNickname#  
+				        , #senderName#  
+				        , #addr#  
+				        , #detailAddr#  
+				        , #pathName#  
+				        , #useYn#  
+				        , #createSeq#  
+				        , SYSDATE  
+				        , #modifySeq#  
+				        , SYSDATE
+		                 )  
+			
+		</insert>
+		
+		
+		<insert id="DeptManage.insertDeptMultiApi" parameterClass="hashmap">
+			INSERT INTO $DB_NEOS$`t_co_dept_multi` 
+			SET
+				`dept_seq` = #deptSeq# , 
+				`lang_code` = #langCode# , 
+				`group_seq` = #groupSeq# , 
+				`comp_seq` = #compSeq# , 
+				`biz_seq` = #bizSeq# , 
+				`dept_name` = #deptName# , 
+				`dept_nickname` = #deptNickname# , 
+				`sender_name` = #senderName# , 
+				`addr` = #addr# , 
+				`detail_addr` = #detailAddr# , 
+				`path_name` = #pathName# , 
+				`use_yn` = #useYn# , 
+				`create_seq` = #createSeq# , 
+				`create_date` = NOW() , 
+				`modify_seq` = #modifySeq# , 
+				`modify_date` = NOW()
+			ON DUPLICATE KEY UPDATE
+				`group_seq` = #groupSeq# , 
+				`comp_seq` = #compSeq# , 
+				`biz_seq` = #bizSeq# , 
+				<isNotEmpty property="deptName">
+				`dept_name` = #deptName# ,
+				</isNotEmpty>
+				<isNotEmpty property="deptNickname">
+				`dept_nickname` = #deptNickname# ,
+				</isNotEmpty>
+				<isNotEmpty property="senderName">
+				`sender_name` = #senderName# ,
+				</isNotEmpty> 
+				<isNotEmpty property="addr">
+				`addr` = #addr# , 
+				</isNotEmpty>
+				<isNotEmpty property="detailAddr">
+				`detail_addr` = #detailAddr# ,
+				</isNotEmpty>				 
+				<isNotEmpty property="pathName">
+					`path_name` = #pathName# ,
+				</isNotEmpty>
+				<isEmpty property="pathName">					
+					`path_name` = CASE WHEN #parentDeptSeq# = '0' THEN #deptName# ELSE $DB_NEOS$get_dept_pathNm('|',#parentDeptSeq#,#groupSeq#,#langCode#) || '|' || #deptName# END,
+				</isEmpty>				
+				`use_yn` = #useYn# , 
+				`modify_seq` = #modifySeq# , 
+				`modify_date` = NOW()
+		</insert>
+		
+		
+		<select id="DeptManage.selectCompSortList" parameterClass="hashmap" resultClass="egovMap">
+			/* DeptManage.selectCompSortList - oracle */
+	   		SELECT $DB_NEOS$FN_GetMultiLang(#langCode#, c.detail_name_multi) as detail_name, b.detail_code, d.order_num, d.sort_type, d.comp_seq 
+			FROM 
+				$DB_NEOS$t_co_code a, 
+				$DB_NEOS$t_co_code_detail b LEFT OUTER JOIN (SELECT * FROM $DB_NEOS$t_co_comp_emp_sort WHERE comp_seq = #compSeq# AND use_yn = 'Y') d ON d.sort_field = b.detail_code, 
+				$DB_NEOS$v_t_co_code_detail_multi c
+			WHERE a.code = b.code 
+			AND a.code = #code#
+			AND b.detail_code = c.detail_code 
+			AND a.use_yn = 'Y' 
+			AND b.use_yn = 'Y' 
+			AND c.use_yn = 'Y'
+			ORDER BY d.order_num, b.order_num
+   		</select>
+   		
+   		
+   		<select id="DeptManage.selectCompDeptList" parameterClass="hashmap" resultClass="egovMap">
+   			/* DeptManage.selectCompDeptList - oracle */
+   			select
+   				*
+   			from $DB_NEOS$t_co_dept
+   			where comp_seq = #compSeq#
+   		</select>
+   
+   
+	   <insert id="DeptManage.insertCompEmpSort" parameterClass="hashmap">
+	   	   /* DeptManage.insertCompEmpSort - oracle */
+	   	   MERGE INTO $DB_NEOS$t_co_comp_emp_sort
+		   USING DUAL
+		      ON (comp_seq  = #compSeq#
+		     AND  order_num = #orderNum#)
+            WHEN MATCHED THEN
+                 UPDATE SET sort_field  = #sortField#  
+					      , sort_type   = #sortType# 
+					      , use_yn      = #useYn# 
+					      , create_seq  = #createSeq#  
+					      , create_date = SYSDATE
+					      , modify_seq  = #modifySeq#  
+					      , modify_date = SYSDATE
+            WHEN NOT MATCHED THEN
+                 INSERT (
+                         comp_seq   
+					   , sort_field 
+					   , sort_type  
+					   , order_num  
+					   , use_yn     
+					   , create_seq 
+					   , create_date
+					   , modify_seq 
+					   , modify_date
+		   		     )
+		   		    
+		         VALUES (
+		                 #compSeq#  
+					   , #sortField#  
+					   , #sortType#  
+					   , #orderNum#  
+					   , #useYn# 
+					   , #createSeq#  
+					   , SYSDATE
+					   , #modifySeq#  
+					   , SYSDATE
+		                )  
+					
+		</insert>
+		
+		<update id="DeptManage.updateDeptOrderNum" parameterClass="hashmap">
+			/* DeptManage.updateDeptOrderNum - oracle */
+			MERGE INTO $DB_NEOS$t_co_dept
+		    USING DUAL
+		       ON (dept_seq = #deptSeq#)
+             WHEN MATCHED THEN
+                  UPDATE SET order_num   = #orderNum#,
+			                 modify_seq  = #modifySeq#,
+			                 modify_date = SYSDATE
+             WHEN NOT MATCHED THEN
+                  INSERT (
+                          group_seq
+                        , comp_seq
+                        , biz_seq
+                        , dept_seq
+                        , order_num
+                        , modify_seq
+                        , modify_date		
+		    		     )
+		    		    
+		          VALUES (
+		                  #groupSeq#
+		                , #compSeq#
+		                , #bizSeq#
+		                , #deptSeq#
+		                , #orderNum#
+		                , #modifySeq#
+		                , SYSDATE
+		                 )  
+			
+		</update>
+		
+	    <select id="DeptManage.getDeptExist" parameterClass="hashmap" resultClass="Integer">
+	        /* DeptManage.getDeptExist - oracle */
+            SELECT count(*) 
+            FROM ( SELECT A.* , '|' || a.path || '|' AS fPath 
+                   FROM $DB_NEOS$v_org_chart_admin A
+                 ) AA 
+            WHERE INSTR(substr(fPath,length('|' || comp_seq || '|'),length(fPath)) , '|' || #deptSeq# || '|') > 0
+            AND   seq != #deptSeq# 
+            <isNotEmpty property="chkType">
+              <isEqual property="chkType" compareValue="U"> 
+            AND   use_yn = 'Y'  <!-- 사용여부 -->
+              </isEqual>
+            </isNotEmpty>            
+        </select>
+        
+	    <select id="DeptManage.getEmpExist" parameterClass="hashmap" resultClass="Integer">
+            /* DeptManage.getEmpExist - oracle */
+            SELECT count(*) FROM $DB_NEOS$v_user_info
+            WHERE  dept_seq = #deptSeq# 
+            AND    e_use_yn = 'Y'
+            AND    ed_use_yn = 'Y'
+            AND    emd_use_yn = 'Y'
+            <isNotEmpty property="chkType">
+              <isEqual property="chkType" compareValue="U"> 
+            AND    work_status != '001'  <!-- 퇴직 -->
+              </isEqual>
+            </isNotEmpty>
+        </select>
+        
+		<delete id="DeptManage.deleteDept" parameterClass="hashmap">
+		    /* DeptManage.deleteDept - oracle */		
+			delete
+			from $DB_NEOS$t_co_dept
+			where
+				dept_seq = #deptSeq#
+		</delete>
+		
+		<delete id="DeptManage.deleteDeptMulti" parameterClass="hashmap">
+		    /* DeptManage.deleteDeptMulti - oracle */
+			delete
+			from $DB_NEOS$t_co_dept_multi
+			where
+				dept_seq = #deptSeq#
+		</delete>        
+		
+		
+		<select id="DeptManage.getDeptBatchInfo" parameterClass="hashmap" resultClass="egovMap">
+			/* DeptManage.getDeptBatchInfo - oracle */
+			SELECT 
+				A.*, B.*, C.*, D.*, E.*
+				, CASE WHEN b.check_ori_dept_seq is not null
+                        AND a.dept_path = b.path THEN '1' ELSE '0' END AS check_dept_path  
+			FROM
+				(
+					SELECT 
+						A.*
+						,CASE WHEN A.dept_type='사업장' THEN B.biz_seq ELSE null END check_biz_seq						
+					FROM $DB_NEOS$t_co_dept_batch A
+					LEFT JOIN $DB_NEOS$t_co_biz B on A.dept_seq = B.biz_cd
+					WHERE batch_seq = #retKey#
+				) a
+			LEFT JOIN
+				(
+					SELECT 
+						COUNT(a.dept_seq) AS check_dept_seq
+						,a.dept_seq
+                        , MIN(b.path) KEEP (DENSE_RANK FIRST ORDER BY a.dept_seq) AS path
+                        , MIN(b.dept_seq) KEEP (DENSE_RANK FIRST ORDER BY a.dept_seq) AS check_ori_dept_seq
+					FROM $DB_NEOS$t_co_dept_batch a
+					LEFT JOIN
+						$DB_NEOS$t_co_dept b
+					ON
+						a.comp_seq = b.comp_seq and a.dept_seq = b.dept_cd
+					WHERE
+						batch_seq = #retKey#
+					GROUP BY a.dept_seq
+				) b on a.dept_seq = b.dept_seq
+			LEFT JOIN
+				(
+					SELECT 
+						COUNT(dept_seq) check_parent_dept_seq
+						,dept_seq
+					FROM $DB_NEOS$t_co_dept_batch
+					WHERE
+						batch_seq = #retKey# 
+					GROUP BY  dept_seq					
+				)c on a.parent_dept_seq = c.dept_seq
+			LEFT JOIN
+				(
+					SELECT 
+						COUNT(dept_seq) check_dept_seq_batch
+						,dept_seq
+					FROM $DB_NEOS$t_co_dept_batch
+					WHERE
+						batch_seq = #retKey# 
+					GROUP BY  dept_seq					
+				)d on a.dept_seq = d.dept_seq	
+			LEFT JOIN
+				(
+					SELECT 
+						COUNT(b.comp_seq) check_comp_seq
+						,b.comp_seq	as comp_seq1				
+					FROM $DB_NEOS$t_co_dept_batch a
+					left join $DB_NEOS$t_co_comp b on a.comp_seq = b.comp_seq
+					WHERE
+						batch_seq = #retKey#	
+					GROUP BY b.comp_seq				
+				)e on a.comp_seq = e.comp_seq1			
+		</select>
+		
+		<select id="DeptManage.getDeptInfo" parameterClass="hashMap" resultClass="egovMap">
+			/* DeptManage.getDeptInfo - oracle */
+			SELECT 
+				*
+			FROM
+				$DB_NEOS$t_co_dept
+			WHERE
+				dept_seq = #deptSeq#		
+		</select>
+		
+		
+		<select id="DeptManage.getSelectedDeptBatchInfo" parameterClass="hashMap" resultClass="egovMap">
+			/* DeptManage.getSelectedDeptBatchInfo - oracle */
+			SELECT
+				*
+			FROM
+				$DB_NEOS$t_co_dept_batch
+			WHERE
+				batch_seq = #retKey#
+				AND (dept_seq IN ($strDeptSeq$) AND parent_dept_seq IN ($strParDeptSeq$))
+            ORDER BY TO_NUMBER(seq)
+		</select>
+		
+		
+		<select id="DeptManage.getDeptSeqList" parameterClass="hashmap" resultClass="egovMap">
+			/* DeptManage.getDeptSeqList - oracle */
+			select *
+			from $DB_NEOS$t_co_dept
+			where
+				dept_seq = #deptSeq#
+			  AND ROWNUM = 1
+		</select>
+		
+		<select id="DeptManage.getBizSeqList" parameterClass="hashmap" resultClass="egovMap">
+			select *
+			from $DB_NEOS$t_co_biz
+			where
+				biz_seq = #deptSeq#
+			limit 1
+		</select>
+		
+		<delete id="DeptManage.deleteDeptBatchInfo" parameterClass="hashmap">
+			/* DeptManage.deleteDeptBatchInfo - oracle */
+			DELETE FROM $DB_NEOS$t_co_dept_batch
+			WHERE
+				batch_seq = #retKey#
+				<isNotEmpty property="strBatchSeq">
+					AND seq IN ($strBatchSeq$)
+				</isNotEmpty>				
+		</delete>
+		
+		<select id="DeptManage.getChildDeptInfoList" parameterClass="hashmap" resultClass="egovMap">
+			/* DeptManage.getChildDeptInfoList - oracle */
+			SELECT * FROM
+			$DB_NEOS$t_co_dept
+			WHERE
+				parent_dept_seq = #deptSeq#		
+		</select>
+		
+		
+		<update id="DeptManage.updateChildDeptInfo" parameterClass="hashmap">
+			/* DeptManage.updateChildDeptInfo - oracle */
+			MERGE INTO $DB_NEOS$t_co_dept A
+		    USING t_co_dept_multi B
+		       ON (A.dept_seq = B.dept_seq)
+             WHEN MATCHED THEN
+                   UPDATE SET A.path = $DB_NEOS$get_dept_path('|', A.dept_seq, #groupSeq#)
+				            , A.dept_level = $DB_NEOS$get_dept_level(A.dept_seq, #groupSeq#)
+				            , A.biz_seq = #bizSeq#
+				    WHERE INSTR('|' || A.path || '|', '|' || #deptSeq# || '|')	> 0
+		              AND B.lang_code = #langCode#
+		</update>
+		
+		
+		<update id="DeptManage.updateChildDeptMultiInfo" parameterClass="hashmap">
+			/* DeptManage.updateChildDeptMultiInfo - oracle */
+			MERGE INTO $DB_NEOS$t_co_dept_multi A
+		    USING $DB_NEOS$t_co_dept B
+		       ON (A.dept_seq = B.dept_seq)
+             WHEN MATCHED THEN
+                   UPDATE SET A.path_name = $DB_NEOS$get_dept_pathNm('|', A.dept_seq, A.group_seq, A.lang_code)
+							, A.biz_seq = #bizSeq#
+				    WHERE (INSTR('|' || B.path || '|', '|' || #deptSeq# || '|') > 0 or INSTR('|' || B.path || '|', '|' || #deptSeq# || '|') > 0 or B.dept_seq = #deptSeq#)
+		</update>
+		
+		<update id="DeptManage.updateChildDeptLevelInfo" parameterClass="hashmap">
+			/* DeptManage.updateChildDeptLevelInfo - oracle */
+			UPDATE $DB_NEOS$t_co_dept 
+			SET
+				dept_level = $DB_NEOS$get_dept_level(dept_seq, #groupSeq#)
+			WHERE
+				(INSTR('|' || path || '|', '|' || #deptSeq# || '|') > 0 or INSTR('|' || path || '|', '|' || #deptSeq# || '|') > 0 or dept_seq = #deptSeq#)	
+		</update>
+		
+		
+		<select id="DeptManage.getDeptBatchCompList" parameterClass="hashmap" resultClass="egovMap">
+			/* DeptManage.getDeptBatchCompList - oracle */
+			SELECT DISTINCT
+				comp_seq
+			FROM
+				$DB_NEOS$t_co_dept_batch
+			WHERE batch_seq = #retKey#		
+		</select>
+		
+		<update id="DeptManage.updateBizInfo" parameterClass="hashmap">
+			UPDATE
+				$DB_NEOS$t_co_biz
+			SET
+				comp_regist_num = #compRegistNum#,
+				comp_num = #compNum#,
+				zip_code = #zipCode#,
+				order_num = #orderNum#,
+				use_yn = #useYn#,
+				display_yn = #displayYn#,
+				biz_cd = #deptCd#
+			WHERE
+				biz_seq = #deptSeq#
+		</update>
+		
+		
+		<update id="DeptManage.updateBizMultiInfo" parameterClass="hashmap">
+<!-- 			UPDATE -->
+<!-- 				t_co_biz_multi -->
+<!-- 			SET -->
+<!-- 				biz_name = #deptName#, -->
+<!-- 				owner_name = #ownerName#, -->
+<!-- 				addr = #bizAddr#, -->
+<!-- 				detail_addr = #bizDetailAddr# -->
+<!-- 			WHERE -->
+<!-- 				biz_seq = #deptSeq# -->
+			INSERT INTO $DB_NEOS$`t_co_biz_multi` 
+			SET
+				biz_seq = #deptSeq#,
+				lang_code = #langCode#,
+				group_seq = #groupSeq#,
+				comp_seq = #compSeq#,
+				biz_name = #deptName#,
+				owner_name = #ownerName#,
+				addr = #addr#,
+				detail_addr = #detailAddr#,
+				use_yn = #useYn#
+			ON DUPLICATE KEY UPDATE
+				biz_name = #deptName#,
+				owner_name = #ownerName#,
+				addr = #addr#,
+				detail_addr = #detailAddr#,
+				use_yn = #useYn#	
+		</update>
+		
+		<delete id="DeptManage.deleteBizInfo" parameterClass="hashmap">
+			DELETE FROM
+				$DB_NEOS$t_co_biz
+			WHERE
+				biz_seq = #bizSeq#
+		</delete>
+		
+		<delete id="DeptManage.deleteBizMultiInfo" parameterClass="hashmap">
+			DELETE FROM
+				$DB_NEOS$t_co_biz_multi
+			WHERE
+				biz_seq = #bizSeq#
+		</delete>
+		
+		<update id="DeptManage.UpdateBizAddInfomation" parameterClass="hashmap">
+			/* DeptManage.UpdateBizAddInfomation - oracle */
+			UPDATE
+				$DB_NEOS$t_co_biz
+			SET				
+				seal_file_id = #sealFileId#,
+				biz_cd = #bizCd#
+			WHERE
+				biz_seq = #bizSeq#
+		</update>
+		
+		
+		<select id="DeptManage.selectBizInfo" parameterClass="hashmap" resultClass="egovMap">
+			/* DeptManage.selectBizInfo - oracle */
+			select
+				group_seq
+				,comp_seq
+				,'' as dept_seq
+				,biz_seq
+				,biz_cd as "deptCd"
+				,'0' as parent_dept_seq
+				,use_yn
+				,order_num
+				,'N' as team_yn
+				,'N' as vir_dept_yn
+				,a.seal_file_id
+				,a.display_yn
+				,'B' as dept_type
+				,zip_code	
+				,comp_regist_num
+				,comp_num
+				,fax_num
+				,(SELECT $DB_NEOS$FN_GetMultiLang(#langCode#,comp_name_multi) FROM $DB_NEOS$v_t_co_comp_multi WHERE comp_seq = a.comp_seq AND ROWNUM = 1) AS "parentDeptName"	
+			from
+				$DB_NEOS$t_co_biz a
+			where
+				biz_seq = #deptSeq#
+		</select>
+		
+		<select id="DeptManage.selectDeptInfo" parameterClass="hashmap" resultClass="egovMap">
+			/* DeptManage.selectDeptInfo - oracle */
+			select
+				group_seq
+				,comp_seq
+				,dept_seq
+				,biz_seq
+				,dept_cd as "deptCd"
+				,parent_dept_seq
+				,use_yn
+				,order_num
+				,team_yn
+				,vir_dept_yn
+				,'' seal_file_id
+				,CASE WHEN vir_dept_yn = 'Y' THEN 'V'
+			    	 WHEN team_yn = 'Y' THEN 'T'
+			    	 WHEN ea_yn = 'Y' THEN 'E'
+			         ELSE 'D' 
+			    END AS dept_type			    
+				,zip_code
+				,'' as comp_regist_num
+				,'' as comp_num		
+				,CASE WHEN a.parent_dept_seq = '0' THEN (SELECT $DB_NEOS$FN_GetMultiLang(#langCode#,comp_name_multi) FROM $DB_NEOS$v_t_co_comp_multi WHERE comp_seq = a.comp_seq AND ROWNUM = 1)
+				         ELSE (SELECT $DB_NEOS$FN_GetMultiLang(#langCode#,dept_name_multi) FROM $DB_NEOS$v_t_co_dept_multi WHERE dept_seq = a.parent_dept_seq) 
+				    END AS "parentDeptName"
+				,a.display_yn
+				,a.inner_receive_yn
+				,NVL(a.standard_code,'') as standard_code
+			from
+				$DB_NEOS$t_co_dept a
+			where
+				dept_seq = #deptSeq#
+		</select>
+		
+		<select id="DeptManage.selectBizMultiInfo" parameterClass="hashmap" resultClass="egovMap">
+			/* DeptManage.selectBizMultiInfo - oracle */
+			select a.biz_name as dept_name,
+      			NVL(en.biz_name,'') as dept_name_en,
+      			NVL(jp.biz_name,'') as dept_name_jp,
+      			NVL(cn.biz_name,'') as dept_name_cn,
+      			a.biz_nickname as dept_nickname,
+      			a.sender_name as sender_name,
+      			a.owner_name,
+      			a.addr,
+      			a.detail_addr      			
+			from $DB_NEOS$t_co_biz_multi a
+      			left join $DB_NEOS$t_co_biz_multi en on a.biz_seq = en.biz_seq and en.lang_code = 'en'
+      			left join $DB_NEOS$t_co_biz_multi jp on a.biz_seq = jp.biz_seq and jp.lang_code = 'jp'
+      			left join $DB_NEOS$t_co_biz_multi cn on a.biz_seq = cn.biz_seq and cn.lang_code = 'cn'
+			where
+				a.lang_code = 'kr'
+				and a.biz_seq = #deptSeq#
+		</select>
+		
+		<select id="DeptManage.selectDeptMultiInfo" parameterClass="hashmap" resultClass="egovMap">
+			/* DeptManage.selectDeptMultiInfo - oracle */
+			select a.dept_name,
+      			NVL(en.dept_name,'') as dept_name_en,
+      			NVL(jp.dept_name,'') as dept_name_jp,
+      			NVL(cn.dept_name,'') as dept_name_cn,
+      			a.dept_nickname,
+      			a.sender_name,
+      			'' owner_name,
+      			a.addr,
+      			a.detail_addr 
+			from $DB_NEOS$t_co_dept_multi a
+      			left join $DB_NEOS$t_co_dept_multi en on a.dept_seq = en.dept_seq and en.lang_code = 'en'
+      			left join $DB_NEOS$t_co_dept_multi jp on a.dept_seq = jp.dept_seq and jp.lang_code = 'jp'
+      			left join $DB_NEOS$t_co_dept_multi cn on a.dept_seq = cn.dept_seq and cn.lang_code = 'cn'
+			where
+				a.lang_code = 'kr'
+				and a.dept_seq = #deptSeq#
+		</select>
+		
+		<select id="DeptManage.getDeptBizExist" parameterClass="hashmap" resultClass="Integer">
+			/* DeptManage.getDeptBizExist - oracle */
+			select 
+				count(biz_seq)
+			from
+				$DB_NEOS$t_co_dept
+			where
+				biz_seq = #bizSeq# AND use_yn = 'Y'		
+		</select>
+		
+		<update id="DeptManage.UpdateBizAddInfo" parameterClass="hashmap">
+			update
+				$DB_NEOS$t_co_biz_multi
+			set
+				sender_name = #senderName#,
+				biz_nickname = #bizNickname#
+			where
+				biz_seq = #bizSeq#
+		</update>
+		
+		<update id="DeptManage.UpdateDisplayDeptSeq" parameterClass="hashmap">
+			/* DeptManage.UpdateDisplayDeptSeq - oracle */
+			update
+				$DB_NEOS$t_co_dept
+			set
+				display_dept_seq = $DB_NEOS$get_display_dept_seq(dept_seq, group_seq),
+				display_yn = #deptDisplayYn#
+			where
+				comp_seq = #compSeq#
+				<isNotEmpty property="deptSeq">
+				AND dept_seq = #deptSeq#
+				</isNotEmpty>				
+		</update>
+		
+		
+		<select id="DeptManage.selectDeptCd" parameterClass="hashmap" resultClass="egovMap">
+			/* DeptManage.selectDeptCd - oracle */
+			select
+				dept_cd
+			from
+				$DB_NEOS$t_co_dept
+			where
+				comp_seq = #compSeq# and dept_cd = #deptCd#
+				<isNotEmpty property="deptSeq">
+				AND dept_seq != #deptSeq#
+				</isNotEmpty>
+			  AND ROWNUM = 1
+		</select>
+		
+		<select id="DeptManage.selectBizCd" parameterClass="hashmap" resultClass="egovMap">
+			/* DeptManage.selectBizCd - oracle */
+			select
+				biz_cd
+			from
+				$DB_NEOS$t_co_biz
+			where
+				comp_seq = #compSeq# and biz_cd = #deptCd#
+				<isNotEmpty property="deptSeq">
+				AND biz_seq != #deptSeq#
+				</isNotEmpty>
+			AND ROWNUM = 1
+		</select>
+		
+		<select id="DeptManage.getDeptSeqByCd" parameterClass="hashmap" resultClass="egovMap">
+			/* DeptManage.getDeptSeqByCd - oracle */
+			select
+				*
+			from
+				$DB_NEOS$t_co_dept
+			where
+				dept_cd = #deptSeq#
+			AND ROWNUM = 1
+		</select>
+		
+		<select id="DeptManage.getBizInfoByCd" parameterClass="hashmap" resultClass="egovMap">
+			/* DeptManage.getDeptSeqByCd - oracle */
+			select
+				*
+			from
+				$DB_NEOS$t_co_biz
+			where
+				biz_cd = #deptSeq#
+			AND ROWNUM = 1
+		</select>
+		
+		<select id="DeptManage.getCompInfoByCd" parameterClass="hashmap" resultClass="egovMap">
+			/* DeptManage.getCompInfoByCd - oracle */
+			select
+				*
+			from
+				$DB_NEOS$t_co_comp
+			where
+				comp_cd = #compSeq#
+			  AND ROWNUM = 1
+		</select>
+		
+		<select id="DeptManage.getParDeptInfoByCd" parameterClass="hashmap" resultClass="egovMap">
+			/* DeptManage.getParDeptInfoByCd - oracle */
+			select
+				*
+			from
+				$DB_NEOS$t_co_dept
+			where
+				dept_cd = #parentDeptSeq#
+			AND ROWNUM = 1
+		</select>
+		
+		<select id="DeptManage.getBizByCd" parameterClass="hashmap" resultClass="egovMap">
+			/* DeptManage.getBizByCd - oracle */
+			select
+				*
+			from
+				$DB_NEOS$t_co_biz
+			where
+				biz_cd = #bizSeq#
+			AND ROWNUM = 1
+		</select>
+		
+		
+		<update id="DeptManage.updateOrgchartSeq" parameterClass="hashmap">
+			update $DB_NEOS$t_seq set currval = (
+				select max(maxNum+1) from(
+					select max(comp_seq + 0) maxNum from $DB_NEOS$t_co_comp
+					union all
+					select max(biz_seq + 0) maxNum from $DB_NEOS$t_co_biz
+					union all
+					select max(dept_seq + 0) maxNum from $DB_NEOS$t_co_dept
+					union all
+					select max(emp_seq + 0) maxNum from $DB_NEOS$t_co_emp
+				)a
+			)
+			where name = 'orgchart';
+		</update>
+		
+		<select id="DeptManage.selectParentDeptInfo" parameterClass="hashmap" resultClass="egovMap">
+			/* DeptManage.selectParentDeptInfo - oracle */
+			select
+				*
+			from
+				$DB_NEOS$t_co_dept
+			where
+				dept_seq = #parentDeptSeq#
+			AND ROWNUM = 1
+		</select>
+		
+		
+		<update id="DeptManage.UpdateBizSealFileId" parameterClass="hashmap">
+			/* DeptManage.UpdateBizSealFileId - oracle */
+			update
+				$DB_NEOS$t_co_biz
+			set
+				seal_file_id = #sealFileId#
+			where
+				biz_seq = #bizSeq#
+		</update>
+		
+		<update id="DeptManage.UpdateEmpDeptBizInfo" parameterClass="hashmap">
+			UPDATE $DB_NEOS$t_co_emp_dept A 
+			INNER JOIN $DB_NEOS$t_co_dept B on A.dept_seq = B.dept_seq
+			SET
+				A.biz_seq = #bizSeq#
+			WHERE
+				('|' || B.path || '|') like ('|%' || #deptSeq# || '%|')	
+				or B.dept_seq = #deptSeq#				
+		</update>
+		
+		<update id="DeptManage.UpdateEmpDeptMultiBizInfo" parameterClass="hashmap">
+			UPDATE $DB_NEOS$t_co_emp_dept_multi A 
+			INNER JOIN $DB_NEOS$t_co_dept B on A.dept_seq = B.dept_seq
+			SET
+				A.biz_seq = #bizSeq#
+			WHERE
+				('|' || B.path || '|') like ('|%' || #deptSeq# || '%|')	
+				or B.dept_seq = #deptSeq#
+		</update>
+		
+		<update id="DeptManage.UpdateEmpCompBizInfo" parameterClass="hashmap">
+			UPDATE $DB_NEOS$t_co_emp_comp A 
+			INNER JOIN $DB_NEOS$t_co_dept B on A.dept_seq = B.dept_seq
+			SET
+				A.biz_seq = #bizSeq#
+			WHERE
+				('|' || B.path || '|') like ('|%' || #deptSeq# || '%|'))	
+				or B.dept_seq = #deptSeq#
+		</update>		
+		
+		<update id="DeptManage.UpdateErpDeptBizInfo" parameterClass="hashmap">
+			UPDATE $DB_NEOS$t_co_erp_dept A 
+			INNER JOIN $DB_NEOS$t_co_dept B on A.dept_seq = B.dept_seq
+			SET
+				A.biz_seq = #bizSeq#
+			WHERE
+				('|' || B.path || '|') like ('|%' || #deptSeq# || '%|')	
+				or B.dept_seq = #deptSeq#
+		</update>
+		
+		<update id="DeptManage.UpdateErpEmpBizInfo" parameterClass="hashmap">
+			UPDATE $DB_NEOS$t_co_erp_emp A 
+			INNER JOIN $DB_NEOS$t_co_dept B on A.dept_seq = B.dept_seq
+			SET
+				A.biz_seq = #bizSeq#
+			WHERE
+				('|' || B.path || '|') like ('|%' || #deptSeq# || '%|')	
+				or B.dept_seq = #deptSeq#
+		</update>
+		
+		<select id="DeptManage.getDeptInfoByCd" parameterClass="hashmap" resultClass="egovMap">
+			select
+				a.comp_seq,
+				a.biz_seq,
+				a.dept_seq
+			from
+				$DB_NEOS$t_co_dept a
+			inner join $DB_NEOS$t_co_comp b on a.comp_seq = b.comp_seq
+			where
+				a.dept_cd = #deptSeq# and b.comp_cd = #compSeq#
+			limit 1
+		</select>
+		
+		
+		<select id="DeptManage.checkDeptInsertValidation" parameterClass="hashmap" resultClass="egovMap">
+			select 
+			(select count(*) from $DB_NEOS$t_co_dept where dept_seq = #deptSeq#) as checkDeptSeq,	
+			(select count(*) from $DB_NEOS$t_co_dept where dept_seq = #parentDeptSeq# and biz_seq = #bizSeq#) as checkBizSeq,
+			(select count(*) from $DB_NEOS$t_co_dept where dept_seq = #parentDeptSeq#) as checkParDeptSeq,
+			(select count(*) from $DB_NEOS$t_co_comp where comp_seq = #compSeq#) as checkComp		
+		</select>
+		
+		<delete id="DeptManage.delDeptMulti" parameterClass="hashmap">
+			 delete from
+			 	$DB_NEOS$t_co_dept_multi
+			 where
+			 	dept_seq = #deptSeq# and lang_code = #langCode#
+		</delete>
+		
+		<delete id="DeptManage.delBizMulti" parameterClass="hashmap">
+			 delete from
+			 	$DB_NEOS$t_co_biz_multi
+			 where
+			 	biz_seq = #deptSeq# and lang_code = #langCode#
+		</delete>
+		
+		
+		<update id="DeptManage.updateChildDeptDisplayYn" parameterClass="hashmap">
+			update $DB_NEOS$t_co_dept
+			set
+				display_yn = #deptDisplayYn#
+			where
+				('|' || path || '|') like('%|$deptSeq$|%')		
+		</update>
+		
+		<update id="DeptManage.UpdateInnerReceiveYn" parameterClass="hashmap">
+			update $DB_NEOS$t_co_dept
+			set
+				inner_receive_yn = #innerReceiveYn#
+			where dept_seq = #deptSeq#
+		</update>
+        
+        <select id="DeptManage.getBizSeqFromBizCd" parameterClass="hashmap" resultClass="string">
+            SELECT biz_seq
+              FROM $DB_NEOS$t_co_biz
+             WHERE comp_seq = #compSeq#
+               AND biz_cd   = #bizCd#
+        </select>
+            
+        <select id="DeptManage.getDeptSeqFromDeptCd" parameterClass="hashmap" resultClass="string">
+            SELECT dept_seq
+              FROM $DB_NEOS$t_co_dept
+             WHERE comp_seq = #compSeq#
+               AND dept_Cd  = #deptCd#
+        </select>
+        
+        <select id="DeptManage.getBizSeqFromDeptCd" parameterClass="hashmap" resultClass="string">
+            SELECT biz_seq
+              FROM $DB_NEOS$t_co_dept
+             WHERE comp_seq = #compSeq#
+               AND dept_Cd  = #deptCd#
+        </select>
+</sqlMap>

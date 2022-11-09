@@ -1,0 +1,92 @@
+<header class="head" data-height="56" data-role="header" style="height: 56px; z-index: 1">
+	<div class="left_div">
+		<a class="btn_can" ng-click="cancel()"></a>
+	</div>
+	
+	<h1>문서 양식</h1>
+	
+	<div class="right_div">
+		<a class="btn_check" ng-click="confirm()"></a>
+	</div>
+</header>
+
+<section id="id_template_scroll" class="con" data-height="*" data-role="content" style="position: absolute; top:56px; left: 0; right:0; z-index: 0; background: #eeeeee;">
+	<div class="con_in" style="width: 100%;">
+		<table id="id_template_grid" cellpadding="0" cellspacing="0" style="width: calc(100% - 32px); margin: 16px; table-layout: fixed;">
+			<colgroup>
+				<col width="50%">
+				<col width="50%">
+			</colgroup>
+			
+			<tbody>
+				<!-- 업무보고 -->
+<!--				<tr>
+					<td colspan="2" style="padding-bottom: 10px;">
+						<span class="temp_title">업무 보고</span>
+					</td>
+				</tr>-->
+				<tr>
+					<td class="grid_item" temp_index="0_0">
+						<div>
+							<img class="temp_img" src="./mobile/images/temp/template_01.png">
+						</div>
+						<div style="margin-top: 10px;">
+							<span class="temp_text">일일업무보고</span>
+						</div>
+					</td>
+					<td class="grid_item" temp_index="0_1">
+						<div>
+							<img class="temp_img" src="./mobile/images/temp/template_02.png">
+						</div>
+						<div style="margin-top: 10px;">
+							<span class="temp_text">수시업무보고</span>
+						</div>
+					</td>
+				</tr>
+				
+				<!-- 회의록 -->
+<!--				<tr>
+					<td colspan="2" style="padding-bottom: 10px;">
+						<span class="temp_title">회의록</span>
+					</td>
+				</tr>-->
+				<tr>
+					<td class="grid_item" temp_index="1_0">
+						<div>
+							<img class="temp_img" src="./mobile/images/temp/template_03.png">
+						</div>
+						<div style="margin-top: 10px;">
+							<span class="temp_text">회의록</span>
+						</div>
+					</td>
+					<td class="grid_item" temp_index="2_0">
+						<div>
+							<img class="temp_img" src="./mobile/images/temp/template_04.png">
+						</div>
+						<div style="margin-top: 10px;">
+							<span class="temp_text">이슈 보고서</span>
+						</div>
+					</td>
+				</tr>
+				
+				<!-- 보고서 -->
+<!--				<tr>
+					<td colspan="2" style="padding-bottom: 10px;">
+						<span class="temp_title">보고서</span>
+					</td>
+				</tr>-->
+				<tr>
+					<td class="grid_item" temp_index="2_1">
+						<div>
+							<img class="temp_img" src="./mobile/images/temp/template_05.png">
+						</div>
+						<div style="margin-top: 10px;">
+							<span class="temp_text">사업 계획 보고서</span>
+						</div>
+					</td>
+					<td class="grid_item"></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</section>

@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="EmpManage">
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+	<select id="EmpManage.selectUserInfo_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+		SELECT count(v.emp_seq) as TOTAL_COUNT 
+			FROM v_user_info v
+			WHERE
+				v.group_seq = #groupSeq#
+				<isEmpty property="isGroupAll">
+					<isEqual property="isGroupAll" compareValue="N">
+						<isNotEmpty property="compSeq">
+						AND v.comp_seq = #compSeq#
+						</isNotEmpty>
+					</isEqual>
+				</isEmpty>
+				AND v.emp_lang_code = #langCode#
+				AND v.dept_lang_code = #langCode#
+				AND v.comp_lang_code = #langCode#
+			<isNotEmpty property="empSeq">
+				AND v.emp_seq = #empSeq#
+			</isNotEmpty>	
+			<isNotEmpty property="deptSeq">
+				AND v.dept_seq = #deptSeq#
+			</isNotEmpty>
+			
+			<isNotEmpty property="bizSeq">
+				AND v.biz_seq = #bizSeq#
+			</isNotEmpty>
+			<isNotEmpty property="empName">
+				AND v.emp_name LIKE '%$empName$%'
+			</isNotEmpty>
+			<isNotEmpty property="loginId">
+				AND v.login_id = #loginId#
+			</isNotEmpty>
+			<isNotEmpty property="nameAndLoginId">
+				AND ( v.emp_name LIKE '%$nameAndLoginId$%' OR v.login_id LIKE '%$nameAndLoginId$%')
+			</isNotEmpty>
+			<isNotEmpty property="mainDeptYn">
+				AND v.main_dept_yn = #mainDeptYn#
+			</isNotEmpty>
+			<isNotEmpty property="dutyCode">
+				AND v.duty_code = #dutyCode#
+			</isNotEmpty>
+			<isNotEmpty property="positionCode">
+				AND v.position_code = #positionCode#
+			</isNotEmpty>
+			<isNotEmpty property="deptName">
+				AND v.dept_name LIKE '%$deptName$%'
+			</isNotEmpty>
+			<isNotEmpty property="workStatus">
+				AND v.work_status = #workStatus#
+			</isNotEmpty>
+			<isNotEmpty property="useYn">
+				AND v.use_yn = #useYn#
+			</isNotEmpty>
+			
+			<isNotEmpty property="userSe">
+				<isEqual property="userSe" compareValue="USER">
+				AND v.e_use_yn = 'Y'
+				AND v.ed_use_yn = 'Y'
+				AND v.emd_use_yn = 'Y'
+				AND v.cm_use_yn = 'Y'
+				AND v.dm_use_yn = 'Y'
+				</isEqual>
+			</isNotEmpty>
+			
+			<isNotEmpty property="deptSeqList">
+				AND v.dept_seq <iterate prepend="IN" property="deptSeqList" open="(" close=")" conjunction=",">#deptSeqList[].deptSeq#</iterate> 
+			</isNotEmpty>
+			<isNotEmpty property="empSeqList">
+				AND v.emp_seq <iterate prepend="IN" property="empSeqList" open="(" close=")" conjunction=",">#empSeqList[].empSeq#</iterate> 
+			</isNotEmpty> 
+			
+	</select>
+
+	<select id="EmpManage.selectUserInfo" parameterClass="hashmap" resultClass="egovMap">
+		/* EmpManage.selectUserInfo - mysql */
+		SELECT 
+			v.*
+			, get_emp_duty_position_name(v.group_seq,v.comp_seq,v.duty_code,'DUTY',#langCode#) as duty_code_name
+			, get_emp_duty_position_name(v.group_seq,v.comp_seq,v.position_code,'POSITION',#langCode#) as position_code_name
+			, get_emp_duty_position_name(v.group_seq,v.comp_seq,v.dept_duty_code,'DUTY',#langCode#) as dept_duty_code_name
+			, get_emp_duty_position_name(v.group_seq,v.comp_seq,v.dept_position_code,'POSITION',#langCode#) as dept_position_code_name
+			, v.main_work
+		FROM v_user_info v
+		WHERE
+			v.group_seq = #groupSeq#
+			<isEmpty property="isGroupAll">
+					<isEqual property="isGroupAll" compareValue="N">
+						<isNotEmpty property="compSeq">
+						AND v.comp_seq = #compSeq#
+						</isNotEmpty>
+					</isEqual>
+				</isEmpty>
+			AND v.emp_lang_code = #langCode#
+			AND v.dept_lang_code = #langCode#
+			AND v.comp_lang_code = #langCode#
+			<isNotEmpty property="empSeq">
+				AND v.emp_seq = #empSeq#
+			</isNotEmpty>
+			<isNotEmpty property="deptSeq">
+				AND v.dept_seq = #deptSeq#
+			</isNotEmpty>
+			
+			<isNotEmpty property="bizSeq">
+				AND v.biz_seq = #bizSeq#
+			</isNotEmpty>
+			<isNotEmpty property="empName">
+				AND v.emp_name LIKE '%$empName$%'
+			</isNotEmpty>
+			<isNotEmpty property="loginId">
+				AND v.login_id = #loginId#
+			</isNotEmpty>
+		
+			<isNotEmpty property="nameAndLoginId">
+				AND ( v.emp_name LIKE '%$nameAndLoginId$%' OR v.login_id LIKE '%$nameAndLoginId$%')
+			</isNotEmpty>
+			
+			
+			<isNotEmpty property="mainDeptYn">
+				AND v.main_dept_yn = #mainDeptYn#
+			</isNotEmpty>
+			<isNotEmpty property="dutyCode">
+				AND v.duty_code = #dutyCode#
+			</isNotEmpty>
+			<isNotEmpty property="positionCode">
+				AND v.position_code = #positionCode#
+			</isNotEmpty>
+			<isNotEmpty property="deptName">
+				AND v.dept_name LIKE '%$deptName$%'
+			</isNotEmpty>
+			<isNotEmpty property="workStatus">
+				AND v.work_status = #workStatus#
+			</isNotEmpty>
+			<isNotEmpty property="useYn">
+				AND v.use_yn = #useYn#
+			</isNotEmpty>
+			
+			<isNotEmpty property="userSe">
+				<isEqual property="userSe" compareValue="USER">
+				AND v.e_use_yn = 'Y'
+				AND v.ed_use_yn = 'Y'
+				AND v.emd_use_yn = 'Y'
+				AND v.cm_use_yn = 'Y'
+				AND v.dm_use_yn = 'Y'
+				</isEqual>
+			</isNotEmpty>
+			
+			<isNotEmpty property="deptSeqList">
+				AND v.dept_seq <iterate prepend="IN" property="deptSeqList" open="(" close=")" conjunction=",">#deptSeqList[].deptSeq#</iterate> 
+			</isNotEmpty>
+			<isNotEmpty property="empSeqList">
+				AND v.emp_seq <iterate prepend="IN" property="empSeqList" open="(" close=")" conjunction=",">#empSeqList[].empSeq#</iterate> 
+			</isNotEmpty> 
+		
+		<isNotEmpty property="orderBy">
+			ORDER BY
+				$orderBy$
+		</isNotEmpty>
+		
+		<isEmpty property="orderBy">
+			ORDER BY v.main_dept_yn DESC
+		</isEmpty>
+		
+		
+		<isNotEmpty property="startNum">
+		 	<isNotEmpty property="endNum">
+		 		<isNotEqual property="endNum" compareValue="0">
+		 			LIMIT $startNum$, $endNum$
+		 		</isNotEqual>
+		 	</isNotEmpty>
+		</isNotEmpty>
+		
+	</select>
+	
+	<select id="EmpManage.selectEmpDuplicate" parameterClass="hashmap" resultClass="string">
+		SELECT 
+			COUNT(emp_seq) 
+		FROM 
+			t_co_emp
+		WHERE 
+			group_seq = #groupSeq#
+		
+			<isNotEmpty property="loginId">
+			AND login_id = #loginId#
+			</isNotEmpty>
+			<isNotEmpty property="emailAddr">
+			AND email_addr = #emailAddr#
+			</isNotEmpty>
+	</select>
+	
+	
+	
+	<update id="EmpManage.updateEmpLoginId" parameterClass="hashmap">
+		UPDATE
+			t_co_emp
+		SET
+			login_id = #loginId#
+		WHERE
+			group_seq = #groupSeq#
+			AND
+				emp_seq = #empSeq#
+
+	</update>
+	
+	<select id="EmpManage.selectUserAuthList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT *, (`get_code_detail_info`('0', 'COM505', A.code_type, #langCode#)) AS codeTypeName 
+		FROM 
+			(
+				SELECT detail_code AS seq, author_code, code_type
+				FROM `t_co_auth_class_relate` 
+				WHERE detail_code = #dutyCode#
+				UNION
+				SELECT detail_code AS seq, author_code, code_type
+				FROM `t_co_auth_class_relate` 
+				WHERE detail_code = #positionCode#
+				UNION
+				SELECT dept_id AS seq, author_code , '3' AS code_type
+				FROM `t_co_auth_dept_relate` WHERE dept_id = #deptSeq#
+				UNION
+				SELECT emp_seq AS seq, author_code , '0' AS code_type
+				FROM `t_co_auth_user_relate` 
+				WHERE emp_seq = #empSeq#
+			) A 
+			LEFT OUTER JOIN `comtnauthorinfo` B ON A.author_code = B.author_code
+		ORDER BY A.code_type, A.author_code
+	</select>
+	
+	<delete id="EmpManage.deleteEmpDept" parameterClass="egovMap">
+		DELETE FROM `neos`.`t_co_emp_dept` 
+		WHERE
+			dept_seq = #deptSeq# AND emp_seq = #empSeq#
+	</delete>
+	 
+	<delete id="EmpManage.deleteEmpDeptMulti" parameterClass="egovMap">
+		DELETE FROM `neos`.`t_co_emp_dept_multi` 
+		WHERE
+			dept_seq = #deptSeq# AND emp_seq = #empSeq#
+	</delete>
+	
+	
+	<update id="EmpManage.updatemyInfo">
+	<![CDATA[
+		UPDATE 
+			t_co_emp
+		SET
+			gender_code = #mf#
+			,bday = #birthday_date#
+			,wedding_day = #wedding_date#
+			,lunar_yn = #lunarYn#
+			,wedding_yn = #weddingYn#
+			,native_lang_code = #nativeLangCode#
+			,mobile_tel_num = #phone#
+			,home_tel_num = #hometel#
+			,pic_file_id = #picFileId#
+			,sign_file_id = #signFileId#
+		WHERE
+			emp_seq = #emp_seq#
+	]]>
+	</update>
+	
+	
+	
+	
+	<update id="EmpManage.updatemyInfoMulti">
+	<![CDATA[
+		UPDATE 
+			t_co_emp_multi
+		SET
+			main_work = #mainWork#
+		WHERE
+			emp_seq = #emp_seq#
+			AND lang_code = #langCode#
+	]]>
+	</update>
+	
+
+	<update id="EmpManage.updatemyInfodeptMulti">
+	<![CDATA[
+		UPDATE 
+			t_co_emp_dept
+		SET
+			tel_num = #comptel#
+			,fax_num = #fax#
+		WHERE
+			dept_seq = #dept_seq#
+			AND emp_seq = #emp_seq#
+	]]>
+	</update>
+	
+	
+	
+	
+	
+	
+</sqlMap>

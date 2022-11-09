@@ -1,0 +1,1711 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="visitorManage">
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	
+	<procedure id="VisitorManageDAO.getVisitorList" parameterClass="java.util.HashMap" remapResults="true" resultClass="java.util.HashMap">
+	<![CDATA[
+		CALL $DB_NEOS$Z_DUZONITGROUP_BS_VISITOR_S(#nRNo#, #pDist#, #pFrDT#, #pToDT#, #pType#, #pDept#, #pGrade#, #pName#, #pVisitCo#, #pVisitNm#, #empSeq#, #userSe#, $startNum$, $endNum$)
+	]]>
+	</procedure>
+	
+	<select id="VisitorManageDAO.getSAppGradeCD" parameterClass="java.util.HashMap" remapResults="true" resultClass="string">
+			select (CASE WHEN (
+						SELECT approver_emp_seq 
+						FROM $DB_NEOS$Z_DUZONITGROUP_VISITORS_M  
+						WHERE r_no = 0) = NULL
+					THEN ''
+					WHEN (
+						SELECT approver_emp_seq
+						FROM $DB_NEOS$Z_DUZONITGROUP_VISITORS_M 
+						WHERE r_no = 0) > 0
+					THEN (
+						SELECT $DB_NEOS$get_comp_emp_dp(d.comp_seq, o.duty_code,'DUTY','kr') 
+						FROM $DB_NEOS$Z_DUZONITGROUP_VISITORS_M A 
+						join $DB_NEOS$t_co_emp c on
+						a.approver_emp_seq = c.emp_seq
+						join $DB_NEOS$t_co_comp d on
+						a.approver_comp_seq = d.comp_seq
+						join $DB_NEOS$t_co_emp_dept o on
+						a.approver_emp_seq = o.emp_seq
+						WHERE o.main_dept_yn = 'y'
+						LIMIT 0,1)
+					end) as sAppGradeCD;   		 
+	</select>
+	
+	
+	
+	<select id="VisitorManageDAO.getNormalVisitorList" remapResults="true" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	<isEqual property="pDist" compareValue="1"> 
+		<isEqual property="nRNo" compareValue="0">
+			SELECT 
+				a.r_no, 
+				IFNULL(b.seq, 0) AS seq,
+				a.man_comp_seq,
+				a.man_emp_seq,
+				g.comp_name man_comp_name,
+				f.dept_name man_dept_name,
+				c.emp_name man_emp_name,				
+				e.dept_seq AS man_dept_seq,
+				$DB_NEOS$get_emp_duty_position_name(e.group_seq,a.man_comp_seq,d.duty_code,'DUTY','kr') man_grade_name,	
+				a.req_comp_seq,
+				a.req_emp_seq,
+				
+				i.emp_name req_emp_name,
+				h.dept_seq AS req_dept_seq,
+				a.visit_distinct,
+				a.visitor_co,
+				a.visitor_nm,
+				a.visit_hp,
+				a.visit_car_no,
+				a.visit_aim,
+				a.visit_cnt,
+				DATE_FORMAT(STR_TO_DATE(a.visit_dt_fr, '%Y%m%d'),'%Y-%m-%d') visit_dt_fr,
+				
+				IFNULL(a.visit_dt_to, '') AS visit_dt_to,
+				IFNULL(a.visit_tm_fr, '') AS visit_tm_fr,
+				IFNULL(a.visit_tm_to, '') AS visit_tm_to, 
+				a.approval_yn,
+				DATE_FORMAT(STR_TO_DATE(b.visit_dt, '%Y%m%d'),'%Y-%m-%d') visit_dt,
+				
+				<!-- CASE WHEN b.in_time != '' THEN CONCAT( SUBSTR(IFNULL(b.in_time,''),1,4), '-' , SUBSTR(IFNULL(b.in_time,''),5,2) , '-' , SUBSTR(IFNULL(b.in_time,''),7,2) )  END AS in_date,
+				CASE WHEN b.out_time != '' THEN CONCAT( SUBSTR(IFNULL(b.out_time,''),1,4), '-' , SUBSTR(IFNULL(b.out_time,''),5,2) , '-' , SUBSTR(IFNULL(b.out_time,''),7,2) )  END AS out_date,
+				
+				CASE WHEN b.in_time != '' THEN CONCAT(SUBSTR(IFNULL(b.in_time,''),9,2),':',SUBSTR(IFNULL(b.in_time,''),11,2)) END AS in_time,
+				CASE WHEN b.out_time != '' THEN CONCAT(SUBSTR(IFNULL(b.out_time,''),9,2),':',SUBSTR(IFNULL(b.out_time,''),11,2)) END AS out_time, -->
+				
+				CASE WHEN b.in_time != '' THEN CONCAT(SUBSTR(IFNULL(b.in_time,''),1,2),':',SUBSTR(IFNULL(b.in_time,''),3,2)) END AS in_time,
+				CASE WHEN b.out_time != '' THEN CONCAT(SUBSTR(IFNULL(b.out_time,''),1,2),':',SUBSTR(IFNULL(b.out_time,''),3,2)) END AS out_time,				
+				
+				b.in_time AS f_in_time,
+				b.out_time AS f_out_time,
+				
+				IFNULL(b.visit_card_no, '') AS visit_card_no,
+				IFNULL(a.etc, '') AS man_emp_phone,
+				a.qr_send_status_code,
+				a.elct_appv_doc_status,
+				a.elet_appv_link_yn,
+				a.elct_appv_doc_id, 
+				a.visit_pticket_yn,
+				DATE_FORMAT(a.qr_send_date, '%Y.%m.%d') qr_send_date,
+				a.created_dt,
+				a.visit_place_code,
+				a.visit_place_sub_code,
+				a.qr_data,
+				a.visit_place_name,
+				a.man_tel_num,
+				$DB_NEOS$get_dept_pathNm(' > ',e.dept_seq,#groupSeq#,'kr') AS ManPathName,
+				$DB_NEOS$get_dept_pathNm(' > ',h.dept_seq,#groupSeq#,'kr') AS ReqPathName,
+				CASE WHEN j.doc_sts = 10 THEN j.doc_title ELSE CONCAT('[',j.doc_no,'] ',j.doc_title) END AS docName,
+				a.elet_appv_interface_key,
+				a.t_map_seq
+				
+			FROM $DB_NEOS$Z_DUZONITGROUP_VISITORS_M a
+			LEFT OUTER JOIN $DB_NEOS$Z_DUZONITGROUP_VISITORS_D b ON a.r_no = b.r_no
+			
+			JOIN $DB_NEOS$t_co_emp_multi c ON a.man_emp_seq = c.emp_seq AND c.lang_code = 'kr'
+			JOIN $DB_NEOS$t_co_emp_dept d ON a.man_emp_seq = d.emp_seq AND d.comp_seq = a.man_comp_seq AND d.main_dept_yn ='Y'
+			JOIN $DB_NEOS$t_co_dept e ON e.dept_seq = d.dept_seq
+			JOIN $DB_NEOS$t_co_dept_multi f ON f.dept_seq = ifnull(e.display_dept_seq, e.dept_seq) AND f.lang_code = 'kr'
+			JOIN $DB_NEOS$t_co_comp_multi g ON g.comp_seq = a.man_comp_seq AND g.lang_code = 'kr'
+			
+			JOIN $DB_NEOS$t_co_emp_dept h ON a.req_emp_seq = h.emp_seq AND h.comp_seq = a.req_comp_seq AND h.main_dept_yn = 'Y'
+			JOIN $DB_NEOS$t_co_emp_multi i ON a.req_emp_seq = i.emp_seq AND i.lang_code = 'kr'
+			LEFT OUTER JOIN $DB_NEOS$teag_appdoc j ON a.elct_appv_doc_id = j.doc_id
+			
+			WHERE a.visit_distinct = 1 AND a.del_yn != 1 
+				 AND (a.visit_dt_fr >= #pFrDT# AND a.visit_dt_fr <![CDATA[<]]>= #pToDT#)
+ 				 
+ 				 AND IFNULL(c.emp_name,'') LIKE CONCAT('%' ,#pManName#, '%')
+				 AND IFNULL(i.emp_name, '') LIKE CONCAT('%' ,#pReqName#, '%')
+				 
+				 AND IFNULL(a.visitor_co,'') LIKE CONCAT('%' ,#pVisitCo#, '%')
+				 AND IFNULL(a.visitor_nm,'') LIKE CONCAT('%' ,#pVisitNm#, '%')
+				 AND IFNULL(a.visit_place_name, '') LIKE CONCAT('%' ,#pVisitPlace#, '%')
+				 
+				 AND a.elet_appv_link_yn = CASE WHEN #pEapLinkYn# IS NULL THEN a.elet_appv_link_yn ELSE #pEapLinkYn# END
+				 <isNotEmpty property="pVisitCardNo">
+				 AND IFNULL(b.visit_card_no, '') LIKE CONCAT('%' ,#pVisitCardNo#, '%')
+				 </isNotEmpty>
+				 <isEqual property="searchListType" compareValue="pTicket">   
+				 AND a.visit_pticket_yn = "Issue"
+				 </isEqual>
+				 <isEqual property="searchListType" compareValue="check">
+				 AND a.elct_appv_doc_status = CASE WHEN a.elet_appv_link_yn = "Y" THEN "종결" ELSE a.elct_appv_doc_status END
+				 </isEqual>
+				 <isEqual property="userSe" compareValue="USER">
+				 	AND a.req_emp_seq = #empSeq#
+				 </isEqual>
+				 <isEqual property="userSe" compareValue="ADMIN">
+				 	AND a.req_comp_seq = #compSeq#
+				 </isEqual>
+				 <isEqual property="userSe" compareValue="MASTER">
+				 	AND a.req_comp_seq = CASE WHEN #selectedCompSeq# IS NULL THEN a.req_comp_seq ELSE #selectedCompSeq# END
+				 	<!-- AND a.req_emp_seq = CASE WHEN #userSe# = 'USER' THEN #empSeq# ELSE a.req_emp_seq END -->
+				 </isEqual>
+				 
+				 ORDER BY a.created_dt DESC, a.visit_dt_fr, a.visit_tm_fr  		 
+				 LIMIT $startNum$, $endNum$;
+				    
+		</isEqual>
+		<isNotEqual property="nRNo" compareValue="0">
+			SELECT 
+				a.r_no, 
+				IFNULL(b.seq, 0) AS seq,
+				a.man_comp_seq,
+				a.man_emp_seq,
+				g.comp_name man_comp_name,
+				f.dept_name man_dept_name,
+				c.emp_name man_emp_name,				
+				e.dept_seq AS man_dept_seq,
+				$DB_NEOS$get_emp_duty_position_name(e.group_seq,a.man_comp_seq,d.duty_code,'DUTY','kr') man_grade_name,	
+				a.req_comp_seq,
+				a.req_emp_seq,
+				(SELECT emp_name FROM $DB_NEOS$t_co_emp_multi WHERE emp_seq = a.req_emp_seq AND lang_code = 'kr' LIMIT 1) req_emp_name,
+				h.dept_seq AS req_dept_seq,
+				a.visit_distinct,
+				a.visitor_co,
+				a.visitor_nm,
+				a.visit_hp,
+				a.visit_car_no,
+				a.visit_aim,
+				a.visit_cnt,
+				a.visit_dt_fr,
+				IFNULL(a.visit_tm_fr, '') AS visit_tm_fr,
+				a.approval_yn,
+				b.visit_dt,
+				
+				IFNULL(b.in_time, '') AS in_time, 
+				IFNULL(b.out_time, '') AS out_time,
+								
+				<!-- CASE WHEN b.in_time != '' THEN CONCAT( SUBSTR(IFNULL(b.in_time,''),1,4), '-' , SUBSTR(IFNULL(b.in_time,''),5,2) , '-' , SUBSTR(IFNULL(b.in_time,''),7,2) )  END AS in_date,
+				CASE WHEN b.out_time != '' THEN CONCAT( SUBSTR(IFNULL(b.out_time,''),1,4), '-' , SUBSTR(IFNULL(b.out_time,''),5,2) , '-' , SUBSTR(IFNULL(b.out_time,''),7,2) )  END AS out_date,
+				
+				CASE WHEN b.in_time != '' THEN CONCAT(SUBSTR(IFNULL(b.in_time,''),9,2),':',SUBSTR(IFNULL(b.in_time,''),11,2)) END AS in_time,
+				CASE WHEN b.out_time != '' THEN CONCAT(SUBSTR(IFNULL(b.out_time,''),9,2),':',SUBSTR(IFNULL(b.out_time,''),11,2)) END AS out_time, -->
+				
+				IFNULL(b.visit_card_no, '') AS visit_card_no,
+				IFNULL(a.etc, '') AS man_emp_phone,
+				a.qr_send_status_code,
+				a.elct_appv_doc_status,
+				a.man_comp_seq,
+				a.man_emp_seq,
+				a.elet_appv_link_yn,
+				a.visit_pticket_yn,
+				a.visit_place_code,
+				a.visit_place_sub_code,
+				a.visit_place_name,
+				CONCAT('[',i.doc_no,'] ',i.doc_title) AS docName,
+				a.elct_appv_doc_id,
+				a.qr_data,
+				a.man_tel_num,
+				a.elet_appv_interface_key,
+				a.etc AS modify_reason,
+				a.visit_car_in_time,
+				a.visit_car_out_time
+				
+			FROM $DB_NEOS$Z_DUZONITGROUP_VISITORS_M a
+			LEFT OUTER JOIN $DB_NEOS$Z_DUZONITGROUP_VISITORS_D b ON a.r_no = b.r_no				
+			
+			JOIN $DB_NEOS$t_co_emp_multi c ON a.man_emp_seq = c.emp_seq AND c.lang_code = 'kr'
+			JOIN $DB_NEOS$t_co_emp_dept d ON a.man_emp_seq = d.emp_seq AND d.comp_seq = a.man_comp_seq AND d.main_dept_yn ='Y'
+			JOIN $DB_NEOS$t_co_dept e ON e.dept_seq = d.dept_seq
+			JOIN $DB_NEOS$t_co_dept_multi f ON f.dept_seq = ifnull(e.display_dept_seq, e.dept_seq) AND f.lang_code = 'kr'
+			JOIN $DB_NEOS$t_co_comp_multi g ON g.comp_seq = a.man_comp_seq AND g.lang_code = 'kr'
+			JOIN $DB_NEOS$t_co_emp_dept h ON a.req_emp_seq = h.emp_seq AND h.comp_seq = a.req_comp_seq AND h.main_dept_yn = 'Y'
+			
+			LEFT OUTER JOIN $DB_NEOS$teag_appdoc i ON a.elct_appv_doc_id = i.doc_id
+			
+			WHERE a.visit_distinct = 1 AND a.del_yn != 1 AND a.r_no = #nRNo#    
+				
+		</isNotEqual>
+	</isEqual>
+	</select>
+	
+	<procedure id="VisitorManageDAO.getVisitorList_TOTALCOUNT" parameterClass="java.util.HashMap" remapResults="true" resultClass="String">
+	<![CDATA[
+		CALL $DB_NEOS$Z_DUZONITGROUP_BS_VISITOR_S_TOTALCOUNT(#nRNo#, #pDist#, #pFrDT#, #pToDT#, #pType#, #pDept#, #pGrade#, #pName#, #pVisitCo#, #pVisitNm#, #userSe#, #empSeq#)
+	]]>
+	</procedure>
+	
+	
+	<select id="VisitorManageDAO.getNormalVisitorList_TOTALCOUNT" remapResults="true" parameterClass="java.util.HashMap" resultClass="String">
+		<isEqual property="pDist" compareValue="1"> 
+			<isEqual property="nRNo" compareValue="0"> 
+				SELECT 
+					COUNT(a.r_no) cnt
+				FROM $DB_NEOS$Z_DUZONITGROUP_VISITORS_M a
+				JOIN $DB_NEOS$Z_DUZONITGROUP_VISITORS_D b ON a.r_no = b.r_no  
+				
+				JOIN $DB_NEOS$t_co_emp_multi c ON a.man_emp_seq = c.emp_seq AND c.lang_code = 'kr'
+				JOIN $DB_NEOS$t_co_emp_dept d ON a.man_emp_seq = d.emp_seq AND d.comp_seq = a.man_comp_seq AND d.main_dept_yn ='Y'
+				JOIN $DB_NEOS$t_co_dept e ON e.dept_seq = d.dept_seq
+				JOIN $DB_NEOS$t_co_dept_multi f ON f.dept_seq = ifnull(e.display_dept_seq, e.dept_seq) AND f.lang_code = 'kr'
+				JOIN $DB_NEOS$t_co_comp_multi g ON g.comp_seq = a.man_comp_seq AND g.lang_code = 'kr'
+				JOIN $DB_NEOS$t_co_emp_multi i ON a.req_emp_seq = i.emp_seq AND i.lang_code = 'kr'
+				LEFT OUTER JOIN $DB_NEOS$teag_appdoc j ON a.elct_appv_doc_id = j.doc_id
+				
+				WHERE a.visit_distinct = 1 AND a.del_yn != 1 
+				 AND (a.visit_dt_fr >= #pFrDT# AND a.visit_dt_fr <![CDATA[<]]>= #pToDT#)
+ 				 AND IFNULL(c.emp_name,'') LIKE CONCAT('%' ,#pManName#, '%')
+				 AND IFNULL(i.emp_name, '') LIKE CONCAT('%' ,#pReqName#, '%')
+				 
+				 AND IFNULL(a.visitor_co,'') LIKE CONCAT('%' ,#pVisitCo#, '%')
+				 AND IFNULL(a.visitor_nm,'') LIKE CONCAT('%' ,#pVisitNm#, '%')
+				 AND IFNULL(a.visit_place_name, '') LIKE CONCAT('%' ,#pVisitPlace#, '%')
+				
+				 AND a.elet_appv_link_yn = CASE WHEN #pEapLinkYn# IS NULL THEN a.elet_appv_link_yn ELSE #pEapLinkYn# END
+ 				<isNotEmpty property="pVisitCardNo">
+				 AND b.visit_card_no = #pVisitCardNo#
+				 </isNotEmpty>
+				 <isEqual property="searchListType" compareValue="pTicket">
+				 AND a.visit_pticket_yn = "Issue"
+				 </isEqual>
+				 <isEqual property="searchListType" compareValue="check">
+				 AND a.elct_appv_doc_status = CASE WHEN a.elet_appv_link_yn = "Y" THEN "종결" ELSE a.elct_appv_doc_status END
+				 </isEqual>
+				 <isEqual property="userSe" compareValue="USER">
+				 	AND a.req_emp_seq = #empSeq#
+				 </isEqual>
+				 <isEqual property="userSe" compareValue="ADMIN">
+				 	AND a.req_comp_seq = #compSeq#
+				 </isEqual>
+				 <isEqual property="userSe" compareValue="MASTER">
+				 	AND a.req_comp_seq = CASE WHEN #selectedCompSeq# IS NULL THEN a.req_comp_seq ELSE #selectedCompSeq# END
+				 </isEqual>
+				 
+			</isEqual>
+			<isNotEqual property="nRNo" compareValue="0">
+				SELECT 
+					COUNT(a.r_no) cnt
+				FROM $DB_NEOS$Z_DUZONITGROUP_VISITORS_M a
+				JOIN $DB_NEOS$Z_DUZONITGROUP_VISITORS_D b ON a.r_no = b.r_no
+				
+				JOIN $DB_NEOS$t_co_emp_multi c ON a.man_emp_seq = c.emp_seq AND c.lang_code = 'kr'
+				JOIN $DB_NEOS$t_co_emp_dept d ON a.man_emp_seq = d.emp_seq AND d.comp_seq = a.man_comp_seq AND d.main_dept_yn ='Y'
+				JOIN $DB_NEOS$t_co_dept e ON e.dept_seq = d.dept_seq
+				JOIN $DB_NEOS$t_co_dept_multi f ON f.dept_seq = ifnull(e.display_dept_seq, e.dept_seq) AND f.lang_code = 'kr'
+				JOIN $DB_NEOS$t_co_comp_multi g ON g.comp_seq = a.man_comp_seq AND g.lang_code = 'kr'
+				LEFT OUTER JOIN $DB_NEOS$teag_appdoc i ON a.elct_appv_doc_id = i.doc_id
+				
+				WHERE a.visit_distinct = 1 AND a.del_yn != 1 AND a.r_no = #nRNo# 
+			</isNotEqual>
+		</isEqual>
+	</select>
+	
+	<delete id="VisitorManageDAO.deleteVisitor" parameterClass="java.util.HashMap">
+	
+		UPDATE 
+			$DB_NEOS$Z_DUZONITGROUP_VISITORS_M 
+		SET 
+			del_yn = '1' 
+		WHERE 
+			r_no in(#R_NO#)
+	</delete>
+	
+	
+	
+	<procedure id="VisitorManageDAO.insertVisitor" parameterClass="java.util.HashMap">
+	<![CDATA[
+		CALL $DB_NEOS$Z_DUZONITGROUP_BS_VISITOR_I(#man_comp_seq#,#man_emp_seq#,#req_comp_seq#,#req_emp_seq#,#distinct#,#visitor_co#,#visitor_nm#,#visit_hp#,#visit_car_no#,#fr_dt#,#to_dt#,#visit_tm_fr#,#visit_tm_to#,#visit_aim#,#visit_cnt#,#note#,#fr_dt#,#sInTime#,#sOutTime#)
+		     ]]>
+	</procedure>
+	
+	<insert id="VisitorManageDAO.insertNormalVisitor" parameterClass="java.util.HashMap">
+		<isEqual property="sDistinct" compareValue="1">
+		INSERT INTO $DB_NEOS$Z_DUZONITGROUP_VISITORS_M ( 
+					r_no, 
+					man_comp_seq, 
+					man_emp_seq, 
+					req_comp_seq, 
+					req_emp_seq, 
+					visit_distinct, 
+					visitor_co, 
+					visitor_nm, 
+					visit_hp, 
+					visit_car_no, 
+					visit_dt_fr, 
+					visit_tm_fr, 
+					visit_aim, 
+					visit_cnt, 
+					approval_yn, 
+					etc, 
+					created_dt, 
+					del_yn,
+					visit_place_code,
+					visit_place_sub_code,
+					visit_place_name,
+					visit_pticket_yn,
+					elet_appv_link_yn,
+					elet_appv_interface_key,
+					elct_appv_doc_id,
+					elct_appv_doc_status,
+					qr_data,
+					qr_send_status_code,
+					man_tel_num,
+					visit_car_in_time,
+					visit_car_out_time,
+					t_map_seq
+				)
+		VALUES ( 
+					#nR_NO#,
+					#nManCoSeq#, 
+					#nManUserSeq#, 
+					#nReqCoSeq#, 
+					#nReqUserSeq#, 
+					#sDistinct#, 
+					#sVisitCO#, 
+					#sVisitNM#, 
+					#sVisitHP#, 
+					#sVisitCarNo#, 
+					#sVisitFrDT#, 
+					#sVisitFrTM#, 
+					#sVisitAIM#, 
+					#nVisitCnt#, 
+					#approvalYn#, 
+					#sETC#, 
+					NOW(), 
+					'0', 
+					#visit_place_code#,
+					#visit_place_sub_code#,
+					#visit_place_name#,
+					#visit_pticket_yn#,
+					#elet_appv_link_yn#,
+					#elet_appv_interface_key#,
+					#elct_appv_doc_id#,
+					#elct_appv_doc_status#,
+					#qr_data#,
+					#qr_send_status_code#,
+					#nManTelNum#,
+					#visitCarInTime#,
+					#visitCarOutTime#,
+					#t_map_seq#
+				);
+	</isEqual> 
+	<!-- <isNotEqual property="distinct" compareValue="1">
+		insert into z_duzonitgroup_bs_log (log_str)
+		select 'insert table (distincg=2)';
+		
+		INSERT INTO Z_DUZONITGROUP_VISITORS_M ( r_no, 
+					man_comp_seq, 
+					man_emp_seq, 
+					req_comp_seq, 
+					req_emp_seq, 
+					visit_distinct, 
+					visitor_co, 
+					visitor_nm, 
+					visit_hp, 
+					visit_car_no, 
+					visit_dt_fr, 
+					visit_dt_to, 
+					visit_tm_fr, 
+					visit_tm_to, 
+					visit_aim, 
+					visit_cnt, 
+					approval_yn, 
+					etc, 
+					created_dt, 
+					del_yn
+				)
+		VALUES ( nR_NO, 
+					nManCoSeq, 
+					nManUserSeq, 
+					nReqCoSeq, 
+					nReqUserSeq, 
+					sDistnct, 
+					sVisitCO, 
+					sVisitNM, 
+					sVisitHP, 
+					sVisitCarNo, 
+					sVisitFrDT, 
+					sVisitToDT, 
+					sVisitFrTM, 
+					sVisitToTM, 
+					sVisitAIM, 
+					nVisitCnt, 
+					'0', 
+					sETC, 
+					NOW(), 
+					'0'
+				);
+	
+		insert into z_duzonitgroup_bs_log (log_str)
+		select 'success insert table (distincg=2)';
+		
+		
+		insert into z_duzonitgroup_bs_log (log_str)
+		select 'insert date';
+		
+		insert into z_duzonitgroup_bs_log (log_str)
+		select sVisitFrDT;
+		
+		SET FR_DATE = CAST(DATE_FORMAT(CAST(sVisitFrDT AS CHAR(10)),'%Y-%m-%d %H:%i:%s') AS CHAR(19));
+		insert into z_duzonitgroup_bs_log (log_str, fr_date)
+		select 'fr_date', FR_DATE;
+	
+		SET TO_DATE = CAST(DATE_FORMAT(CAST(sVisitToDT AS CHAR(10)),'%Y-%m-%d %H:%i:%s') AS CHAR(19));
+	
+		insert into z_duzonitgroup_bs_log (log_str, to_date)
+		select 'insert date', TO_DATE;
+		
+		SET SEQ = 1;
+		
+		insert into z_duzonitgroup_bs_log (fr_date, to_date, seq)
+		select FR_DATE, TO_DATE, SEQ;
+			
+		WHILE FR_DATE <= TO_DATE	DO
+			SET VISIT_DT = CAST(DATE_FORMAT(FR_DATE,'%Y%m%d') AS CHAR(8));
+			
+			 INSERT INTO Z_DUZONITGROUP_VISITORS_D (r_no, seq, visit_dt, created_dt)
+			 VALUES (nR_NO, SEQ, VISIT_DT, NOW());
+			
+			SET FR_DATE = FR_DATE + INTERVAL 1 DAY;
+			SET SEQ = SEQ + 1;
+		END WHILE;	
+	</isNotEqual> -->
+	</insert>
+	
+	
+	<insert id="VisitorManageDAO.insertNormalVisitorInOutTime" parameterClass="java.util.HashMap">
+		INSERT INTO $DB_NEOS$Z_DUZONITGROUP_VISITORS_D (seq, r_no, visit_dt, created_dt)
+		VALUES (#nSeq#, #nR_NO#, #sVisitFrDT#, NOW());
+	</insert>
+	
+	
+	<select id="VisitorManageDAO.getMaxRNo" parameterClass="java.util.HashMap" remapResults="true" resultClass="Integer">
+		
+		SELECT 
+			MAX(r_no)
+		FROM
+			$DB_NEOS$Z_DUZONITGROUP_VISITORS_M
+		
+	</select>
+	
+	<select id="VisitorManageDAO.getNseq" parameterClass="java.util.HashMap" remapResults="true" resultClass="Integer">
+		
+		SELECT 
+			COUNT(*) 
+		FROM
+			$DB_NEOS$Z_DUZONITGROUP_VISITORS_D
+		WHERE 
+			r_no = #nR_NO#
+		
+	</select>
+	
+	<procedure id="VisitorManageDAO.getApproverList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	<![CDATA[
+		CALL $DB_NEOS$Z_DUZONITGROUP_BS_APPROVER_S(#comp_seq#,#searchStr#,#langCD#,#groupSeq#)
+		     ]]>
+	</procedure>
+	
+	
+	<procedure id="VisitorManageDAO.CheckVisitor" parameterClass="java.util.HashMap">
+	<![CDATA[
+		CALL $DB_NEOS$Z_DUZONITGROUP_BS_VISITOR_CHECK(#nRNo#,#nSeq#,#nCardNo#,#sType#,#sTime#)
+		     ]]>
+	</procedure> 
+	
+	<update id="VisitorManageDAO.CheckNormalVisitor" parameterClass="java.util.HashMap">
+		<isEqual property="sType" compareValue="in"> 
+			UPDATE $DB_NEOS$Z_DUZONITGROUP_VISITORS_D 
+			SET in_time = #sTime#, visit_card_no = #nCardNo# 
+			WHERE r_no = #nRNo# AND seq = #nSeq#; 
+		</isEqual>
+		<isEqual property="sType" compareValue="out"> 
+			UPDATE $DB_NEOS$Z_DUZONITGROUP_VISITORS_D 
+			SET out_time = #sTime#
+			WHERE r_no = #nRNo# AND seq = #nSeq#;
+		</isEqual>
+	</update>
+	
+	<procedure id="VisitorManageDAO.SetVisitApproval" parameterClass="java.util.HashMap">
+	<![CDATA[
+		CALL $DB_NEOS$Z_DUZONITGROUP_BS_APPROVER_I(#nCoSeq#,#nAppUserSeq#,#nCreatedSeq#)
+		     ]]>
+	</procedure>
+	
+	
+	
+	<procedure id="VisitorManageDAO.GetAppInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	<![CDATA[
+		CALL $DB_NEOS$Z_DUZONITGROUP_BS_APPINFO(#nRNo#,#nManCoSeq#)
+		     ]]>
+	</procedure>
+	
+	
+	<select id="VisitorManageDAO.GetVisitorWeekList" parameterClass="java.util.HashMap" remapResults="true" resultClass="java.util.HashMap">
+		SELECT 
+			r_no, req_comp_seq, req_emp_seq, visitor_co, visitor_nm, visit_aim, visit_hp, visit_car_no, visit_cnt, visit_dt_fr, visit_tm_fr, etc, ifnull(visit_place_code,'') as visit_place_code
+		FROM 
+			$DB_NEOS$Z_DUZONITGROUP_VISITORS_M
+		WHERE 
+			visit_dt_fr= #sDate# AND visit_distinct = 1 AND del_yn != 1
+	</select>
+	
+	
+	<select id="VisitorManageDAO.GetVisitorListApp" remapResults="true" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		
+		SELECT
+			a.r_no, 
+			cm.comp_name man_comp_name, 
+			ed.dept_seq man_dept_seq,
+			dm.dept_name man_dept_name,
+			$DB_NEOS$get_emp_duty_position_name(e.group_seq, c.comp_seq,ed.duty_code,'DUTY', #sLangKind#) man_grade_name,
+			em.emp_name man_emp_name,
+			a.req_comp_seq, 
+			a.req_emp_seq, 
+			IFNULL(cmcm.comp_name, 0) AS approver_comp_name, 
+			IFNULL(emem.emp_name, '') AS approver_emp_name,
+			$DB_NEOS$get_emp_duty_position_name(ee.group_seq, cc.comp_seq,IFNULL((CASE WHEN (
+						SELECT approver_emp_seq
+						FROM $DB_NEOS$Z_DUZONITGROUP_VISITORS_M 
+						WHERE r_no = a.r_no) = NULL
+					THEN '' 
+					WHEN (
+						SELECT approver_emp_seq 
+						FROM $DB_NEOS$Z_DUZONITGROUP_VISITORS_M 
+						WHERE r_no = a.r_no) > 0 
+					THEN (
+						SELECT duty_code
+						FROM $DB_NEOS$t_co_emp
+						WHERE emp_seq = a.approver_emp_seq
+						LIMIT 0,1) 
+					END), ''),'DUTY', 'kr') AS approver_grade_name, 
+			IFNULL((CASE WHEN (
+						SELECT approver_emp_seq
+						FROM $DB_NEOS$Z_DUZONITGROUP_VISITORS_M 
+						WHERE r_no = a.r_no) = NULL
+					THEN '' 
+					WHEN (
+						SELECT approver_emp_seq 
+						FROM $DB_NEOS$Z_DUZONITGROUP_VISITORS_M 
+						WHERE r_no = a.r_no) > 0 
+					THEN (
+						SELECT duty_code
+						FROM $DB_NEOS$t_co_emp
+						WHERE emp_seq = a.approver_emp_seq
+						LIMIT 0,1) 
+					END), '') AS approver_grade,
+			a.visit_distinct, 
+			a.visitor_co, 
+			a.visitor_nm, 
+			a.visit_hp, 
+			a.visit_car_no, 
+			a.visit_aim, 
+			a.visit_cnt, 
+			date_format(str_to_date(a.visit_dt_fr, '%Y%m%d'),'%Y-%m-%d') visit_dt_fr,
+			date_format(str_to_date(IFNULL(a.visit_dt_to, ''), '%Y%m%d'),'%Y-%m-%d') visit_dt_to,
+			a.visit_tm_fr, 
+			IFNULL(a.visit_tm_to, '') AS visit_tm_to, 
+			case when a.approval_yn = 0 then $DB_NEOS$get_code_detail_info('0', 'ea0016', '10', #sLangKind#) 
+				when a.approval_yn = 1 then $DB_NEOS$get_code_detail_info('0', 'ATT0021', 'Y', #sLangKind#)  
+				else $DB_NEOS$get_code_detail_info('0', 'ATT0013', '100', #sLangKind#) end approval_yn,
+			'' AS in_time, 
+			'' AS out_time, 
+			'' AS visit_card_no,
+			IFNULL(a.etc, '') AS etc,
+			IFNULL((CASE WHEN (
+						SELECT N.emp_seq
+						FROM $DB_NEOS$Z_DUZONITGROUP_VISITORS_M M
+						JOIN $DB_NEOS$Z_DUZONITGROUP_APPROVAL N ON M.man_comp_seq = N.comp_seq 
+						WHERE r_no = a.r_no AND N.emp_seq = #nUserSeq#) = NULL
+					THEN '0' 
+					WHEN (
+						SELECT N.emp_seq
+						FROM $DB_NEOS$Z_DUZONITGROUP_VISITORS_M M
+						JOIN $DB_NEOS$Z_DUZONITGROUP_APPROVAL N ON M.man_comp_seq = N.comp_seq
+						WHERE r_no = a.r_no AND N.emp_seq = #nUserSeq#) > 0 
+					THEN '1'
+					WHEN (
+						SELECT d.emp_seq
+						FROM $DB_NEOS$Z_DUZONITGROUP_VISITORS_M M
+						JOIN $DB_NEOS$t_co_emp_comp d ON #nUserSeq# = d.emp_seq and #nCoSeq# = d.comp_seq and d.work_status IN ('999','004')
+						WHERE r_no = a.r_no ) > 0
+					THEN '1'
+					END), '') AS app_auth
+					
+		FROM $DB_NEOS$Z_DUZONITGROUP_VISITORS_M a
+		JOIN $DB_NEOS$t_co_emp e on a.man_emp_seq = e.emp_seq 
+		JOIN $DB_NEOS$t_co_emp_dept ed on e.emp_seq = ed.emp_seq AND e.group_seq = ed.group_seq and ed.comp_seq = a.man_comp_seq and ed.main_dept_yn = 'Y'
+		JOIN $DB_NEOS$t_co_comp c ON e.group_seq = c.group_seq AND ed.comp_seq = c.comp_seq
+		JOIN $DB_NEOS$t_co_emp_comp ec ON ec.comp_seq = c.comp_seq AND e.emp_seq = ec.emp_seq
+		JOIN $DB_NEOS$t_co_comp_multi cm ON c.comp_seq = cm.comp_seq AND cm.lang_code = 'kr'
+		JOIN $DB_NEOS$t_co_dept_multi dm ON dm.group_seq = e.group_seq AND c.comp_seq = dm.comp_seq AND ed.dept_Seq = dm.dept_Seq AND dm.lang_code = 'kr'
+		JOIN $DB_NEOS$t_co_emp_multi em ON em.emp_seq = e.emp_seq AND e.group_seq = em.group_seq AND em.lang_code = 'kr'
+		LEFT JOIN $DB_NEOS$t_co_emp ee on a.approver_emp_seq = ee.emp_seq 
+		LEFT JOIN $DB_NEOS$t_co_emp_dept eded on ee.emp_seq = eded.emp_seq AND ee.group_seq = eded.group_seq and eded.comp_seq = a.approver_comp_seq and eded.main_dept_yn = 'Y'
+		LEFT JOIN $DB_NEOS$t_co_comp cc ON ee.group_seq = cc.group_seq AND eded.comp_seq = cc.comp_seq
+		LEFT JOIN $DB_NEOS$t_co_emp_comp ecec ON ecec.comp_seq = cc.comp_seq AND ee.emp_seq = ecec.emp_seq
+		LEFT JOIN $DB_NEOS$t_co_comp_multi cmcm ON cc.comp_seq = cmcm.comp_seq AND cmcm.lang_code = 'kr'
+		LEFT JOIN $DB_NEOS$t_co_dept_multi dmdm ON dmdm.group_seq = ee.group_seq AND cc.comp_seq = dmdm.comp_seq AND eded.dept_Seq = dmdm.dept_Seq AND dmdm.lang_code = 'kr'
+		LEFT JOIN $DB_NEOS$t_co_emp_multi emem ON emem.emp_seq = ee.emp_seq AND ee.group_seq = emem.group_seq AND emem.lang_code = 'kr'
+		WHERE 
+			a.visit_distinct = 2 
+			AND ed.main_dept_yn = 'Y'
+			AND ifnull(em.lang_code,'kr') = #sLangKind#
+			AND a.del_yn != 1
+			AND a.visit_dt_fr BETWEEN #sFrDT# AND #sToDT#
+			<isNotEmpty property="pDept">
+		   		AND  dm.dept_name LIKE CONCAT('%',ifnull(#pDept#,''),'%') 		   
+		    </isNotEmpty>
+		    <isNotEmpty property="pGrade">
+		        AND  $DB_NEOS$get_emp_duty_position_name(e.group_seq, c.comp_seq,ed.duty_code,'DUTY',#sLangKind#) LIKE CONCAT('%',ifnull(#pGrade#,''),'%')	   
+		    </isNotEmpty>
+		    <isNotEmpty property="pName">
+		   		AND  em.emp_name LIKE CONCAT('%',ifnull(#pName#,''),'%') 		   
+		    </isNotEmpty>
+		    <isNotEmpty property="pVisitCo">
+		   		AND  a.visitor_co LIKE CONCAT('%',ifnull(#pVisitCo#,''),'%') 		   
+		    </isNotEmpty>
+		    <isNotEmpty property="pVisitNm">
+		   		AND  a.visitor_nm LIKE CONCAT('%',ifnull(#pVisitNm#,''),'%') 		   
+		    </isNotEmpty>
+		 LIMIT $startNum$, $endNum$;
+	</select>
+	
+	
+	<select id="VisitorManageDAO.GetVisitorListApp_TOTALCOUNT" parameterClass="java.util.HashMap" remapResults="true" resultClass="String">
+		SELECT
+			count(a.r_no)
+		FROM $DB_NEOS$Z_DUZONITGROUP_VISITORS_M a
+		JOIN $DB_NEOS$t_co_emp e on a.man_emp_seq = e.emp_seq 
+		JOIN $DB_NEOS$t_co_emp_dept ed on e.emp_seq = ed.emp_seq AND e.group_seq = ed.group_seq and ed.comp_seq = a.man_comp_seq and ed.main_dept_yn = 'Y'
+		JOIN $DB_NEOS$t_co_comp c ON e.group_seq = c.group_seq AND ed.comp_seq = c.comp_seq
+		JOIN $DB_NEOS$t_co_emp_comp ec ON ec.comp_seq = c.comp_seq AND e.emp_seq = ec.emp_seq
+		JOIN $DB_NEOS$t_co_comp_multi cm ON c.comp_seq = cm.comp_seq AND cm.lang_code = 'kr'
+		JOIN $DB_NEOS$t_co_dept_multi dm ON dm.group_seq = e.group_seq AND c.comp_seq = dm.comp_seq AND ed.dept_Seq = dm.dept_Seq AND dm.lang_code = 'kr'
+		JOIN $DB_NEOS$t_co_emp_multi em ON em.emp_seq = e.emp_seq AND e.group_seq = em.group_seq AND em.lang_code = 'kr'
+		LEFT JOIN $DB_NEOS$t_co_emp ee on a.approver_emp_seq = ee.emp_seq 
+		LEFT JOIN $DB_NEOS$t_co_emp_dept eded on ee.emp_seq = eded.emp_seq AND ee.group_seq = eded.group_seq and eded.comp_seq = a.approver_comp_seq and eded.main_dept_yn = 'Y'
+		LEFT JOIN $DB_NEOS$t_co_comp cc ON ee.group_seq = cc.group_seq AND eded.comp_seq = cc.comp_seq
+		LEFT JOIN $DB_NEOS$t_co_emp_comp ecec ON ecec.comp_seq = cc.comp_seq AND ee.emp_seq = ecec.emp_seq
+		LEFT JOIN $DB_NEOS$t_co_comp_multi cmcm ON cc.comp_seq = cmcm.comp_seq AND cmcm.lang_code = 'kr'
+		LEFT JOIN $DB_NEOS$t_co_dept_multi dmdm ON dmdm.group_seq = ee.group_seq AND cc.comp_seq = dmdm.comp_seq AND eded.dept_Seq = dmdm.dept_Seq AND dmdm.lang_code = 'kr'
+		LEFT JOIN $DB_NEOS$t_co_emp_multi emem ON emem.emp_seq = ee.emp_seq AND ee.group_seq = emem.group_seq AND emem.lang_code = 'kr'
+		
+		WHERE 
+			a.visit_distinct = 2 
+			AND ed.main_dept_yn = 'Y'
+			AND ifnull(em.lang_code,'kr') = #sLangKind#
+			AND a.del_yn != 1
+			AND a.visit_dt_fr BETWEEN #sFrDT# AND #sToDT#
+			<isNotEmpty property="pDept">
+		   		AND  dm.dept_name LIKE CONCAT('%',ifnull(#pDept#,''),'%') 		   
+		    </isNotEmpty>
+		    <isNotEmpty property="pGrade">
+		        AND  $DB_NEOS$get_emp_duty_position_name(e.group_seq, c.comp_seq,ed.duty_code,'DUTY',#sLangKind#) LIKE CONCAT('%',ifnull(#pGrade#,''),'%')	   
+		    </isNotEmpty>
+		    <isNotEmpty property="pName">
+		   		AND  em.emp_name LIKE CONCAT('%',ifnull(#pName#,''),'%') 		   
+		    </isNotEmpty>
+		    <isNotEmpty property="pVisitCo">
+		   		AND  a.visitor_co LIKE CONCAT('%',ifnull(#pVisitCo#,''),'%') 		   
+		    </isNotEmpty>
+		    <isNotEmpty property="pVisitNm">
+		   		AND  a.visitor_nm LIKE CONCAT('%',ifnull(#pVisitNm#,''),'%') 		   
+		    </isNotEmpty>
+	</select>
+	
+	
+	<update id="VisitorManageDAO.SetVisitorApp" parameterClass="java.util.HashMap">
+	UPDATE 
+		$DB_NEOS$Z_DUZONITGROUP_VISITORS_M 
+	SET 
+		approval_yn = #sType#, approver_comp_seq = #nCoSeq#, approver_emp_seq = #nUserSeq#
+	WHERE r_no in($nRNo$)
+	</update>
+	
+	<insert id="VisitorManageDAO.InsertVisitorExt" parameterClass="java.util.HashMap">
+		INSERT INTO $DB_NEOS$z_duzonitgroup_visitors_req (
+			req_no,
+			man_comp_seq,
+			man_emp_seq,
+			man_dept_seq,
+			req_comp_seq,
+			req_emp_seq, 
+			approver_comp_seq,
+			approver_emp_seq, 
+			visit_distinct,
+			visitor_co, 
+			visitor_detail_info, 
+			visit_dt_fr,
+			visit_dt_to,
+			visit_tm_fr, 
+			visit_tm_to, 
+			visit_aim,
+			visit_cnt, 
+			etc, 
+			created_dt, 
+			del_yn, 
+			visit_place_code, 
+			visit_place_sub_code,
+			man_tel_num,
+			visit_car_in_time,
+			visit_car_out_time
+			)
+		VALUES
+			(
+			(select max(req_no) from $DB_NEOS$z_duzonitgroup_visitors_req a) +1 ,
+			#man_comp_seq#,
+			#man_emp_seq#,
+			#man_dept_seq#,
+			#req_comp_seq#,
+			#req_emp_seq#, 
+			#approver_comp_seq#, 
+			#approver_emp_seq#, 
+			#visit_distinct#,
+			#visitor_co#,
+			#visitor_detail_info#, 
+			#visit_dt_fr#,
+			#visit_dt_to#,
+			#visit_tm_fr#, 
+			#visit_tm_to#, 
+			#visit_aim#,
+			#visit_cnt#, 
+			#qr_send_yn#, 
+			now(),
+			#del_yn#, 
+			#visit_place_code#, 
+			#visit_place_sub_code#,
+			#man_tel_num#,
+			#visit_car_in_time#,
+			#visit_car_out_time#
+			)
+	</insert>
+	
+	<update id="VisitorManageDAO.UpdateVisitorExt" parameterClass="java.util.HashMap">
+	
+		UPDATE 
+			$DB_NEOS$z_duzonitgroup_visitors_req 
+		SET	
+			man_comp_seq = #man_comp_seq#,
+			man_emp_seq = #man_emp_seq#,
+			man_dept_seq = #man_dept_seq#,
+			req_comp_seq = #req_comp_seq#,
+			req_emp_seq = #req_emp_seq#, 
+			visit_distinct = #visit_distinct#,
+			visitor_co = #visitor_co#, 
+			visitor_detail_info = #visitor_detail_info#, 
+			visit_dt_fr = #visit_dt_fr#,
+			visit_dt_to = #visit_dt_to#,
+			visit_tm_fr = #visit_tm_fr#, 
+			visit_tm_to = #visit_tm_to#, 
+			visit_aim = #visit_aim#,
+			visit_cnt = #visit_cnt#, 
+			etc = #qr_send_yn#, 
+			del_yn = #del_yn#, 
+			visit_place_code = #visit_place_code#, 
+			visit_place_sub_code= #visit_place_sub_code#,
+			man_tel_num = #man_tel_num#
+		WHERE
+			req_no = #req_no#
+			
+	</update>
+	
+	<select id="VisitorManageDAO.GetReqNo" resultClass="String" parameterClass="java.util.HashMap">
+		SELECT 
+			ifnull(MAX(req_no), 0)
+		FROM
+			$DB_NEOS$z_duzonitgroup_visitors_req
+	</select>
+	
+	<update id="VisitorManageDAO.updateDocId" parameterClass="java.util.HashMap">
+		UPDATE 
+			$DB_NEOS$z_duzonitgroup_visitors_req
+		SET 
+			elet_appv_interface_key = #approKey#,
+			elct_appv_doc_id = #docId#
+		where 
+			req_no = #reqNo#
+	</update>
+	
+	
+	<select id="VisitorManageDAO.getVisitorPopContent" resultClass="java.util.HashMap" parameterClass="java.util.HashMap">
+		SELECT 
+			man_comp_seq,
+			man_emp_seq,
+			man_dept_seq,
+			req_comp_seq,
+			req_emp_seq,
+			visit_distinct,
+			visitor_co,
+			visitor_detail_info,
+			visit_dt_fr,
+			visit_dt_to,
+			visit_tm_fr,
+			visit_tm_to,
+			visit_aim,
+			visit_cnt,
+			etc AS qr_send_yn,
+			created_dt,
+			del_yn,
+			visit_place_code,
+			visit_place_sub_code,
+			elet_appv_interface_key,
+			elct_appv_doc_id,
+			e.dept_name,
+			(SELECT emp_name FROM $DB_NEOS$t_co_emp_multi WHERE emp_seq = a.man_emp_seq AND lang_code = 'kr') emp_name,
+			$DB_NEOS$get_emp_duty_position_name(d.group_seq,a.man_comp_seq,c.duty_code,'DUTY','kr') dp_name,
+			a.man_tel_num,
+			a.visit_car_in_time,
+			a.visit_car_out_time
+
+		FROM $DB_NEOS$z_duzonitgroup_visitors_req a
+		JOIN $DB_NEOS$t_co_emp_dept c ON a.man_emp_seq = c.emp_seq AND c.comp_seq = a.man_comp_seq AND main_dept_yn ='Y'
+		JOIN $DB_NEOS$t_co_dept d ON d.dept_seq = a.man_dept_seq
+		JOIN $DB_NEOS$t_co_dept_multi e ON e.dept_seq = ifnull(d.display_dept_seq, d.dept_seq) AND e.lang_code = 'kr'
+		
+		WHERE elet_appv_interface_key = #approKey#
+	</select>
+	
+	<update id="VisitorManageDAO.UpdateAppvDocSts" parameterClass="java.util.HashMap">
+		UPDATE 
+			$DB_NEOS$Z_DUZONITGROUP_VISITORS_M
+		SET
+			elct_appv_doc_status = #docStatus#,
+			approval_yn = #approvalYn#
+		WHERE
+			elet_appv_interface_key = #approKey#
+	</update>
+	
+	<select id="VisitorManageDAO.GetQrImageInfo" parameterClass="java.util.HashMap" remapResults="true" resultClass="java.util.HashMap">
+		select
+			a.qr_data as qrData
+			,concat(substring(a.visit_dt_fr,1,4), '.', substring(a.visit_dt_fr,5,2), '.', substring(a.visit_dt_fr,7,2), ' ', substring(a.visit_tm_fr,1,2), ':', substring(a.visit_tm_fr,3,2)) as qrDate
+			,a.visitor_nm as qrName
+			,a.visitor_co as qrComp
+			,ifnull(a.man_tel_num,'') as qrManTelNum
+			,ifnull(a.visit_place_name,'') as qrPlace
+			,ifnull(a.visit_place_sub_code,'') as qrPlaceSubCode
+			,case when ifnull(a.visit_car_no,'') = '' then '미등록' else concat(ifnull(a.visit_car_no,''), (case when a.visit_pticket_yn = 'Issue' then '(무료)' else '' end)) end as qrCar
+			,c.mms_calback_no as qrCallbackNo
+			,a.visit_hp as qrMobileNo
+			,concat(em.emp_name, ' ', dpm.dp_name) as qrManager
+			,dm.dept_name as qrManagerDept
+			,'http://bizboxmobile.cloudfax.co.kr' as bill36524Url
+			,c.bill36524_id as bill36524Id
+			,c.agent_id as agentId
+			,c.agent_key as agentKey
+		from $DB_NEOS$z_duzonitgroup_visitors_m a
+		join $DB_NEOS$t_co_group g on g.group_seq = #groupSeq#
+		join $DB_NEOS$t_co_comp b on a.req_comp_seq = b.comp_seq
+		join $DB_NEOS$t_fx_fax c on b.sms_id = c.bill36524_id
+		join $DB_NEOS$t_co_emp_dept ed on ed.main_dept_yn = 'Y' and a.man_comp_seq = ed.comp_seq and a.man_emp_seq = ed.emp_seq
+		join $DB_NEOS$t_co_emp_multi em on em.lang_code = 'kr' and em.emp_seq = ed.emp_seq
+		join $DB_NEOS$t_co_dept d on ed.dept_seq = d.dept_seq
+		left join $DB_NEOS$t_co_dept_multi dm on dm.lang_code = 'kr' and ifnull(d.display_dept_seq, d.dept_seq) = dm.dept_seq
+		left join $DB_NEOS$t_co_comp_duty_position_multi dpm on dpm.dp_type = 'POSITION' and dpm.dp_seq = ed.position_code
+		where a.r_no = #nR_NO#
+	</select>
+	
+	
+	<update id="VisitorManageDAO.updateQrSendStatus" parameterClass="java.util.HashMap">
+		UPDATE 
+			$DB_NEOS$Z_DUZONITGROUP_VISITORS_M
+		SET
+			qr_send_status_code = #qr_send_status_code#,
+			qr_send_date = NOW()
+		WHERE
+			r_no = #nR_NO#
+	</update>
+	
+	<select id="VisitorManageDAO.getRNoList" parameterClass="java.util.HashMap" resultClass = "java.util.HashMap">
+		SELECT 
+			GROUP_CONCAT(a.r_no SEPARATOR ',') AS r_no_list,
+			b.etc AS qr_send_yn
+		FROM 
+			$DB_NEOS$z_duzonitgroup_visitors_m a
+		JOIN 
+			$DB_NEOS$z_duzonitgroup_visitors_req b
+		ON 
+			a.elet_appv_interface_key = b.elet_appv_interface_key
+		WHERE 
+			a.elet_appv_interface_key = #approKey#
+			
+	</select>
+	
+	<update id="VisitorManageDAO.updateVisitorInfo" parameterClass="java.util.HashMap">
+		UPDATE 
+			$DB_NEOS$Z_DUZONITGROUP_VISITORS_M 
+		SET
+			man_comp_seq = #man_comp_seq#, 
+			man_emp_seq = #man_emp_seq#,
+			man_tel_num = #man_tel_num#, 
+			visitor_co = #visitor_co#, 
+			visitor_nm = #visitor_nm#, 
+			visit_hp = #visit_hp#, 
+			visit_car_no = #visit_car_no#, 
+			visit_tm_fr = #visit_tm_fr#, 
+			visit_aim = #visit_aim#,
+			visit_car_in_time= #visit_car_in_time#,
+			visit_car_out_time= #visit_car_out_time#, 
+			etc = #etc#,
+			edited_dt = NOW()
+		WHERE
+			r_no = #req_no#	
+	</update>
+	
+	<select id="VisitorManageDAO.getQrSendList" remapResults="true" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT 
+				a.r_no, 
+				IFNULL(b.seq, 0) AS seq,
+				a.man_comp_seq,
+				a.man_emp_seq,
+				
+				<!-- e.comp_name man_comp_name, -->
+				(SELECT comp_name FROM $DB_NEOS$t_co_comp_multi WHERE comp_seq = a.man_comp_seq AND lang_code = 'kr' LIMIT 1) man_comp_name,
+
+				f.dept_name man_dept_name,
+
+				(SELECT emp_name FROM $DB_NEOS$t_co_emp_multi WHERE emp_seq = a.man_emp_seq AND lang_code = 'kr' LIMIT 1) man_emp_name,
+				<!-- e.emp_name man_emp_name, -->
+					
+				d.dept_seq AS man_dept_seq,
+				$DB_NEOS$get_emp_duty_position_name(e.group_seq,a.man_comp_seq,d.duty_code,'DUTY','kr') man_grade_name,	
+				
+				a.req_comp_seq,
+				a.req_emp_seq,
+				<!-- g.emp_name AS req_emp_name, -->
+				(SELECT emp_name FROM $DB_NEOS$t_co_emp_multi WHERE emp_seq = a.req_emp_seq AND lang_code = 'kr' LIMIT 1) req_emp_name,
+				h.dept_seq AS req_dept_seq,
+				
+				a.visit_distinct,
+				a.visitor_co,
+				a.visitor_nm,
+				a.visit_hp,
+				a.visit_car_no,
+				a.visit_aim,
+				a.visit_cnt,
+				DATE_FORMAT(STR_TO_DATE(a.visit_dt_fr, '%Y%m%d'),'%Y-%m-%d') visit_dt_fr,
+				IFNULL(a.visit_tm_fr, '') AS visit_tm_fr,
+				a.approval_yn,
+				DATE_FORMAT(STR_TO_DATE(b.visit_dt, '%Y%m%d'),'%Y-%m-%d') visit_dt,
+				CASE WHEN b.in_time != '' THEN CONCAT(SUBSTR(IFNULL(b.in_time,''),1,2),':',SUBSTR(IFNULL(b.in_time,''),3,2)) END AS in_time,
+				CASE WHEN b.out_time != '' THEN CONCAT(SUBSTR(IFNULL(b.out_time,''),1,2),':',SUBSTR(IFNULL(b.out_time,''),3,2)) END AS out_time,
+				IFNULL(b.visit_card_no, '') AS visit_card_no,
+				IFNULL(a.etc, '') AS etc,
+				a.qr_send_status_code,
+				a.elct_appv_doc_status,
+				a.visit_pticket_yn,
+				DATE_FORMAT(a.qr_send_date, '%Y.%m.%d') qr_send_date,
+				a.created_dt
+				
+			FROM $DB_NEOS$Z_DUZONITGROUP_VISITORS_M a
+			LEFT OUTER JOIN $DB_NEOS$Z_DUZONITGROUP_VISITORS_D b ON a.r_no = b.r_no
+			
+			<!-- JOIN $DB_NEOS$v_user_info e ON a.man_emp_seq = e.emp_seq AND a.man_comp_seq = e.comp_seq 
+			JOIN $DB_NEOS$v_user_info g ON a.req_emp_seq = g.emp_seq AND a.req_comp_seq = g.comp_seq -->
+			
+			JOIN $DB_NEOS$t_co_emp_dept d ON a.man_emp_seq = d.emp_seq AND d.comp_seq = a.man_comp_seq AND d.main_dept_yn ='Y'
+			JOIN $DB_NEOS$t_co_dept e ON e.dept_seq = d.dept_seq
+			JOIN $DB_NEOS$t_co_dept_multi f ON f.dept_seq = ifnull(e.display_dept_seq, e.dept_seq) AND f.lang_code = 'kr'
+			JOIN $DB_NEOS$t_co_emp_dept h ON a.req_emp_seq = h.emp_seq AND h.comp_seq = a.req_comp_seq AND h.main_dept_yn = 'Y'
+			
+			WHERE a.visit_distinct = 1 AND a.del_yn != 1 				 
+				 AND IFNULL(a.visitor_nm,'') LIKE CONCAT('%' ,#pVisitNm#, '%')
+				 AND IFNULL(a.visit_car_no, '') LIKE CONCAT('%' ,#pVisitCarNo#, '%')				 
+				 AND a.req_emp_seq = CASE WHEN #userSe# = 'USER' THEN #empSeq# ELSE a.req_emp_seq END
+				 AND qr_send_status_code != ""
+				 AND DATE_FORMAT(qr_send_date,'%Y%m%d') >= #qrFrDt# AND DATE_FORMAT(qr_send_date,'%Y%m%d') <![CDATA[<]]>= #qrToDt#
+				 ORDER BY qr_send_date DESC, created_dt DESC		 
+				 LIMIT $startNum$, $endNum$;
+	</select>
+	
+	
+	<select id="VisitorManageDAO.getQrSendList_TOTALCOUNT" remapResults="true" parameterClass="java.util.HashMap" resultClass="String">
+		SELECT 
+			COUNT(a.r_no) cnt
+		FROM $DB_NEOS$Z_DUZONITGROUP_VISITORS_M a
+		
+		<!-- JOIN $DB_NEOS$v_user_info e ON a.man_emp_seq = e.emp_seq AND a.man_comp_seq = e.comp_seq AND e.main_dept_yn='Y' AND e.emp_lang_code='kr' -->
+		JOIN $DB_NEOS$t_co_emp_dept d ON a.man_emp_seq = d.emp_seq AND d.comp_seq = a.man_comp_seq AND d.main_dept_yn ='Y'
+		JOIN $DB_NEOS$t_co_dept e ON e.dept_seq = d.dept_seq
+		JOIN $DB_NEOS$t_co_dept_multi f ON f.dept_seq = ifnull(e.display_dept_seq, e.dept_seq) AND f.lang_code = 'kr'
+		JOIN $DB_NEOS$t_co_emp_dept h ON a.req_emp_seq = h.emp_seq AND h.comp_seq = a.req_comp_seq AND h.main_dept_yn = 'Y'
+		
+		WHERE a.visit_distinct = 1 AND a.del_yn != 1 				 
+				 AND IFNULL(a.visitor_nm,'') LIKE CONCAT('%' ,#pVisitNm#, '%')
+				 AND IFNULL(a.visit_car_no, '') LIKE CONCAT('%' ,#pVisitCarNo#, '%')				 
+				 AND a.req_emp_seq = CASE WHEN #userSe# = 'USER' THEN #empSeq# ELSE a.req_emp_seq END
+				 AND qr_send_status_code != ""
+				 AND DATE_FORMAT(qr_send_date,'%Y%m%d') >= #qrFrDt# AND DATE_FORMAT(qr_send_date,'%Y%m%d') <![CDATA[<]]>= #qrToDt#
+			
+	</select>
+	
+	<select id="VisitorManageDAO.checkEapDoc" remapResults="true" parameterClass="java.util.HashMap" resultClass="Integer">
+		SELECT
+			COUNT(r_no)
+		FROM
+			$DB_NEOS$z_duzonitgroup_visitors_m
+		WHERE
+			elet_appv_interface_key=#approKey#
+	</select>
+	
+	<delete id="VisitorManageDAO.deleteReqData" parameterClass="java.util.HashMap">
+		UPDATE
+			$DB_NEOS$z_duzonitgroup_visitors_req
+		SET
+			del_yn = '1'
+		WHERE
+			elet_appv_interface_key=#approKey#
+	</delete>
+	
+	<select id="VisitorManageDAO.getAppvVisitorList" remapResults="true" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT 
+				a.r_no rNo, 
+				a.man_comp_seq manCompSeq,
+				a.man_emp_seq manEmpSeq,
+				(SELECT comp_name FROM $DB_NEOS$t_co_comp_multi WHERE comp_seq = a.man_comp_seq AND lang_code = 'kr') manCompName,
+				f.dept_name manDeptName,
+				(SELECT emp_name FROM $DB_NEOS$t_co_emp_multi WHERE emp_seq = a.man_emp_seq AND lang_code = 'kr') manEmpName,
+				e.dept_seq manDeptSeq,
+				$DB_NEOS$get_emp_duty_position_name(e.group_seq,a.man_comp_seq,d.duty_code,'DUTY','kr') manGradeName,	
+				a.req_comp_seq reqCompSeq,
+				a.req_emp_seq reqEmpSeq,
+				(SELECT emp_name FROM $DB_NEOS$t_co_emp_multi WHERE emp_seq = req_emp_seq AND lang_code = 'kr') reqEmpName,
+				h.dept_seq reqDeptSeq,
+				a.visit_distinct visitDistinct,
+				a.visitor_co visitCo,
+				a.visitor_nm visitorNm,
+				a.visit_hp visitorHp,
+				a.visit_car_no visitorCarNo,
+				a.visit_aim visitAim,
+				a.visit_cnt visitCnt,
+				DATE_FORMAT(STR_TO_DATE(a.visit_dt_fr, '%Y%m%d'),'%Y-%m-%d') visitDt,
+				IFNULL(a.visit_tm_fr, '') AS visitTm,
+				CASE WHEN b.in_time != '' THEN CONCAT(SUBSTR(IFNULL(b.in_time,''),1,2),':',SUBSTR(IFNULL(b.in_time,''),3,2)) END AS inTime,
+				CASE WHEN b.out_time != '' THEN CONCAT(SUBSTR(IFNULL(b.out_time,''),1,2),':',SUBSTR(IFNULL(b.out_time,''),3,2)) END AS outTime,
+				IFNULL(b.visit_card_no, '') visitCardNo,
+				IFNULL(a.etc, '') AS etc,
+				a.qr_send_status_code qrSendStatusCode,
+				a.elct_appv_doc_status elctAppvDocStatus,
+				a.visit_pticket_yn visitorPticketYn,
+				DATE_FORMAT(a.qr_send_date, '%Y.%m.%d') qrSendDate,
+				a.created_dt createdDt,
+				a.visit_place_code visitPlaceCode,
+				a.visit_place_sub_code visitPlaceSubCode,
+				a.qr_data qrData
+				
+			FROM $DB_NEOS$Z_DUZONITGROUP_VISITORS_M a
+			LEFT OUTER JOIN $DB_NEOS$Z_DUZONITGROUP_VISITORS_D b ON a.r_no = b.r_no
+			JOIN $DB_NEOS$t_co_emp_dept d ON a.man_emp_seq = d.emp_seq AND d.comp_seq = a.man_comp_seq AND d.main_dept_yn ='Y'
+			JOIN $DB_NEOS$t_co_dept e ON e.dept_seq = d.dept_seq
+			JOIN $DB_NEOS$t_co_dept_multi f ON f.dept_seq = ifnull(e.display_dept_seq, e.dept_seq) AND f.lang_code = 'kr'
+			
+			JOIN $DB_NEOS$t_co_emp_dept h ON a.req_emp_seq = h.emp_seq AND h.comp_seq = a.req_comp_seq AND h.main_dept_yn = 'Y'
+			
+			WHERE a.visit_distinct = 1 AND a.del_yn != 1 			 
+				 AND (a.visit_dt_fr >= #pFrDt# AND a.visit_dt_fr <![CDATA[<]]>= #pToDt#)
+				 AND a.qr_data != ""
+				 ORDER BY a.visit_dt_fr, a.visit_tm_fr, a.created_dt DESC				 
+	</select>
+	
+	
+	<select id="VisitorManageDAO.getNormalVisitorInOutList" remapResults="true" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT 
+				a.r_no, 
+				IFNULL(b.seq, 0) AS seq,
+				a.man_comp_seq,
+				a.man_emp_seq,
+				g.comp_name man_comp_name,
+				f.dept_name man_dept_name,
+				c.emp_name man_emp_name,				
+				e.dept_seq AS man_dept_seq,
+				$DB_NEOS$get_emp_duty_position_name(e.group_seq,a.man_comp_seq,d.duty_code,'DUTY','kr') man_grade_name,	
+				a.req_comp_seq,
+				a.req_emp_seq,
+				(SELECT emp_name FROM $DB_NEOS$t_co_emp_multi WHERE emp_seq = a.req_emp_seq AND lang_code = 'kr' LIMIT 1) req_emp_name,
+				h.dept_seq AS req_dept_seq,
+				a.visit_distinct,
+				a.visitor_co,
+				a.visitor_nm,
+				a.visit_hp,
+				a.visit_car_no,
+				a.visit_aim,
+				a.visit_cnt,
+				DATE_FORMAT(STR_TO_DATE(a.visit_dt_fr, '%Y%m%d'),'%Y-%m-%d') visit_dt_fr,
+				
+				IFNULL(a.visit_dt_to, '') AS visit_dt_to,
+				IFNULL(a.visit_tm_fr, '') AS visit_tm_fr,
+				IFNULL(a.visit_tm_to, '') AS visit_tm_to, 
+				a.approval_yn,
+				DATE_FORMAT(STR_TO_DATE(b.visit_dt, '%Y%m%d'),'%Y-%m-%d') visit_dt,
+				
+				CASE WHEN b.in_time != '' THEN CONCAT(SUBSTR(IFNULL(b.in_time,''),1,2),':',SUBSTR(IFNULL(b.in_time,''),3,2)) END AS in_time,
+				CASE WHEN b.out_time != '' THEN CONCAT(SUBSTR(IFNULL(b.out_time,''),1,2),':',SUBSTR(IFNULL(b.out_time,''),3,2)) END AS out_time,
+				
+				IFNULL(b.visit_card_no, '') AS visit_card_no,
+				IFNULL(a.etc, '') AS etc,
+				a.qr_send_status_code,
+				a.elct_appv_doc_status,
+				a.visit_pticket_yn,
+				DATE_FORMAT(a.qr_send_date, '%Y.%m.%d') qr_send_date,
+				a.created_dt,
+				a.visit_place_code,
+				a.visit_place_sub_code,
+				a.qr_data,
+				a.visit_place_name
+								
+			FROM $DB_NEOS$Z_DUZONITGROUP_VISITORS_M a
+			LEFT OUTER JOIN $DB_NEOS$Z_DUZONITGROUP_VISITORS_D b ON a.r_no = b.r_no
+			
+			JOIN $DB_NEOS$t_co_emp_multi c ON a.man_emp_seq = c.emp_seq AND c.lang_code = 'kr'
+			JOIN $DB_NEOS$t_co_emp_dept d ON a.man_emp_seq = d.emp_seq AND d.comp_seq = a.man_comp_seq AND d.main_dept_yn ='Y'
+			JOIN $DB_NEOS$t_co_dept e ON e.dept_seq = d.dept_seq
+			JOIN $DB_NEOS$t_co_dept_multi f ON f.dept_seq = ifnull(e.display_dept_seq, e.dept_seq) AND f.lang_code = 'kr'
+			JOIN $DB_NEOS$t_co_comp_multi g ON g.comp_seq = a.man_comp_seq AND g.lang_code = 'kr'
+			JOIN $DB_NEOS$t_co_emp_dept h ON a.req_emp_seq = h.emp_seq AND h.comp_seq = a.req_comp_seq AND h.main_dept_yn = 'Y'
+				 
+			WHERE a.visit_distinct = 1 AND a.del_yn != 1 
+				 AND (a.visit_dt_fr >= #pFrDT# AND a.visit_dt_fr <![CDATA[<]]>= #pToDT#)
+				 AND IFNULL(f.dept_name,'') LIKE CONCAT('%' ,#pDept#, '%')
+				 AND IFNULL($DB_NEOS$get_emp_duty_position_name(e.group_seq,a.man_comp_seq,d.duty_code,'DUTY','kr'),'') LIKE CONCAT('%' ,#pGrade#, '%')
+ 				 AND IFNULL(c.emp_name,'') LIKE CONCAT('%' ,#pName#, '%')
+				 AND IFNULL(a.visitor_co,'') LIKE CONCAT('%' ,#pVisitCo#, '%')
+				 AND IFNULL(a.visitor_nm,'') LIKE CONCAT('%' ,#pVisitNm#, '%')
+				 AND IFNULL(a.visit_place_name, '') LIKE CONCAT('%' ,#pVisitPlace#, '%')
+				 AND a.req_emp_seq = CASE WHEN #userSe# = 'USER' THEN #empSeq# ELSE a.req_emp_seq END
+				 AND a.elct_appv_doc_status = CASE WHEN a.elet_appv_link_yn = 'Y' THEN '결재종결' ELSE '' END
+				 ORDER BY a.visit_dt_fr, a.visit_tm_fr, a.created_dt DESC				 
+				 LIMIT $startNum$, $endNum$;
+				 
+	</select>	
+	
+	<select id="VisitorManageDAO.getNormalVisitorInOutList_TOTALCOUNT" remapResults="true" parameterClass="java.util.HashMap" resultClass="String">
+		SELECT 
+			count(a.r_no) 
+		FROM $DB_NEOS$Z_DUZONITGROUP_VISITORS_M a
+		LEFT OUTER JOIN $DB_NEOS$Z_DUZONITGROUP_VISITORS_D b ON a.r_no = b.r_no
+			
+		JOIN $DB_NEOS$t_co_emp_multi c ON a.man_emp_seq = c.emp_seq AND c.lang_code = 'kr'
+		JOIN $DB_NEOS$t_co_emp_dept d ON a.man_emp_seq = d.emp_seq AND d.comp_seq = a.man_comp_seq AND d.main_dept_yn ='Y'
+		JOIN $DB_NEOS$t_co_dept e ON e.dept_seq = d.dept_seq
+		JOIN $DB_NEOS$t_co_dept_multi f ON f.dept_seq = ifnull(e.display_dept_seq, e.dept_seq) AND f.lang_code = 'kr'
+		JOIN $DB_NEOS$t_co_comp_multi g ON g.comp_seq = a.man_comp_seq AND g.lang_code = 'kr'
+		JOIN $DB_NEOS$t_co_emp_dept h ON a.req_emp_seq = h.emp_seq AND h.comp_seq = a.req_comp_seq AND h.main_dept_yn = 'Y'
+				 
+		WHERE a.visit_distinct = 1 AND a.del_yn != 1 
+			 AND (a.visit_dt_fr >= #pFrDT# AND a.visit_dt_fr <![CDATA[<]]>= #pToDT#)
+			 AND IFNULL(f.dept_name,'') LIKE CONCAT('%' ,#pDept#, '%')
+			 AND IFNULL($DB_NEOS$get_emp_duty_position_name(e.group_seq,a.man_comp_seq,d.duty_code,'DUTY','kr'),'') LIKE CONCAT('%' ,#pGrade#, '%')
+			 AND IFNULL(c.emp_name,'') LIKE CONCAT('%' ,#pName#, '%')
+			 AND IFNULL(a.visitor_co,'') LIKE CONCAT('%' ,#pVisitCo#, '%')
+			 AND IFNULL(a.visitor_nm,'') LIKE CONCAT('%' ,#pVisitNm#, '%')
+			 AND IFNULL(a.visit_place_name, '') LIKE CONCAT('%' ,#pVisitPlace#, '%')
+			 AND a.req_emp_seq = CASE WHEN #userSe# = 'USER' THEN #empSeq# ELSE a.req_emp_seq END
+			 AND a.elct_appv_doc_status = CASE WHEN a.elet_appv_link_yn = 'Y' THEN '결재종결' ELSE '' END
+			 
+			 
+	</select>	
+	
+	
+	<update id="VisitorManageDAO.BatchInOutCheck" parameterClass="java.util.HashMap">
+		UPDATE 
+			$DB_NEOS$Z_DUZONITGROUP_VISITORS_D a
+		SET
+			<dynamic prepend=" " close=" ">
+				<isNotEmpty property="inTime" prepend=", ">
+					a.in_time = #inTime#, 
+					a.visit_card_no = #visitCardNo#
+				</isNotEmpty>
+				<isNotEmpty property="outTime" prepend=", ">
+					a.out_time = #outTime#
+				</isNotEmpty>
+			</dynamic>
+		WHERE 
+			<isNotEmpty property="rNo">
+			a.r_no = #rNo#
+			</isNotEmpty>
+			<isEmpty property="rNo">
+			a.r_no = (
+				SELECT * 
+				FROM (
+					SELECT
+						b.r_no
+					FROM
+						$DB_NEOS$Z_DUZONITGROUP_VISITORS_D b
+					WHERE
+						b.visit_card_no=#visitCardNo#
+					AND 
+						ifnull(b.out_time,'') = ''
+					ORDER BY b.visit_dt DESC, b.in_time DESC
+					LIMIT 1
+					) temp
+				)
+			</isEmpty>
+	</update>
+	
+	
+	<insert id="VisitorManageDAO.insertInHouseVisitor" parameterClass="java.util.HashMap">
+		INSERT INTO $DB_NEOS$Z_DUZONITGROUP_VISITORS_M ( 
+					r_no, 
+					man_comp_seq, 
+					man_emp_seq, 
+					man_tel_num,
+					req_comp_seq, 
+					req_emp_seq, 
+					visit_distinct, 
+					visitor_co, 
+					visitor_nm, 
+					visit_hp, 
+					visit_car_no, 
+					visit_dt_fr, 
+					visit_tm_fr, 
+					visit_aim, 
+					visit_cnt, 
+					approval_yn, 
+					etc, 
+					created_dt, 
+					del_yn,
+					visit_place_code,
+					visit_place_sub_code,
+					visit_place_name,
+					visit_pticket_yn,
+					elet_appv_link_yn,
+					elet_appv_interface_key,
+					elct_appv_doc_id,
+					elct_appv_doc_status,
+					qr_data,
+					qr_send_status_code
+				)
+		VALUES ( 
+					#nR_NO#,
+					#nManCoSeq#, 
+					#nManUserSeq#,
+					#nManUserHp#,
+					#nReqCoSeq#, 
+					#nReqUserSeq#, 
+					#sDistinct#, 
+					#sVisitCO#, 
+					#sVisitNM#, 
+					#sVisitHP#, 
+					#sVisitCarNo#, 
+					#sVisitFrDT#, 
+					#sVisitFrTM#, 
+					#sVisitAIM#, 
+					#nVisitCnt#, 
+					#approvalYn#, 
+					#sETC#, 
+					NOW(), 
+					'0', 
+					#visit_place_code#,
+					#visitDistinct#,
+					#visit_place_name#,
+					#visit_pticket_yn#,
+					#elet_appv_link_yn#,
+					#elet_appv_interface_key#,
+					#elct_appv_doc_id#,
+					#elct_appv_doc_status#,
+					#qr_data#,
+					#qr_send_status_code#
+				);
+	</insert>
+	
+	
+	
+	<select id="VisitorManageDAO.getVisitorInfo" remapResults="true" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+			SELECT 
+				a.r_no rNo, 
+				a.man_comp_seq manCompSeq,
+				a.man_emp_seq manEmpSeq,
+				
+				g.comp_name manCompName ,
+				f.dept_name manDeptName,
+				(SELECT emp_name FROM $DB_NEOS$t_co_emp_multi WHERE emp_seq = a.man_emp_seq AND lang_code = 'kr' LIMIT 1) manEmpName,
+				<!-- e.emp_name manEmpName,	 -->
+				e.dept_seq AS manDeptSeq,
+				$DB_NEOS$get_emp_duty_position_name(e.group_seq,a.man_comp_seq,d.duty_code,'DUTY','kr') manGradeName,	
+				
+				a.req_comp_seq reqCompSeq,
+				a.req_emp_seq reqEmpSeq,
+				
+				(SELECT emp_name FROM $DB_NEOS$t_co_emp_multi WHERE emp_seq = a.req_emp_seq AND lang_code = 'kr' LIMIT 1) reqEmpName,
+				
+				h.dept_seq AS reqDeptSeq,
+				a.visitor_co visitCo,
+				a.visitor_nm visitNm,
+				a.visit_hp visitHp,
+				a.visit_car_no visitCarNo,
+				a.visit_aim visitAim,
+				a.visit_cnt visitCnt,
+				
+				CONCAT(SUBSTR(IFNULL(a.visit_tm_fr,''),1,2),':',SUBSTR(IFNULL(a.visit_tm_fr,''),3,2)) AS visitTm,
+				a.approval_yn approvaYn,
+				DATE_FORMAT(STR_TO_DATE(b.visit_dt, '%Y%m%d'),'%Y-%m-%d') visitDt,
+				
+				CASE WHEN b.in_time != '' THEN CONCAT(SUBSTR(IFNULL(b.in_time,''),1,2),':',SUBSTR(IFNULL(b.in_time,''),3,2)) END AS inTime,
+				CASE WHEN b.out_time != '' THEN CONCAT(SUBSTR(IFNULL(b.out_time,''),1,2),':',SUBSTR(IFNULL(b.out_time,''),3,2)) END AS outTime,
+				
+				IFNULL(b.visit_card_no, '') AS visitCardNo,
+				a.qr_send_status_code qrSendStatusCode,
+				a.elct_appv_doc_status elctAppvDocStatus,
+				
+				case when a.visit_pticket_yn = 'Issue' then 'Y' ELSE 'N' END AS visitPticketYn,
+				
+				DATE_FORMAT(a.qr_send_date, '%Y.%m.%d') qrSendDate,
+				a.created_dt createdDt,
+				a.visit_place_code visitPlaceCode,
+				a.visit_place_sub_code visitDistinct,
+				a.qr_data qrData,
+				a.visit_place_name visitPlaceName,
+				a.man_tel_num manTelNum,
+				#authYn# AS authYn
+				
+			FROM $DB_NEOS$Z_DUZONITGROUP_VISITORS_M a
+			LEFT OUTER JOIN $DB_NEOS$Z_DUZONITGROUP_VISITORS_D b ON a.r_no = b.r_no
+
+			JOIN $DB_NEOS$t_co_emp_dept d ON a.man_emp_seq = d.emp_seq AND d.comp_seq = a.man_comp_seq AND d.main_dept_yn ='Y'
+			JOIN $DB_NEOS$t_co_dept e ON e.dept_seq = d.dept_seq
+			JOIN $DB_NEOS$t_co_dept_multi f ON f.dept_seq = ifnull(e.display_dept_seq, e.dept_seq) AND f.lang_code = 'kr'
+			JOIN $DB_NEOS$t_co_comp_multi g ON g.comp_seq = a.man_comp_seq AND g.lang_code = 'kr'
+			JOIN $DB_NEOS$t_co_emp_dept h ON a.req_emp_seq = h.emp_seq AND h.comp_seq = a.req_comp_seq AND h.main_dept_yn = 'Y'
+			
+			WHERE a.visit_distinct = 1 AND a.del_yn != 1
+				AND a.r_no = #rNo#
+				<isEmpty property="rNo">
+				OR b.visit_card_no = #visitCardNo#
+				</isEmpty>
+				<isEqual property="activeCardYn" compareValue="N">
+				AND DATE_FORMAT(CURDATE(), '%Y%m%d') = a.visit_dt_fr
+				</isEqual>
+				AND ifnull(b.out_time,'') = ''
+				ORDER BY a.visit_dt_fr DESC, b.in_time DESC
+				LIMIT 1
+	</select>		
+	
+	<select id="VisitorManageDAO.getCheckVisitCardNo" remapResults="true" parameterClass="java.util.HashMap" resultClass="Integer">
+		SELECT 
+			COUNT(*)
+		FROM 
+			$DB_NEOS$Z_DUZONITGROUP_VISITORS_D a
+		JOIN 
+			$DB_NEOS$Z_DUZONITGROUP_VISITORS_M b ON a.r_no = b.r_no 
+		WHERE 
+			visit_card_no = #nCardNo# 
+			AND ifnull(out_time,'') = ''
+			<!-- AND DATE_FORMAT(CURDATE(), '%Y%m%d') = b.visit_dt_fr   -->
+			AND b.del_yn != 1
+	</select>
+	
+	<select id="VisitorManageDAO.getCheckVisitDt" remapResults="true" parameterClass="java.util.HashMap" resultClass="String">
+		SELECT 
+			a.visit_dt
+		FROM 
+			$DB_NEOS$Z_DUZONITGROUP_VISITORS_D a
+		JOIN 
+			$DB_NEOS$Z_DUZONITGROUP_VISITORS_M b ON a.r_no = b.r_no 
+		WHERE 
+			a.r_no = #rNo#
+			AND b.del_yn != 1
+	</select>
+	
+	
+	<select id="VisitorManageDAO.getManInfo" remapResults="true" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+			
+		SELECT 
+			e.emp_seq manEmpSeq
+			,ec.comp_seq manCompSeq
+			,e.mobile_tel_num manTelNum
+		FROM 
+			$DB_NEOS$t_co_emp e
+		JOIN 
+			$DB_NEOS$t_co_emp_comp ec 
+		ON 
+			e.emp_seq = ec.emp_seq AND ec.work_status = '999'
+		WHERE 
+			e.login_id = #manLoginId#
+		ORDER BY e.main_comp_seq = ec.comp_seq desc
+		LIMIT 1	
+	</select>
+	
+	<select id="VisitorManageDAO.getEmpTelNum" remapResults="true" parameterClass="java.util.HashMap" resultClass="String">
+			
+		SELECT
+			mobile_tel_num 
+		FROM 
+			$DB_NEOS$t_co_emp 
+		WHERE 
+			emp_seq = #manEmpSeq#
+	</select>
+	
+	<select id="VisitorManageDAO.getEaDocFormId" remapResults="true" parameterClass="java.util.HashMap" resultClass="String">
+		SELECT
+			form_id
+		FROM 
+			$DB_NEOS$teag_form
+		WHERE 
+			form_d_tp = 'VISIT01';
+	</select>
+	
+	<select id="VisitorManageDAO.getEaDocId" remapResults="true" parameterClass="java.util.HashMap" resultClass="Integer">
+		SELECT
+			count(*)
+		FROM 
+			$DB_NEOS$Z_DUZONITGROUP_VISITORS_M
+		WHERE 
+			elct_appv_doc_id = #docId#
+	</select>
+	
+	<select id="VisitorManageDAO.checkInOutMenuAuthYn" remapResults="true" parameterClass="java.util.HashMap" resultClass="Integer">
+		SELECT 
+			COUNT(*) 
+		FROM 
+			$DB_NEOS$t_co_authcode a
+		JOIN 
+			$DB_NEOS$t_co_auth_relate b ON a.author_code = b.author_code AND b.emp_seq = #empSeq#
+		JOIN 
+			$DB_NEOS$t_co_menu_auth c ON a.author_code = c.author_code AND c.menu_no = 910110000
+		WHERE
+			a.author_use_yn = 'Y'
+	</select>
+	
+	<select id="VisitorManageDAO.getManInfoSch" remapResults="true" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT 
+			ed.biz_seq AS bizSeq,
+			e.emp_seq AS empSeq,
+			ec.comp_seq AS compSeq,
+			ed.dept_seq AS deptSeq,
+			e.out_mail AS emailAddr,
+			e.out_domain AS emailDomain
+		FROM $DB_NEOS$t_co_emp e
+		JOIN $DB_NEOS$t_co_emp_dept ed on ed.dept_seq = #man_dept_seq# AND ed.emp_seq = e.emp_seq
+		JOIN $DB_NEOS$t_co_emp_comp ec ON ec.comp_seq = #man_comp_seq# AND ec.work_status = '999' AND ec.emp_seq = e.emp_seq
+		WHERE e.emp_seq = #man_emp_seq#
+	</select>
+	
+	<select id="VisitorManageDAO.getReqInfoSch" remapResults="true" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT 
+			e.emp_seq AS empSeq,
+			ec.comp_seq AS compSeq,
+			e.out_mail AS emailAddr,
+			e.out_domain AS emailDomain,
+			ec.dept_seq AS deptSeq,
+			em.emp_name AS empName
+		FROM $DB_NEOS$t_co_emp e
+		JOIN $DB_NEOS$t_co_emp_multi em ON e.emp_seq = em.emp_seq AND lang_code = 'kr'
+		JOIN $DB_NEOS$t_co_emp_comp ec ON ec.comp_seq = #req_comp_seq# AND ec.work_status = '999' AND ec.emp_seq = e.emp_seq
+		WHERE e.emp_seq = #req_emp_seq#
+	</select>
+	
+	<select id="VisitorManageDAO.getEapAppLineList" remapResults="true" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT 
+			t1.user_id AS empSeq,
+			t1.co_id AS compSeq,
+			t1.dept_id AS deptSeq
+		FROM 
+			$DB_NEOS$teag_appdoc_line t1
+		JOIN
+			$DB_NEOS$teag_appdoc t2 ON t1.doc_id = t2.doc_id 
+		WHERE 
+			t1.doc_id = #elct_appv_doc_id# AND t1.user_id != t2.user_id
+	</select>
+	
+	
+	<select id="VisitorManageDAO.getEapRefList" remapResults="true" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT 
+			ec.emp_seq orgSeq,
+			'E' orgType,
+			ec.comp_seq compSeq,
+			ec.dept_seq deptSeq
+		FROM $DB_NEOS$teag_appdoc_receiveuser t1
+		JOIN $DB_NEOS$t_co_emp_comp ec ON t1.user_id = ec.emp_seq  AND t1.co_id = ec.comp_seq AND ec.use_yn = 'Y'
+		WHERE t1.doc_id = #elct_appv_doc_id#
+	</select>
+	
+	<update id="VisitorManageDAO.updateTmapSeq" parameterClass="java.util.HashMap">
+		UPDATE 
+			$DB_NEOS$Z_DUZONITGROUP_VISITORS_M 
+		SET 
+			t_map_seq = #t_map_seq#
+		WHERE 
+			r_no = #nR_NO#
+	</update>
+	
+	<select id="VisitorManageDAO.getVisitorInfoSimple" remapResults="true" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT 
+			*
+		FROM 
+			$DB_NEOS$Z_DUZONITGROUP_VISITORS_M
+		WHERE 
+			r_no = #rNo#
+	</select>
+	
+	<select id="VisitorManageDAO.checkPticketCount" remapResults="true" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		<!-- SELECT 	
+			COUNT(t_map_seq) count
+		FROM
+			$DB_NEOS$z_duzonitgroup_visitors_m a
+		WHERE
+			t_map_seq Is NOT null
+		AND
+			visit_dt_fr = #visitDt#
+		AND
+			visit_car_in_time <![CDATA[<=]]>  #visitCarOutTime#
+		AND
+			visit_car_out_time >= #visitCarInTime#
+		AND 
+			a.del_yn = '0'
+		<isNotEmpty property="rNo">
+		AND
+			r_no NOT IN (#rNo#)
+		</isNotEmpty>		
+		UNION ALL
+		SELECT
+			maxParkingCount max
+		FROM 
+			$DB_NEOS$z_duzonitgroup_tmap_connect
+		WHERE
+			comp_seq = #manCompSeq# -->
+		
+		SELECT 	
+			COUNT(t_map_seq) count
+		FROM
+			$DB_NEOS$z_duzonitgroup_visitors_m a
+		WHERE
+			t_map_seq Is NOT null
+		AND
+			visit_dt_fr = #visitDt#
+		AND
+			visit_car_in_time <![CDATA[<=]]>  #visitCarOutTime#
+		AND
+			visit_car_out_time >= #visitCarInTime#
+		AND 
+			a.del_yn = '0'
+			
+		<isNotEmpty property="rNo">
+		AND
+			r_no NOT IN (#rNo#)
+		</isNotEmpty>	
+			
+		UNION ALL
+		(
+		SELECT maxParkingCount max
+		FROM (
+				SELECT * FROM $DB_NEOS$z_duzonitgroup_tmap_connect WHERE comp_seq = #manCompSeq#
+				UNION
+				SELECT * FROM $DB_NEOS$z_duzonitgroup_tmap_connect WHERE comp_seq = '0'
+			) T LIMIT 1 
+		)
+	
+	</select>
+	
+	<select id="VisitorManageDAO.checkPticketDuple" remapResults="true" parameterClass="java.util.HashMap" resultClass="Integer">
+		SELECT 
+			COUNT(*)
+		FROM
+			$DB_NEOS$z_duzonitgroup_visitors_m
+		WHERE
+			REPLACE(visit_car_no," ", "") = #visitCarNo#
+		AND
+			visit_dt_fr = #visitDt#
+		AND
+			visit_car_in_time <![CDATA[<=]]>  #visitCarOutTime#
+		AND
+			visit_car_out_time >= #visitCarInTime#
+		AND
+			t_map_seq IS NOT NULL
+		AND
+			del_yn = '0'
+	</select>
+	
+	
+	<select id="VisitorManageDAO.getTmapInfo" remapResults="true" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		
+		SELECT * 
+		FROM (
+			SELECT * FROM $DB_NEOS$z_duzonitgroup_tmap_connect WHERE comp_seq = #man_comp_seq#
+			UNION
+			SELECT * FROM $DB_NEOS$z_duzonitgroup_tmap_connect WHERE comp_seq = '0'
+		) T
+		LIMIT 1
+		
+	</select>
+	
+	<select id="VisitorManageDAO.getTmapServerInfo" remapResults="true" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT 
+			tmap_server,
+			tmap_token
+		FROM 
+			$DB_NEOS$t_co_group
+	</select>
+	
+	<insert id="VisitorManageDAO.insertQrStayLog" parameterClass="java.util.HashMap">
+		INSERT INTO $DB_NEOS$t_co_qr_stay_log ( 
+					qr_gbn_code,
+					qr_code,
+					qr_detail_code,
+					compName,
+					deptPathName,
+					empName,
+					empSeq,
+					mobile_tel_num,
+					gps_info,
+					create_seq,
+					create_date,
+					location_addr
+				)
+		VALUES ( 
+					#qrGbnCode#,
+					#qrCode#,
+					#qrDetailCode#,
+					#compName#,
+					#deptPathName#,
+					#empName#,
+					#empSeq#,
+					#mobileTelNum#,
+					#gpsInfo#,
+					#empSeq#,
+					NOW(),
+					#locationAddr#
+				);
+	</insert>
+	
+	
+	<select id="VisitorManageDAO.getQrPlaceCertificationData" remapResults="true" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT 
+			DATE_FORMAT(create_date,'%Y-%m-%d %H:%i') as createDate,
+			compName,
+			deptPathName,
+			empName,
+			qr_gbn_code as qrGbnCode,
+			location_addr as locationAddr,
+			qr_detail_code as qrDetailCode,
+			qr_code as qrCode
+		FROM
+			$DB_NEOS$t_co_qr_stay_log
+		WHERE
+			DATE_FORMAT(create_date, '%Y-%m-%d') BETWEEN #frDate# AND #toDate#
+	
+	</select>	
+	
+	<select id="VisitorManageDAO.checkQrStayLogDuple" remapResults="true" parameterClass="java.util.HashMap" resultClass="Integer">
+		SELECT
+			TIMESTAMPDIFF(SECOND,create_date, NOW())
+		FROM
+			$DB_NEOS$t_co_qr_stay_log
+		WHERE empSeq = #empSeq# AND qr_gbn_code = #qrGbnCode# AND qr_code = #qrCode# AND qr_detail_code = #qrDetailCode# 
+		AND TIMESTAMPDIFF(SECOND, create_date, NOW()) <![CDATA[<]]> 300
+		ORDER BY stay_seq DESC
+		LIMIT 1
+	</select>
+	
+	<select id="VisitorManageDAO.getEmpInfo" remapResults="true" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		select
+			cm.comp_name compName
+			,dm.path_name deptPathName
+			,em.emp_name empName
+			,ifnull(e.mobile_tel_num,'') as mobileTelNum 
+		from $DB_NEOS$t_co_emp e
+		join $DB_NEOS$t_co_emp_multi em on e.emp_seq = em.emp_seq and em.lang_code = 'kr'
+		join $DB_NEOS$t_co_emp_comp ec on e.emp_seq = ec.emp_seq and ec.use_yn = 'Y' and ec.work_status != '001'
+		join $DB_NEOS$t_co_comp_multi cm on ec.comp_seq = cm.comp_seq and cm.lang_code = 'kr'
+		join $DB_NEOS$t_co_dept_multi dm on ec.dept_seq = dm.dept_seq and dm.lang_code = 'kr'
+		where em.emp_seq = #empSeq#
+		order by e.main_comp_seq = ec.comp_seq desc
+		limit 1
+	
+	</select>	
+	
+</sqlMap>

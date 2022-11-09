@@ -1,0 +1,1520 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="MenuManageDAO">	
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	
+	<select id="MenuManageDAO.getAllTopMenuList" parameterClass="hashmap" resultClass="egovMap" >
+		
+		select 
+		m.menu_gubun,
+		$DB_NEOS$FN_GetMultiLang(#langCode#,mm.menu_nm_multi) as menu_nm
+		from
+		<isEqual property="menuAuthType" compareValue="USER">
+		$DB_NEOS$t_co_menu m
+		join
+		$DB_NEOS$v_t_co_menu_multi mm on m.menu_no = mm.menu_no
+		</isEqual>
+		<isEqual property="menuAuthType" compareValue="ADMIN">
+		$DB_NEOS$t_co_menu_adm m
+		join
+		$DB_NEOS$v_t_co_menu_adm_multi mm on m.menu_no = mm.menu_no			
+		</isEqual>
+		where
+		m.upper_menu_no = '0'
+		and NVL(m.delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+		order by m.menu_ordr
+	 						
+	</select>	
+
+	<select id="MenuManageDAO.selectTreeMenu" parameterClass="hashmap" resultClass="egovMap" >
+		/* MenuManageDAO.selectTreeMenu - oracle */
+		
+		SELECT
+		M.menu_no
+		, M.menu_gubun
+		, M.upper_menu_no
+		, FN_GetMultiLang(#langCode#,MM.menu_nm_multi) as name
+		, MM.menu_dc
+		, M.url_path
+		, M.sso_use_yn
+		, M.MENU_DEPTH AS lvl
+		, (SELECT COUNT(menu_no) FROM t_co_menu WHERE upper_menu_no = M.menu_no AND NVL(delete_yn , 'N') <![CDATA[ <> ]]> 'Y') AS child_count
+		, '' AS checked
+		, DECODE( NVL(M.url_path, ' '), ' ' , 'folder' , 'file') AS "spriteCssClass"
+		, M.menu_ordr
+		FROM T_CO_MENU M
+		JOIN V_T_CO_MENU_MULTI MM ON M.MENU_NO = MM.MENU_NO
+		WHERE 
+		M.MENU_GUBUN = #menuGubun#
+		AND NVL(M.DELETE_YN , 'N') <![CDATA[ <> ]]> 'Y'
+		START WITH UPPER_MENU_NO = 0
+		CONNECT BY PRIOR M.MENU_NO=M.UPPER_MENU_NO
+		ORDER SIBLINGS BY M.MENU_DEPTH, M.MENU_ORDR, M.MENU_NO		
+	</select>
+	
+	<select id="MenuManageDAO.selectTreeAdmMenu" parameterClass="hashmap" resultClass="egovMap" >
+		/* MenuManageDAO.selectTreeAdmMenu - oracle */
+		
+		SELECT
+		M.menu_no
+		, M.menu_gubun
+		, M.upper_menu_no
+		, FN_GetMultiLang(#langCode#,MM.menu_nm_multi) as name
+		, MM.menu_dc
+		, M.url_path
+		, M.sso_use_yn
+		, M.MENU_DEPTH AS lvl
+		, (SELECT COUNT(menu_no) FROM t_co_menu_adm WHERE upper_menu_no = M.menu_no AND NVL(delete_yn , 'N') <![CDATA[ <> ]]> 'Y') AS child_count
+		, '' AS checked
+		, DECODE( NVL(M.url_path, ' '), ' ' , 'folder' , 'file') AS "spriteCssClass"
+		, M.menu_ordr
+		FROM T_CO_MENU_ADM M
+		JOIN V_T_CO_MENU_ADM_MULTI MM ON M.MENU_NO = MM.MENU_NO
+		WHERE 
+		M.MENU_GUBUN = #menuGubun#
+		AND NVL(M.DELETE_YN , 'N') <![CDATA[ <> ]]> 'Y'
+		AND M.menu_auth_type = 'ADMIN'
+		START WITH UPPER_MENU_NO = 0
+		CONNECT BY PRIOR M.MENU_NO=M.UPPER_MENU_NO
+		ORDER SIBLINGS BY M.MENU_DEPTH, M.MENU_ORDR, M.MENU_NO						
+	</select>
+	
+	<select id="MenuManageDAO.getMenuChlidCnt" parameterClass="hashMap" resultClass="int">
+	    /* MenuManageDAO.getMenuChlidCnt - oracle */
+	    
+	    SELECT COUNT(*)
+	      <isEqual property="type" compareValue="USER">
+	    FROM T_CO_MENU
+		  </isEqual>
+		  <isEqual property="type" compareValue="ADMIN">
+	    FROM T_CO_MENU_ADM
+		  </isEqual>
+	    WHERE UPPER_MENU_NO = #menuNo#
+	    AND   NVL(DELETE_YN , 'N') <![CDATA[ <> ]]> 'Y'	
+	</select>
+	
+	<select id="MenuManageDAO.getMenuNo" parameterClass="hashMap" resultClass="int">
+	      /* MenuManageDAO.getMenuNo - oracle */
+	      
+	      SELECT MAX(menu_no)+1 AS menuNo
+	      <isEqual property="type" compareValue="USER">
+		  FROM t_co_menu
+		  </isEqual>
+		  <isEqual property="type" compareValue="ADMIN">
+		  FROM t_co_menu_adm
+		  </isEqual>
+	</select>
+	<insert id="MenuManageDAO.insertMenu" parameterClass="hashMap" >	
+	    /* MenuManageDAO.insertMenu - oracle */   
+	     
+		<isEqual property="type" compareValue="USER">	
+			INSERT INTO T_CO_MENU
+				(
+					MENU_GUBUN, MENU_NO, UPPER_MENU_NO, MENU_ORDR, URL_GUBUN , URL_PATH, USE_YN, SSO_USE_YN, PUBLIC_YN, MENU_DEPTH, CREATE_SEQ, CREATE_DATE
+					<isNotEmpty property="menuImgClass">, MENU_IMG_CLASS</isNotEmpty>
+				)
+				VALUES
+				( 			  
+					#menuGubun#, #menuNo#, #upperMenuNo#, #menuOrdr#, #urlGubun# , #urlPath#, #useChk#, #ssoUseYn#, #publicYn#, get_menu_depth(#upperMenuNo#,#menuGubun#), #loginVO.uniqId#, sysdate
+					<isNotEmpty property="menuImgClass">, #menuImgClass#</isNotEmpty>
+				)	
+		</isEqual>			
+		
+		<isEqual property="type" compareValue="ADMIN">	
+		
+		INSERT INTO T_CO_MENU_ADM
+				(
+					MENU_GUBUN,MENU_ADM_GUBUN, MENU_AUTH_TYPE, MENU_NO, UPPER_MENU_NO, MENU_ORDR, URL_GUBUN , URL_PATH, USE_YN, PUBLIC_YN ,MENU_DEPTH, CREATE_SEQ, CREATE_DATE, SSO_USE_YN
+					<isNotEmpty property="menuImgClass">, MENU_IMG_CLASS</isNotEmpty>
+				)
+				VALUES
+				( 			  
+					#menuGubun#,#menuGubun#,'ADMIN', #menuNo#, #upperMenuNo#, #menuOrdr#, #urlGubun# , #urlPath#, #useChk#, #publicYn# , get_menu_depth(#upperMenuNo#,#menuGubun#), #loginVO.uniqId#, sysdate, #ssoUseYn#
+					<isNotEmpty property="menuImgClass">, #menuImgClass#</isNotEmpty> 
+				)	
+		</isEqual>				
+	</insert>
+ 
+	<insert id="MenuManageDAO.insertMenuMulti" parameterClass="hashMap" >	
+        /* MenuManageDAO.insertMenuMulti - oracle */
+		
+		<isEqual property="type" compareValue="USER">
+			INSERT INTO T_CO_MENU_MULTI
+					(
+						MENU_NO, 
+						LANG_CODE, 
+						MENU_NM, 
+						MENU_DC,
+						CREATE_SEQ, 
+						CREATE_DATE
+					)
+					VALUES
+					( 			  
+						#menuNo# , 				
+						#langKind#, 
+						#menuNm#, 
+						#menuDc#,
+						#loginVO.uniqId# ,
+						 sysdate
+					)	
+		</isEqual>
+			
+		<isEqual property="type" compareValue="ADMIN">
+		    
+			INSERT INTO T_CO_MENU_ADM_MULTI
+					(
+						MENU_NO, 
+						LANG_CODE, 
+						MENU_NM, 
+						MENU_DC,
+						CREATE_SEQ, 
+						CREATE_DATE
+					)
+					VALUES
+					( 			  
+						#menuNo# , 				
+						#langKind#, 
+						#menuNm#, 
+						#menuDc#,
+						#loginVO.uniqId# ,
+					    sysdate
+					 )
+		</isEqual>
+	</insert>	
+    
+	<update id="MenuManageDAO.updateMenuDelYn" parameterClass="hashMap">
+	        /* MenuManageDAO.updateMenuDelYn - oracle */
+	        
+ 			<isEqual property="type" compareValue="USER">
+			UPDATE T_CO_MENU 
+			   SET 				    
+				    DELETE_YN		    =	'Y'
+				   ,MODIFY_SEQ			=   #loginVO.uniqId#
+				   ,MODIFY_DATE			=   sysdate
+			WHERE MENU_NO = #menuNo#	
+			</isEqual>
+		
+			<isEqual property="type" compareValue="ADMIN">
+			UPDATE T_CO_MENU_ADM 
+			   SET 				    
+				    DELETE_YN		    =	'Y'
+				   ,MODIFY_SEQ			=   #loginVO.uniqId#
+				   ,MODIFY_DATE			=   sysdate
+			WHERE MENU_NO = #menuNo#	
+			</isEqual>
+ 	</update>    
+  
+ 	<delete id="MenuManageDAO.deleteMenu" parameterClass="hashMap">
+ 	        /* MenuManageDAO.deleteMenu - oracle */ 
+ 	        
+ 			<isEqual property="type" compareValue="USER">
+ 			DELETE FROM t_co_menu
+ 			 WHERE MENU_NO	= #menuNo#
+ 			</isEqual>
+ 			<isEqual property="type" compareValue="ADMIN">
+ 			DELETE FROM t_co_menu_adm
+ 			 WHERE MENU_NO	= #menuNo#
+ 			</isEqual>
+ 	</delete>
+ 	
+ 	<delete id="MenuManageDAO.deleteMenuMulti" parameterClass="hashMap">
+ 	        /* MenuManageDAO.deleteMenuMulti - oracle */ 
+ 			
+ 			<isEqual property="type" compareValue="USER">
+ 			DELETE FROM T_CO_MENU_MULTI
+ 			 WHERE MENU_NO	= #menuNo#
+ 			</isEqual>
+ 			<isEqual property="type" compareValue="ADMIN">
+ 			DELETE FROM T_CO_MENU_ADM_MULTI
+ 			 WHERE MENU_NO	= #menuNo#
+ 			</isEqual> 	
+ 	</delete>
+ 	
+ 	<delete id="MenuManageDAO.deleteMenuAuth" parameterClass="hashMap">
+ 	        /* MenuManageDAO.deleteMenuAuth - oracle */
+ 	        
+ 	        DELETE FROM T_CO_MENU_AUTH
+ 			WHERE MENU_NO	= #menuNo#
+ 			 
+ 	</delete>
+
+	<update id="MenuManageDAO.updateMenu" parameterClass="hashMap">
+	        /* MenuManageDAO.updateMenu - oracle */
+	        
+ 			<isEqual property="type" compareValue="USER">
+			UPDATE T_CO_MENU 
+			   SET 				    
+				    UPPER_MENU_NO		=	#upperMenuNo#
+				   ,USE_YN				=	#useChk#
+				   ,SSO_USE_YN			=	#ssoUseYn#
+				   ,URL_GUBUN           =   #urlGubun#
+				   ,URL_PATH			=   #urlPath#
+				   ,MENU_ORDR           =   #menuOrdr#
+				   ,PUBLIC_YN           =   #publicYn#
+				   ,MODIFY_SEQ			=   #loginVO.uniqId#
+				   ,MODIFY_DATE			=   sysdate
+				   ,OPEN_MENU_NO		=   #openMenuNo#
+			WHERE MENU_NO = #menuNo#	
+			</isEqual>
+		
+			<isEqual property="type" compareValue="ADMIN">
+			UPDATE T_CO_MENU_ADM 
+			   SET 				    
+				    UPPER_MENU_NO		=	#upperMenuNo#
+				   ,USE_YN				=	#useChk#
+				   ,URL_GUBUN           =   #urlGubun#
+				   ,URL_PATH			=   #urlPath#
+				   ,MENU_ORDR           =   #menuOrdr#
+				   ,PUBLIC_YN           =   #publicYn#
+				   ,MODIFY_SEQ			=   #loginVO.uniqId#
+				   ,MODIFY_DATE			=   sysdate
+			WHERE MENU_NO = #menuNo#	
+			</isEqual>
+ 	</update>
+
+	<update id="MenuManageDAO.updateMenuDetail" parameterClass="hashMap">
+        /* MenuManageDAO.updateMenuDetail - oracle */
+	
+		<isEqual property="type" compareValue="USER">
+		MERGE INTO  T_CO_MENU_MULTI      	
+	    </isEqual>	
+	    <isEqual property="type" compareValue="ADMIN">
+		MERGE INTO  T_CO_MENU_ADM_MULTI      	
+	    </isEqual>	
+            USING DUAL
+                ON ( MENU_NO = #menuNo# AND  LANG_CODE = #langKind#)
+                WHEN MATCHED
+                THEN 
+                    UPDATE
+                         SET                          
+                             MENU_NM = #menuNm#
+                           , MENU_DC = #menuDc#
+                           , MODIFY_SEQ = #loginVO.uniqId#
+                           , MODIFY_DATE = sysdate   
+                  WHEN NOT MATCHED
+                  THEN
+                     INSERT (
+                              MENU_NO
+                            , LANG_CODE
+                            , MENU_NM
+                            , MENU_DC
+                            , CREATE_SEQ
+                            , CREATE_DATE
+                              )
+                     VALUES (
+                              #menuNo# 
+                            , #langKind#
+                            ,  #menuNm#
+                            ,  #menuDc#  
+                            ,  #loginVO.uniqId#
+                            ,  sysdate                                
+                              )  
+ 	</update>
+ 	
+ 	<select id="MenuManageDAO.selectComboBOxList" parameterClass="hashMap" resultClass="egovMap">
+		/* MenuManageDAO.selectComboBOxList - oracle */
+		
+		 SELECT   F.MENU_NO AS UPPER_MENU_NO
+  		        , F.MENU_NM AS UPPER_MENU_NM 
+  		       <isEqual property="type" compareValue="USER">
+  		       FROM T_CO_MENU E, T_CO_MENU_MULTI F 
+  		       </isEqual>
+  		       <isEqual property="type" compareValue="ADMIN">
+  		       FROM T_CO_MENU_ADM E, T_CO_MENU_ADM_MULTI F 
+  		       </isEqual>
+  		       WHERE E.MENU_NO = F.menu_no
+  		         AND E.MENU_GUBUN = #menuGubun#
+  		         AND F.LANG_CODE = #loginVO.langCode#
+  		       <isEqual property="type" compareValue="ADMIN">
+  		         AND E.MENU_AUTH_TYPE = 'ADMIN'
+  		       </isEqual>
+  		         AND NVL(E.DELETE_YN , 'N') <![CDATA[ <> ]]> 'Y'
+  		         ORDER BY MENU_ORDR
+	</select>
+	
+ 	<select id="MenuManageDAO.selectComboBOxSubList" parameterClass="hashMap" resultClass="egovMap">
+ 		/* MenuManageDAO.selectComboBOxSubList - oracle */
+ 		
+		 SELECT F.MENU_NO AS MENU_NO, F.MENU_NM AS MENU_NM 
+  		       <isEqual property="type" compareValue="USER">
+  		       FROM t_co_menu e, v_t_co_menu_multi f 
+  		       </isEqual>
+  		       <isEqual property="type" compareValue="ADMIN">
+  		       FROM t_co_menu_adm e, v_t_co_menu_adm_multi f 
+  		       </isEqual>
+  		       WHERE e.menu_no = f.menu_no
+  		         AND e.menu_gubun = #menuGubun#
+  		       <isEqual property="type" compareValue="ADMIN">
+  		         AND e.menu_auth_type = 'ADMIN'
+  		       </isEqual>
+  		         AND NVL(e.delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+  		         AND NVL(e.url_path , '') <![CDATA[ <> ]]> ''
+  		         order by menu_ordr
+	</select>	
+	
+	<select id="MenuManageDAO.selectMenuCompList" parameterClass="hashmap" resultClass="egovMap">
+ 	  /* MenuManageDAO.selectMenuCompList - oracle */
+ 	  
+ 	  SELECT b.comp_seq as comp_seq_list
+  		   , $DB_NEOS$FN_GetMultiLang(#langCode#,c.comp_name_multi) as comp_name_list
+        FROM $DB_NEOS$t_co_menu a 
+            ,$DB_NEOS$t_co_menu_comp b 
+            ,$DB_NEOS$v_t_co_comp_multi c
+       WHERE TO_CHAR(a.menu_no) = b.menu_no
+         and b.comp_seq = c.comp_seq	
+         and a.menu_no = #menuNo#
+         and c.group_seq = #groupSeq#	  		        
+ 	
+ 	</select>
+	
+	<select id="MenuManageDAO.menuInfoView" parameterClass="hashmap" resultClass="egovMap" >
+	   /* MenuManageDAO.menuInfoView - oracle */
+	    
+	   SELECT	   
+	          a.menu_gubun
+	   		, a.comp_seq
+	        , a.menu_img_path
+	        , a.menu_no
+	        , a.upper_menu_no
+	        , a.menu_ordr
+	        , a.use_yn
+	        , a.url_gubun
+	        , a.url_path
+	        , NVL(a.sso_use_yn,'N') as sso_use_yn
+	        , a.menu_depth
+	        , a.menu_img_class
+	        , b.menu_nm AS menu_nm_kr
+	        , $DB_NEOS$FN_GetMultiLang('en_f',b.menu_nm_multi) AS menu_nm_en 
+	        , $DB_NEOS$FN_GetMultiLang('jp_f',b.menu_nm_multi) AS menu_nm_jp
+	        , $DB_NEOS$FN_GetMultiLang('cn_f',b.menu_nm_multi) AS menu_nm_cn
+	        , b.menu_dc
+	        , A.public_yn
+	        , A.open_menu_no
+  		     FROM $DB_NEOS$t_co_menu A, $DB_NEOS$v_t_co_menu_multi B
+	    WHERE A.menu_no = B.menu_no  
+	     AND a.menu_no =  #menuNo#
+	     AND ROWNUM=1
+	</select>	
+	
+	<select id="MenuManageDAO.admMenuInfoView" parameterClass="hashmap" resultClass="egovMap" >
+	    /* MenuManageDAO.admMenuInfoView - oracle */
+	    SELECT	   
+	          a.menu_gubun
+	        , a.menu_no
+	        , a.upper_menu_no
+	        , a.menu_ordr
+	        , a.use_yn
+	        , a.url_gubun
+	        , a.url_path
+	        , NVL(a.sso_use_yn,'N') as sso_use_yn
+	        , a.menu_depth
+	        , a.menu_img_class
+	        , b.menu_nm AS menu_nm_kr
+	        , $DB_NEOS$FN_GetMultiLang('en_f',b.menu_nm_multi) AS menu_nm_en 
+	        , $DB_NEOS$FN_GetMultiLang('jp_f',b.menu_nm_multi) AS menu_nm_jp
+	        , $DB_NEOS$FN_GetMultiLang('cn_f',b.menu_nm_multi) AS menu_nm_cn
+	        , b.menu_dc      
+	        , A.menu_auth_type
+	        , A.public_yn
+  		     FROM $DB_NEOS$t_co_menu_adm A, $DB_NEOS$v_t_co_menu_adm_multi B
+	    WHERE A.menu_no = B.menu_no  
+	     AND a.menu_no =  #menuNo#
+	     AND ROWNUM=1
+		
+
+	</select>	
+	
+	<select id="MenuManageDAO.selectMenuImgClass" parameterClass="hashmap" resultClass="String" >
+		/* MenuManageDAO.admMenuInfoView - oracle */
+		
+		select menu_img_class 
+		from  
+		<isEqual property="userSe" compareValue="USER">
+		$DB_NEOS$t_co_menu
+		</isEqual>
+		<isNotEqual property="userSe" compareValue="USER">
+		$DB_NEOS$t_co_menu_adm
+		</isNotEqual>
+		where menu_no = $startWith$ and ROWNUM = 1
+	</select>
+	
+	<select id="MenuManageDAO.selectMenuTreeList" parameterClass="hashmap" resultClass="egovMap" >
+		/* MenuManageDAO.selectMenuTreeList - oracle */
+		
+		SELECT  
+		    A.MENU_NO, 
+			A.MENU_GUBUN,
+			A.UPPER_MENU_NO, 
+			D.MENU_NM AS NAME, 
+			D.MENU_DC, 
+			A.URL_PATH, 
+			A.SSO_USE_YN,
+			A.LVL,
+			(SELECT COUNT(MENU_NO) FROM T_CO_MENU WHERE UPPER_MENU_NO = A.MENU_NO AND USE_YN = 'Y' AND NVL(DELETE_YN , 'N') <![CDATA[ <> ]]> 'Y') AS CHILD_COUNT,
+			CASE WHEN (SELECT COUNT(MENU_NO) FROM T_EA_BOX WHERE UPPER_MENU_NO = A.MENU_NO) > 0 THEN 'TRUE' ELSE 'FALSE' END AS OPENED ,
+			A.URL_GUBUN,
+			A.MENU_IMG_CLASS,
+			A.MENU_TYPE,
+			A.MENU_ORDR
+		FROM    (
+                 SELECT LEVEL AS LVL, CM.* FROM T_CO_MENU CM 
+                 WHERE USE_YN = 'Y'
+                 START WITH UPPER_MENU_NO = $startWith$
+                 CONNECT BY NOCYCLE PRIOR MENU_NO=UPPER_MENU_NO
+                 ORDER SIBLINGS BY  NVL(MENU_ORDR,99999)
+                 ) A
+		        <isNotEqual property="userSe" compareValue="master">  
+		        INNER JOIN (SELECT B.MENU_NO FROM T_CO_MENU_AUTH B 
+		        <isNotEmpty property="authCodeList">
+		         WHERE AUTHOR_CODE <iterate prepend="IN" property="authCodeList" open="(" close=")" conjunction=","> #authCodeList[]# </iterate>
+		        </isNotEmpty>
+		         GROUP BY MENU_NO) B
+		         ON    A.menu_no = B.menu_no
+		        </isNotEqual>                 
+                INNER JOIN t_co_menu C ON C.menu_no = A.menu_no
+		        LEFT OUTER JOIN t_co_menu_multi D ON C.menu_no = D.menu_no
+				LEFT OUTER JOIN t_co_menu_comp E ON TO_CHAR(C.menu_no) = E.menu_no AND E.comp_seq = #compSeq#		
+		WHERE   D.LANG_CODE = #langCode#
+			AND DECODE(A.PUBLIC_YN , 'Y' , #compSeq# ,  NVL(E.COMP_SEQ, '0')) = #compSeq#
+			AND A.USE_YN = 'Y'
+			<isNotEmpty property="level">
+			AND A.LVL = $level$
+			</isNotEmpty>
+			AND NVL(A.DELETE_YN , 'N') <![CDATA[ <> ]]> 'Y'
+		ORDER BY LVL , MENU_ORDR
+	</select> 
+	
+	<select id="MenuManageDAO.selectMenuJsTreeList"  parameterClass="hashmap" resultClass="egovMap" >
+		 /* MenuManageDAO.selectMenuJsTreeList MenuJsTree 가져오기 - oracle */
+		
+		 SELECT TB.MENU_NO
+		      , TB.MENU_GUBUN
+		      , TB.UPPER_MENU_NO
+		      , TB.NAME
+		      , TB.MENU_DC
+		      , TB.URL_PATH
+		      , TB.SSO_USE_YN
+		      , TB.CHILD_COUNT
+		      , TB.EA_CHILD_COUNT
+		      , TB.URL_GUBUN
+		      , TB.MENU_IMG_CLASS
+		      , TB.MENU_TYPE
+		      , TB.MENU_ORDR
+		 FROM(	
+		      SELECT A.MENU_NO 
+		           , A.MENU_GUBUN
+		           , A.UPPER_MENU_NO 
+		           , B.MENU_NM AS NAME 
+		           , B.MENU_DC 
+		           , A.URL_PATH
+		           , A.SSO_USE_YN
+		           , (SELECT COUNT(MENU_NO) FROM T_CO_MENU WHERE UPPER_MENU_NO = A.MENU_NO AND USE_YN = 'Y' AND NVL(DELETE_YN , 'N') <![CDATA[ <> ]]> 'Y') AS CHILD_COUNT
+		           , (SELECT COUNT(MENU_NO) FROM T_EA_BOX WHERE UPPER_MENU_NO = A.MENU_NO AND EMP_SEQ = #empSeq# AND  COMP_SEQ = #compSeq# AND USE_YN = 'Y' AND MENU_GUBUN = 'MENU010' ) AS EA_CHILD_COUNT 
+		           , A.URL_GUBUN
+		           , A.MENU_IMG_CLASS
+		           , A.MENU_TYPE
+		           , A.MENU_ORDR
+		      FROM T_CO_MENU A LEFT OUTER JOIN T_CO_MENU_MULTI B ON A.MENU_NO = B.MENU_NO
+		      <isNotEqual property="userSe" compareValue="MASTER">
+		      <isNotEmpty property="authCodeList">
+		      INNER JOIN T_CO_MENU_AUTH C
+		      ON    A.MENU_NO = C.MENU_NO
+		      AND   C.AUTHOR_CODE <iterate prepend="IN" property="authCodeList" open="(" close=")" conjunction=","> #authCodeList[]# </iterate>
+		      </isNotEmpty>
+		      </isNotEqual>	
+		      LEFT OUTER JOIN T_CO_MENU_COMP E ON TO_CHAR(C.MENU_NO) = E.MENU_NO AND E.COMP_SEQ = #compSeq#
+		      WHERE B.LANG_CODE = #langCode#
+		      AND   DECODE(PUBLIC_YN ,'Y' , #compSeq# , NVL(E.COMP_SEQ, '0')) = #compSeq#
+		      AND   A.USE_YN = 'Y'
+		      AND   NVL(A.DELETE_YN , 'N') <![CDATA[ <> ]]> 'Y'
+		      AND A.UPPER_MENU_NO = #upperMenuNo#
+		      GROUP BY  A.MENU_NO 
+                  	  , A.MENU_GUBUN
+                   	  , A.UPPER_MENU_NO 
+                   	  , B.MENU_NM  
+                   	  , B.MENU_DC 
+                   	  , A.URL_PATH
+                   	  , A.SSO_USE_YN 
+                   	  , A.URL_GUBUN
+                   	  , A.MENU_IMG_CLASS
+                   	  , A.MENU_TYPE
+                   	  , A.MENU_ORDR
+		      <isEqual property="eaPrivateBox" compareValue="Y">
+		      UNION ALL
+		      SELECT MENU_NO
+		           , MENU_GUBUN
+		           , UPPER_MENU_NO 
+		           , MENU_NM AS NAME
+		           , MENU_DC
+		           , URL_PATH
+		           , SSO_USE_YN
+		           , (SELECT COUNT(MENU_NO) FROM T_EA_BOX WHERE UPPER_MENU_NO = A.MENU_NO AND EMP_SEQ = #empSeq# AND  COMP_SEQ = #compSeq# AND USE_YN = 'Y' AND MENU_GUBUN = 'MENU010') AS CHILD_COUNT
+		           , 0 AS EA_CHILD_COUNT 
+		           , URL_GUBUN
+		           , MENU_IMG_CLASS
+		           , A.MENU_TYPE
+		           , MENU_ORDR
+		      FROM T_EA_BOX A
+		      WHERE UPPER_MENU_NO = #upperMenuNo#
+		      AND COMP_SEQ = #compSeq#
+		      AND EMP_SEQ = #empSeq#
+		      AND USE_YN = 'Y'
+		      AND MENU_GUBUN = 'MENU010'
+		</isEqual>
+		) TB ORDER BY MENU_ORDR
+	</select>
+	
+	<select id="MenuManageDAO.selectFirstMenuInfo" parameterClass="hashmap" resultClass="egovMap" >
+		 /* MenuManageDAO.selectFirstMenuInfo  - oracle */
+		 
+		SELECT  
+			C.MENU_NO, 
+			C.MENU_GUBUN,
+			C.UPPER_MENU_NO, 
+			D.MENU_NM, 
+			D.MENU_DC, 
+			C.URL_PATH, 
+			C.SSO_USE_YN,
+			A.LVL AS LVL,
+			C.URL_GUBUN,
+			C.MENU_IMG_CLASS
+		FROM    (
+                 SELECT LEVEL AS LVL, cm.* From t_co_menu cm 
+                 WHERE use_yn = 'Y'
+                 START WITH UPPER_MENU_NO = $startWith$
+                 CONNECT BY PRIOR menu_no=UPPER_MENU_NO
+                 ORDER SIBLINGS BY  NVL(menu_ordr,99999)
+                 ) A
+		        INNER JOIN t_co_menu C ON C.menu_no = A.menu_no
+		        LEFT OUTER JOIN t_co_menu_multi D ON C.menu_no = D.menu_no
+		        LEFT OUTER JOIN t_co_menu_comp E ON TO_CHAR(C.menu_no) = E.menu_no AND E.comp_seq = #compSeq#
+		        INNER JOIN t_co_menu_auth MA ON    A.menu_no = MA.menu_no		      
+		        INNER JOIN t_co_authcode AC 
+		        ON    MA.author_code = AC.author_code
+		        AND   AC.comp_seq IN (#compSeq# , '0') 
+		        AND   AC.author_type IN('001', '002') 
+		        AND   AC.author_use_yn = 'Y'
+		        INNER JOIN (
+		                    SELECT author_code FROM t_co_auth_relate U
+		                    WHERE  (author_type = '002' and u.dept_seq = #deptSeq#) 
+		                        or (author_type <![CDATA[ <> ]]> '002' and u.emp_seq = #empSeq#)
+		                    ) AR 
+		         ON   AR.author_code AND AC.author_code
+		WHERE D.LANG_CODE = #langCode#
+	    AND   C.USE_YN = 'Y'
+		AND   DECODE(public_yn , 'Y' , #compSeq# , NVL(E.comp_seq, '0')) = #compSeq#
+		AND   NVL(C.delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+		AND ROWNUM = 1
+		ORDER BY NVL(C.MENU_ORDR,99999)
+		
+	</select> 
+	
+	<select id="MenuManageDAO.selectFirstAdminMenuInfo" parameterClass="hashmap" resultClass="egovMap" >
+		 /* MenuManageDAO.selectFirstAdminMenuInfo - oracle */
+		 
+		SELECT  
+			C.MENU_NO, 
+			C.MENU_GUBUN,
+			C.UPPER_MENU_NO, 
+			D.MENU_NM, 
+			D.MENU_DC, 
+			C.URL_PATH, 
+			C.SSO_USE_YN,
+			A.LVL AS LVL,
+			C.URL_GUBUN,
+			C.MENU_IMG_CLASS
+		FROM    (
+                 SELECT LEVEL AS LVL, cm.* From t_co_menu_adm cm 
+                 WHERE use_yn = 'Y'
+                 START WITH UPPER_MENU_NO = $startWith$
+                 CONNECT BY PRIOR menu_no=UPPER_MENU_NO
+                 ORDER SIBLINGS BY  NVL(menu_ordr,99999)
+                 ) A
+         INNER JOIN t_co_menu_adm C ON A.menu_no = C.menu_no
+		 LEFT OUTER JOIN t_co_menu_adm_multi D ON C.menu_no = D.menu_no
+		 <isNotEqual property="userSe" compareValue="MASTER">  
+		 INNER JOIN t_co_menu_auth MA
+		 ON    A.menu_no = MA.menu_no		      
+		 INNER JOIN t_co_authcode AC
+		 ON    MA.author_code = AC.author_code
+		 AND   AC.comp_seq in (#compSeq# , '0')
+		 AND   AC.author_type = '005' 
+		 AND   AC.author_use_yn = 'Y'
+		 INNER JOIN t_co_auth_relate AR
+		 ON    AC.author_code = AR.author_code
+		 AND   AR.comp_seq = #compSeq# 
+		 AND   AR.emp_seq = #empSeq#
+		 LEFT  OUTER JOIN t_co_menu_adm_comp E ON A.menu_no = E.menu_no AND  E.comp_seq = #compSeq#
+		 </isNotEqual> 		
+		     
+		WHERE C.menu_auth_type = #menuAuthType#
+	    AND D.lang_code = #langCode#
+		AND C.use_yn = 'Y'
+		AND NVL(C.delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+		<isNotEqual property="userSe" compareValue="MASTER">
+		AND   DECODE(public_yn , 'Y' , #compSeq# , NVL(E.comp_seq, '0')) = #compSeq#
+		</isNotEqual>
+		AND ROWNUM = 1
+		ORDER BY NVL(C.MENU_ORDR,99999)
+		
+	</select> 
+	
+	
+	<select id="MenuManageDAO.selectAdminMenuJsTreeList"  parameterClass="hashmap" resultClass="egovMap" >
+		 /* MenuManageDAO.selectAdminMenuJsTreeList 관리자 MenuJsTree 가져오기 - oracle */
+		 SELECT A.MENU_NO
+		      , A.UPPER_MENU_NO
+		      , B.MENU_NM AS NAME
+		      , B.MENU_DC
+		      , A.URL_PATH
+		      , A.SSO_USE_YN
+		      , (SELECT COUNT(MENU_NO) FROM T_CO_MENU_ADM WHERE UPPER_MENU_NO = A.MENU_NO AND USE_YN = 'Y' AND NVL(DELETE_YN , 'N') <![CDATA[ <> ]]> 'Y') AS CHILD_COUNT 
+		      , 0 AS EA_CHILD_COUNT 
+		      , (SELECT MENU_NO FROM T_CO_AUTH_ADM_USER_RELATE WHERE MENU_NO = A.MENU_NO AND EMP_SEQ = #empSeq# AND COMP_SEQ = #compSeq#) AS AUTH_MENU_NO
+		      , A.URL_GUBUN
+		      , A.MENU_IMG_CLASS
+		      , A.MENU_ORDR
+		 FROM T_CO_MENU_ADM A 
+		 LEFT OUTER JOIN T_CO_MENU_ADM_MULTI B ON A.MENU_NO = B.MENU_NO
+		 <isNotEqual property="userSe" compareValue="MASTER">  
+		 INNER JOIN T_CO_MENU_AUTH MA
+		 ON    A.MENU_NO = MA.MENU_NO		      
+		 INNER JOIN T_CO_AUTHCODE AC
+		 ON    MA.AUTHOR_CODE = AC.AUTHOR_CODE
+		 AND   AC.COMP_SEQ IN (#compSeq# , '0')
+		 AND   AC.AUTHOR_TYPE = '005' 
+		 AND   AC.AUTHOR_USE_YN = 'Y'
+		 INNER JOIN T_CO_AUTH_RELATE AR
+		 ON    AC.AUTHOR_CODE = AR.AUTHOR_CODE
+		 AND   AR.COMP_SEQ = #compSeq# 
+		 AND   AR.EMP_SEQ = #empSeq#
+		 LEFT  OUTER JOIN T_CO_MENU_ADM_COMP E ON A.MENU_NO = E.MENU_NO AND  E.COMP_SEQ = #compSeq#
+		 </isNotEqual> 
+		 WHERE A.MENU_AUTH_TYPE = #menuAuthType#
+		 AND   B.LANG_CODE = #langCode#
+		 AND   A.USE_YN = 'Y'  	
+		 AND   A.UPPER_MENU_NO = #upperMenuNo#
+		 <isNotEqual property="userSe" compareValue="MASTER">
+		 AND   DECODE(PUBLIC_YN, 'Y' , #compSeq# , NVL(E.COMP_SEQ, '0')) = #compSeq#
+		 </isNotEqual>
+		 AND   NVL(A.DELETE_YN , 'N') <![CDATA[ <> ]]> 'Y'
+		 GROUP BY A.MENU_NO
+		      , A.UPPER_MENU_NO
+		      , B.MENU_NM 
+		      , B.MENU_DC
+		      , A.URL_PATH
+		      , A.SSO_USE_YN
+		      , A.URL_GUBUN
+		      , A.MENU_IMG_CLASS
+		      , A.MENU_ORDR
+		 ORDER BY MENU_ORDR	
+	</select>
+	
+	<select id="MenuManageDAO.selectAdminMenuTreeListAuth" parameterClass="hashmap" resultClass="egovMap" >
+	 /* MenuManageDAO.selectAdminMenuTreeListAuth - oracle */
+	 
+		SELECT  DISTINCT
+			C.MENU_NO, 
+			C.UPPER_MENU_NO, 
+			D.MENU_NM AS NAME, 
+			D.MENU_DC, 
+			C.URL_PATH, 
+			C.SSO_USE_YN,
+			A.LVL AS LVL,
+			(SELECT COUNT(MENU_NO) FROM T_CO_MENU_ADM WHERE UPPER_MENU_NO = A.MENU_NO AND USE_YN = 'Y' AND NVL(A.DELETE_YN , 'N') <![CDATA[ <> ]]> 'Y') AS CHILD_COUNT,
+			C.URL_GUBUN,
+			C.MENU_IMG_CLASS,
+		    C.MENU_ORDR
+		FROM    (
+                 SELECT LEVEL AS LVL, CM.* FROM T_CO_MENU_ADM CM 
+                 WHERE USE_YN = 'Y'
+                 START WITH UPPER_MENU_NO = $startWith$
+                 CONNECT BY PRIOR MENU_NO=UPPER_MENU_NO
+                 ORDER SIBLINGS BY  NVL(MENU_ORDR,99999)
+                 ) A		       
+			 INNER JOIN T_CO_MENU_ADM C ON C.MENU_NO = A.MENU_NO
+			 LEFT OUTER JOIN T_CO_MENU_ADM_MULTI D ON C.MENU_NO = D.MENU_NO
+		    <isNotEqual property="userSe" compareValue="MASTER">  
+			 INNER JOIN T_CO_MENU_AUTH MA
+			 ON    C.MENU_NO = MA.MENU_NO		      
+			 INNER JOIN T_CO_AUTHCODE AC
+			 ON    MA.AUTHOR_CODE = AC.AUTHOR_CODE
+			 AND   AC.COMP_SEQ IN (#compSeq# , '0')
+			 AND   AC.AUTHOR_TYPE = '005' 
+			 AND   AC.AUTHOR_USE_YN = 'Y'
+			 INNER JOIN T_CO_AUTH_RELATE AR
+			 ON    AC.AUTHOR_CODE = AR.AUTHOR_CODE
+			 AND   AR.COMP_SEQ = #compSeq# 
+			 AND   AR.EMP_SEQ = #empSeq#
+			 LEFT OUTER JOIN T_CO_MENU_ADM_COMP E ON C.MENU_NO = E.MENU_NO AND  E.COMP_SEQ = #compSeq#
+			 </isNotEqual>
+		 WHERE C.use_yn = 'Y'
+		 AND   C.menu_auth_type = #menuAuthType#
+		 AND   D.lang_code = #langCode#
+			<isNotEmpty property="level">
+			AND A.LVL = $level$
+			</isNotEmpty>
+			<isNotEqual property="userSe" compareValue="MASTER">
+			AND DECODE(A.PUBLIC_YN , 'Y' , #compSeq# , NVL(E.COMP_SEQ, '0')) = #compSeq#
+			</isNotEqual>
+			AND NVL(C.DELETE_YN , 'N') <![CDATA[ <> ]]> 'Y'
+		 ORDER BY LVL , MENU_ORDR
+	</select> 
+	
+	<select id="MenuManageDAO.selectMenuListOfUrl" parameterClass="hashmap" resultClass="egovMap">
+	/* MenuManageDAO.selectMenuListOfUrl - oracle */
+	
+		SELECT M.MENU_NO, M.UPPER_MENU_NO, MM.MENU_NM, M.URL_PATH, M.URL_GUBUN, M.MENU_IMG_CLASS
+        FROM
+            (
+                SELECT LEVEL AS LVL, CM.* FROM T_CO_MENU CM 
+                 WHERE USE_YN = 'Y'
+                 START WITH menu_no = (SELECT menu_no 
+                                    FROM t_co_menu 
+                                    WHERE 
+                                        (
+                                            CASE WHEN url_gubun IS NOT NULL THEN '/'||url_gubun||url_path
+                                            ELSE url_path
+                                            END
+                                        ) LIKE '%$urlPath$%'
+                                    AND ROWNUM = 1)
+                 CONNECT BY PRIOR UPPER_MENU_NO = MENU_NO
+                 ORDER SIBLINGS BY  NVL(MENU_ORDR,99999)
+            ) V, T_CO_MENU M, T_CO_MENU_MULTI MM
+        WHERE
+            V.MENU_NO = M.MENU_NO
+            AND M.MENU_NO = MM.MENU_NO(+)
+			AND MM.LANG_CODE = #langCode#
+			AND M.USE_YN ='Y'
+			AND NVL(M.DELETE_YN , 'N') <![CDATA[ <> ]]> 'Y'
+			ORDER BY V.LVL DESC
+	</select>
+	
+	
+	<select id="MenuManageDAO.selectMenuAdminListOfUrl" parameterClass="hashmap" resultClass="egovMap">
+	/* MenuManageDAO.selectMenuAdminListOfUrl - oracle */
+	
+		SELECT M.MENU_NO, M.UPPER_MENU_NO, MM.MENU_NM, M.URL_PATH, M.URL_GUBUN, M.MENU_IMG_CLASS
+        FROM
+            (
+                SELECT LEVEL AS LVL, CM.* FROM T_CO_MENU_ADM CM 
+                 WHERE USE_YN = 'Y'
+                 START WITH MENU_NO = (SELECT MENU_NO 
+                                    FROM T_CO_MENU 
+                                    WHERE 
+                                        (
+                                            CASE WHEN URL_GUBUN IS NOT NULL THEN '/'||URL_GUBUN||URL_PATH
+                                            ELSE URL_PATH
+                                            END
+                                        ) LIKE '%$urlPath$%'
+                                    AND ROWNUM = 1)
+                 CONNECT BY PRIOR UPPER_MENU_NO = MENU_NO
+                 ORDER SIBLINGS BY  NVL(MENU_ORDR,99999)
+            ) V, T_CO_MENU_ADM M, T_CO_MENU_ADM_MULTI MM
+        WHERE
+            V.MENU_NO = M.MENU_NO
+            AND M.MENU_NO = MM.MENU_NO(+)
+			AND MM.LANG_CODE = #langCode#
+			AND M.USE_YN ='Y'
+			AND NVL(M.DELETE_YN , 'N') <![CDATA[ <> ]]> 'Y'
+			ORDER BY V.LVL DESC
+	</select>
+	
+	<select id="MenuManageDAO.selectMyMenuList" parameterClass="hashmap" resultClass="egovMap">
+	/* MenuManageDAO.selectMyMenuList - oracle */
+	
+		SELECT C.MENU_NO
+		     , B.MENU_NM
+		     , A.URL_GUBUN
+		     , A.URL_PATH
+		     , A.MENU_IMG_CLASS
+		     , A.MENU_IMG_PATH
+		     , GET_MENU_FIRST_INFO('0', C.MENU_NO, #langCode#) AS GNB_MENU_NO
+		     , GET_MENU_FIRST_INFO('1', C.MENU_NO, #langCode#) AS GNB_MENU_NM
+		FROM T_CO_MENU_MYMENU C 
+		LEFT OUTER JOIN 
+		    (SELECT * 
+		       FROM T_CO_MENU 
+		      WHERE USE_YN = 'Y' 
+		      ) A ON A.MENU_NO = C.MENU_NO
+			LEFT OUTER JOIN 
+			(SELECT * 
+			   FROM T_CO_MENU_MULTI 
+			  WHERE LANG_CODE = #langCode#
+			) B ON B.MENU_NO = C.MENU_NO
+		WHERE C.EMP_SEQ = #empSeq#
+		      AND C.DEPT_SEQ = #deptSeq#
+	</select>
+	
+	
+	
+	<insert id="MenuManageDAO.insertMyMenuList" parameterClass="hashmap">
+	/* MenuManageDAO.insertMyMenuList - oracle */
+	
+		   INSERT ALL 
+	   <dynamic>
+	       <iterate >
+		       INTO T_CO_MENU_MYMENU (MENU_NO, EMP_SEQ,	DEPT_SEQ )
+			VALUES
+	    	      (#[].menuNo# , #[].empSeq#, #[].deptSeq#)
+	       </iterate>
+	   </dynamic>
+	        SELECT * FROM DUAL
+	
+	</insert>
+	
+	<delete id="MenuManageDAO.deleteMyMenuList" parameterClass="hashmap">
+	/* MenuManageDAO.deleteMyMenuList - oracle */
+	
+		DELETE FROM T_CO_MENU_MYMENU 
+		WHERE
+		EMP_SEQ = #empSeq# AND DEPT_SEQ = #deptSeq#	
+	</delete>
+	
+	<select id="MenuManageDAO.eaBoxChildCnt" parameterClass="hashmap" resultClass="int">
+	/* MenuManageDAO.eaBoxChildCnt - oracle */
+	
+		 SELECT COUNT(*) as "cnt" 
+		  FROM T_EA_BOX 
+		 WHERE UPPER_MENU_NO = #eaId#
+		   AND COMP_SEQ = #compSeq#
+		   AND EMP_SEQ = #empSeq# 
+	</select>
+	<select id="MenuManageDAO.selectMenuListOfMenuNo" parameterClass="hashmap" resultClass="egovMap">
+		/* MenuManageDAO.selectMenuListOfMenuNo - oracle */
+		
+		SELECT M.MENU_NO, M.UPPER_MENU_NO, MM.MENU_NM, M.URL_PATH, M.URL_GUBUN, M.MENU_IMG_CLASS
+		FROM
+			(
+				SELECT LEVEL AS LVL, CM.* FROM T_CO_MENU CM 
+                 WHERE USE_YN = 'Y'
+                 START WITH MENU_NO = $menuNo$
+                 CONNECT BY PRIOR UPPER_MENU_NO = MENU_NO
+                 ORDER SIBLINGS BY  NVL(MENU_ORDR,99999)
+            ) V, T_CO_MENU M, T_CO_MENU_MULTI MM
+        WHERE
+            V.MENU_NO = M.MENU_NO
+            AND  M.MENU_NO = MM.MENU_NO(+)
+			AND MM.LANG_CODE = #langCode#
+			AND M.USE_YN ='Y'
+			AND NVL(M.DELETE_YN , 'N') <![CDATA[ <> ]]> 'Y'
+			ORDER BY V.LVL DESC
+	</select>
+	
+	<select id="MenuManageDAO.selectEaEmpMenuTreeList" parameterClass="hashmap" resultClass="egovMap" >
+		/* MenuManageDAO.selectEaEmpMenuTreeList - oracle */
+		
+		SELECT  
+			C.MENU_NO, 
+			C.MENU_GUBUN,
+			C.UPPER_MENU_NO, 
+			C.MENU_NM AS NAME, 
+			C.MENU_DC, 
+			C.URL_PATH, 
+			C.SSO_USE_YN,
+			A.LVL,
+			(SELECT COUNT(MENU_NO) FROM T_EA_BOX WHERE UPPER_MENU_NO = C.MENU_NO AND EMP_SEQ = #empSeq# AND COMP_SEQ = #compSeq# AND USE_YN = 'Y' AND MENU_GUBUN = 'MENU010') AS CHILD_COUNT,
+			C.URL_GUBUN,
+			C.MENU_IMG_CLASS,
+			C.MENU_ORDR
+		FROM    (
+				SELECT LEVEL AS LVL, CM.* FROM T_EA_BOX CM 
+                 WHERE use_yn = 'Y'
+                   AND MENU_NO IS NOT NULL
+                 START WITH menu_no = $eaStartWith$
+                 CONNECT BY PRIOR UPPER_MENU_NO = MENU_NO
+                 ORDER SIBLINGS BY  NVL(MENU_ORDR,99999)
+		         ) A,
+		        T_EA_BOX C 
+		WHERE 
+			C.MENU_NO = A.MENU_NO
+			AND C.EMP_SEQ = #empSeq#
+			AND C.COMP_SEQ = #compSeq#
+			AND C.USE_YN = 'Y'
+			AND C.MENU_GUBUN = 'MENU010'
+			AND use_yn = 'Y'
+			<isNotEmpty property="level">
+			AND A.LEVEL = $level$
+			</isNotEmpty>
+		GROUP BY C.MENU_NO, 
+				C.MENU_GUBUN,
+				C.UPPER_MENU_NO, 
+				C.MENU_NM AS NAME, 
+				C.MENU_DC, 
+				C.URL_PATH, 
+				C.SSO_USE_YN,
+				A.LVL 
+				C.URL_GUBUN,
+				C.MENU_IMG_CLASS,
+				C.MENU_ORDR
+		ORDER BY LVL , MENU_ORDR
+	</select> 	
+	
+	<select id="MenuManageDAO.selectEAPrivateMenuTreeList" parameterClass="hashmap" resultClass="egovMap" >
+		/*MenuManageDAO.selectEAPrivateMenuTreeList - oracle */
+		
+		SELECT  MENU_NO, 
+				MENU_GUBUN,
+				UPPER_MENU_NO, 
+				MENU_NM AS NAME, 
+				MENU_DC, 
+				URL_PATH, 
+				SSO_USE_YN,
+				(SELECT COUNT(MENU_NO) FROM T_EA_BOX WHERE UPPER_MENU_NO = A.MENU_NO AND EMP_SEQ = #empSeq# AND COMP_SEQ = #compSeq# AND USE_YN = 'Y' AND MENU_GUBUN = 'MENU010') AS CHILD_COUNT,
+				URL_GUBUN,
+				MENU_IMG_CLASS,
+				MENU_ORDR 
+			  FROM T_EA_BOX A
+			 WHERE UPPER_MENU_NO = #upperMenuNo#
+			   AND COMP_SEQ = #compSeq#
+			   AND EMP_SEQ = #empSeq#
+			   AND USE_YN = 'Y'
+			   AND MENU_GUBUN = 'MENU010'
+			 ORDER BY MENU_ORDR
+	</select> 	
+	
+	
+	<select id="MenuManageDAO.selectCompList" parameterClass="hashMap" resultClass="egovMap">
+	    /* MenuManageDAO.selectCompList - oracle */
+		
+		SELECT COMP_SEQ
+		  FROM T_CO_COMP	
+		 WHERE GROUP_SEQ = #loginVO.groupSeq#
+		   AND USE_YN = 'Y'
+		   AND NATIVE_LANG_CODE = #loginVO.langCode#
+			
+	</select>
+	
+	<insert id="MenuManageDAO.insertMenuComp" parameterClass="hashMap">
+	    /* MenuManageDAO.insertMenuComp - oracle */
+	    
+	    INSERT ALL
+		<dynamic>
+	   	   <iterate property="arrCompList" conjunction=" " >
+		    <isEqual property="type" compareValue="USER">
+	        INTO T_CO_MENU_COMP
+	        </isEqual>	
+	        <isEqual property="type" compareValue="ADMIN">
+	        INTO T_CO_MENU_ADM_COMP
+	        </isEqual>	  
+	        ( MENU_NO , COMP_SEQ ) 
+	        VALUES (#menuNo#, #arrCompList[]#)
+	       </iterate>
+	   </dynamic>
+	   SELECT * FROM dual
+	</insert>
+	    	      	
+	    	      		    	      	
+	<delete id="MenuManageDAO.deleteMenuComp" parameterClass="hashMap">
+		/* MenuManageDAO.deleteMenuComp - oracle */
+		 
+		<isEqual property="type" compareValue="USER">
+		DELETE FROM T_CO_MENU_COMP
+	    </isEqual>	
+		<isEqual property="type" compareValue="ADMIN">
+		DELETE FROM T_CO_MENU_ADM_COMP
+		</isEqual>
+			WHERE MENU_NO = #menuNo#
+	
+	</delete>
+	
+	<select id="MenuManageDAO.getMenuCnt" parameterClass="hashMap" resultClass="hashMap">
+		/* MenuManageDAO.getMenuCnt - oracle */
+		
+		EXEC p_menu_cnt(#compSeq#,#deptSeq#,#empSeq#)
+	</select>
+	
+	<select id="MenuManageDAO.getIsAuthMenuCnt" parameterClass="hashMap" resultClass="int">
+		/* MenuManageDAO.getIsAuthMenuCnt - oracle */
+		
+		select count(D.menu_no) as cnt 
+		From $DB_NEOS$t_co_menu_auth A
+		inner join $DB_NEOS$t_co_authcode B on A.author_code = B.author_code
+		inner join $DB_NEOS$t_co_auth_relate C on C.author_code = B.author_code AND C.author_type = '005'
+		inner join $DB_NEOS$t_co_menu_adm D on A.menu_no = D.menu_no
+		where C.emp_seq = #empSeq# and C.comp_seq = #compSeq# and D.use_yn = 'Y' and (D.delete_yn is null or D.delete_yn != 'Y')
+		AND A.menu_no = #menuNo#	
+	</select>
+	
+	<select id="MenuManageDAO.selectEaBoxListTreeMenu" parameterClass="hashmap" resultClass="egovMap" >
+		/* MenuManageDAO.selectEaBoxListTreeMenu - oracle */
+					
+			SELECT  
+				C.menu_no, 
+				C.menu_gubun,
+				C.upper_menu_no, 
+				FN_GetMultiLang(#langCode#,D.menu_nm_multi) as name, 
+				D.menu_dc, 
+				C.url_path, 
+				C.sso_use_yn,
+				'0' AS lvl,
+				'0' AS child_count,
+				null AS auth_menu_no,
+				C.url_gubun,
+				C.menu_img_class,
+				IF( NVL(C.url_path, '') = '' , 'folder' , 'file') AS "spriteCssClass",
+				C.menu_ordr
+			FROM    t_co_menu C 
+			LEFT OUTER JOIN v_t_co_menu_multi D ON C.menu_no = D.menu_no
+			WHERE   C.menu_gubun = #menuGubun#
+			AND     NVL(delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+			AND     C.menu_no = $startWith$
+			UNION ALL
+			SELECT  
+				C.menu_no, 
+				C.menu_gubun,
+				C.upper_menu_no, 
+				FN_GetMultiLang(#langCode#,D.menu_nm_multi) as name, 
+				D.menu_dc, 
+				C.url_path, 
+				C.sso_use_yn,
+				A.LEVEL AS lvl,
+				'0' AS child_count,
+				null AS auth_menu_no,
+				C.url_gubun,
+				C.menu_img_class,
+				IF( NVL(C.url_path, '') = '' , 'folder' , 'file') AS spriteCssClass,
+				C.menu_ordr
+			FROM    (
+					SELECT  `get_menu_connect_by_id`(menu_no) AS menu_no, @level AS LEVEL
+					FROM    (
+						SELECT  @start_with := $startWith$,
+							@menu_no := @start_with,
+							@level := 0
+						) vars, t_co_menu
+					WHERE   @menu_no IS NOT NULL AND use_yn = 'Y'
+			         ) A
+			        INNER JOIN t_co_menu C
+			        ON C.menu_no = A.menu_no 
+			        LEFT OUTER JOIN v_t_co_menu_multi D ON C.menu_no = D.menu_no
+			WHERE   C.menu_gubun = #menuGubun#
+				AND C.MENU_TYPE = 'eaBox'
+				AND NVL(delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+				AND A.LEVEL = 1
+			GROUP BY A.menu_no
+			ORDER BY lvl , NVL(menu_ordr,99999)
+	</select>
+
+	<select id="MenuManageDAO.selectNonEaBoxListTreeMenu" parameterClass="hashmap" resultClass="egovMap" >
+		/* MenuManageDAO.selectNonEaBoxListTreeMenu - oracle_작업필요 */
+		
+		SELECT  
+			C.menu_no, 
+			C.menu_gubun,
+			C.upper_menu_no, 
+			$DB_NEOS$FN_GetMultiLang(#langCode#,D.menu_nm_multi) as name, 
+			D.menu_dc, 
+			C.url_path, 
+			C.sso_use_yn,
+			'0' AS lvl,
+			'0' AS child_count,
+			null AS auth_menu_no,
+			C.url_gubun,
+			C.menu_img_class,
+			IF( IFNULL(C.url_path, '') = '' , 'folder' , 'file') AS "spriteCssClass",
+			C.menu_ordr
+		FROM    $DB_NEOS$t_co_menu C 
+		LEFT OUTER JOIN $DB_NEOS$v_t_co_menu_multi D ON C.menu_no = D.menu_no
+		WHERE   C.menu_gubun = #menuGubun#
+		AND     IFNULL(delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+		AND     C.menu_no = $startWith$ OR C.menu_no = $startWith1$
+		UNION ALL
+		
+		SELECT *
+		FROM (
+			SELECT  
+				C.menu_no, 
+				C.menu_gubun,
+				C.upper_menu_no, 
+				$DB_NEOS$FN_GetMultiLang(#langCode#,D.menu_nm_multi) as name, 
+				D.menu_dc, 
+				C.url_path, 
+				C.sso_use_yn,
+				A.LEVEL AS lvl,
+				'0' AS child_count,
+				null AS auth_menu_no,
+				C.url_gubun,
+				C.menu_img_class,
+				IF( IFNULL(C.url_path, '') = '' , 'folder' , 'file') AS spriteCssClass,
+				C.menu_ordr
+			FROM    (
+					SELECT  $DB_NEOS$`get_menu_connect_by_id`(menu_no) AS menu_no, @level AS LEVEL
+					FROM    (
+						SELECT  @start_with := $startWith$,
+							@menu_no := @start_with,
+							@level := 0
+						) vars, $DB_NEOS$t_co_menu
+					WHERE   @menu_no IS NOT NULL AND use_yn = 'Y'
+			         ) A
+			        INNER JOIN $DB_NEOS$t_co_menu C
+			        ON C.menu_no = A.menu_no 
+			        LEFT OUTER JOIN $DB_NEOS$v_t_co_menu_multi D ON C.menu_no = D.menu_no
+			WHERE   C.menu_gubun = #menuGubun#
+				AND IFNULL(delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+				AND A.LEVEL = 1
+			GROUP BY A.menu_no
+			
+			UNION ALL
+			
+			SELECT  
+				C.menu_no, 
+				C.menu_gubun,
+				C.upper_menu_no, 
+				$DB_NEOS$FN_GetMultiLang(#langCode#,D.menu_nm_multi) as name, 
+				D.menu_dc, 
+				C.url_path, 
+				C.sso_use_yn,
+				A.LEVEL AS lvl,
+				'0' AS child_count,
+				null AS auth_menu_no,
+				C.url_gubun,
+				C.menu_img_class,
+				IF( IFNULL(C.url_path, '') = '' , 'folder' , 'file') AS spriteCssClass,
+				C.menu_ordr
+			FROM    (
+					SELECT  $DB_NEOS$`get_menu_connect_by_id`(menu_no) AS menu_no, @level AS LEVEL
+					FROM    (
+						SELECT  @start_with1 := $startWith1$,
+							@menu_no := @start_with1,
+							@level := 0
+						) vars, $DB_NEOS$t_co_menu
+					WHERE   @menu_no IS NOT NULL AND use_yn = 'Y'
+			         ) A
+			        INNER JOIN $DB_NEOS$t_co_menu C
+			        ON C.menu_no = A.menu_no 
+			        LEFT OUTER JOIN $DB_NEOS$v_t_co_menu_multi D ON C.menu_no = D.menu_no
+			WHERE   C.menu_gubun = #menuGubun#
+				AND IFNULL(delete_yn , 'N') <![CDATA[ <> ]]> 'Y'
+				AND A.LEVEL = 1
+			GROUP BY A.menu_no
+			
+		) eaFormList
+		where eaFormList.menu_no IN ('102010000', '102020000', '102030000', '102040000', '101030000', '101060000')
+		ORDER BY lvl , IFNULL(menu_ordr,99999)
+	</select>
+
+	<select id="MenuManageDAO.selectEaFormTreeMenu" parameterClass="hashmap" resultClass="egovMap" >
+	    /* MenuManageDAO.selectEaFormTreeMenu - oracle_작업필요 */
+	    
+	    SELECT * FROM (
+	    SELECT	CONCAT(FORM_FOLDER_ID,'R') AS form_id
+		     , 0 AS upper_form_id
+		     , $DB_NEOS$FN_GetLanguageName(#loginVo.langCode#, form_folder_nm, form_folder_nm_en, form_folder_nm_jp, form_folder_nm_cn ) AS form_nm
+		     , SORT_ORDER        
+		     , 'folder' AS "spriteCssClass"
+     		 , 'true' AS expanded
+     		 , '' AS interlock_url
+       		 , '' AS interlock_width
+       		 , '' AS interlock_height
+       		 , '' AS form_tp
+       		 , '' AS form_d_tp
+       		 , '' AS doc_width
+		FROM	$DB_NEOS$TEAG_FORM_FOLDER
+		WHERE	use_yn = '1'
+		AND 	co_id in (#loginVo.compSeq#, '0')
+		AND 	group_id = #loginVo.groupSeq#
+		UNION ALL
+		SELECT 	DISTINCT A.form_id
+		     ,  CONCAT(A.FORM_FOLDER_ID,'R') AS upper_form_id
+		     ,  $DB_NEOS$FN_GetLanguageName(#loginVo.langCode#, a.form_nm, a.form_nm_en, a.form_nm_jp, a.form_nm_cn ) AS form_nm
+		     ,  IFNULL(A.sort_order, '') AS sort_order  
+		     , 'file' AS spriteCssClass
+     		 , 'false' AS expanded
+     		 , IFNULL(A.interlock_url, '') AS interlock_url
+     		 , IFNULL(A.interlock_width, '') AS interlock_width
+     		 , IFNULL(A.interlock_height, '') AS interlock_height
+     		 , A.form_tp AS form_tp
+     		 , A.form_d_tp AS form_d_tp
+     		 , CASE A.form_mode WHEN '1' THEN 900 ELSE 1024 END AS doc_width
+		FROM $DB_NEOS$TEAG_FORM A
+		JOIN $DB_NEOS$TEAG_FORM_FOLDER B
+			ON B.USE_YN = '1'
+			AND	A.FORM_FOLDER_ID = B.FORM_FOLDER_ID
+		INNER JOIN (
+			SELECT	b.gbn_org AS gbnOrg
+			      , b.seq AS seq
+			FROM	(
+				SELECT path FROM (
+					SELECT  dept_seq AS deptSeq
+					FROM	$DB_NEOS$v_user_info
+					WHERE	comp_seq = #loginVo.compSeq#
+					AND	emp_seq = #loginVo.uniqId#
+				   )a INNER JOIN (
+				   	SELECT	gbn_org
+					      , seq AS deptSeq
+					      , CONCAT('|',path,'|') AS path
+					FROM	$DB_NEOS$v_org_chart
+					WHERE	gbn_org = 'd'
+				   ) b ON a.deptSeq = b.deptSeq 
+			 	) a INNER JOIN (
+					SELECT	gbn_org
+				      , seq
+				      , CONCAT('%|',path,'|%') AS path
+				  	FROM	$DB_NEOS$v_org_chart
+			 	) b ON a.path LIKE b.path
+			 	GROUP BY b.gbn_org, b.seq 
+		) D 
+		WHERE     A.USE_YN = '1'
+		AND     A.DISPLAY_YN = '1'
+		<isNotEmpty property="search">
+		AND 	(A.form_nm LIKE '%$search$%' OR A.form_nm_en LIKE '%$search$%' OR A.form_nm_jp LIKE '%$search$%' OR A.form_nm_cn LIKE '%$search$%') 
+		</isNotEmpty>
+		) A
+		ORDER BY UPPER_FORM_ID , CONVERT(IFNULL(SORT_ORDER, 999), INT)
+	</select>	
+	
+	<select id="MenuManageDAO.selectEaFormPortlet" parameterClass="hashmap" resultClass="egovMap" >
+	    /* MenuManageDAO.selectEaFormPortlet - oracle_작업필요 */
+	    
+	  SELECT * FROM (
+		    SELECT
+		    	FORM_FOLDER_ID||'R' AS form_id
+			     , '0' AS upper_form_id
+			     , $DB_NEOS$FN_GetLanguageName(#loginVo.langCode#, form_folder_nm, form_folder_nm_en, form_folder_nm_jp, form_folder_nm_cn ) AS form_nm
+			     , NVL(SORT_ORDER, '') as sort_order        
+			     , 'folder' AS spriteCssClass
+	     		 , 'true' AS expanded
+	     		 , '' AS interlock_url
+	       		 , '' AS interlock_width
+	       		 , '' AS interlock_height
+	       		 , '' AS form_tp
+	       		 , '' AS form_d_tp
+	       		 , '' AS doc_width
+			FROM	$DB_NEOS$TEAG_FORM_FOLDER
+			WHERE	use_yn = '1'
+			AND 	co_id in (#loginVo.compSeq#, '0')
+			AND 	group_id = #loginVo.groupSeq#
+			UNION ALL
+			  SELECT DISTINCT to_char(A.form_id)
+			     ,  A.FORM_FOLDER_ID||'R' AS upper_form_id
+			     ,  $DB_NEOS$FN_GetLanguageName(#loginVo.langCode#, a.form_nm, a.form_nm_en, a.form_nm_jp, a.form_nm_cn ) AS form_nm
+			     ,  NVL(A.sort_order, '') AS sort_order
+			     , 'file' AS spriteCssClass
+	     		 , 'false' AS expanded
+	     		 , NVL(A.interlock_url, '') AS interlock_url
+	     		 , NVL(A.interlock_width, '') AS interlock_width
+	     		 , NVL(A.interlock_height, '') AS interlock_height
+	     		 , A.form_tp AS form_tp
+	     		 , A.form_d_tp AS form_d_tp
+	             , TO_CHAR(CASE A.form_mode WHEN '1' THEN 900 ELSE 1024 END) AS doc_width
+			FROM $DB_NEOS$TEAG_FORM A
+			JOIN $DB_NEOS$TEAG_FORM_FOLDER B
+			ON B.USE_YN = '1'
+			AND	A.FORM_FOLDER_ID = B.FORM_FOLDER_ID
+		<isNotEmpty property="userFormSet">	
+			INNER JOIN (
+				SELECT form_id AS formId
+					, org_div AS gbnOrg
+					, org_id AS seq
+			    FROM  $DB_NEOS$teag_form_auth
+			) C ON A.FORM_ID = C.formId 	
+		</isNotEmpty>
+			INNER JOIN (
+				SELECT	b.gbn_org AS gbnOrg
+				      , b.seq AS seq
+				FROM	(
+					SELECT path FROM (
+						SELECT  dept_seq AS deptSeq
+						FROM	$DB_NEOS$v_user_info
+						WHERE	comp_seq = #loginVo.compSeq#
+						AND	emp_seq = #loginVo.uniqId#
+					   )a INNER JOIN (
+					   	SELECT	gbn_org
+						      , seq AS deptSeq
+						      , '|' || path || '|' AS path
+						FROM	$DB_NEOS$v_org_chart
+						WHERE	gbn_org = 'd'
+					   ) b ON a.deptSeq = b.deptSeq 
+				 	) a INNER JOIN (
+						SELECT	gbn_org
+					      , seq
+					      , '%|' || path || '|%' AS path
+					  	FROM	$DB_NEOS$v_org_chart
+				 	) b ON a.path LIKE b.path
+				 	GROUP BY b.gbn_org, b.seq 
+			) D 
+			ON 1=1
+		<isNotEmpty property="userFormSet">	
+			AND C.gbnOrg = D.gbnOrg AND C.seq = D.seq
+		</isNotEmpty>
+		WHERE     A.USE_YN = '1'
+		AND     A.DISPLAY_YN = '1'
+		<isNotEmpty property="search">
+		AND 	(A.form_nm LIKE '%$search$%' OR A.form_nm_en LIKE '%$search$%' OR A.form_nm_jp LIKE '%$search$%' OR A.form_nm_cn LIKE '%$search$%') 
+		</isNotEmpty>
+		
+		) A
+		<isNotEmpty property="portletForm">
+		WHERE spriteCssClass = 'file'
+			<iterate prepend="AND"  property="opValue" open=" form_id IN (" close=")" conjunction="," >
+					#opValue[]#
+			</iterate>
+		</isNotEmpty>
+		ORDER BY TO_NUMBER(NVL(SORT_ORDER, 999))
+
+	</select>	
+	
+	<select id="MenuManageDAO.getEaBoxPortletInfo" parameterClass="hashMap" resultClass="egovMap">
+		/* MenuManageDAO.getEaBoxPortletInfo - oracle */
+		
+		select A.menu_no, $DB_NEOS$FN_GetMultiLang(#langCode#,B.menu_nm_multi) as menu_nm 
+		from $DB_NEOS$t_co_menu A
+		inner join $DB_NEOS$v_t_co_menu_multi B on A.menu_no = B.menu_no
+		where A.menu_no in($opValue$)		
+	</select>
+	
+	<select id="MenuManageDAO.getEaFormPortletInfo" parameterClass="hashMap" resultClass="egovMap">
+		/* MenuManageDAO.getEaFormPortletInfo - oracle */
+		
+		SELECT form_id, form_nm
+		FROM   $DB_NEOS$teag_form
+		WHERE  form_id IN ($opValue$)
+				
+	</select>
+	
+	<select id="MenuManageDAO.getNonEaFormPortletInfo" parameterClass="hashMap" resultClass="egovMap">
+		/* MenuManageDAO.getNonEaFormPortletInfo - oracle */
+		
+		SELECT c_tikeycode as form_id, c_tiname as form_nm
+		FROM   $DB_NEOS$A_TEMPLATEINFO
+		WHERE  c_tikeycode IN ($opValue$)
+				
+	</select>
+	
+	<select id="MenuManageDAO.getAttendCheck" parameterClass="hashMap" resultClass="egovMap">
+		/* MenuManageDAO.getAttendCheck - oracle */
+		
+		SELECT *
+		FROM   $DB_NEOS$t_secom_alarm
+		WHERE ROWNUM=1
+	</select>
+ 	
+ 	<select id="MenuManageDAO.getOpenMenuDepth" parameterClass="hashMap" resultClass="String">
+ 		/* MenuManageDAO.getOpenMenuDepth - oracle */
+ 		
+	 	<isEqual property="userSe" compareValue="USER">
+	 		SELECT
+	 			NVL(open_menu_depth,' ') as sreturn
+	 		FROM
+	 			$DB_NEOS$t_co_menu
+	 		WHERE
+	 			menu_no = #firstDepthMenuNo#
+	 	</isEqual>
+	 	<isNotEqual property="userSe" compareValue="USER">
+	 		SELECT
+	 			NVL(open_menu_depth,' ') as sreturn
+	 		FROM
+	 			$DB_NEOS$t_co_menu_adm
+	 		WHERE
+	 			menu_no = #firstDepthMenuNo#
+	 	</isNotEqual>
+ 		
+ 	</select>
+ 	
+ 	
+ 	<select id="MenuManageDAO.getReportMenuCnt" parameterClass="hashMap" resultClass="String">
+ 		/* MenuManageDAO.getOpenMenuDepth - oracle */
+ 		
+	 	<isEqual property="kind" compareValue="0">
+	 		SELECT count(tswr.report_seq) menuCnt
+			FROM $DB_NEOS$t_sc_work_report tswr
+			WHERE tswr.create_seq = #empSeq#
+			AND tswr.group_seq = #groupSeq#
+			AND tswr.use_yn = 'Y'
+			AND tswr.read_yn = 'N'
+	 	</isEqual>
+	 	<isEqual property="kind" compareValue="1">
+	 		SELECT  count(tswr.report_seq) menuCnt
+			FROM $DB_NEOS$t_sc_work_report tswr
+			WHERE tswr.target_emp_seq = #empSeq#	
+			AND tswr.use_yn = 'Y'
+			AND tswr.state = 'B'
+			AND tswr.group_seq = #groupSeq#
+			AND tswr.read_yn = 'N'
+	 	</isEqual>
+ 	</select>
+ 	
+ 	
+ 	
+   <select id="MenuManageDAO.FormTreeList" resultClass="java.util.HashMap"  parameterClass="java.util.HashMap">
+		/* MenuManageDAO.FormTreeList - oracle_작업필요 */
+	    
+	    SELECT T.* 
+	    FROM
+	    (
+			SELECT	LPAD('0',17,'0') AS CODE, LPAD('9',17,'9') AS UPPER_CODE, '서식' AS CODE_NM
+					, TO_NUMBER(TO_CHAR(0,'FM9')) AS ORD
+                    , 'A' AS CONTENTTYPE
+					, 'open' AS STATE, 'A' REL
+					, 'rootfolder' AS SPRITECSSCLASS
+					, '0' AS COMP_SEQ
+					, 'Y' AS Visible
+			FROM	DUAL
+			UNION	ALL		
+			SELECT		a. C_FIKEYCODE AS CODE, LPAD('0',17,'0') AS UPPER_CODE, C_FINAME AS CODE_NM
+						, TO_NUMBER(TO_CHAR(NVL(C_FIORD, 9999),'FM9000'))  AS ORD, 'F' AS CONTENTTYPE
+						, 'open' AS STATE, 'F' AS REL
+						, 'folder' AS SPRITECSSCLASS
+					    , C_FIORGCODE AS COMP_SEQ
+					    , C_FIVISIBLE AS Visible
+			FROM	$DB_NEOS$A_FOLDERINFO a
+			<isEqual property="loginVO.userSe" compareValue="USER">
+			INNER JOIN (SELECT C_FIKEYCODE FROM $DB_NEOS$A_FOLDERAUTH 
+						WHERE     (ORGGUBUN = 'g') 
+						       or (ORGGUBUN = 'c' AND orgSEQ = #loginVO.organId#) 
+						       or (ORGGUBUN = 'd' AND orgSEQ = #loginVO.orgnztId#)
+						GROUP BY C_FIKEYCODE
+			) b ON      a.C_FIKEYCODE = b.C_FIKEYCODE
+			</isEqual>
+			WHERE	1=1
+			AND		NVL(C_FIUSEFLAG, '000') <![CDATA[<> ]]>'999'
+			UNION	ALL
+			SELECT	a.C_TIKEYCODE AS CODE, COALESCE(PARENT,LPAD('0',17,'0')) AS UPPER_CODE, C_TINAME AS CODE_NM
+					,TO_NUMBER(TO_CHAR(NVL(C_ORD, 9999),'FM9000'))  AS ORD, TYPE AS CONTENTTYPE
+					, 'close' AS STATE, 'T' AS REL
+					, 'file'  AS SPRITECSSCLASS
+					, C_TIORGCODE AS COMP_SEQ
+					, C_TIVISIBLE AS Visible
+			FROM	$DB_NEOS$A_TEMPLATEINFO a
+			<isEqual property="loginVO.userSe" compareValue="USER">
+			INNER JOIN (SELECT C_TIKEYCODE FROM $DB_NEOS$A_TEMPLATEAUTH 
+						WHERE     (ORGGUBUN = 'g' ) 
+						       or (ORGGUBUN = 'c' AND orgSEQ = #loginVO.organId#) 
+						       or (ORGGUBUN = 'd' AND orgSEQ = #loginVO.orgnztId#)
+						GROUP BY C_TIKEYCODE
+			) b ON      a.C_TIKEYCODE = b.C_TIKEYCODE
+			</isEqual>
+			WHERE	1=1
+			AND		C_CIKIND     <![CDATA[<]]> '920'
+			AND		NVL(C_TIUSEFLAG, '000')  <![CDATA[<> ]]> '999'  
+			AND		a.c_tiuse = 'Y'  
+			AND      a.c_tivisible = 'Y'
+	    )T
+	    WHERE	1=1
+		<isNotEqual property="loginVO.userSe" compareValue="MASTER">
+		AND     COMP_SEQ in ('0', #loginVO.organId#)
+		</isNotEqual>
+		<isNotEmpty property="tiVisible">
+		AND     Visible = #tiVisible#
+		</isNotEmpty>		
+		<isNotEmpty property="portletForm">
+		AND sPRITECSSCLASS = 'file'
+			<iterate prepend="AND"  property="opValue" open=" CODE IN (" close=")" conjunction="," >
+					#opValue[]#
+			</iterate>
+		</isNotEmpty>
+		ORDER BY REL , ORD
+
+
+	</select>
+	
+	
+	<delete id="MenuManageDAO.delMenuMulti" parameterClass="hashMap">
+		/* MenuManageDAO.delMenuMulti - oracle */
+		
+		delete from $DB_NEOS$t_co_menu_multi
+		where menu_no = #menuNo# and lang_code = #langCode#
+	</delete>
+	
+	
+</sqlMap>

@@ -1,0 +1,3511 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ErpOrgchartDAO">
+
+    <typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+    <typeAlias  alias="empVo" type="bizbox.orgchart.service.vo.EmpVO"/>
+    <typeAlias  alias="empMultiVo" type="bizbox.orgchart.service.vo.EmpMultiVO"/>
+    <typeAlias  alias="empDeptVo" type="bizbox.orgchart.service.vo.EmpDeptVO"/>
+    <typeAlias  alias="empDeptMultiVo" type="bizbox.orgchart.service.vo.EmpDeptMultiVO"/>
+    
+	
+	<select id="ErpOrgchartDAO.selectErpSyncDetailList_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+		/* ErpOrgchartDAO.selectErpSyncDetailList_TOTALCOUNT - oracle */
+		select count(*)
+		from $DB_NEOS$t_co_erp_sync
+		where
+			group_seq = #groupSeq#
+			<isNotEmpty property="compSeq">
+			AND comp_seq = #compSeq#
+			</isNotEmpty>
+			<isNotEmpty property="autoYn">
+			AND auto_yn = #autoYn#
+			</isNotEmpty>
+			<isNotEmpty property="syncStatus">
+			AND sync_status = #syncStatus#
+			</isNotEmpty>
+			<isNotEmpty property="startDate">
+				<isNotEmpty property="endDate">
+					AND sync_date between '$startDate$ 00:00:00' and '$endDate$ 23:59:59'
+				</isNotEmpty>
+			</isNotEmpty>
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectErpSyncDetailList" parameterClass="hashmap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectErpSyncDetailList - oracle */
+		SELECT tc.sync_seq
+		     , tc.group_seq
+		     , tc.comp_seq
+		     , tc.sync_date
+		     , tc.erp_sync_date
+		     , tc.auto_yn
+		     , tc.dept_join_cnt
+		     , tc.dept_modify_cnt
+		     , tc.emp_join_cnt
+		     , tc.emp_resign_cnt
+		     , tc.emp_modify_cnt
+		     , tc.sync_status
+		     , tc.create_seq
+		     , tc.create_date
+		     , tc.create_ip
+		     , tc.modify_seq
+		     , tc.modify_date
+		     , tc.modify_ip
+		     , tc.comp_name
+		     , tc.emp_name
+		     , tc.RNUM
+		  FROM ( SELECT tb.sync_seq
+		              , tb.group_seq
+		              , tb.comp_seq
+		              , tb.sync_date
+		              , tb.erp_sync_date
+		              , tb.auto_yn
+		              , tb.dept_join_cnt
+		              , tb.dept_modify_cnt
+		              , tb.emp_join_cnt
+		              , tb.emp_resign_cnt
+		              , tb.emp_modify_cnt
+		              , tb.sync_status
+		              , tb.create_seq
+		              , tb.create_date
+		              , tb.create_ip
+		              , tb.modify_seq
+		              , tb.modify_date
+		              , tb.modify_ip
+		              , tb.comp_name
+		              , tb.emp_name
+		              , ROWNUM AS RNUM
+		           FROM ( SELECT ta.sync_seq
+		                       , ta.group_seq
+		                       , ta.comp_seq
+		                       , ta.sync_date
+		                       , ta.erp_sync_date
+		                       , ta.auto_yn
+		                       , ta.dept_join_cnt
+		                       , ta.dept_modify_cnt
+		                       , ta.emp_join_cnt
+		                       , ta.emp_resign_cnt
+		                       , ta.emp_modify_cnt
+		                       , ta.sync_status
+		                       , ta.create_seq
+		                       , ta.create_date
+		                       , ta.create_ip
+		                       , ta.modify_seq
+		                       , ta.modify_date
+		                       , ta.modify_ip
+		                       , ( SELECT x1.comp_name 
+		                             FROM $DB_NEOS$t_co_comp_multi x1
+		                            WHERE x1.group_seq = ta.group_seq
+		                              AND x1.comp_seq  = ta.comp_seq 
+		                              AND x1.lang_code = #langCode# 
+		                              AND ROWNUM       = 1
+		                         ) AS comp_name
+		                       , ( SELECT x2.emp_name
+		                             FROM $DB_NEOS$t_co_emp_multi x2
+		                            WHERE x2.group_seq = ta.group_seq
+		                              AND x2.emp_seq   = ta.create_seq 
+		                              AND x2.lang_code = #langCode# 
+		                              AND ROWNUM       = 1
+		                         ) AS emp_name
+		                    FROM $DB_NEOS$t_co_erp_sync ta
+		                   WHERE ta.group_seq = #groupSeq#
+		                   <isNotEmpty property="compSeq">
+		                       AND ta.comp_seq = #compSeq#
+		                   </isNotEmpty>
+		                   <isNotEmpty property="autoYn">
+		                       AND ta.auto_yn = #autoYn#
+		                   </isNotEmpty>
+		                   <isNotEmpty property="syncStatus">
+		                       AND ta.sync_status = #syncStatus#
+		                   </isNotEmpty>
+		                   <isNotEmpty property="startDate">
+		                       <isNotEmpty property="endDate">
+		                           AND ta.sync_date BETWEEN '$startDate$ 00:00:00' AND '$endDate$ 23:59:59'
+		                       </isNotEmpty>
+		                   </isNotEmpty>
+		                   ORDER BY ta.sync_date DESC
+		                ) tb
+		          WHERE ROWNUM <![CDATA[ <= ]]> $endNum$ 
+		       ) tc
+		 WHERE tc.RNUM <![CDATA[ >= ]]> $startNum$
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectErpSyncCompDetailList_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+		/* ErpOrgchartDAO.selectErpSyncCompDetailList_TOTALCOUNT - oracle */
+		select count(*)
+		from $DB_NEOS$t_co_erp_comp_sync
+		where
+			group_seq = #groupSeq#
+			<isNotEmpty property="autoYn">
+			AND auto_yn = #autoYn#
+			</isNotEmpty>
+			<isNotEmpty property="syncStatus">
+			AND sync_status = #syncStatus#
+			</isNotEmpty>
+			<isNotEmpty property="startDate">
+				<isNotEmpty property="endDate">
+					AND sync_date between '$startDate$ 00:00:00' and '$endDate$ 23:59:59'
+				</isNotEmpty>
+			</isNotEmpty>
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectErpSyncCompDetailList" parameterClass="hashmap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectErpSyncCompDetailList - oracle */
+		SELECT tc.sync_seq
+		     , tc.group_seq
+		     , tc.sync_date
+		     , tc.erp_sync_date
+		     , tc.auto_yn
+		     , tc.comp_join_cnt
+		     , tc.comp_modify_cnt
+		     , tc.sync_status
+		     , tc.create_seq
+		     , tc.create_date
+		     , tc.create_ip
+		     , tc.modify_seq
+		     , tc.modify_date
+		     , tc.modify_ip
+		     , tc.emp_name
+		     , tc.RNUM
+		  FROM ( SELECT tb.sync_seq
+		              , tb.group_seq
+		              , tb.sync_date
+		              , tb.erp_sync_date
+		              , tb.auto_yn
+		              , tb.comp_join_cnt
+		              , tb.comp_modify_cnt
+		              , tb.sync_status
+		              , tb.create_seq
+		              , tb.create_date
+		              , tb.create_ip
+		              , tb.modify_seq
+		              , tb.modify_date
+		              , tb.modify_ip
+		              , tb.emp_name
+		              , ROWNUM AS RNUM
+		           FROM ( SELECT ta.sync_seq
+		                       , ta.group_seq
+		                       , ta.sync_date
+		                       , ta.erp_sync_date
+		                       , ta.auto_yn
+		                       , ta.comp_join_cnt
+		                       , ta.comp_modify_cnt
+		                       , ta.sync_status
+		                       , ta.create_seq
+		                       , ta.create_date
+		                       , ta.create_ip
+		                       , ta.modify_seq
+		                       , ta.modify_date
+		                       , ta.modify_ip
+		                       , ( SELECT x1.emp_name
+		                             FROM $DB_NEOS$t_co_emp_multi x1
+		                            WHERE x1.group_seq = ta.group_seq
+		                              AND x1.emp_seq   = ta.create_seq
+		                              AND x1.lang_code = #langCode#
+		                              AND ROWNUM       = 1
+		                         ) AS emp_name
+		                    FROM $DB_NEOS$t_co_erp_comp_sync ta
+		                   WHERE ta.group_seq = #groupSeq#
+		                   <isNotEmpty property="autoYn">
+		                      AND ta.auto_yn = #autoYn#
+		                   </isNotEmpty>
+		                   <isNotEmpty property="syncStatus">
+		                      AND ta.sync_status = #syncStatus#
+		                   </isNotEmpty>
+		                   <isNotEmpty property="startDate">
+		                       <isNotEmpty property="endDate">
+		                          AND ta.sync_date BETWEEN '$startDate$ 00:00:00' AND '$endDate$ 23:59:59'
+		                       </isNotEmpty>
+		                   </isNotEmpty>
+		                   ORDER BY ta.sync_date DESC
+		                ) tb
+		          WHERE ROWNUM <![CDATA[ <= ]]> $endNum$
+		       ) tc
+		 WHERE tc.RNUM <![CDATA[ >= ]]> $startNum$   
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectErpSyncCodeList" parameterClass="hashmap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectErpSyncCodeList - oracle */
+		SELECT 	
+			<isEqual property="codeType" compareValue="40">
+			erp_code_name,
+			</isEqual>
+			group_seq, 
+			comp_seq, 
+			code_type, 
+			erp_code, 
+			gw_code, 
+			create_seq, 
+			create_date, 
+			create_ip
+		FROM 
+			$DB_NEOS$t_co_erp_sync_code 
+		WHERE
+			group_seq = #groupSeq#
+			AND comp_seq = #compSeq#
+			<isNotEmpty property="codeType">
+			AND code_type = #codeType#
+			</isNotEmpty>
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectCommonCodeList" parameterClass="hashmap" resultClass="egovMap" remapResults="true">
+		/* ErpOrgchartDAO.selectCommonCodeList - oracle */
+		SELECT  
+			b.detail_code <isNotEmpty property="aliasCode"> as "$aliasCode$"</isNotEmpty>, 
+			$DB_NEOS$FN_GetMultiLang(#langCode#, c.detail_name_multi) <isEmpty property="aliasName"> as detail_name </isEmpty> <isNotEmpty property="aliasName"> as "$aliasName$"</isNotEmpty>
+			<isNotEmpty property="aliasFlag1"> , b.flag_1  as "$aliasFlag1$"</isNotEmpty>
+		FROM $DB_NEOS$t_co_code a 
+		  JOIN $DB_NEOS$t_co_code_detail b ON a.code = b.code 
+		  AND a.use_yn = 'Y' AND b.use_yn = 'Y'
+		  LEFT OUTER JOIN $DB_NEOS$v_t_co_code_detail_multi c ON b.code=c.code AND b.detail_code = c.detail_code
+		WHERE
+			a.code = #code#
+		ORDER BY b.order_num
+	</select>
+	
+	<delete id="ErpOrgchartDAO.deleteErpSyncCodeList" parameterClass="hashmap">
+		/* ErpOrgchartDAO.deleteErpSyncCodeList - oracle */
+		delete 
+		from $DB_NEOS$t_co_erp_sync_code 
+		where
+			group_seq = #groupSeq# 
+			and comp_seq = #compSeq#
+	</delete>
+	
+	<insert id="ErpOrgchartDAO.insertErpSyncCodeList" parameterClass="hashmap">
+		/* ErpOrgchartDAO.insertErpSyncCodeList - oracle */
+         INSERT INTO $DB_NEOS$t_co_erp_sync_code 
+				( group_seq
+				, comp_seq
+				, code_type
+				, erp_code
+				, gw_code
+				, erp_code_name
+				, create_seq
+				, create_date
+				, create_ip
+				)
+        <dynamic>
+            <iterate property="codeList" conjunction="UNION ALL">
+			 SELECT #groupSeq#
+			      , #compSeq#
+			      , #codeList[].codeType#
+			      , #codeList[].erpCode#
+			      , #codeList[].gwCode#
+			      , NVL(#codeList[].erpCodeName#, '')
+			      , NVL(#createSeq#, '')
+			      , SYSDATE
+			      , NVL(#createIp#, '')
+			   FROM DUAL
+            </iterate>
+		</dynamic>
+	</insert>
+	
+	<select id="ErpOrgchartDAO.selectSyncBizList" parameterClass="hashmap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectSyncBizList - oracle */
+		select 
+			eb.erp_biz_seq, 
+			eb.erp_comp_seq, 
+			eb.group_seq, 
+			eb.comp_seq, 
+			eb.biz_seq,
+			(case
+				when #erpBizSeqList# like '%|' || eb.erp_biz_seq || '|%' then '1'
+			else '0'
+			end
+			) as result_code
+		from 
+			$DB_NEOS$t_co_erp_biz eb 
+		where 
+			eb.erp_comp_seq = #cdCompany#
+			and eb.group_seq = #groupSeq#
+			and eb.comp_seq = #compSeq#
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectSyncDeptList" parameterClass="hashmap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectSyncDeptList - oracle */
+		SELECT 
+			ed.group_seq,
+			ed.comp_seq,
+			ed.biz_seq,
+			ed.dept_seq,
+			ed.erp_dept_seq,
+			ed.erp_comp_seq,
+			(
+				CASE
+					WHEN #erpDeptSeqList# LIKE '%|' || ed.erp_dept_seq || '|%' THEN '2'
+					ELSE '0'
+				END
+			) AS result_code
+		FROM $DB_NEOS$t_co_erp_dept ed
+		where 
+			NVL(ed.erp_comp_seq, ' ') = #cdCompany#
+			and ed.group_seq = #groupSeq#
+			and ed.comp_seq = #compSeq#
+	</select>
+	
+	
+	<insert id="ErpOrgchartDAO.insertTmpBiz" parameterClass="hashmap">
+		/* ErpOrgchartDAO.insertTmpBiz - oracle */
+		INSERT INTO $DB_NEOS$t_tmp_biz 
+		(
+			sync_seq, 
+			biz_seq, 
+			biz_cd,
+			group_seq, 
+			comp_seq, 
+			comp_regist_num, 
+			comp_num, 
+			tel_num, 
+			fax_num, 
+			homepg_addr, 
+			zip_code, 
+			display_yn, 
+			native_lang_code, 
+			order_num, 
+			use_yn, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date, 
+			erp_biz_seq, 
+			erp_comp_seq, 
+			result_code
+		)
+		VALUES
+		(
+			#syncSeq#,
+			#bizSeq#,
+			#bizSeq#, 
+			#groupSeq#,
+			#compSeq#,
+			#compRegistNum#,
+			#compNum#,
+			#telNum#,
+			#faxNum#,
+			#homepgAddr#,
+			#zipCode#,
+			#displayYn#,
+			#nativeLangCode#,
+			#orderNum#,
+			#useYn#,
+			#editorSeq#,
+			SYSDATE,
+			#editorSeq#,
+			SYSDATE,
+			#erpBizSeq#,
+			#erpCompSeq#,
+			case when (select 1 from $DB_NEOS$t_co_biz where biz_seq = #bizSeq# AND ROWNUM = 1) = 1 then '1' 
+			else (case when #useYn# = 'N' then '2' else '0' end) end 
+		)
+	</insert>
+	
+	<insert id="ErpOrgchartDAO.insertTmpBizMulti" parameterClass="hashmap">
+		/* ErpOrgchartDAO.insertTmpBizMulti - oracle */
+		INSERT INTO $DB_NEOS$t_tmp_biz_multi 
+		(
+			sync_seq, 
+			biz_seq, 
+			lang_code, 
+			group_seq, 
+			comp_seq, 
+			biz_name, 
+			owner_name, 
+			biz_condition, 
+			item, 
+			addr, 
+			detail_addr, 
+			use_yn, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date,
+			result_code
+		)
+		VALUES
+		(
+			#syncSeq#,		
+			#bizSeq#,		
+			#langCode#,		
+			#groupSeq#,		
+			#compSeq#,		
+			#bizName#,		
+			#ownerName#,	
+			#bizCondition#,	
+			#item#,			
+			#addr#,			
+			#detailAddr#, 
+			#useYn#, 
+			#editorSeq#, 
+			SYSDATE,
+			#editorSeq#, 
+			SYSDATE,
+			case when (select 1 from $DB_NEOS$t_co_biz where biz_seq = #bizSeq# AND ROWNUM = 1) = 1 then '1' else '0' end
+		)
+	</insert>
+	
+	<insert id="ErpOrgchartDAO.insertTmpDept" parameterClass="hashmap">
+		/* ErpOrgchartDAO.insertTmpDept - oracle */
+		INSERT INTO $DB_NEOS$t_tmp_dept 
+			(
+				sync_seq, 
+				dept_seq, 
+				dept_cd, 
+				group_seq, 
+				comp_seq, 
+				biz_seq, 
+				parent_dept_seq, 
+				tel_num, 
+				fax_num, 
+				homepg_addr, 
+				zip_code, 
+				susin_yn, 
+				vir_dept_yn, 
+				team_yn, 
+				native_lang_code, 
+				path, 
+				ptype, 
+				dept_level, 
+				order_num, 
+				use_yn, 
+				create_seq, 
+				create_date, 
+				modify_seq, 
+				modify_date, 
+				dept_manager, 
+				erp_dept_seq, 
+				erp_biz_seq, 
+				erp_comp_seq, 
+				result_code
+			)
+			VALUES
+			(
+				#syncSeq#,			
+				#deptSeq#,			
+				#deptCd#,			
+				#groupSeq#,			
+				#compSeq#,			
+				#bizSeq#,			
+				#parentDeptSeq#,	
+				#telNum#,			
+				#faxNum#,			
+				#homepgAddr#,		
+				#zipCode#,			
+				#susinYn#,			
+				#virDeptYn#,		
+				#teamYn#,			
+				#nativeLangCode#,	 
+				#path#,			
+				#ptype#,	 
+				#deptLevel#, 
+				#orderNum#,	 
+				#useYn#,	  
+				#editorSeq#, 
+				SYSDATE,
+				#editorSeq#, 
+				SYSDATE,
+				#deptManager#, 
+				#erpDeptSeq#, 
+				#erpBizSeq#, 
+				#erpCompSeq#,  
+				case 
+					when (select NVL(B.comp_seq, #compSeq#) from $DB_NEOS$t_tmp_dept A LEFT OUTER JOIN $DB_NEOS$t_co_dept B ON A.dept_seq=B.dept_seq and B.comp_seq != #compSeq# where A.dept_seq = #deptSeq# AND ROWNUM = 1) != #compSeq# then '1' 
+					when #useYn# = 'N' then '2'
+					when (select 1 from $DB_NEOS$t_tmp_biz where biz_seq = #bizSeq# AND result_code != '2' AND ROWNUM = 1) is null then '10'
+					when (
+						select case
+						         when parent_dept_seq = '0' then 
+								      (CASE WHEN NVL(biz_seq, '') != NVL(#bizSeq#, '') 
+							                  OR NVL(biz_seq, '') != NVL(#parentDeptSeq#, '') 
+							                  OR NVL(path, '') != NVL(#path#, '') THEN 1 ELSE 0 END)
+							     else
+							          (CASE WHEN NVL(biz_seq, '') != NVL(#bizSeq#, '') 
+							                  OR NVL(parent_dept_seq, '') != NVL(#parentDeptSeq#, '')
+							                  OR NVL(path, '') != NVL(#path#, '') THEN 1 ELSE 0 END)
+							     end    
+						from $DB_NEOS$t_co_dept 
+						where group_seq = #groupSeq# 
+						  and dept_seq = #deptSeq# 
+						  and comp_seq = #compSeq#
+						 ) = 1 then '20' 
+					when (select 1 from $DB_NEOS$t_co_dept where group_seq = #groupSeq# and dept_seq = #deptSeq# AND ROWNUM = 1) = 1 then '30'
+					else '0' 
+				end
+			)
+	</insert>
+	
+	<insert id="ErpOrgchartDAO.insertTmpDeptMulti" parameterClass="hashmap">
+		/* ErpOrgchartDAO.insertTmpDeptMulti - oracle */
+		INSERT INTO $DB_NEOS$t_tmp_dept_multi 
+			(
+				sync_seq, 
+				dept_seq, 
+				lang_code, 
+				group_seq, 
+				comp_seq, 
+				biz_seq, 
+				dept_name, 
+				dept_display_name, 
+				sender_name, 
+				addr, 
+				detail_addr, 
+				path_name, 
+				use_yn, 
+				create_seq, 
+				create_date, 
+				modify_seq, 
+				modify_date, 
+				result_code
+			)
+			VALUES
+			(
+				#syncSeq#,		
+				#deptSeq#,		
+				#langCode#,		
+				#groupSeq#,		
+				#compSeq#,		
+				#bizSeq#,		
+				#deptName#,		
+				#deptDisplayName#, 
+				#senderName#, 
+				#addr#, 
+				#detailAddr#,
+				#pathName#, 
+				#useYn#,
+				#editorSeq#, 
+				SYSDATE, 
+				#editorSeq#, 
+				SYSDATE, 
+				case 
+					when (select NVL(B.comp_seq, #compSeq#) from $DB_NEOS$t_tmp_dept A LEFT OUTER JOIN $DB_NEOS$t_co_dept B ON A.dept_seq=B.dept_seq and B.comp_seq != #compSeq# where A.dept_seq = #deptSeq# AND ROWNUM = 1) != #compSeq# then '1'
+					when #useYn# = 'N' then '2' 
+					when (select 1 from $DB_NEOS$t_tmp_biz where biz_seq = #bizSeq# AND result_code != '2' AND ROWNUM = 1) is null then '10'
+					when (
+					   select CASE WHEN NVL(biz_seq, '') != NVL(#bizSeq#, '') 
+					                 OR NVL(dept_name, '') != NVL(#deptName#, '')
+					                 OR NVL(path_name, '') != NVL(#pathName#, '') THEN 1 ELSE 0 END
+					   from $DB_NEOS$t_co_dept_multi
+					   where group_seq = #groupSeq# 
+					     and dept_seq = #deptSeq# 
+					     and comp_seq = #compSeq#
+					     and lang_code = #langCode#
+					     ) = 1 then '20' 
+					when (select 1 from $DB_NEOS$t_co_dept where group_seq = #groupSeq# and dept_seq = #deptSeq# AND ROWNUM = 1) = 1 then '30'  
+					else '0' 
+				end
+			)
+				
+	</insert>
+	
+	<select id="ErpOrgchartDAO.selectCompList" parameterClass="hashmap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectCompList - oracle */
+		SELECT 
+			c.group_seq,
+			c.comp_seq AS "id",
+			'c' AS "gbnOrg",
+			'c' AS "orgDiv",
+			c.comp_seq AS "includeDeptCode",
+			c.comp_seq,
+			'' AS biz_seq,
+			'0' AS "parentSeq",
+			c.comp_seq AS "path",
+			'0' AS "parentPath",
+			cm.comp_name AS "text"
+		FROM $DB_NEOS$t_co_comp c LEFT OUTER JOIN $DB_NEOS$t_co_comp_multi cm ON c.comp_seq = cm.comp_seq AND cm.lang_code = #langCode#
+		WHERE c.group_seq = #groupSeq#
+		AND c.comp_seq = #compSeq#
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectTmpBizList" parameterClass="hashmap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectTmpBizList - oracle */
+		SELECT 
+			b.biz_seq AS "id",
+			'b' AS "gbnOrg",
+			'b' AS "orgDiv",
+			b.biz_seq AS "includeDeptCode",
+			b.comp_seq,
+			b.biz_seq,
+			b.comp_seq AS "parentSeq",
+			b.comp_seq || '|' || b.biz_seq AS "path",
+			b.comp_seq AS "parentPath",
+			bm.biz_name AS "text"
+		FROM $DB_NEOS$t_tmp_biz b LEFT OUTER JOIN $DB_NEOS$t_tmp_biz_multi bm ON b.biz_seq = bm.biz_seq AND lang_code = #langCode#
+		WHERE
+			b.group_seq = #groupSeq#
+			AND b.comp_seq = #compSeq#
+			AND b.sync_seq = #syncSeq#
+			AND bm.sync_seq = #syncSeq#
+			AND b.result_code != '2'
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectTmpDeptList" parameterClass="hashmap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectTmpDeptList - oracle */
+		SELECT 
+			d.dept_seq AS "id",
+			'd' AS "gbnOrg",
+			'd' AS "orgDiv",
+			d.dept_seq AS "includeDeptCode",
+			d.comp_seq,
+			d.biz_seq,
+			d.parent_dept_seq AS "parentSeq",
+			d.comp_seq || '|' || d.biz_seq || '|' || path AS "path",
+			(
+			case
+				when d.biz_seq = d.parent_dept_seq then d.comp_seq || '|' || d.biz_seq
+				when d.biz_seq != d.parent_dept_seq then
+					(SELECT d.comp_seq || '|' || d.biz_seq || '|' || path FROM $DB_NEOS$t_tmp_dept WHERE sync_seq = #syncSeq# AND dept_seq = d.parent_dept_seq AND ROWNUM = 1)
+				else
+					d.comp_seq || '|' || d.biz_seq
+			end
+			) AS "parentPath",
+			dm.dept_name AS "text",
+			replace(d.result_code,' ','') as "deptResultCode",
+			replace(dm.result_code,' ','') as "deptMultiResultCode",
+			b.result_code as "bizResultCode"
+		FROM $DB_NEOS$t_tmp_dept d LEFT OUTER JOIN $DB_NEOS$t_tmp_dept_multi dm ON d.dept_seq = dm.dept_seq AND dm.lang_code = #langCode#
+		left join $DB_NEOS$t_tmp_biz b on d.biz_Seq = b.biz_seq
+		WHERE
+			d.group_seq = #groupSeq#
+			AND d.comp_seq = #compSeq#
+			AND d.sync_seq = #syncSeq#
+			AND b.sync_Seq = #syncSeq#
+			AND dm.sync_seq = #syncSeq#
+			AND d.result_code != '2'
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectTmpBizInfoList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT 
+			*
+		FROM $DB_NEOS$t_tmp_biz
+		WHERE
+			group_seq = #groupSeq#
+			AND comp_seq = #compSeq#
+			AND sync_seq = #syncSeq#
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectTmpEmpSeq" parameterClass="hashmap" resultClass="String">
+		SELECT NVL((select emp_seq from $DB_NEOS$t_co_emp_comp where erp_emp_seq = #erpEmpSeq# AND ROWNUM = 1), $DB_NEOS$f_nextval('orgchart') )  as "empSeq" from dual
+	</select>
+	
+	
+	<insert id="ErpOrgchartDAO.insertTmpEmp" parameterClass="hashmap">
+		/* ErpOrgchartDAO.insertTmpEmp - oracle */
+		INSERT INTO $DB_NEOS$t_tmp_emp 
+		(
+			sync_seq, 
+			emp_seq, 
+			group_seq, 
+			login_id, 
+			emp_num, 
+			erp_emp_num, 
+			email_addr, 
+			login_passwd, 
+			appr_passwd, 
+			passwd_date, 
+			passwd_input_fail_count, 
+			pay_passwd, 
+			passwd_status_code, 
+			mobile_use_yn, 
+			messenger_use_yn, 
+			check_work_yn, 
+			shift, 
+			job_code, 
+			status_code, 
+			main_comp_seq, 
+			duty_code, 
+			position_code, 
+			native_lang_code, 
+			license_check_yn, 
+			join_day, 
+			resign_day, 
+			gender_code, 
+			bday, 
+			lunar_yn, 
+			work_status, 
+			home_tel_num, 
+			mobile_tel_num, 
+			wedding_yn, 
+			wedding_day, 
+			private_yn, 
+			zip_code, 
+			pic_file_id, 
+			sign_file_id, 
+			use_yn, 
+			ls_role_id, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date, 
+			erp_emp_seq, 
+			erp_comp_seq, 
+			erp_biz_seq, 
+			erp_dept_seq, 
+			gerp_no_gemp,
+			result_code,
+			gw_update_time,
+			row_num	
+		)
+		VALUES
+		(
+			#syncSeq#, 
+			#empSeq#,
+			#groupSeq#, 
+			#loginId#, 
+			#empNum#, 
+			#erpEmpNum#, 
+			$DB_NEOS$FN_SPLIT(#emailAddr#, '@', 1), 
+			#loginPasswd#, 
+			#apprPasswd#, 
+			SYSDATE, 
+			#passwdInputFailCount#, 
+			#payPasswd#, 
+			#passwdStatusCode#, 
+			#mobileUseYn#, 
+			#messengerUseYn#, 
+			#checkWorkYn#, 
+			#shift#, 
+			#jobCode#, 
+			#statusCode#, 
+			#mainCompSeq#, 
+			#dutyCode#, 
+			#positionCode#, 
+			#nativeLangCode#, 
+			#licenseCheckYn#, 
+			case when replace(#joinDay#,' ','') = null then null else TO_DATE(replace(#joinDay#,' ',''), 'YYYY-MM-DD') end, 
+			case when replace(#resignDay#,' ','') = null then null else TO_DATE(replace(#resignDay#,' ',''), 'YYYY-MM-DD') end, 
+			#genderCode#, 
+			case when replace(#bday#,' ','') = null then null else TO_DATE(replace(#bday#,' ',''), 'YYYY-MM-DD') end, 
+			#lunarYn#, 
+			#workStatus#, 
+			#homeTelNum#, 
+			#mobileTelNum#, 
+			#weddingYn#, 
+			case when replace(#weddingDay#,' ','') = null then null else TO_DATE(replace(#weddingDay#,' ',''), 'YYYY-MM-DD') end, 
+			#privateYn#, 
+			#zipCode#, 
+			#picFileId#, 
+			#signFileId#, 
+			#useYn#, 
+			#lsRoleId#, 
+			#editorSeq#, 
+			SYSDATE, 
+			#editorSeq#, 
+			SYSDATE, 
+			#erpEmpSeq#, 
+			#erpCompSeq#, 
+			#erpBizSeq#, 
+			#erpDeptSeq#, 
+			#noGemp#, 
+			case 
+				when #workStatus# = '001' and (select count(*) from $DB_NEOS$t_co_emp_comp where erp_emp_seq = #erpEmpSeq# and work_status != '001' ) > 0 then '7'
+				when #workStatus# = '001' then '2'
+				when #loginIdType# = '2' and (#loginId# is null or #loginId# = '') then '4'
+				when (select 1 from $DB_NEOS$t_co_emp_comp where group_seq = #groupSeq# and erp_emp_seq = #erpEmpSeq# AND ROWNUM = 1) = 1 then '20'
+				when (select 1 from $DB_NEOS$t_co_emp where group_seq = #groupSeq# and login_id = #loginId# AND ROWNUM = 1) = 1 then '5'
+				when (select 1 from $DB_NEOS$t_tmp_biz where biz_seq = #bizSeq# and result_code = '0' AND ROWNUM = 1) is null then '10'
+				when (select 1 from $DB_NEOS$t_co_emp where group_seq = #groupSeq# and emp_seq = #empSeq# AND ROWNUM = 1) = 1 then '1' 
+				else '0' 
+			end,
+			#gwUpdateTime#,
+			#rowNum#
+		)
+	</insert>
+	
+	<insert id="ErpOrgchartDAO.insertTmpEmpMulti" parameterClass="hashmap">
+		/* ErpOrgchartDAO.insertTmpEmpMulti - oracle */
+		insert into $DB_NEOS$t_tmp_emp_multi 
+		(
+			sync_seq, 
+			emp_seq, 
+			lang_code, 
+			group_seq, 
+			emp_name, 
+			addr, 
+			detail_addr, 
+			main_work, 
+			use_yn, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date, 
+			result_code
+		)
+		values
+		(
+			#syncSeq#, 
+			#empSeq#, 
+			#langCode#, 
+			#groupSeq#, 
+			#empName#, 
+			#addr#, 
+			#detailAddr#, 
+			#mainWork#, 
+			#useYn#, 
+			#editorSeq#, 
+			SYSDATE,
+			#editorSeq#, 
+			SYSDATE,
+			case 
+				when #workStatus# = '001' then '2' 
+				when #loginIdType# = '2' and (#loginId# is null or #loginId# = '') then '4'
+				when (select 1 from $DB_NEOS$t_co_emp_comp where group_seq = #groupSeq# and erp_emp_seq = #erpEmpSeq# AND ROWNUM = 1) = 1 then '20'
+				when (select 1 from $DB_NEOS$t_co_emp where group_seq = #groupSeq# and login_id = #loginId# AND ROWNUM = 1) = 1 then '5'
+				when (select 1 from $DB_NEOS$t_tmp_biz where biz_seq = #bizSeq# and result_code = '0' AND ROWNUM = 1) is null then '10'
+				when (select 1 from $DB_NEOS$t_co_emp where group_seq = #groupSeq# and emp_seq = #empSeq# AND ROWNUM = 1) = 1 then '1' 
+				else '0' 
+			end
+		)
+	</insert>
+	
+	<select id="ErpOrgchartDAO.selectTmpEmpList_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+		/* ErpOrgchartDAO.selectTmpEmpList_TOTALCOUNT - oracle */
+		select 
+			count(*) as TOTAL_COUNT
+		from $DB_NEOS$t_tmp_emp e 
+			left outer join $DB_NEOS$t_tmp_emp_multi em on em.sync_seq = #syncSeq# and e.emp_seq = em.emp_seq and lang_code = 'kr'
+			left outer join $DB_NEOS$t_tmp_emp_dept ed on ed.sync_seq = #syncSeq# and e.emp_seq = ed.emp_seq
+			<isEqual property="resultCode" compareValue="20">
+			left outer join $DB_NEOS$t_co_emp_comp ce on ce.erp_emp_seq = e.erp_emp_num
+			</isEqual>
+		where e.sync_seq = #syncSeq#
+		<isNotEmpty property="resultCode">
+			and e.result_code = #resultCode#
+		</isNotEmpty>
+		<isEqual property="resultCode" compareValue="20">
+			and (select count(emp_seq) from $DB_NEOS$t_co_emp_comp where erp_emp_seq = e.erp_emp_num) = 1
+		</isEqual>
+		<isNotEmpty property="deptName">
+			and exists (select dept_seq from $DB_NEOS$t_tmp_dept_multi where dept_seq = ed.dept_seq  and dept_name like '%$deptName$%' and lang_Code = 'kr')
+		</isNotEmpty>
+		<isNotEmpty property="empName">
+			and em.emp_name like '%$empName$%'
+		</isNotEmpty>
+		<isNotEmpty property="deptEmpName">
+                	  AND (tb.emp_name LIKE '%$deptEmpName$%' or 
+                	  			EXISTS ( SELECT x3.dept_seq
+                                  FROM $DB_NEOS$t_tmp_dept_multi x3
+                                 WHERE x3.dept_seq = tc.dept_seq
+                                   AND x3.dept_name LIKE '%$deptEmpName$%'
+                                   AND x3.lang_code = 'kr' )
+                        )
+	    </isNotEmpty>
+		<isNotEmpty property="erpErrCode">
+			<isEqual property="erpErrCode" compareValue="0">
+			and ((e.result_code = '0' and ed.result_Code not in('6','10','30','40','50')) or (e.result_code = '20' and (select count(emp_seq) from $DB_NEOS$t_co_emp_comp where erp_emp_seq = e.erp_emp_num) = 1))
+			</isEqual>
+			<isEqual property="erpErrCode" compareValue="1">
+			and e.result_code = '0' and ed.result_Code not in('6','10','30','40','50')
+			</isEqual>
+			<isEqual property="erpErrCode" compareValue="2">
+			and e.result_code = '20' and (select count(emp_seq) from $DB_NEOS$t_co_emp_comp where erp_emp_seq = e.erp_emp_num) = 1
+			</isEqual>
+			<isEqual property="erpErrCode" compareValue="3">
+			and e.result_Code = '7'
+			</isEqual>
+			<isEqual property="erpErrCode" compareValue="4">
+			and ((e.result_code != '0' and ed.result_Code in('6','10','30','40','50')) or (e.result_code != '20' and (select count(emp_seq) from $DB_NEOS$t_co_emp_comp where erp_emp_seq = e.erp_emp_num) != 1) or e.result_Code != '7')
+			</isEqual>
+		</isNotEmpty>
+		<isNotEmpty property="noEmpList">
+			and e.emp_seq in ($noEmpList$)
+		</isNotEmpty>
+		<isNotEmpty property="workStatus">
+			and e.work_status = #workStatus#
+		</isNotEmpty>
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectTmpEmpList" parameterClass="hashmap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectTmpEmpList - oracle */
+		SELECT t2.sync_seq
+		     , t2.emp_seq
+		     , t2.emp_name
+		     , t2.email_addr
+		     , t2.erp_emp_seq
+		     , t2.duty_code
+		     , t2.duty_code_name
+		     , t2.position_code
+		     , t2.position_code_name
+		     , t2.work_status
+		     , t2.work_status_name
+		     , t2.status_code
+		     , t2.status_code_name
+		     , t2.job_code
+		     , t2.job_code_name
+		     , t2.result_code
+		     , t2.ed_result_code
+		     , t2.license_check_yn
+		     , t2.license_check_yn_name
+		     , t2.dept_name
+		     , t2.dept_seq
+		     , t2.biz_seq
+		     , t2.erp_comp_seq
+		     , t2.comp_seq
+		     , t2.RNUM
+		  FROM ( SELECT t1.sync_seq
+		              , t1.emp_seq
+		              , t1.emp_name
+		              , t1.email_addr
+		              , t1.erp_emp_seq
+		              , t1.duty_code
+		              , t1.duty_code_name
+		              , t1.position_code
+		              , t1.position_code_name
+		              , t1.work_status
+		              , t1.work_status_name
+		              , t1.status_code
+		              , t1.status_code_name
+		              , t1.job_code
+		              , t1.job_code_name
+		              , t1.result_code
+		              , t1.ed_result_code
+		              , t1.license_check_yn
+		              , t1.license_check_yn_name
+		              , t1.dept_name
+		              , t1.dept_seq
+		              , t1.biz_seq
+		              , t1.erp_comp_seq
+		              , t1.comp_seq
+		              , ROWNUM AS RNUM
+		           FROM ( SELECT ta.sync_seq
+		                         <isEqual property="resultCode" compareValue="20">
+		                             , ce.emp_seq AS emp_seq
+		                         </isEqual>
+		                         <isNotEqual property="resultCode" compareValue="20">
+		                             , ta.emp_seq AS emp_seq
+		                         </isNotEqual>
+		                       , tb.emp_name
+		                       , ta.email_addr
+		                       , ta.erp_emp_seq
+		                       , ta.duty_code
+		                       , $DB_NEOS$GET_EMP_DUTY_POSITION_NAME(ta.group_seq, #compSeq#, ta.duty_code, 'DUTY', #langCode#) AS duty_code_name
+		                       , ta.position_code
+		                       , $DB_NEOS$GET_EMP_DUTY_POSITION_NAME(ta.group_seq, #compSeq#, ta.position_code, 'POSITION', #langCode#) AS position_code_name
+		                       , ta.work_status
+		                       , $DB_NEOS$GET_CODE_DETAIL_INFO('0', 'COM517', ta.work_status, #langCode#) AS work_status_name
+		                       , ta.status_code
+		                       , $DB_NEOS$GET_CODE_DETAIL_INFO('0', 'COM504', ta.status_code, #langCode#) AS status_code_name
+		                       , ta.job_code
+		                       , ( SELECT x1.erp_code_name
+		                             FROM $DB_NEOS$t_co_erp_sync_code x1
+		                            WHERE x1.comp_seq  = tc.comp_seq
+		                              AND x1.erp_code  = ta.job_code
+		                              AND x1.code_type = '20'
+		                         ) AS job_code_name
+		                       , replace(ta.result_code, ' ','') as result_code
+		                       , replace(tc.result_code, ' ','') AS ed_result_code
+		                       , ta.license_check_yn
+		                       , $DB_NEOS$GET_CODE_DETAIL_INFO('0', 'COM530', ta.license_check_yn, #langCode#) AS license_check_yn_name
+		                       , ( SELECT x2.dept_name
+		                             FROM $DB_NEOS$t_tmp_dept_multi x2
+		                            WHERE x2.sync_seq  = #syncSeq#
+		                              AND x2.dept_seq  = tc.dept_seq
+		                              AND x2.lang_code = #langCode#
+		                         ) AS dept_name
+		                       , tc.dept_seq
+		                       , tc.biz_seq
+		                       , tc.erp_comp_seq
+		                       , tc.comp_seq
+		                    FROM $DB_NEOS$t_tmp_emp ta
+		                    LEFT OUTER JOIN $DB_NEOS$t_tmp_emp_multi tb ON ta.emp_seq  = tb.emp_seq
+		                                                               AND tb.sync_seq = #syncSeq#
+		                                                               and lang_code = 'kr'
+		                    LEFT OUTER JOIN $DB_NEOS$t_tmp_emp_dept tc  ON ta.emp_seq  = tc.emp_seq
+		                                                               AND tc.sync_seq = #syncSeq#
+		                    <isEqual property="resultCode" compareValue="20">
+		                        left outer join $DB_NEOS$t_co_emp_comp ce on ce.erp_emp_seq = ta.erp_emp_num
+		                    </isEqual>
+		                   WHERE ta.sync_seq = '$syncSeq$'
+		                   <isNotEmpty property="resultCode">
+		                      AND ta.result_code = '$resultCode$'
+		                   </isNotEmpty>
+		                   <isEqual property="resultCode" compareValue="20">
+								and (select count(emp_seq) from $DB_NEOS$t_co_emp_comp where erp_emp_seq = ta.erp_emp_num) = 1
+							</isEqual>
+		                   <isNotEmpty property="deptName">
+		                      AND EXISTS ( SELECT x3.dept_seq
+		                                     FROM $DB_NEOS$t_tmp_dept_multi x3
+		                                    WHERE x3.dept_seq = tc.dept_seq
+		                                      AND x3.dept_name LIKE '%$deptName$%'
+		                                      AND x3.lang_code = 'kr' )
+		                   </isNotEmpty>
+		                   <isNotEmpty property="empName">
+		                      AND tb.emp_name LIKE '%$empName$%'
+		                   </isNotEmpty>
+		                   <isNotEmpty property="deptEmpName">
+		                   	  AND (tb.emp_name LIKE '%$deptEmpName$%' or 
+		                   	  			EXISTS ( SELECT x3.dept_seq
+		                                     FROM $DB_NEOS$t_tmp_dept_multi x3
+		                                    WHERE x3.dept_seq = tc.dept_seq
+		                                      AND x3.dept_name LIKE '%$deptEmpName$%'
+		                                      AND x3.lang_code = 'kr' )
+		                           )
+						   </isNotEmpty>
+		                   <isNotEmpty property="erpErrCode">
+								<isEqual property="erpErrCode" compareValue="0">
+								and ((ta.result_code = '0' and tc.result_Code not in('6','10','30','40','50')) or (ta.result_code = '20' and (select count(emp_seq) from $DB_NEOS$t_co_emp_comp where erp_emp_seq = ta.erp_emp_num) = 1))
+								</isEqual>
+								<isEqual property="erpErrCode" compareValue="1">
+								and ta.result_code = '0' and tc.result_Code not in('6','10','30','40','50')
+								</isEqual>
+								<isEqual property="erpErrCode" compareValue="2">
+								and ta.result_code = '20' and (select count(emp_seq) from $DB_NEOS$t_co_emp_comp where erp_emp_seq = ta.erp_emp_num) = 1
+								</isEqual>
+								<isEqual property="erpErrCode" compareValue="3">
+								and ta.result_Code = '7'
+								</isEqual>
+								<isEqual property="erpErrCode" compareValue="4">
+								and ((ta.result_code != '0' and tc.result_Code in('6','10','30','40','50')) or (ta.result_code != '20' and (select count(emp_seq) from $DB_NEOS$t_co_emp_comp where erp_emp_seq = ta.erp_emp_num) != 1) or ta.result_Code != '7')
+								</isEqual>
+							</isNotEmpty>
+							<isNotEmpty property="noEmpList">
+								and ta.emp_seq in ($noEmpList$)
+							</isNotEmpty>
+							<isNotEmpty property="workStatus">
+								and e.work_status = #workStatus#
+							</isNotEmpty>
+		                ) t1
+		          WHERE ROWNUM <![CDATA[ <= ]]> $endNum$
+		       ) t2
+		 WHERE t2.RNUM <![CDATA[ >= ]]> $startNum$
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectTmpEmpAutoList" parameterClass="hashmap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectTmpEmpAutoList - oracle */
+		select 
+			e.sync_seq,
+			<isEqual property="resultCode" compareValue="20">
+				ce.emp_seq,
+			</isEqual>
+			<isNotEqual property="resultCode" compareValue="20">
+				e.emp_seq,
+			</isNotEqual>
+			em.emp_name,
+			e.email_addr,
+			e.erp_emp_seq,
+			e.duty_code,
+			$DB_NEOS$get_emp_duty_position_name(e.group_seq, #compSeq#, e.duty_code, 'DUTY', #langCode#) as duty_code_name,
+			e.position_code,
+			$DB_NEOS$get_emp_duty_position_name(e.group_seq, #compSeq#, e.position_code, 'POSITION', #langCode#) as position_code_name,
+			e.work_status,
+			$DB_NEOS$get_code_detail_info('0', 'COM517', e.work_status, #langCode#) as work_status_name,
+			e.status_code,
+			$DB_NEOS$get_code_detail_info('0', 'COM504', e.status_code, #langCode#) as status_code_name,
+			e.job_code,
+			$DB_NEOS$get_code_detail_info('0', 'COM503', e.status_code, #langCode#) as job_code_name,
+			replace(e.result_code,' ','') as result_code,
+			replace(ed.result_code,' ','') AS ed_result_code,
+			e.license_check_yn,
+			$DB_NEOS$get_code_detail_info('0', 'COM530', e.license_check_yn, #langCode#) as license_check_yn_name,
+			(select dept_name from $DB_NEOS$t_tmp_dept_multi where sync_seq = #syncSeq# and dept_seq = ed.dept_seq and lang_code = #langCode#) as dept_name,
+			ed.dept_seq,
+			ed.biz_seq,
+			ed.erp_comp_seq
+		from $DB_NEOS$t_tmp_emp e 
+			left outer join $DB_NEOS$t_tmp_emp_multi em on em.sync_seq = #syncSeq# and e.emp_seq = em.emp_seq
+			left outer join $DB_NEOS$t_tmp_emp_dept ed on ed.sync_seq = #syncSeq# and e.emp_seq = ed.emp_seq
+			<isEqual property="resultCode" compareValue="20">
+				left outer join $DB_NEOS$t_co_emp ce on ce.erp_emp_num = e.erp_emp_num
+			</isEqual>
+		where e.sync_seq = '$syncSeq$'
+		<isNotEmpty property="resultCode">
+			and e.result_code = '$resultCode$'
+		</isNotEmpty>
+		<isEqual property="resultCode" compareValue="20">
+			and (select count(emp_seq) from $DB_NEOS$t_co_emp where erp_emp_num = e.erp_emp_num) = 1
+		</isEqual>
+		<isNotEmpty property="deptName">
+			and exists (select dept_seq from $DB_NEOS$t_tmp_dept_multi where dept_seq = ed.dept_seq  and dept_name like '%$deptName$%' and lang_Code = 'kr')
+		</isNotEmpty>
+		<isNotEmpty property="empName">
+			and em.emp_name like '%$empName$%'
+		</isNotEmpty>
+	</select>
+	
+	
+	<select id="ErpOrgchartDAO.selectNoMappingEmpCnt" parameterClass="hashmap" resultClass="Integer">
+		/* ErpOrgchartDAO.selectNoMappingEmpCnt - mariaDB */
+		select 
+			count(a.emp_seq) cnt
+		From $DB_NEOS$t_tmp_emp a
+		inner join $DB_NEOS$t_tmp_emp_dept b on a.sync_seq = b.sync_seq and a.emp_seq = b.emp_seq
+		where a.sync_seq = #syncSeq# and a.result_code = '0' and b.result_code not in('6','10','30','40','50')
+		<isNotEmpty property="noEmpList">
+			and a.emp_seq in ($noEmpList$)
+		</isNotEmpty>
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectEmpResignCnt" parameterClass="hashmap" resultClass="Integer">
+		/* ErpOrgchartDAO.selectEmpResignCnt - mariaDB */
+		select 
+			count(a.emp_seq)
+		from
+			$DB_NEOS$t_tmp_emp a
+		inner join $DB_NEOS$t_co_emp b on a.emp_seq = b.emp_seq
+		where a.sync_seq = #syncSeq# and a.result_code = '2' and b.work_status != '001'
+	</select>
+	
+	
+	<select id="ErpOrgchartDAO.selectEmpModifyCnt" parameterClass="hashmap" resultClass="Integer">
+		/* ErpOrgchartDAO.selectEmpModifyCnt - mariaDB */		
+		select 
+			count(emp_seq) 
+		from 
+			$DB_NEOS$t_tmp_emp a 
+		where result_code = '20'
+		and (select count(emp_seq) from $DB_NEOS$t_Co_emp where erp_emp_num = a.erp_emp_num) = 1
+		and a.sync_seq = #syncSeq#
+		<isNotEmpty property="noEmpList">
+			and a.emp_seq in ($noEmpList$)
+		</isNotEmpty>
+	</select>
+	
+	
+	
+	<insert id="ErpOrgchartDAO.insertTmpEmpDept" parameterClass="hashmap">
+		/* ErpOrgchartDAO.insertTmpEmpDept - oracle */
+		insert into $DB_NEOS$t_tmp_emp_dept 
+		(
+			sync_seq, 
+			dept_seq, 
+			emp_seq, 
+			group_seq, 
+			comp_seq, 
+			biz_seq, 
+			main_dept_yn, 
+			duty_code, 
+			position_code, 
+			tel_num, 
+			fax_num, 
+			zip_code, 
+			orgchart_display_yn, 
+			messenger_display_yn, 
+			order_num, 
+			use_yn, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date, 
+			erp_emp_seq, 
+			erp_comp_seq, 
+			erp_biz_seq, 
+			erp_dept_seq, 
+			result_code
+		)
+		values
+		(
+			#syncSeq#, 
+			#deptSeq#, 
+			#empSeq#, 
+			#groupSeq#, 
+			#compSeq#, 
+			#bizSeq#, 
+			#mainDeptYn#, 
+			#dutyCode#, 
+			#positionCode#, 
+			#telNum#, 
+			#faxNum#, 
+			#zipCode#, 
+			#orgchartDisplayYn#, 
+			#messengerDisplayYn#, 
+			#orderNum#, 
+			#useYn#, 
+			#editorSeq#, 
+			SYSDATE, 
+			#editorSeq#, 
+			SYSDATE, 
+			#erpEmpSeq#, 
+			#erpCompSeq#, 
+			#erpBizSeq#, 
+			#erpDeptSeq#, 
+			case 
+				when #workStatus# = '001' then '2' 
+				when ((#dutyCode# = #compSeq# || '_null' and #positionCode# = #compSeq# || '_null') and (#emailAddr# = null or #emailAddr# = '')) then '70'
+				when ((#dutyCode# = #compSeq# || '_' and #positionCode# = #compSeq# || '_') and (#emailAddr# = null or #emailAddr# = '')) then '70'
+				when ((#dutyCode# = #compSeq# || '_null') and (#emailAddr# = null or #emailAddr# = '')) then '80'
+				when ((#dutyCode# = #compSeq# || '_') and (#emailAddr# = null or #emailAddr# = '')) then '80'
+				when ((#positionCode# = #compSeq# || '_null') and (#emailAddr# = null or #emailAddr# = '')) then '90'
+				when ((#positionCode# = #compSeq# || '_') and (#emailAddr# = null or #emailAddr# = '')) then '90'
+				when (#dutyCode# = #compSeq# || '_null' and #positionCode# = #compSeq# || '_null') then '50'
+				when (#dutyCode# = #compSeq# || '_' and #positionCode# = #compSeq# || '_') then '50'
+				when (#dutyCode# = #compSeq# || '_null') then '30'
+				when (#dutyCode# = #compSeq# || '_') then '30'
+				when (#positionCode# = #compSeq# || '_null') then '40'
+				when (#positionCode# = #compSeq# || '_') then '40'
+				when #loginIdType# = '2' and (#loginId# is null or #loginId# = '') then '4'
+				when (select 1 from $DB_NEOS$t_co_emp_comp where group_seq = #groupSeq# and erp_emp_seq = #erpEmpSeq# AND ROWNUM = 1) = 1 then '20'
+				when (select 1 from $DB_NEOS$t_co_emp where group_seq = #groupSeq# and login_id = #loginId# AND ROWNUM = 1) = 1 then '5'
+				when (select 1 from $DB_NEOS$t_tmp_dept where sync_seq = #syncSeq# and dept_seq = #deptSeq# AND result_code in ('0','20','30') AND ROWNUM = 1) is null and (select 1 from $DB_NEOS$t_co_dept where dept_seq = #deptSeq# AND ROWNUM = 1) is null then '6'
+				when (select 1 from $DB_NEOS$t_co_emp_comp where erp_emp_seq = #erpEmpSeq# AND ROWNUM = 1) = 1 then '1' 
+				else '0' 
+			end
+		)
+	
+	</insert>
+	
+	<insert id="ErpOrgchartDAO.insertTmpEmpDeptMulti" parameterClass="hashmap">
+		/* ErpOrgchartDAO.insertTmpEmpDeptMulti - oracle */
+		
+		insert into $DB_NEOS$t_tmp_emp_dept_multi 
+			(
+				sync_seq, 
+				dept_seq, 
+				emp_seq, 
+				lang_code, 
+				group_seq, 
+				comp_seq, 
+				biz_seq, 
+				addr, 
+				detail_addr, 
+				use_yn, 
+				create_seq, 
+				create_date, 
+				modify_seq, 
+				modify_date,
+				result_code
+			)
+			values
+			(
+				#syncSeq#, 
+				#deptSeq#, 
+				#empSeq#, 
+				#langCode#, 
+				#groupSeq#, 
+				#compSeq#, 
+				#bizSeq#, 
+				#addr#, 
+				#detailAddr#, 
+				#useYn#, 
+				#editorSeq#, 
+				SYSDATE, 
+				#editorSeq#, 
+				SYSDATE,
+				case 
+					when #workStatus# = '001' then '2' 
+					when #loginIdType# = '2' and (#loginId# is null or #loginId# = '') then '4'
+					when (select 1 from $DB_NEOS$t_co_emp_comp where group_seq = #groupSeq# and erp_emp_seq = #erpEmpSeq# AND ROWNUM = 1) = 1 then '20'
+					when (select 1 from $DB_NEOS$t_co_emp where group_seq = #groupSeq# and login_id = #loginId# AND ROWNUM = 1) = 1 then '5'
+					when (select 1 from $DB_NEOS$t_tmp_dept where sync_seq = #syncSeq# and dept_seq = #deptSeq# AND ROWNUM = 1) is null then '6'
+					when (select 1 from $DB_NEOS$t_co_emp_comp where erp_emp_seq = #erpEmpSeq# AND ROWNUM = 1) = 1 then '1' 
+					else '0'  
+				end
+			)
+	</insert>
+	
+	<update id="ErpOrgchartDAO.insertBizList"  parameterClass="hashmap">
+		/* ErpOrgchartDAO.insertBizList - oracle */
+		insert into $DB_NEOS$t_co_biz (biz_seq,biz_cd,group_seq,comp_seq,comp_regist_num,comp_num,tel_num,fax_num,homepg_addr,zip_code,display_yn,native_lang_code,order_num,use_yn,create_seq,create_date,modify_seq,modify_date)
+		select 
+			b.biz_seq         ,
+			b.biz_cd		  ,
+			b.group_seq       ,
+			b.comp_seq        ,
+			b.comp_regist_num ,
+			b.comp_num        ,
+			b.tel_num         ,
+			b.fax_num         ,
+			b.homepg_addr     ,
+			b.zip_code        ,
+			b.display_yn      ,
+			b.native_lang_code,
+			b.order_num       ,
+			b.use_yn          ,
+			b.create_seq      ,
+			b.create_date     ,
+			b.modify_seq      ,
+			b.modify_date
+		from $DB_NEOS$t_tmp_biz b
+		where b.sync_seq = #syncSeq#
+		and b.result_code = '0'
+	</update>
+	
+	<update id="ErpOrgchartDAO.updateBizList" parameterClass="hashmap">        	
+		MERGE INTO $DB_NEOS$t_co_biz A
+		USING $DB_NEOS$t_tmp_biz B
+		   ON (A.biz_seq = B.biz_seq
+		  AND  sync_seq = #syncSeq#
+		  AND b.result_Code = '1')
+         WHEN MATCHED THEN
+              UPDATE SET 
+              	a.tel_num = b.tel_num,
+				a.fax_num = b.fax_num,
+				a.zip_code = b.zip_code,  
+				a.order_num = b.order_num    
+	</update>
+	
+	
+	
+	<update id="ErpOrgchartDAO.insertBizMultiList"  parameterClass="hashmap">
+		/* ErpOrgchartDAO.insertBizMultiList - oracle */
+		insert into $DB_NEOS$t_co_biz_multi (biz_seq,lang_code,group_seq,comp_seq,biz_name,owner_name,biz_condition,item,addr,detail_addr,use_yn,create_seq,create_date,modify_seq,modify_date)
+		select 
+			bm.biz_seq      ,
+			bm.lang_code    ,
+			bm.group_seq    ,
+			bm.comp_seq     ,
+			bm.biz_name     ,
+			bm.owner_name   ,
+			bm.biz_condition,
+			bm.item         ,
+			bm.addr         ,
+			bm.detail_addr  ,
+			bm.use_yn       ,
+			bm.create_seq   ,
+			bm.create_date  ,
+			bm.modify_seq   ,
+			bm.modify_date
+		from $DB_NEOS$t_tmp_biz_multi bm
+		inner join $DB_NEOS$t_tmp_biz b on bm.biz_Seq = b.biz_Seq and bm.sync_seq = b.sync_seq
+		where bm.sync_seq = #syncSeq#
+		and bm.result_code = '0'
+		and b.result_code in('0','1')
+	</update>
+	
+	
+	<update id="ErpOrgchartDAO.updateBizMultiList" parameterClass="hashmap">			        	
+        MERGE INTO $DB_NEOS$t_co_biz_multi A
+		USING $DB_NEOS$t_tmp_biz_multi B
+		   ON (A.biz_seq = B.biz_seq
+		  AND  sync_seq = #syncSeq#
+		  AND  b.result_Code = '1'
+		  AND  a.lang_code = b.lang_Code)
+         WHEN MATCHED THEN
+              UPDATE SET 
+              	a.biz_name = b.biz_name,
+				a.addr = b.addr,
+				a.detail_addr = b.detail_addr
+	</update>
+	
+	
+	
+	<delete id="ErpOrgchartDAO.deleteEmpComp" 		parameterClass="hashmap">
+		/* ErpOrgchartDAO.deleteEmpComp - oracle */
+		delete from  $DB_NEOS$t_co_emp_comp where comp_seq = #compSeq#
+	</delete>
+	
+	<delete id="ErpOrgchartDAO.deleteErpDept" 		parameterClass="hashmap">
+		/* ErpOrgchartDAO.deleteErpDept - oracle */
+		delete from  $DB_NEOS$t_co_erp_dept where comp_seq = #compSeq#
+	</delete>
+	
+	<delete id="ErpOrgchartDAO.deleteErpBiz" 		parameterClass="hashmap">
+		/* ErpOrgchartDAO.deleteErpBiz - oracle */
+		delete from  $DB_NEOS$t_co_erp_biz where comp_seq = #compSeq#
+	</delete>
+	
+	<delete id="ErpOrgchartDAO.deleteEmpDept" 		parameterClass="hashmap">
+		/* ErpOrgchartDAO.deleteErpBiz - oracle */
+		delete from  $DB_NEOS$t_co_emp_dept where comp_seq = #compSeq#
+	</delete>
+	
+	<delete id="ErpOrgchartDAO.deleteEmpDeptMulti" 	parameterClass="hashmap">
+		/* ErpOrgchartDAO.deleteErpBiz - oracle */
+		delete from  $DB_NEOS$t_co_emp_dept_multi where comp_seq = #compSeq#
+	</delete>
+	
+	<delete id="ErpOrgchartDAO.deleteDept" 			parameterClass="hashmap">
+		/* ErpOrgchartDAO.deleteDept - oracle */
+		delete from  $DB_NEOS$t_co_dept where comp_seq = #compSeq#
+	</delete>
+	
+	<delete id="ErpOrgchartDAO.deleteDeptMulti" 	parameterClass="hashmap">
+		/* ErpOrgchartDAO.deleteDeptMulti - oracle */
+		delete from  $DB_NEOS$t_co_dept_multi where comp_seq = #compSeq#
+	</delete>
+	
+	<delete id="ErpOrgchartDAO.deleteBiz" 			parameterClass="hashmap">
+		/* ErpOrgchartDAO.deleteBiz - oracle */
+		delete from  $DB_NEOS$t_co_biz where comp_seq = #compSeq#
+	</delete>
+	
+	<delete id="ErpOrgchartDAO.deleteBizMulti" 		parameterClass="hashmap">
+		/* ErpOrgchartDAO.deleteBizMulti - oracle */
+		delete from  $DB_NEOS$t_co_biz_multi where comp_seq = #compSeq#
+	</delete>
+	
+	<delete id="ErpOrgchartDAO.deleteEmp" 			parameterClass="hashmap">
+		/* ErpOrgchartDAO.deleteEmp - oracle */
+		DELETE 
+		FROM  $DB_NEOS$t_co_emp  
+		WHERE EXISTS ( SELECT emp_seq FROM $DB_NEOS$t_co_emp_dept d WHERE $DB_NEOS$t_co_emp.emp_seq = d.emp_seq AND d.comp_seq = #compSeq# AND $DB_NEOS$t_co_emp.main_comp_seq = #compSeq#)
+	</delete>
+	
+	<delete id="ErpOrgchartDAO.deleteEmpMulti" 		parameterClass="hashmap">
+		/* ErpOrgchartDAO.deleteEmpMulti - oracle */
+		DELETE 
+		FROM  $DB_NEOS$t_co_emp_multi 
+		WHERE EXISTS (select emp_seq FROM   $DB_NEOS$t_co_emp_dept b WHERE $DB_NEOS$t_co_emp_multi.emp_seq = b.emp_seq AND b.comp_seq = #compSeq#)
+	</delete>
+	
+	<select id="ErpOrgchartDAO.selectTmpDeptTotalCount" parameterClass="hashmap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectTmpDeptTotalCount - oracle */
+		SELECT '0' as result_code, COUNT(*) AS result_code_cnt
+		from $DB_NEOS$t_tmp_dept A inner join $DB_NEOS$t_tmp_dept_multi B
+		  on A.dept_seq = B.dept_Seq
+		where A.sync_seq = #syncSeq#
+		and B.sync_seq = #syncSeq#
+		and A.result_code = B.result_code
+		and (A.result_code = '0' or B.result_code = '0')
+		and b.lang_code = 'kr'
+    
+		union all
+		    
+		SELECT '20' as result_code, COUNT(*) AS result_code_cnt
+		from $DB_NEOS$t_tmp_dept A inner join $DB_NEOS$t_tmp_dept_multi B
+		  on A.dept_seq = B.dept_Seq
+		where A.sync_seq = #syncSeq#
+		and B.sync_seq = #syncSeq#
+		and A.result_code != B.result_code
+		and (A.result_code = '20' or B.result_code = '20')
+		and b.lang_code = 'kr'
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectTmpEmpTotalCount" parameterClass="hashmap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectTmpEmpTotalCount - oracle */
+		SELECT replace(result_code,' ','') as result_code, COUNT(*) AS result_code_cnt
+		from $DB_NEOS$t_tmp_emp
+		where sync_seq = #syncSeq#
+		and result_code in ('0','20', '2', '7')
+		<isNotEmpty property="noEmpList">
+			and emp_seq in ($noEmpList$)
+		</isNotEmpty>
+		group by result_code
+	</select>
+	
+	<update id="ErpOrgchartDAO.insertDeptList"  parameterClass="hashmap">
+		/* ErpOrgchartDAO.insertDeptList - oracle */
+		INSERT INTO $DB_NEOS$t_co_dept
+		( dept_seq
+		, dept_cd
+		, group_seq
+		, comp_seq
+		, biz_seq
+		, parent_dept_seq
+		, tel_num
+		, fax_num
+		, homepg_addr
+		, zip_code
+		, susin_yn
+		, vir_dept_yn
+		, team_yn
+		, native_lang_code
+		, path
+		, ptype
+		, dept_level
+		, order_num
+		, use_yn
+		, create_seq
+		, create_date
+		, modify_seq
+		, modify_date
+		, dept_manager
+		)
+		SELECT tb.dept_seq
+		     , tb.dept_cd
+		     , tb.group_seq
+		     , tb.comp_seq
+		     , tb.biz_seq
+		     , tb.parent_dept_seq
+		     , tb.tel_num
+		     , tb.fax_num
+		     , tb.homepg_addr
+		     , tb.zip_code
+		     , tb.susin_yn
+		     , tb.vir_dept_yn
+		     , tb.team_yn
+		     , tb.native_lang_code
+		     , tb.path
+		     , tb.ptype
+		     , tb.dept_level
+		     , tb.order_num
+		     , tb.use_yn
+		     , tb.create_seq
+		     , tb.create_date
+		     , tb.modify_seq
+		     , tb.modify_date
+		     , tb.dept_manager
+		  FROM ( SELECT ta.dept_seq
+		              , ta.dept_cd
+		              , ta.group_seq
+		              , ta.comp_seq
+		              , ta.biz_seq
+		              , CASE
+		                  WHEN dept_level = 1  THEN '0'
+		                  ELSE parent_dept_seq
+		                END AS parent_dept_seq
+		              , ta.tel_num
+		              , ta.fax_num
+		              , ta.homepg_addr
+		              , ta.zip_code
+		              , ta.susin_yn
+		              , ta.vir_dept_yn
+		              , ta.team_yn
+		              , ta.native_lang_code
+		              , ta.path
+		              , ta.ptype
+		              , ta.dept_level
+		              , ta.order_num
+		              , ta.use_yn
+		              , ta.create_seq
+		              , ta.create_date
+		              , ta.modify_seq
+		              , ta.modify_date
+		              , ta.dept_manager
+		              , ROWNUM AS RNUM
+		           FROM $DB_NEOS$t_tmp_dept ta
+		          WHERE ta.sync_seq    = #syncSeq#
+		            AND ta.result_code = '0'
+		       ) tb
+		 WHERE 1=1
+		   <isNotEqual property="autoYn" compareValue="Y">
+		       AND tb.RNUM BETWEEN $startNum$+1 AND $startNum$+$endNum$
+		   </isNotEqual>
+	</update>
+	
+	<update id="ErpOrgchartDAO.insertDeptMultiList"  parameterClass="hashmap">
+		/* ErpOrgchartDAO.insertDeptMultiList - oracle */
+		INSERT INTO $DB_NEOS$t_co_dept_multi
+		( dept_seq
+		, lang_code
+		, group_seq
+		, comp_seq
+		, biz_seq
+		, dept_name
+		, dept_display_name
+		, sender_name
+		, addr
+		, detail_addr
+		, path_name
+		, use_yn
+		, create_seq
+		, create_date
+		, modify_seq
+		, modify_date
+		)
+		SELECT tb.dept_seq
+		     , tb.lang_code
+		     , tb.group_seq
+		     , tb.comp_seq
+		     , tb.biz_seq
+		     , tb.dept_name
+		     , tb.dept_display_name
+		     , tb.sender_name
+		     , tb.addr
+		     , tb.detail_addr
+		     , tb.path_name
+		     , tb.use_yn
+		     , tb.create_seq
+		     , tb.create_date
+		     , tb.modify_seq
+		     , tb.modify_date
+		  FROM ( SELECT ta.dept_seq
+		              , ta.lang_code
+		              , ta.group_seq
+		              , ta.comp_seq
+		              , ta.biz_seq
+		              , ta.dept_name
+		              , ta.dept_display_name
+		              , ta.sender_name
+		              , ta.addr
+		              , ta.detail_addr
+		              , ta.path_name
+		              , ta.use_yn
+		              , ta.create_seq
+		              , ta.create_date
+		              , ta.modify_seq
+		              , ta.modify_date
+		              , ROWNUM AS RNUM
+		           FROM $DB_NEOS$t_tmp_dept_multi ta
+		          WHERE ta.sync_seq    = #syncSeq#
+		            AND ta.result_code = '0'
+		       ) tb
+		 WHERE 1=1
+		   <isNotEqual property="autoYn" compareValue="Y">
+		       AND tb.RNUM BETWEEN $startNum$+1 AND $startNum$+$endNum$
+		   </isNotEqual>
+	</update>
+	
+	<select id="ErpOrgchartDAO.selectTmpEmp" parameterClass="egovMap" resultClass="empVo">
+		/* ErpOrgchartDAO.selectTmpEmp - oracle */
+		select 
+			<isEqual property="firstYn" compareValue="N">
+				<isEqual property="resultCode" compareValue="20">
+					ce.emp_seq                 as "empSeq",
+				</isEqual>
+				<isNotEqual property="resultCode" compareValue="20">
+					e.emp_seq                 as "empSeq",
+				</isNotEqual>
+			</isEqual>
+			<isEqual property="firstYn" compareValue="Y">
+				e.emp_seq                 as "empSeq",
+			</isEqual>
+			e.group_seq               as "groupSeq",
+			e.login_id                as "loginId",
+			e.emp_num                 as "empNum",
+			e.erp_emp_num             as "erpEmpNum",
+			e.email_addr              as "emailAddr",
+			e.login_passwd            as "loginPasswd",
+			e.appr_passwd             as "apprPasswd",
+			e.passwd_date             as "passwdDate",
+			e.passwd_input_fail_count as "passwdInputFailCount",
+			e.pay_passwd              as "payPasswd",
+			e.passwd_status_code      as "passwdStatusCode",
+			e.mobile_use_yn           as "mobileUseYn",
+			e.messenger_use_yn        as "messengerUseYn",
+			e.check_work_yn           as "checkWorkYn",
+			e.shift                   as "shift",
+			e.job_code                as "jobCode",
+			e.status_code             as "statusCode",
+			e.main_comp_seq           as "mainCompSeq",
+			e.duty_code               as "dutyCode",
+			e.position_code           as "positionCode",
+			e.native_lang_code        as "nativeLangCode",
+			e.license_check_yn        as "licenseCheckYn",
+			e.join_day                as "joinDay",
+			e.resign_day              as "resignDay",
+			e.gender_code             as "genderCode",
+			e.bday                    as "bday",
+			e.lunar_yn                as "lunarYn",
+			e.work_status             as "workStatus",
+			e.home_tel_num            as "homeTelNum",
+			e.mobile_tel_num          as "mobileTelNum",
+			e.wedding_yn              as "weddingYn",
+			e.wedding_day             as "weddingDay",
+			e.private_yn              as "privateYn",
+			e.zip_code                as "zipCode",
+			e.pic_file_id             as "picFileId",
+			e.sign_file_id            as "signFileId",
+			e.use_yn                  as "useYn",
+			e.ls_role_id              as "lsRoleId",
+			e.create_seq              as "createSeq",
+			e.create_date             as "createDate",
+			e.modify_seq              as "modifySeq",
+			e.modify_date             as "modifyDate"
+		from $DB_NEOS$t_tmp_emp e
+		<isEqual property="resultCode" compareValue="20">
+<!-- 			LEFT OUTER JOIN $DB_NEOS$t_co_emp ce ON e.login_id = ce.login_id and e.erp_emp_num = ce.erp_emp_num -->
+			LEFT OUTER JOIN $DB_NEOS$t_co_emp ce ON e.erp_emp_num = ce.erp_emp_num and e.emp_seq = ce.emp_seq
+		</isEqual>
+		where
+			sync_seq = #syncSeq# 
+			<isEqual property="firstYn" compareValue="N">
+				<isEqual property="resultCode" compareValue="20">
+					and ce.emp_seq = #empSeq# 
+				</isEqual>
+				<isNotEqual property="resultCode" compareValue="20">
+					and e.emp_seq = #empSeq#
+				</isNotEqual>
+			</isEqual>
+			<isEqual property="firstYn" compareValue="Y">
+				and e.emp_seq = #empSeq#
+			</isEqual>
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectTmpEmpMulti" parameterClass="egovMap" resultClass="empMultiVo">
+		/* ErpOrgchartDAO.selectTmpEmpMulti - oracle */
+		select 
+			<isEqual property="firstYn" compareValue="N">
+				<isEqual property="resultCode" compareValue="20">
+					ce.emp_seq     as "empSeq",
+				</isEqual>
+				<isNotEqual property="resultCode" compareValue="20">
+					em.emp_seq     as "empSeq",
+				</isNotEqual>
+			</isEqual>
+			<isEqual property="firstYn" compareValue="Y">
+				em.emp_seq     as "empSeq",
+			</isEqual>
+			em.lang_code   as "langCode",
+			em.group_seq   as "groupSeq",
+			em.emp_name    as "empName",
+			em.addr        as "addr",
+			em.detail_addr as "detailAddr",
+			em.main_work   as "mainWork",
+			em.use_yn      as "useYn",
+			em.create_seq  as "createSeq",
+			em.create_date as "createDate",
+			em.modify_seq  as "modifySeq",
+			em.modify_date as "modifyDate"
+		from $DB_NEOS$t_tmp_emp_multi em
+		<isEqual property="resultCode" compareValue="20">
+			left outer join $DB_NEOS$t_tmp_emp e on e.emp_seq = em.emp_seq and em.sync_seq = e.sync_seq
+<!-- 			left outer join $DB_NEOS$t_co_emp ce on e.login_id = ce.login_id and e.erp_emp_num = ce.erp_emp_num -->
+			left outer join $DB_NEOS$t_co_emp ce on e.erp_emp_num = ce.erp_emp_num and e.emp_seq = ce.emp_seq
+		</isEqual>
+		where
+			em.sync_seq = #syncSeq# 
+			<isEqual property="firstYn" compareValue="N">
+				<isEqual property="resultCode" compareValue="20">
+					and ce.emp_seq = #empSeq#
+				</isEqual>
+				<isNotEqual property="resultCode" compareValue="20">
+					and em.emp_seq = #empSeq#
+				</isNotEqual>
+			</isEqual>
+			<isEqual property="firstYn" compareValue="Y">
+				and em.emp_seq = #empSeq#
+			</isEqual>
+			<isNotEmpty property="langCode">
+				and em.lang_code = #langCode#
+			</isNotEmpty>
+			and rownum = 1
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectTmpEmpDept" parameterClass="egovMap" resultClass="empDeptVo">
+		/* ErpOrgchartDAO.selectTmpEmpDept - oracle */
+		select 
+			ted.dept_seq            as "deptSeq",
+			<isEqual property="firstYn" compareValue="N">
+				<isEqual property="resultCode" compareValue="20">
+					ce.emp_seq     as "empSeq",
+				</isEqual>
+				<isNotEqual property="resultCode" compareValue="20">
+					ted.emp_seq     as "empSeq",
+				</isNotEqual>
+			</isEqual>
+			<isEqual property="firstYn" compareValue="Y">
+				ted.emp_seq     as "empSeq",
+			</isEqual>
+			ted.group_seq           as "groupSeq",
+			ted.comp_seq            as "compSeq",
+			ted.biz_seq             as "bizSeq",
+			ted.main_dept_yn        as "mainDeptYn",
+			ted.duty_code           as "dutyCode",
+			ted.position_code       as "positionCode",
+			ted.tel_num             as "telNum",
+			ted.fax_num             as "faxNum",
+			ted.zip_code            as "zipCode",
+			ted.orgchart_display_yn as "orgchartDisplayYn",
+			ted.messenger_display_yn as "messengerDisplayYn",
+			ted.order_num           as "orderNum",
+			ted.use_yn              as "useYn",
+			ted.create_seq          as "createSeq",
+			ted.create_date         as "createDate",
+			ted.modify_seq          as "modifySeq",
+			ted.modify_date         as "modifyDate"
+		from $DB_NEOS$t_tmp_emp_dept ted
+		<isEqual property="resultCode" compareValue="20">
+			left outer join $DB_NEOS$t_tmp_emp te on te.emp_seq = ted.emp_seq and ted.sync_seq = te.sync_seq
+<!-- 			left outer join $DB_NEOS$t_co_emp ce on te.login_id = ce.login_id and te.erp_emp_num = ce.erp_emp_num -->
+			left outer join $DB_NEOS$t_co_emp ce on te.erp_emp_num = ce.erp_emp_num and te.emp_seq = ce.emp_seq
+		</isEqual>
+		where
+			ted.sync_seq = #syncSeq# 
+			<isEqual property="firstYn" compareValue="N">
+				<isEqual property="resultCode" compareValue="20">
+					and ce.emp_seq = #empSeq#
+					and ted.dept_seq = #deptSeq#
+				</isEqual>
+				<isNotEqual property="resultCode" compareValue="20">
+					and ted.emp_seq = #empSeq#
+				</isNotEqual>
+			</isEqual>
+			<isEqual property="firstYn" compareValue="Y">
+				and ted.emp_seq = #empSeq#
+			</isEqual>
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectTmpEmpDeptMulti" parameterClass="egovMap" resultClass="empDeptMultiVo">
+		/* ErpOrgchartDAO.selectTmpEmpDeptMulti - oracle */
+		select 
+			tedm.dept_seq    as "deptSeq",
+			<isEqual property="firstYn" compareValue="N">
+				<isEqual property="resultCode" compareValue="20">
+					ce.emp_seq     as "empSeq",
+				</isEqual>
+				<isNotEqual property="resultCode" compareValue="20">
+					tedm.emp_seq     as "empSeq",
+				</isNotEqual>
+			</isEqual>
+			<isEqual property="firstYn" compareValue="Y">
+				tedm.emp_seq     as "empSeq",
+			</isEqual>
+			tedm.lang_code   as "langCode",
+			tedm.group_seq   as "groupSeq",
+			tedm.comp_seq    as "compSeq",
+			tedm.biz_seq     as "bizSeq",
+			tedm.addr        as "addr",
+			tedm.detail_addr as "detailAddr",
+			tedm.use_yn      as "useYn",
+			tedm.create_seq  as "createSeq",
+			tedm.create_date as "createDate",
+			tedm.modify_seq  as "modifySeq",
+			tedm.modify_date as "modifyDate"
+		from $DB_NEOS$t_tmp_emp_dept_multi tedm
+		<isEqual property="resultCode" compareValue="20">
+			left outer join $DB_NEOS$t_tmp_emp te on te.emp_seq = tedm.emp_seq and tedm.sync_seq = te.sync_seq
+<!-- 			left outer join $DB_NEOS$t_co_emp ce on te.login_id = ce.login_id and te.erp_emp_num = ce.erp_emp_num -->
+			left outer join $DB_NEOS$t_co_emp ce on te.erp_emp_num = ce.erp_emp_num and te.emp_seq = ce.emp_seq
+		</isEqual>
+		where
+			tedm.sync_seq = #syncSeq# 
+			<isEqual property="firstYn" compareValue="N">
+				<isEqual property="resultCode" compareValue="20">
+					and ce.emp_seq = #empSeq#
+					and tedm.dept_seq = #deptSeq#
+				</isEqual>
+				<isNotEqual property="resultCode" compareValue="20">
+					and tedm.emp_seq = #empSeq#
+				</isNotEqual>
+			</isEqual>
+			<isEqual property="firstYn" compareValue="Y">
+				and tedm.emp_seq = #empSeq#
+			</isEqual>
+			
+	</select>
+	
+	<update id="ErpOrgchartDAO.insertErpBizList" parameterClass="hashmap">
+		/* ErpOrgchartDAO.insertErpBizList - oracle */
+		insert into $DB_NEOS$t_co_erp_biz (group_seq, comp_seq, biz_seq, erp_biz_seq, erp_comp_seq)
+		select group_seq, comp_seq, biz_seq, erp_biz_seq, erp_comp_seq
+		from $DB_NEOS$t_tmp_biz
+		where
+			sync_seq = #syncSeq# 
+			and result_code = '0'
+	</update> 
+	
+	<update id="ErpOrgchartDAO.insertErpDeptList" parameterClass="hashmap">
+	    /* ErpOrgchartDAO.insertErpDeptList - oracle */
+		INSERT INTO $DB_NEOS$t_co_erp_dept
+		( group_seq
+		, comp_seq
+		, biz_seq
+		, dept_seq
+		, erp_dept_seq
+		, erp_biz_seq
+		, erp_comp_seq
+		)
+		SELECT tb.group_seq
+		     , tb.comp_seq
+		     , tb.biz_seq
+		     , tb.dept_seq
+		     , tb.erp_dept_seq
+		     , tb.erp_biz_seq
+		     , tb.erp_comp_seq
+		  FROM ( SELECT ta.group_seq
+		              , ta.comp_seq
+		              , ta.biz_seq
+		              , ta.dept_seq
+		              , ta.erp_dept_seq
+		              , ta.erp_biz_seq
+		              , ta.erp_comp_seq
+		              , ROWNUM AS RNUM
+		           FROM $DB_NEOS$t_tmp_dept ta
+		          WHERE ta.sync_seq    = #syncSeq#
+		            AND ta.result_code = '0'
+		       ) tb
+		 WHERE 1=1
+		   <isNotEqual property="autoYn" compareValue="Y">
+		       AND tb.RNUM BETWEEN $startNum$+1 AND $startNum$+$endNum$
+		   </isNotEqual>
+	</update>
+	
+	<select id="ErpOrgchartDAO.selectSyncTmpEmpList_TOTALCOUNT" parameterClass="hashmap" resultClass="int">
+		/* ErpOrgchartDAO.selectSyncTmpEmpList_TOTALCOUNT - oracle */
+		SELECT COUNT(*)
+		  FROM ( SELECT ROWNUM AS RNUM
+		           FROM $DB_NEOS$t_tmp_emp ta
+		           JOIN $DB_NEOS$t_tmp_emp_dept tb       ON ta.emp_seq = tb.emp_seq
+		           JOIN $DB_NEOS$t_tmp_emp_multi tc      ON ta.emp_seq = tc.emp_seq
+		                                                AND tc.lang_code = 'kr'
+		           JOIN $DB_NEOS$t_tmp_emp_dept_multi td ON ta.emp_seq = td.emp_seq
+		                                                AND td.lang_code = 'kr'
+		          WHERE ta.sync_seq    = #syncSeq#
+		            AND ta.result_code = '0'
+		       ) t1
+		 WHERE 1=1
+		   AND t1.RNUM BETWEEN $startNum$ AND $startNum$+$endNum$
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectSyncTmpEmpList" parameterClass="hashmap" resultClass="hashmap">
+		/* ErpOrgchartDAO.selectSyncTmpEmpList - oracle */
+		SELECT tc."sync_seq"       AS "sync_seq"
+		     , tc."create_seq"     AS "create_seq"
+		     , tc."order_num"      AS "order_num"
+		     , tc."emp_name_kr"    AS "emp_name_kr"
+		     , tc."emp_name_en"    AS "emp_name_en"
+		     , tc."emp_name_jp"    AS "emp_name_jp"
+		     , tc."emp_name_cn"    AS "emp_name_cn"
+		     , tc."loginPassword"  AS "loginPassword"
+		     , tc."checkWorkYn"    AS "checkWorkYn"
+		     , tc."bday"           AS "bday"
+		     , tc."dutyCode"       AS "dutyCode"
+		     , tc."emailAddr"      AS "emailAddr"
+		     , tc."empNum"         AS "empNum"
+		     , tc."erpEmpNum"      AS "erpEmpNum"
+		     , tc."genderCode"     AS "genderCode"
+		     , tc."homeTelNum"     AS "homeTelNum"
+		     , tc."jobCode"        AS "jobCode"
+		     , tc."joinDay"        AS "joinDay"
+		     , tc."licenseCheckYn" AS "licenseCheckYn"
+		     , tc."loginId"        AS "loginId"
+		     , tc."lunarYn"        AS "lunarYn"
+		     , tc."mainCompSeq"    AS "mainCompSeq"
+		     , tc."messengerUseYn" AS "messengerUseYn"
+		     , tc."mobileTelNum",  AS "mobileTelNum"
+		     , tc."mobileUseYn"    AS "mobileUseYn"
+		     , tc."nativeLangCode" AS "nativeLangCode"
+		     , tc."positionCode"   AS "positionCode"
+		     , tc."shift"          AS "shift"
+		     , tc."statusCode"     AS "statusCode"
+		     , tc."weddingDay"     AS "weddingDay"
+		     , tc."weddingYn"      AS "weddingYn"
+		     , tc."workStatus"     AS "workStatus"
+		     , tc."zipCodeHome"    AS "zipCodeHome"
+		     , tc."addrHome"       AS "addrHome"
+		     , tc."detailAddrHome" AS "detailAddrHome"
+		     , tc."bizSeq"         AS "bizSeq"
+		     , tc."compSeq"        AS "compSeq"
+		     , tc."deptSeq"        AS "deptSeq"
+		     , tc."faxNum"         AS "faxNum"
+		     , tc."telNum"         AS "telNum"
+		     , tc."zipCode"        AS "zipCode"
+		     , tc."addr"           AS "addr"
+		     , tc."detailAddr"     AS "detailAddr"
+		  FROM ( SELECT tb."sync_seq"       AS "sync_seq"
+		              , tb."create_seq"     AS "create_seq"
+		              , tb."order_num"      AS "order_num"
+		              , tb."emp_name_kr"    AS "emp_name_kr"
+		              , tb."emp_name_en"    AS "emp_name_en"
+		              , tb."emp_name_jp"    AS "emp_name_jp"
+		              , tb."emp_name_cn"    AS "emp_name_cn"
+		              , tb."loginPassword"  AS "loginPassword"
+		              , tb."checkWorkYn"    AS "checkWorkYn"
+		              , tb."bday"           AS "bday"
+		              , tb."dutyCode"       AS "dutyCode"
+		              , tb."emailAddr"      AS "emailAddr"
+		              , tb."empNum"         AS "empNum"
+		              , tb."erpEmpNum"      AS "erpEmpNum"
+		              , tb."genderCode"     AS "genderCode"
+		              , tb."homeTelNum"     AS "homeTelNum"
+		              , tb."jobCode"        AS "jobCode"
+		              , tb."joinDay"        AS "joinDay"
+		              , tb."licenseCheckYn" AS "licenseCheckYn"
+		              , tb."loginId"        AS "loginId"
+		              , tb."lunarYn"        AS "lunarYn"
+		              , tb."mainCompSeq"    AS "mainCompSeq"
+		              , tb."messengerUseYn" AS "messengerUseYn"
+		              , tb."mobileTelNum",  AS "mobileTelNum"
+		              , tb."mobileUseYn"    AS "mobileUseYn"
+		              , tb."nativeLangCode" AS "nativeLangCode"
+		              , tb."positionCode"   AS "positionCode"
+		              , tb."shift"          AS "shift"
+		              , tb."statusCode"     AS "statusCode"
+		              , tb."weddingDay"     AS "weddingDay"
+		              , tb."weddingYn"      AS "weddingYn"
+		              , tb."workStatus"     AS "workStatus"
+		              , tb."zipCodeHome"    AS "zipCodeHome"
+		              , tb."addrHome"       AS "addrHome"
+		              , tb."detailAddrHome" AS "detailAddrHome"
+		              , tb."bizSeq"         AS "bizSeq"
+		              , tb."compSeq"        AS "compSeq"
+		              , tb."deptSeq"        AS "deptSeq"
+		              , tb."faxNum"         AS "faxNum"
+		              , tb."telNum"         AS "telNum"
+		              , tb."zipCode"        AS "zipCode"
+		              , tb."addr"           AS "addr"
+		              , tb."detailAddr"     AS "detailAddr"
+		              , ROWNUM              AS RNUM
+		           FROM ( SELECT ta.sync_seq                                 AS "sync_seq"
+		                       , ta.create_seq                               AS "create_seq"
+		                       , tb.order_num                                AS "order_num"
+		                       , tc.emp_name                                 AS "emp_name_kr"
+		                       , ''                                          AS "emp_name_en"
+		                       , ''                                          AS "emp_name_jp"
+		                       , ''                                          AS "emp_name_cn"
+		                       , ta.login_passwd                             AS "loginPassword"
+		                       , 'N'                                         AS "checkWorkYn"
+		                       , ta.bday                                     AS "bday"
+		                       , ta.duty_code                                AS "dutyCode"
+		                       , ta.email_addr                               AS "emailAddr"
+		                       , ''                                          AS "empNum"
+		                       , ta.erp_emp_num                              AS "erpEmpNum"
+		                       , 'M'                                         AS "genderCode"
+		                       , ta.home_tel_num                             AS "homeTelNum"
+		                       , CASE ta.job_code
+		                           WHEN '생산직' THEN '1'
+		                           WHEN '영업직' THEN '3'
+		                           ELSE '2'
+		                         END                                         AS "jobCode"
+		                       , ta.join_day                                 AS "joinDay"
+		                       , '1'                                         AS "licenseCheckYn"
+		                       , ta.login_id                                 AS "loginId"
+		                       , 'N'                                         AS "lunarYn"
+		                       , tb.comp_seq                                 AS "mainCompSeq"
+		                       , 'Y'                                         AS "messengerUseYn"
+		                       , ta.mobile_tel_num                           AS "mobileTelNum",
+		                       , 'Y'                                         AS "mobileUseYn"
+		                       , 'kr'                                        AS "nativeLangCode"
+		                       , ta.position_code                            AS "positionCode"
+		                       , '10'                                        AS "shift"
+		                       , CASE ta.status_code
+		                           WHEN '계약직' THEN '2'
+		                           WHEN '임시직' THEN '3'
+		                           ELSE '1'
+		                         END                                         AS "statusCode"
+		                       , ta.wedding_day                              AS "weddingDay"
+		                       , CASE
+		                           WHEN NVL(ta.wedding_day,'') = '' THEN 'N'
+		                           ELSE 'Y'
+		                         END                                         AS "weddingYn"
+		                       , '999'                                       AS "workStatus"
+		                       , ta.zip_code                                 AS "zipCodeHome"
+		                       , tc.addr                                     AS "addrHome"
+		                       , tc.detail_addr                              AS "detailAddrHome"
+		                       , tb.biz_seq                                  AS "bizSeq"
+		                       , tb.comp_seq                                 AS "compSeq"
+		                       , tb.dept_seq                                 AS "deptSeq"
+		                       , tb.fax_num                                  AS "faxNum"
+		                       , tb.tel_num                                  AS "telNum"
+		                       , tb.zip_code                                 AS "zipCode"
+		                       , td.addr                                     AS "addr"
+		                       , td.detail_addr                              AS "detailAddr"
+		                    FROM $DB_NEOS$t_tmp_emp ta
+		                    JOIN $DB_NEOS$t_tmp_emp_dept tb       ON ta.emp_seq   = tb.emp_seq
+		                    JOIN $DB_NEOS$t_tmp_emp_multi tc      ON ta.emp_seq   = tc.emp_seq
+		                                                         AND tc.lang_code = 'kr'
+		                    JOIN $DB_NEOS$t_tmp_emp_dept_multi td ON ta.emp_seq   = td.emp_seq
+		                                                         AND td.lang_code = 'kr'
+		                   WHERE ta.sync_seq    = #syncSeq#
+		                     AND ta.result_code = '0'
+		                ) tb
+		          WHERE ROWNUM <![CDATA[ <= ]]> $endNum$
+		       ) tc
+		 WHERE tc.RNUM <![CDATA[ >= ]]> $startNum$
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectBiz" parameterClass="egovMap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectBiz - oracle */
+		SELECT biz_seq
+		     , biz_cd
+		     , group_seq
+		     , comp_seq
+		     , comp_regist_num
+		     , comp_num
+		     , tel_num
+		     , fax_num
+		     , homepg_addr
+		     , zip_code
+		     , display_yn
+		     , native_lang_code
+		     , order_num
+		     , use_yn
+		     , seal_file_id
+		     , create_seq
+		     , create_date
+		     , modify_seq
+		     , modify_date
+		  FROM $DB_NEOS$t_co_biz
+		 WHERE biz_seq = #bizSeq#
+		   AND ROWNUM  = 1
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectDept" parameterClass="egovMap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectDept - oracle */
+		SELECT dept_seq
+		     , dept_cd
+		     , group_seq
+		     , comp_seq
+		     , biz_seq
+		     , parent_dept_seq
+		     , display_dept_seq
+		     , tel_num
+		     , fax_num
+		     , homepg_addr
+		     , zip_code
+		     , susin_yn
+		     , vir_dept_yn
+		     , team_yn
+		     , ea_yn
+		     , native_lang_code
+		     , path
+		     , ptype
+		     , dept_level
+		     , order_num
+		     , use_yn
+		     , inner_receive_yn
+		     , create_seq
+		     , create_date
+		     , modify_seq
+		     , modify_date
+		     , dept_manager
+		     , sync_type
+		     , display_yn
+		     , standard_code
+		  FROM $DB_NEOS$t_co_dept
+		 WHERE dept_seq = #deptSeq#
+		   AND ROWNUM   = 1
+	</select>
+	
+	<update id="ErpOrgchartDAO.insertEmpComp" parameterClass="hashmap">
+		/* ErpOrgchartDAO.insertEmpComp - oracle */
+		INSERT INTO $DB_NEOS$t_co_emp_comp
+        	(erp_emp_seq, group_seq, comp_seq, biz_seq, dept_seq, emp_seq, check_work_yn, shift, job_code, status_code, resign_day, work_status, erp_comp_seq, erp_biz_seq, erp_dept_seq, use_yn, gerp_no_gemp)
+        SELECT 
+			ed.erp_emp_seq, 
+			ed.group_seq, 
+			ed.comp_seq, 
+			ed.biz_seq, 
+			ed.dept_seq, 
+			e.emp_seq, 
+			e.check_work_yn, 
+			e.shift, 
+			e.job_code, 
+			e.status_code, 
+			e.resign_day, 
+			e.work_status, 
+			e.erp_comp_seq,
+			e.erp_biz_seq,
+			e.erp_dept_seq,
+			e.use_yn,
+			e.gerp_no_gemp
+		FROM $DB_NEOS$t_tmp_emp e JOIN $DB_NEOS$t_tmp_emp_dept ed ON e.emp_seq = ed.emp_seq
+		WHERE
+			e.sync_seq = #syncSeq#
+			AND ed.sync_seq = #syncSeq#
+			AND e.result_code = '0'
+			AND ed.result_code = '0'
+			<isNotEmpty property="noEmpList">
+				and e.emp_seq in ($noEmpList$)
+			</isNotEmpty>
+	</update>
+
+	<update id="ErpOrgchartDAO.updateEmpComp" parameterClass="hashmap">
+		/* ErpOrgchartDAO.updateEmpComp - oracle */
+		UPDATE $DB_NEOS$t_co_emp_comp SET
+		  dept_seq = #newDeptSeq#
+		WHERE  emp_seq = #empSeq# and dept_seq = #oldDeptSeq#
+	</update>
+	
+	<insert id="ErpOrgchartDAO.insertErpSync" parameterClass="hashmap" >
+		/* ErpOrgchartDAO.insertErpSync - oracle */
+		MERGE INTO $DB_NEOS$t_co_erp_sync 
+		USING DUAL
+		   ON (sync_seq = #syncSeq#)
+         WHEN MATCHED THEN
+              UPDATE SET <isNotEmpty property="groupSeq">group_seq           = #groupSeq#,      </isNotEmpty>
+				         <isNotEmpty property="compSeq">comp_seq            = #compSeq#,       </isNotEmpty>
+				         <isNotEmpty property="syncDate">sync_date           = #syncDate#,      </isNotEmpty>
+				         <isNotEmpty property="erpSyncDate">erp_sync_date       = #erpSyncDate#,   </isNotEmpty>
+				         <isNotEmpty property="autoYn">auto_yn             = #autoYn#,        </isNotEmpty>
+				         <isNotEmpty property="deptJoinCnt">dept_join_cnt       = #deptJoinCnt#,   </isNotEmpty>
+				         <isNotEmpty property="deptModifyCnt">dept_modify_cnt     = #deptModifyCnt#, </isNotEmpty>
+				         <isNotEmpty property="empJoinCnt">emp_join_cnt        = #empJoinCnt#,    </isNotEmpty>
+				         <isNotEmpty property="empResignCnt">emp_resign_cnt      = #empResignCnt#,  </isNotEmpty>
+				         <isNotEmpty property="empModifyCnt">emp_modify_cnt      = #empModifyCnt#,  </isNotEmpty>
+				         <isNotEmpty property="syncStatus">sync_status         = #syncStatus#,    </isNotEmpty>
+				         modify_seq          = #editorSeq#, 
+				         modify_date         = SYSDATE, 
+				         modify_ip           = #editorIp#
+         WHEN NOT MATCHED THEN
+              INSERT (
+                      sync_seq, 
+				      group_seq, 
+				      comp_seq, 
+				      sync_date, 
+				      erp_sync_date, 
+				      auto_yn, 
+				      dept_join_cnt, 
+				      dept_modify_cnt, 
+				      emp_join_cnt, 
+				      emp_resign_cnt, 
+				      emp_modify_cnt, 
+				      sync_status, 
+				      create_seq, 
+				      create_date, 
+				      create_ip,
+				      modify_seq,
+				      modify_date,
+				      modify_ip		
+				     )
+				    
+		      VALUES (
+		              #syncSeq#, 
+				      #groupSeq#, 
+				      #compSeq#, 
+				      #syncDate#, 
+				      #erpSyncDate#, 
+				      #autoYn#, 
+				      #deptJoinCnt#, 
+				      #deptModifyCnt#, 
+				      #empJoinCnt#, 
+				      #empResignCnt#, 
+				      #empModifyCnt#, 
+				      #syncStatus#, 
+				      #editorSeq#, 
+				      SYSDATE, 
+				      #editorIp#,
+				      #editorSeq#, 
+				      SYSDATE, 
+				      #editorIp#
+		             )  
+	
+	</insert>
+	
+	<update id="ErpOrgchartDAO.updateErp" parameterClass="hashmap">
+		/* ErpOrgchartDAO.updateErp - oracle */
+		UPDATE $DB_NEOS$t_co_erp 
+		SET 
+	  		modify_seq = #editorSeq#, 
+	  		modify_date = SYSDATE, 
+	  		org_sync_status = #orgSyncStatus#, 
+	  		org_sync_date = TO_DATE(#orgSyncDate#, 'YYYY-MM-DD HH24:MI:SS')
+			
+		WHERE
+			erp_comp_seq = #erpCompSeq# AND comp_seq = #compSeq# AND achr_gbn = #achrGbn#
+	</update>
+	
+	<insert id="ErpOrgchartDAO.insertCompDutyPosition" parameterClass="hashmap"> 
+		/* ErpOrgchartDAO.insertCompDutyPosition - oracle */
+		MERGE INTO $DB_NEOS$t_co_comp_duty_position 
+		USING DUAL
+		   ON (dp_seq  = #dpSeq#
+		  AND  dp_type = #dpType#)
+         WHEN MATCHED THEN
+              UPDATE SET use_yn       = #useYn#,     
+			             modify_seq   = #editorSeq#, 
+			             modify_date  = SYSDATE
+         WHEN NOT MATCHED THEN
+              INSERT (
+                      dp_seq, 
+			          group_seq, 
+			          comp_seq, 
+			          dp_type, 
+			          use_yn, 
+			          order_num, 
+			          create_seq, 
+			          create_date, 
+			          modify_seq, 
+			          modify_date	
+				     )
+				    
+		      VALUES (
+		              #dpSeq#, 
+			          #groupSeq#, 
+			          #compSeq#, 
+			          #dpType#, 
+			          #useYn#, 
+			          #orderNum#, 
+			          #editorSeq#, 
+			          SYSDATE, 
+			          #editorSeq#,
+			          SYSDATE
+		             )  
+		                
+	</insert>
+	
+	<insert id="ErpOrgchartDAO.insertCompDutyPositionMulti" parameterClass="hashmap"> 
+		/* ErpOrgchartDAO.insertCompDutyPositionMulti - oracle */
+		MERGE INTO $DB_NEOS$t_co_comp_duty_position_multi
+		USING DUAL
+		   ON (dp_seq    = #dpSeq#
+		  AND  lang_code = #langCode#
+		  AND  dp_type   = #dpType#)
+         WHEN MATCHED THEN
+              UPDATE SET dp_name      = #dpName#,     
+			             desc_text    = #descText#,   
+			             comment_text = #commentText#,
+			             use_yn       = #useYn#,      
+			             modify_seq   = #editorSeq#,  
+			             modify_date  = SYSDATE      
+         WHEN NOT MATCHED THEN
+              INSERT (
+                      dp_seq, 
+			          lang_code, 
+			          group_seq, 
+			          comp_seq, 
+			          dp_type, 
+			          dp_name, 
+			          desc_text, 
+			          comment_text, 
+			          use_yn, 
+			          create_seq, 
+			          create_date, 
+			          modify_seq, 
+			          modify_date	
+				     )
+				    
+		      VALUES (
+		              #dpSeq#, 
+			          #langCode#, 
+			          #groupSeq#, 
+			          #compSeq#, 
+			          #dpType#, 
+			          #dpName#, 
+			          #descText#, 
+			          #commentText#, 
+			          #useYn#, 
+			          #editorSeq#, 
+			          SYSDATE, 
+			          #editorSeq#, 
+			          SYSDATE
+		             )  
+	</insert>
+	
+	<insert id="ErpOrgchartDAO.insertCustomData" parameterClass="hashmap"> 
+		/* ErpOrgchartDAO.insertCustomData - oracle */
+		MERGE INTO $DB_NEOS$t_custom_kicpa
+		USING DUAL
+		   ON (emp_seq = #empSeq#
+		  AND  kicpa_num  = #kicpaNum#)
+         WHEN MATCHED THEN
+              UPDATE SET erp_num     = #erpNum#,    
+			             email_id    = #emailId#       
+         WHEN NOT MATCHED THEN
+              INSERT (
+                      emp_seq, 
+			          erp_num, 
+			          kicpa_num, 
+			          email_id		
+				     )
+				    
+		      VALUES (
+		              #empSeq#, 
+			          #erpNum#, 
+			          #kicpaNum#, 
+			          #emailId#
+		             )  
+		
+	</insert>
+	
+	<update id="ErpOrgchartDAO.updateDeptList" parameterClass="hashmap">
+		/* ErpOrgchartDAO.updateDeptList - oracle */
+		update $DB_NEOS$t_co_dept
+		set use_yn = 'N'
+		where dept_seq in (select dept_seq from $DB_NEOS$t_tmp_dept where sync_seq = #syncSeq# and result_code = '2')
+	
+	</update>
+	
+	<select id="ErpOrgchartDAO.selectSyncFailTmpEmpList" parameterClass="hashmap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectSyncFailTmpEmpList - oracle */
+		SELECT ta.sync_seq
+		     , ta.emp_seq
+		     , ta.group_seq
+		     , ta.login_id
+		     , ta.emp_num
+		     , ta.erp_emp_num
+		     , ta.email_addr
+		     , ta.login_passwd
+		     , ta.appr_passwd
+		     , ta.passwd_date
+		     , ta.passwd_input_fail_count
+		     , ta.pay_passwd
+		     , ta.passwd_status_code
+		     , ta.mobile_use_yn
+		     , ta.messenger_use_yn
+		     , ta.check_work_yn
+		     , ta.shift
+		     , ta.job_code
+		     , ta.status_code
+		     , ta.main_comp_seq
+		     , ta.duty_code
+		     , ta.position_code
+		     , ta.native_lang_code
+		     , ta.license_check_yn
+		     , ta.join_day
+		     , ta.resign_day
+		     , ta.gender_code
+		     , ta.bday
+		     , ta.lunar_yn
+		     , ta.work_status
+		     , ta.tel_num
+		     , ta.home_tel_num
+		     , ta.mobile_tel_num
+		     , ta.fax_num
+		     , ta.wedding_yn
+		     , ta.wedding_day
+		     , ta.private_yn
+		     , ta.zip_code
+		     , ta.pic_file_id
+		     , ta.sign_file_id
+		     , ta.use_yn
+		     , ta.ls_role_id
+		     , ta.create_seq
+		     , ta.create_date
+		     , ta.modify_seq
+		     , ta.modify_date
+		     , ta.erp_emp_seq
+		     , ta.erp_comp_seq
+		     , ta.erp_biz_seq
+		     , ta.erp_dept_seq
+		     , ta.gerp_no_gemp
+		     , replace(ta.result_code,' ','') as result_code
+		  FROM $DB_NEOS$t_tmp_emp ta
+		 WHERE ta.sync_seq = #syncSeq#
+		   AND ( ta.result_code NOT IN('0','20')
+		      OR EXISTS ( SELECT x1.emp_seq
+		                    FROM $DB_NEOS$t_tmp_emp_dept x1
+		                   WHERE ta.emp_seq  = x1.emp_seq
+		                     AND x1.sync_seq = #syncSeq#
+		                     AND x1.result_code NOT IN ('0','20')
+		                )
+		       )
+    </select>
+	
+	<select id="ErpOrgchartDAO.selectSyncSuccessTmpEmpList" parameterClass="hashmap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectSyncSuccessTmpEmpList - oracle */
+		select e.sync_seq	
+			, e.emp_seq	group_seq	
+			, e.login_id	
+			, e.emp_num	
+			, e.erp_emp_num	
+			, e.email_addr	
+			, e.login_passwd	
+			, e.appr_passwd	
+			, e.passwd_date	
+			, e.passwd_input_fail_count	
+			, e.pay_passwd	
+			, e.passwd_status_code	
+			, e.mobile_use_yn	
+			, e.messenger_use_yn	
+			, e.check_work_yn	
+			, e.shift	
+			, e.job_code	
+			, e.status_code	
+			, e.main_comp_seq	
+			, e.duty_code	
+			, e.position_code	
+			, e.native_lang_code	
+			, e.license_check_yn	
+			, e.gender_code	
+			, e.lunar_yn	
+			, e.work_status	
+			, e.home_tel_num	
+			, e.mobile_tel_num	
+			, e.wedding_yn	
+			, e.private_yn	
+			, e.zip_code	
+			, e.pic_file_id	
+			, e.sign_file_id	
+			, e.use_yn	
+			, e.ls_role_id	
+			, e.create_seq	
+			, e.modify_seq	
+			, e.erp_emp_seq	
+			, e.erp_comp_seq	
+			, e.erp_biz_seq	
+			, e.erp_dept_seq	
+			, e.gerp_no_gemp	
+			, replace(e.result_code,' ','') as result_code
+		from $DB_NEOS$t_tmp_emp e
+		where e.sync_seq = #syncSeq#
+		and (e.result_code in('0','20') 
+			and exists (select d.emp_seq from $DB_NEOS$t_tmp_emp_dept d where d.sync_seq = #syncSeq# and e.emp_seq = d.emp_seq and d.result_code in('0','20')))
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectEmpDeptInfo" parameterClass="egovMap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectEmpDeptInfo - oracle */
+		SELECT ta.dept_seq
+		     , ta.emp_seq
+		     , ta.group_seq
+		     , ta.comp_seq
+		     , ta.biz_seq
+		     , ta.main_comp_yn
+		     , ta.main_dept_yn
+		     , ta.duty_code
+		     , ta.position_code
+		     , ta.tel_num
+		     , ta.fax_num
+		     , ta.zip_code
+		     , ta.orgchart_display_yn
+		     , ta.messenger_display_yn
+		     , ta.ea_display_yn
+		     , ta.order_num
+		     , ta.order_text
+		     , ta.use_yn
+		     , ta.create_seq
+		     , ta.create_date
+		     , ta.modify_seq
+		     , ta.modify_date
+		     , tb.erp_emp_seq
+		     , tb.erp_comp_seq
+		     , tb.erp_biz_seq
+		     , tb.erp_dept_seq
+		     , tb.gerp_no_gemp
+		     , tb.check_work_yn
+		     , tb.shift
+		     , tb.job_code
+		     , tb.status_code
+		     , tb.resign_day
+		     , tb.work_status
+		     , tb.mail_del_yn
+		  FROM $DB_NEOS$t_co_emp_dept ta
+		  LEFT OUTER JOIN $DB_NEOS$t_co_emp_comp tb ON ta.comp_seq = tb.comp_seq
+		                                           AND ta.emp_seq  = tb.emp_seq
+		 WHERE 1=1
+		   AND tb.erp_emp_seq  = #erpEmpSeq#
+		   AND tb.erp_comp_seq = #erpCompSeq#
+		   <isNotEmpty property="deptSeq">
+		       AND ta.dept_seq = #deptSeq#
+		   </isNotEmpty>
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectTmpEmpDeptInfo" parameterClass="egovMap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectTmpEmpDeptInfo - oracle */
+		select    ce.emp_seq
+       			, ed.dept_seq as "newDeptSeq"
+       			, ced.dept_seq as "oldDeptSeq"
+       			, ced.comp_seq as "compSeq"
+		FROM    $DB_NEOS$t_tmp_emp_dept ed JOIN $DB_NEOS$t_tmp_emp e ON e.emp_seq = ed.emp_seq and ed.sync_seq = e.sync_seq
+<!-- 		        left outer join $DB_NEOS$t_co_emp ce on ce.login_id = e.login_id and ce.erp_emp_num = e.erp_emp_num -->
+				left outer join $DB_NEOS$t_co_emp ce on ce.erp_emp_num = e.erp_emp_num and e.emp_seq = ce.emp_seq
+		        left outer join $DB_NEOS$t_co_emp_dept ced on ce.emp_seq = ced.emp_seq
+		where  ed.sync_seq = #syncSeq# and ce.emp_seq = #empSeq# and ed.dept_seq = #deptSeq# and ed.dept_seq != ced.dept_seq and ced.comp_seq = #compSeq#
+	</select>
+	
+	<insert id="ErpOrgchartDAO.insertErpSyncAutoList" parameterClass="hashmap">
+		/* ErpOrgchartDAO.insertErpSyncAutoList - oracle */
+		MERGE INTO $DB_NEOS$t_co_erp_schedule
+		USING DUAL
+		   ON (group_seq     = #groupSeq#
+		  AND  comp_seq      = #compSeq#
+		  AND  schedule_type = #scheduleType#)
+         WHEN MATCHED THEN
+              UPDATE SET schedule_time = #scheduleTime#,
+			             <isEqual property="scheduleType" compareValue="2">
+			             schedule_week = #scheduleWeek#,
+			             </isEqual>   
+			             <isEqual property="scheduleType" compareValue="3">
+			             schedule_day  = #scheduleDay#,
+			             </isEqual>
+			             <isEqual property="scheduleType" compareValue="4">
+			             special_day   = #specialDay#, 
+			             </isEqual>
+			             <isEqual property="scheduleType" compareValue="5">
+						 repeat_type = #repeatType#,
+						 repeat_value = #repeatValue#,
+						 </isEqual>
+			             create_by     = #empSeq#,      
+			             create_date   = SYSDATE
+         WHEN NOT MATCHED THEN
+              INSERT (
+                      group_seq, 
+			          comp_seq, 
+			          schedule_type, 
+			          schedule_time, 
+			          <isEqual property="scheduleType" compareValue="2">
+			          schedule_week,
+			          </isEqual>
+			          <isEqual property="scheduleType" compareValue="3">
+			          schedule_day,
+			          </isEqual>
+			          <isEqual property="scheduleType" compareValue="4">
+			          special_day,
+			          </isEqual>
+			          <isEqual property="scheduleType" compareValue="5">
+					  repeat_type,
+					  repeat_value,
+					  </isEqual>
+			          create_by, 
+			          create_date 
+				     )
+				    
+		      VALUES (
+		              #groupSeq#, 
+			          #compSeq#, 
+			          #scheduleType#, 
+			          #scheduleTime#,
+			          <isEqual property="scheduleType" compareValue="2">
+			          #scheduleWeek#,
+			          </isEqual>
+			          <isEqual property="scheduleType" compareValue="3">
+			          #scheduleDay#,
+			          </isEqual> 
+			          <isEqual property="scheduleType" compareValue="4">
+			          #specialDay#, 
+			          </isEqual>
+			          <isEqual property="scheduleType" compareValue="5">
+					  #repeatType#,
+					  #repeatValue#,
+					  </isEqual>
+			          #empSeq#, 
+			          SYSDATE
+		             )  
+		                
+	</insert>
+	
+	<select id="ErpOrgchartDAO.selectErpSyncAutoList" parameterClass="hashmap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectErpSyncAutoList */
+		SELECT 		group_seq
+				  , comp_seq
+				  , schedule_type
+				  , schedule_time
+				  , schedule_week
+				  , schedule_day
+				  , special_day
+				  , repeat_type
+				  , repeat_value
+		FROM	  $DB_NEOS$t_co_erp_schedule
+		<isEmpty property="allComp">
+		WHERE     comp_seq = #selectCompSeq#
+		</isEmpty>
+		
+	</select>
+	
+	<update id="ErpOrgchartDAO.updateErpSyncAutoList" parameterClass="hashmap">
+		/* ErpOrgchartDAO.updateErpSyncAutoList */
+		UPDATE $DB_NEOS$t_co_erp_schedule SET
+		schedule_type = #scheduleType#, 
+		
+		<isEqual property="scheduleType" compareValue="2">
+		schedule_day = '',
+		special_day = '', 
+		schedule_week = #scheduleWeek#,
+		</isEqual>
+		<isEqual property="scheduleType" compareValue="3">
+		schedule_week = '',
+		special_day = '', 
+		schedule_day = #scheduleDay#,
+		</isEqual> 
+		<isEqual property="scheduleType" compareValue="4">
+		schedule_week = '',
+		schedule_day = '',
+		special_day = #specialDay#, 
+		</isEqual>
+		<isEqual property="scheduleType" compareValue="5">
+		schedule_week = '',
+		schedule_day = '',
+		special_day = '',
+		repeat_type = #repeatType#, 
+		repeat_value = #repeatValue#,
+		</isEqual>
+		schedule_time = #scheduleTime#,
+		modify_date = SYSDATE,
+		modify_by = #empSeq#
+		where comp_seq = #compSeq# 
+	</update>
+	
+	<select id="ErpOrgchartDAO.selectErpSyncAutoUseCompList" parameterClass="hashmap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectErpSyncAutoUseCompList */
+		SELECT		A.group_seq
+				  , A.comp_seq
+				  , A.schedule_type
+				  , A.schedule_time
+				  , A.schedule_week
+				  , A.schedule_day
+				  , A.special_day
+				  , A.repeat_type
+				  , A.repeat_value
+				  , A.create_by
+				  , B.ea_type
+				  , (SELECT org_auto_sync_status FROM $DB_NEOS$t_co_erp WHERE comp_Seq = A.comp_seq and achr_gbn = 'hr' and rownum = 1) orgAutoSyncStatus
+	    FROM	  $DB_NEOS$t_co_erp_schedule A INNER JOIN $DB_NEOS$t_co_comp B
+	    ON		  A.comp_seq = B.comp_seq
+	</select>
+	
+	<update id="ErpOrgchartDAO.updateDeptInfo" parameterClass="hashmap">
+		/* ErpOrgchartDAO.updateDeptInfo - oracle */
+		MERGE INTO $DB_NEOS$t_co_dept A
+		USING t_tmp_dept B
+		   ON (A.dept_seq = B.dept_seq
+		  AND  B.sync_seq = #syncSeq#
+		  AND  (B.result_code = '20' or B.result_code = '30')
+		  AND  A.comp_seq = #compSeq#)
+         WHEN MATCHED THEN
+              UPDATE SET A.biz_seq = B.biz_seq, 
+		                 A.parent_dept_seq = B.parent_dept_seq,
+		                 A.tel_num = B.tel_num,
+		                 A.fax_num = B.fax_num,
+		                 a.order_num = b.order_num,
+<!-- 		                 a.dept_level = B.dept_level, -->
+		                 A.use_yn = B.use_yn,
+<!-- 		                 A.homepg_addr = B.homepg_addr, -->
+<!-- 		                 A.zip_code = B.zip_code, -->
+		                 A.path = B.path
+	</update>
+	
+	<update id="ErpOrgchartDAO.updateDeptMultiInfo" parameterClass="hashmap">
+		/* ErpOrgchartDAO.updateDeptMultiInfo - oracle */
+		MERGE INTO $DB_NEOS$t_co_dept_multi A
+		USING t_tmp_dept_multi B
+		   ON (A.dept_seq = B.dept_seq
+		  AND  sync_seq = #syncSeq#
+		  AND  (B.result_code = '20' or B.result_code = '30') and A.lang_code = B.lang_code
+		  AND  A.comp_seq = #compSeq#)
+         WHEN MATCHED THEN
+              UPDATE SET A.dept_name = B.dept_name, 
+		                 A.biz_seq = B.biz_seq, 
+		                 A.dept_display_name = B.dept_display_name, 
+		                 A.sender_name = B.sender_name, 
+		                 A.addr = B.addr, 
+		                 A.detail_addr = B.detail_addr, 
+		                 A.path_name = B.path_name 
+	</update>
+	
+	<update id="ErpOrgchartDAO.updateDeptMulti" parameterClass="egovMap">
+		/* ErpOrgchartDAO.updateDeptMulti - mariaDB */		
+		
+		MERGE INTO $DB_NEOS$t_co_dept_multi
+		USING DUAL
+		   ON (dept_seq   = #deptSeq#
+		  AND  lang_code = #langCode#)
+         WHEN MATCHED THEN
+              UPDATE SET 
+              		dept_name = #deptName#, 
+					path_name = #pathName#, 
+					use_yn = #useYn#	
+         WHEN NOT MATCHED THEN
+              INSERT (
+                    dept_seq, 
+					lang_code, 
+					group_seq, 
+					comp_seq, 
+					biz_seq, 
+					dept_name, 
+					dept_display_name, 
+					sender_name, 
+					addr, 
+					detail_addr, 
+					path_name, 
+					use_yn, 
+					create_seq
+				     )
+				    
+		      VALUES (
+		            #deptSeq#, 
+					#langCode#, 
+					#groupSeq#, 
+					#compSeq#, 
+					#bizSeq#, 
+					#deptName#, 
+					#deptDisplayName#, 
+					#senderName#, 
+					#addr#, 
+					#detailAddr#, 
+					#pathName#, 
+					#useYn#, 
+					#createSeq#
+		             ) 		
+	</update>
+	
+	
+	
+	<delete id="ErpOrgchartDAO.deleteEmpDeptForChange" parameterClass="hashmap">
+		/* ErpOrgchartDAO.deleteEmpDeptForChange - oracle */
+		delete from $DB_NEOS$t_co_emp_dept where emp_seq = #empSeq# and dept_seq = #oldDeptSeq#
+	</delete>
+	
+	<delete id="ErpOrgchartDAO.deleteEmpDeptMultiForChange" parameterClass="hashmap">
+		/* ErpOrgchartDAO.deleteEmpDeptMultiForChange - oracle */
+		delete from $DB_NEOS$t_co_emp_dept_multi where emp_seq = #empSeq# and dept_seq = #oldDeptSeq#
+	</delete>
+	
+     <select id="ErpOrgchartDAO.selectLastErpCompSync" parameterClass="hashmap" resultClass="egovMap">
+        /* ErpOrgchartDAO.selectLastErpCompSync - oracle */
+        SELECT sync_seq
+             , group_seq
+             , sync_date
+             , erp_sync_date
+             , auto_yn
+             , comp_join_cnt
+             , comp_modify_cnt
+             , sync_status
+             , create_seq
+             , create_date
+             , create_ip
+             , modify_seq
+             , modify_date
+             , modify_ip
+          FROM ( SELECT sync_seq
+                      , group_seq
+                      , TO_CHAR(sync_date, 'YYYY-MM-DD HH24:MI:SS') AS sync_date
+                      , TO_CHAR(erp_sync_date, 'YYYY-MM-DD HH24:MI:SS') AS erp_sync_date
+                      , auto_yn
+                      , comp_join_cnt
+                      , comp_modify_cnt
+                      , sync_status
+                      , create_seq
+                      , TO_CHAR(create_date, 'YYYY-MM-DD HH24:MI:SS') AS create_date
+                      , create_ip
+                      , modify_seq
+                      , TO_CHAR(modify_date, 'YYYY-MM-DD HH24:MI:SS') AS modify_date
+                      , modify_ip
+                   FROM t_co_erp_comp_sync 
+                  WHERE group_seq = 'dev'
+                 ORDER BY sync_seq DESC
+          )
+         WHERE ROWNUM = 1
+     </select>
+	
+	<select id="ErpOrgchartDAO.selectTmpCompList_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+		/* ErpOrgchartDAO.selectTmpCompList_TOTALCOUNT - oracle */
+		select 
+			count(*) as TOTAL_COUNT
+		from $DB_NEOS$t_tmp_comp c 
+		where c.sync_seq = #syncSeq#
+		<isNotEmpty property="resultCode">
+			and c.result_code = #resultCode#
+		</isNotEmpty>
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectTmpCompList" parameterClass="hashmap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectTmpCompList - oracle */
+		<isNotEmpty property="startNum">
+		SELECT t2.sync_seq
+		     , t2.group_seq
+		     , t2.comp_seq
+		     , t2.comp_cd
+		     , t2.parent_comp_seq
+		     , t2.login_type
+		     , t2.comp_regist_num
+		     , t2.comp_num
+		     , t2.standard_code
+		     , t2.erp_use
+		     , t2.tel_num
+		     , t2.fax_num
+		     , t2.homepg_addr
+		     , t2.comp_mail_url
+		     , t2.comp_domain
+		     , t2.email_addr
+		     , t2.email_domain
+		     , t2.zip_code
+		     , t2.sms_use
+		     , t2.sms_id
+		     , t2.sms_passwd
+		     , t2.native_lang_code
+		     , t2.order_num
+		     , t2.use_yn
+		     , t2.ea_type
+		     , t2.create_seq
+		     , t2.create_date
+		     , t2.modify_seq
+		     , t2.modify_date
+		     , t2.comp_email_yn
+		     , t2.erp_use_yn
+		     , t2.sms_use_yn
+		     , t2.erp_comp_seq
+		     , replace(t2.result_code,' ','') as result_code
+		     , t2.lang_code
+		     , t2.comp_name
+		     , t2.comp_display_name
+		     , t2.owner_name
+		     , t2.sender_name
+		     , t2.biz_condition
+		     , t2.item
+		     , t2.addr
+		     , t2.detail_addr
+		     , t2.comp_nickname
+		     , t2.erp_comp_name
+		  FROM ( SELECT t1.sync_seq
+		              , t1.group_seq
+		              , t1.comp_seq
+		              , t1.comp_cd
+		              , t1.parent_comp_seq
+		              , t1.login_type
+		              , t1.comp_regist_num
+		              , t1.comp_num
+		              , t1.standard_code
+		              , t1.erp_use
+		              , t1.tel_num
+		              , t1.fax_num
+		              , t1.homepg_addr
+		              , t1.comp_mail_url
+		              , t1.comp_domain
+		              , t1.email_addr
+		              , t1.email_domain
+		              , t1.zip_code
+		              , t1.sms_use
+		              , t1.sms_id
+		              , t1.sms_passwd
+		              , t1.native_lang_code
+		              , t1.order_num
+		              , t1.use_yn
+		              , t1.ea_type
+		              , t1.create_seq
+		              , t1.create_date
+		              , t1.modify_seq
+		              , t1.modify_date
+		              , t1.comp_email_yn
+		              , t1.erp_use_yn
+		              , t1.sms_use_yn
+		              , t1.erp_comp_seq
+		              , t1.result_code
+		              , t1.lang_code
+		              , t1.comp_name
+		              , t1.comp_display_name
+		              , t1.owner_name
+		              , t1.sender_name
+		              , t1.biz_condition
+		              , t1.item
+		              , t1.addr
+		              , t1.detail_addr
+		              , t1.comp_nickname
+		              , t1.erp_comp_name
+		              , ROWNUM AS RNUM
+		           FROM (
+		</isNotEmpty>
+		SELECT ta.sync_seq
+		     , ta.group_seq
+		     , ta.comp_seq
+		     , ta.comp_cd
+		     , ta.parent_comp_seq
+		     , ta.login_type
+		     , ta.comp_regist_num
+		     , ta.comp_num
+		     , ta.standard_code
+		     , ta.erp_use
+		     , ta.tel_num
+		     , ta.fax_num
+		     , ta.homepg_addr
+		     , ta.comp_mail_url
+		     , ta.comp_domain
+		     , ta.email_addr
+		     , ta.email_domain
+		     , ta.zip_code
+		     , ta.sms_use
+		     , ta.sms_id
+		     , ta.sms_passwd
+		     , ta.native_lang_code
+		     , ta.order_num
+		     , ta.use_yn
+		     , ta.ea_type
+		     , ta.create_seq
+		     , ta.create_date
+		     , ta.modify_seq
+		     , ta.modify_date
+		     , ta.comp_email_yn
+		     , ta.erp_use_yn
+		     , ta.sms_use_yn
+		     , ta.erp_comp_seq
+		     , replace(ta.result_code,' ','') as result_code
+		     , tb.lang_code
+		     , tb.comp_name
+		     , tb.comp_display_name
+		     , tb.owner_name
+		     , tb.sender_name
+		     , tb.biz_condition
+		     , tb.item
+		     , tb.addr
+		     , tb.detail_addr
+		     , tb.comp_nickname
+		     , tb.erp_comp_name
+		  FROM $DB_NEOS$t_tmp_comp ta
+		  LEFT OUTER JOIN $DB_NEOS$t_tmp_comp_multi tb ON ta.comp_seq = tb.comp_seq
+		                                              AND tb.sync_seq = #syncSeq#
+		 WHERE ta.sync_seq = #syncSeq#
+		   <isNotEmpty property="resultCode">
+		       AND ta.result_code = #resultCode#
+		   </isNotEmpty>
+		<isNotEmpty property="startNum">
+		                ) t1
+		          WHERE ROWNUM <![CDATA[ <= ]]> $endNum$
+		       ) t2
+		  WHERE t1.RNUM <![CDATA[ >= ]]> $startNum$
+		</isNotEmpty>
+	</select>
+	
+	<insert id="ErpOrgchartDAO.insertTmpComp" parameterClass="hashmap">
+		/* ErpOrgchartDAO.insertTmpComp - oracle */
+		INSERT INTO $DB_NEOS$t_tmp_comp 
+		(
+			sync_seq        ,
+			group_seq       ,
+			comp_seq        ,
+			comp_cd         ,
+			parent_comp_seq ,
+			login_type      ,
+			comp_regist_num ,
+			comp_num        ,
+			standard_code   ,
+			erp_use         ,
+			tel_num         ,
+			fax_num         ,
+			homepg_addr     ,
+			comp_mail_url   ,
+			comp_domain     ,
+			email_addr      ,
+			email_domain    ,
+			zip_code        ,
+			sms_use         ,
+			sms_id          ,
+			sms_passwd      ,
+			native_lang_code,
+			order_num       ,
+			use_yn          ,
+			ea_type         ,
+			create_seq      ,
+			create_date     ,
+			modify_seq      ,
+			modify_date     ,
+			comp_email_yn   ,
+			erp_use_yn      ,
+			sms_use_yn      ,
+			erp_comp_seq    ,
+			result_code
+		)
+		VALUES
+		(
+			#syncSeq#,
+			#groupSeq#,
+			#compSeq#,
+			#compCd#,
+			#parentCompSeq#,
+			#loginType#,
+			#compRegistNum#,
+			#compNum#,
+			#standardCode#,
+			#erpUse#,
+			#telNum#,
+			#faxNum#,
+			#homepgAddr#,
+			#compMailUrl#,
+			#compDomain#,
+			#emailAddr#,
+			#emailDomain#,
+			#zipCode#,
+			#smsUse#,
+			#smsId#,
+			#smsPasswd#,
+			#nativeLangCode#,
+			#orderNum#,
+			#useYn#,
+			#eaType#,
+			#editorSeq#,
+			SYSDATE,
+			#editorSeq#,
+			SYSDATE,
+			#compEmailYn#,
+			#erpUseYn#,
+			#smsUseYn#,
+			#erpCompSeq#,
+			case 
+				when (select 1 from $DB_NEOS$t_co_erp where erp_comp_seq = #erpCompSeq# and comp_seq != #compSeq# AND ROWNUM = 1) = 1 then '5' 
+				when (select 1 from $DB_NEOS$t_co_comp where comp_seq = #compSeq# AND ROWNUM = 1) = 1 then '20' 
+				else '0'
+			end 
+		)
+	</insert>
+	
+	<insert id="ErpOrgchartDAO.insertTmpCompMulti" parameterClass="hashmap">
+		/* ErpOrgchartDAO.insertTmpCompMulti - oracle */
+		INSERT INTO $DB_NEOS$t_tmp_comp_multi
+		(
+			sync_seq         ,
+			comp_seq         ,
+			lang_code        ,
+			group_seq        ,
+			comp_name        ,
+			comp_display_name,
+			owner_name       ,
+			sender_name      ,
+			biz_condition    ,
+			item             ,
+			addr             ,
+			detail_addr      ,
+			use_yn           ,
+			comp_nickname    ,
+			create_seq       ,
+			create_date      ,
+			modify_seq       ,
+			modify_date      ,
+			erp_comp_seq     ,
+			erp_comp_name    ,
+			result_code
+		)
+		VALUES
+		(
+			#syncSeq#,
+			#compSeq#,
+			#langCode#,
+			#groupSeq#,
+			#compName#,
+			#compDisplayName#,
+			#ownerName#,
+			#senderName#,
+			#bizCondition#,
+			#item#,
+			#addr#,
+			#detailAddr#,
+			#useYn#,
+			#compNickname#,
+			#editorSeq#,
+			SYSDATE,
+			#editorSeq#,
+			SYSDATE,
+			#erpCompSeq#,
+			#erpCompName#,
+			case 
+				when (select 1 from $DB_NEOS$t_co_erp where erp_comp_seq = #erpCompSeq# and comp_seq != #compSeq# AND ROWNUM = 1) = 1 then '5' 
+				when (select 1 from $DB_NEOS$t_co_comp where comp_seq = #compSeq# AND ROWNUM = 1) = 1 then '20' 
+				else '0'
+			end  
+		)
+	</insert>
+	
+	<select id="ErpOrgchartDAO.selectTmpCompTotalCount" parameterClass="hashmap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectTmpCompTotalCount - oracle */
+		SELECT '0' as result_code, COUNT(*) AS result_code_cnt
+		from $DB_NEOS$t_tmp_comp A inner join $DB_NEOS$t_tmp_comp_multi B
+		  on A.comp_seq = B.comp_seq
+		where A.sync_seq = #syncSeq#
+		and B.sync_seq = #syncSeq#
+		and A.result_code = B.result_code
+		and (A.result_code = '0' or B.result_code = '0')
+    	and b.lang_code = 'kr'
+    	
+		union all
+		    
+		SELECT '20' as result_code, COUNT(*) AS result_code_cnt
+		from $DB_NEOS$t_tmp_comp A inner join $DB_NEOS$t_tmp_comp_multi B
+		  on A.comp_seq = B.comp_seq
+		where A.sync_seq = #syncSeq#
+		and B.sync_seq = #syncSeq#
+		and A.result_code != B.result_code
+		and (A.result_code = '20' or B.result_code = '20')
+		and b.lang_code = 'kr'
+	</select>
+	
+	<update id="ErpOrgchartDAO.insertErpCompList" parameterClass="hashmap">
+		/* ErpOrgchartDAO.insertErpCompList - oracle */
+		insert into $DB_NEOS$t_co_erp_comp (group_seq, comp_seq, erp_comp_seq, ext_code)
+		select group_seq, comp_seq, erp_comp_seq, erp_comp_seq
+		from $DB_NEOS$t_tmp_comp
+		where
+			sync_seq = #syncSeq# 
+			and result_code = '0'
+	</update>
+	
+	<insert id="ErpOrgchartDAO.insertErpCompSync" parameterClass="hashmap" >
+		/* ErpOrgchartDAO.insertErpCompSync - oracle */
+		MERGE INTO $DB_NEOS$t_co_erp_comp_sync 
+		USING DUAL
+		   ON (sync_seq = #authCode#)
+         WHEN MATCHED THEN
+              UPDATE SET <isNotEmpty property="groupSeq">group_seq           = #groupSeq#,      </isNotEmpty>
+				         <isNotEmpty property="syncDate">sync_date           = #syncDate#,      </isNotEmpty>
+				         <isNotEmpty property="erpSyncDate">erp_sync_date       = #erpSyncDate#,   </isNotEmpty>
+				         <isNotEmpty property="autoYn">auto_yn             = #autoYn#,        </isNotEmpty>
+				         <isNotEmpty property="compJoinCnt">comp_join_cnt       = #compJoinCnt#,   </isNotEmpty>
+				         <isNotEmpty property="compModifyCnt">comp_modify_cnt     = #compModifyCnt#, </isNotEmpty>
+				         <isNotEmpty property="syncStatus">sync_status         = #syncStatus#,    </isNotEmpty>
+				         modify_seq          = #editorSeq#, 
+				         modify_date         = SYSDATE, 
+				         modify_ip           = #editorIp#
+         WHEN NOT MATCHED THEN
+              INSERT (
+                      sync_seq, 
+				      group_seq, 
+				      sync_date, 
+				      erp_sync_date, 
+				      auto_yn, 
+				      comp_join_cnt, 
+				      comp_modify_cnt, 
+				      sync_status, 
+				      create_seq, 
+				      create_date, 
+				      create_ip,
+				      modify_seq,
+				      modify_date,
+				      modify_ip	
+				     )
+				    
+		      VALUES (
+		              #syncSeq#, 
+				      #groupSeq#, 
+				      #syncDate#, 
+				      #erpSyncDate#, 
+				      #autoYn#, 
+				      #compJoinCnt#, 
+				      #compModifyCnt#, 
+				      #syncStatus#, 
+				      #editorSeq#, 
+				      SYSDATE, 
+				      #editorIp#,
+				      #editorSeq#, 
+				      SYSDATE, 
+				      #editorIp#
+		             )  
+	
+	</insert>
+	
+	<select id="ErpOrgchartDAO.selectErpSyncCompList" parameterClass="hashmap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectErpSyncCompList - oracle */
+		SELECT group_seq
+		     , comp_seq
+		     , erp_seq
+		     , achr_gbn
+		     , erp_type_code
+		     , erp_name
+		     , database_type
+		     , driver
+		     , url
+		     , userid
+		     , password
+		     , create_seq
+		     , create_date
+		     , modify_seq
+		     , modify_date
+		     , erp_comp_seq
+		     , erp_comp_name
+		     , use_yn
+		     , org_sync_status
+		     , org_sync_date
+		     , g20_yn
+		  FROM $DB_NEOS$t_co_erp
+		 WHERE group_seq     = #groupSeq#
+		   AND achr_gbn      = #achrGbn#
+		   AND erp_type_code = #erpTypeCode#
+	</select>
+	
+	<select id="ErpOrgchartDAO.selectEmpResignList" parameterClass="hashmap" resultClass="egovMap">
+		/* ErpOrgchartDAO.selectEmpResignList - oracle */
+		select 
+			ce.emp_seq                as "empSeq",
+			e.group_seq               as "groupSeq",
+			e.login_id                as "loginId",
+			e.emp_num                 as "empNum",
+			e.erp_emp_num             as "erpEmpNum",
+			e.email_addr              as "emailAddr",
+			e.login_passwd            as "loginPasswd",
+			e.appr_passwd             as "apprPasswd",
+			e.passwd_date             as "passwdDate",
+			e.passwd_input_fail_count as "passwdInputFailCount",
+			e.pay_passwd              as "payPasswd",
+			e.passwd_status_code      as "passwdStatusCode",
+			e.mobile_use_yn           as "mobileUseYn",
+			e.messenger_use_yn        as "messengerUseYn",
+			e.check_work_yn           as "checkWorkYn",
+			e.shift                   as "shift",
+			e.job_code                as "jobCode",
+			e.status_code             as "statusCode",
+			e.main_comp_seq           as "mainCompSeq",
+			e.duty_code               as "dutyCode",
+			e.position_code           as "positionCode",
+			e.native_lang_code        as "nativeLangCode",
+			e.license_check_yn        as "licenseCheckYn",
+			e.join_day                as "joinDay",
+			e.resign_day              as "resignDay",
+			e.gender_code             as "genderCode",
+			e.bday                    as "bday",
+			e.lunar_yn                as "lunarYn",
+			e.work_status             as "workStatus",
+			e.home_tel_num            as "homeTelNum",
+			e.mobile_tel_num          as "mobileTelNum",
+			e.wedding_yn              as "weddingYn",
+			e.wedding_day             as "weddingDay",
+			e.private_yn              as "privateYn",
+			e.zip_code                as "zipCode",
+			e.pic_file_id             as "picFileId",
+			e.sign_file_id            as "signFileId",
+			e.use_yn                  as "useYn",
+			e.ls_role_id              as "lsRoleId",
+			e.create_seq              as "createSeq",
+			e.create_date             as "createDate",
+			e.modify_seq              as "modifySeq",
+			e.modify_date             as "modifyDate"
+		from $DB_NEOS$t_tmp_emp e
+<!-- 			LEFT OUTER JOIN $DB_NEOS$t_co_emp ce ON e.login_id = ce.login_id and e.erp_emp_num = ce.erp_emp_num -->
+			LEFT OUTER JOIN $DB_NEOS$t_co_emp ce ON e.erp_emp_num = ce.erp_emp_num and e.emp_seq = ce.emp_seq
+		where
+			sync_seq = #syncSeq# AND
+			result_code = '7'
+			<isNotEmpty property="noEmpList">
+				and e.emp_seq in ($noEmpList$)
+			</isNotEmpty>
+	</select>
+	
+	<update id="ErpOrgchartDAO.updateEmpResign" parameterClass="egovMap">
+		/* ErpOrgchartDAO.updateEmpResign - oracle */
+		update $DB_NEOS$t_co_emp set
+		  use_yn = 'N', work_status = '001', license_check_yn = '3', modify_date = SYSDATE
+		where  emp_seq = #empSeq# and erp_emp_num = #erpEmpNum# 
+	</update>
+	
+	<update id="ErpOrgchartDAO.updateEmpMultiResign" parameterClass="egovMap">
+		/* ErpOrgchartDAO.updateEmpResign - oracle */
+		update $DB_NEOS$t_co_emp_multi set
+		  use_yn = 'N', modify_date = SYSDATE
+		where  emp_seq = #empSeq# 
+	</update>
+	
+	<update id="ErpOrgchartDAO.updateEmpDeptResign" parameterClass="egovMap">
+		/* ErpOrgchartDAO.updateEmpDeptResign - oracle */
+		update $DB_NEOS$t_co_emp_dept set
+		  orgchart_display_yn = 'N', messenger_display_yn = 'N', use_yn = 'N', modify_date = SYSDATE
+		where  emp_seq = #empSeq#
+	</update>
+	
+	<update id="ErpOrgchartDAO.updateEmpDeptMultiResign" parameterClass="egovMap">
+		/* ErpOrgchartDAO.updateEmpDeptMultiResign - oracle */
+		update $DB_NEOS$t_co_emp_dept_multi set
+		  use_yn = 'N', modify_date = SYSDATE
+		where  emp_seq = #empSeq#
+	</update>
+	
+	<update id="ErpOrgchartDAO.updateEmpCompResign" parameterClass="egovMap">
+		/* ErpOrgchartDAO.updateEmpCompResign - oracle */
+		update $DB_NEOS$t_co_emp_comp set
+		  work_status = '001', modify_seq = sysdate, use_yn = 'N'
+		where emp_seq = #empSeq# and erp_emp_seq = #erpEmpNum#
+	</update>
+	
+	<update id="ErpOrgchartDAO.updateLicenseValue" parameterClass="egovMap">
+		/* ErpOrgchartDAO.updateLicenseValue - oracle */
+		UPDATE $DB_NEOS$t_tmp_emp SET
+		  result_code = #resultCode#
+		WHERE  emp_seq = #empSeq# and sync_seq = #syncSeq#  
+	</update>
+	
+	<update id="ErpOrgchartDAO.deleteErpDeptSync"  parameterClass="hashmap">
+		/* ErpOrgchartDAO.ErpOrgchartDAO.deleteErpDeptSync - oracle */
+		UPDATE $DB_NEOS$t_co_dept SET
+		  use_yn = 'N', display_yn = 'N'
+		WHERE  comp_seq = #compSeq# and dept_seq = #deptSeq#
+	</update>
+	
+	<update id="ErpOrgchartDAO.deleteErpDeptMultiSync"  parameterClass="hashmap">
+		/* ErpOrgchartDAO.ErpOrgchartDAO.deleteErpDeptMultiSync - oracle */
+		UPDATE $DB_NEOS$t_co_dept_multi SET
+		  use_yn = 'N'
+		WHERE  comp_seq = #compSeq# and dept_seq = #deptSeq#
+	</update>
+	
+	
+	<select id="ErpOrgchartDAO.selectDeptMultiList" parameterClass="hashmap" resultClass="egovMap">
+		select 
+			dept_seq         as "deptSeq",
+			lang_code        as "langCode",
+			group_seq        as "groupSeq",
+			comp_seq         as "compSeq",
+			biz_seq          as "bizSeq",
+			dept_name        as "deptName",
+			dept_display_name as "deptDisplayName",
+			sender_name      as "senderName",
+			addr             as "addr",
+			detail_addr      as "detailAddr",
+			path_name        as "pathName",
+			use_yn           as "useYn",
+			create_seq       as "createSeq",
+			create_date      as "createDate",
+			modify_seq       as "modifySeq",
+			modify_date		 as "modifyDate" 
+		from $DB_NEOS$t_tmp_dept_multi d
+		where d.sync_seq = #syncSeq#
+		and (d.result_code = '20' or d.result_code = '30')
+	</select>
+	
+	<delete id="ErpOrgchartDAO.deleteDeptMultiInfo" parameterClass="hashmap">
+		delete from
+			$DB_NEOS$t_co_dept_multi
+		where
+			dept_Seq in(
+				select distinct dept_Seq from $DB_NEOS$t_tmp_dept_multi where sync_seq = #syncSeq# and (result_code = '20' or result_Code = '30')
+			)
+	</delete>
+	
+	<update id="ErpOrgchartDAO.insertDeptMultiInfo"  parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_dept_multi (dept_seq,lang_code,group_seq,comp_seq,biz_seq,dept_name,dept_display_name,sender_name,addr,detail_addr,path_name,use_yn,create_seq,create_date,modify_seq,modify_date)
+		select 
+			dept_seq         ,
+			lang_code        ,
+			group_seq        ,
+			comp_seq         ,
+			biz_seq          ,
+			dept_name        ,
+			dept_display_name,
+			sender_name      ,
+			addr             ,
+			detail_addr      ,
+			path_name        ,
+			use_yn           ,
+			create_seq       ,
+			create_date      ,
+			modify_seq       ,
+			modify_date
+		from $DB_NEOS$t_tmp_dept_multi d
+		where d.sync_seq = #syncSeq#
+		and (d.result_code = '20' or d.result_code = '30') 
+	</update>
+	
+	<delete id="ErpOrgchartDAO.deleteEmpMultiInfo" parameterClass="egovMap">
+		delete from
+			$DB_NEOS$t_co_emp_multi
+		where
+			emp_seq = #empSeq#
+	</delete>
+	
+	
+	<update id="ErpOrgchartDAO.updateParentDeptSeqInfo" parameterClass="hashmap">
+		update
+		 	$DB_NEOS$t_co_dept
+		 set
+		 	parent_Dept_seq = '0'
+		 where
+		 	biz_Seq = parent_Dept_seq
+	</update>
+	
+	
+	<insert id="ErpOrgchartDAO.insertEmpMultiInfo" parameterClass="hashmap">
+		INSERT INTO $DB_NEOS$`t_co_emp_multi` 
+			(`emp_seq`, `lang_code`, `group_seq`, `emp_name`, `addr`, `detail_addr`, `main_work`, `use_yn`, `create_seq`, `create_date`, `modify_seq`, `modify_date`) 
+		VALUES 
+			(#empSeq#, #langCode#, #groupSeq#, #empName#, #addr#, #detailAddr#, #mainWork#, #useYn#, #empSeq#, sysdate, null, null)
+		
+	</insert>
+	
+	
+	<update id="ErpOrgchartDAO.updateEmpCompInfo" parameterClass="hashmap">
+		merge into $DB_NEOS$t_co_emp_comp a
+		using (
+		    select a.work_status, b.comp_seq, b.dept_Seq, a.emp_seq, a.use_yn
+		    from $DB_NEOS$t_tmp_emp a
+		    inner join $DB_NEOS$t_tmp_emp_dept b on a.sync_seq = #syncSeq# and b.sync_seq = #syncSeq# and a.emp_seq = b.emp_Seq and a.result_code in ('0','20')
+		    <isNotEmpty property="noEmpList">
+				and a.emp_seq in ($noEmpList$)
+			</isNotEmpty>
+		)B on (a.emp_seq = b.emp_seq and a.comp_seq = b.comp_seq)
+		when matched then
+		update set
+		 a.work_status = B.work_status
+		 , a.use_yn = B.use_yn
+	</update>
+	
+	
+	<update id="ErpOrgchartDAO.setEmpOrderText" parameterClass="hashmap">
+		MERGE INTO $DB_NEOS$t_co_emp_dept A
+		USING (
+               SELECT A.dept_seq, A.emp_seq, POSI.order_num AS POSI_order_num, DUTY.order_num AS DUTY_order_num, E.join_day, vem.emp_name
+                 FROM $DB_NEOS$t_co_emp_dept A
+                 LEFT JOIN $DB_NEOS$t_co_comp_duty_position POSI ON A.position_code = POSI.dp_seq AND POSI.dp_type='POSITION'
+                 LEFT JOIN $DB_NEOS$t_co_comp_duty_position DUTY ON A.duty_code = DUTY.dp_seq AND DUTY.dp_type='DUTY'
+                 LEFT JOIN $DB_NEOS$t_co_emp E ON A.emp_seq = e.emp_seq
+                 LEFT JOIN $DB_NEOS$v_t_co_emp_multi vem ON A.emp_seq = vem.emp_seq and vem.lang_code = 'kr'
+              ) B
+		   ON (A.dept_seq = B.dept_seq
+		  AND  A.emp_seq  = B.emp_seq)
+         WHEN MATCHED THEN
+         UPDATE SET A.order_text = LPAD(DECODE(NVL(B.POSI_order_num,''), '', '9999999999', B.POSI_order_num),10,'0') || '|' ||		-- 직급
+								   LPAD(DECODE(NVL(B.DUTY_order_num,''), '', '9999999999', B.DUTY_order_num),10,'0') || '|' ||		-- 직책
+								   LPAD(DECODE(NVL(A.order_num,''), '', '9999999999', A.order_num),10,'0') || '|' ||				-- 사용자정렬값
+								   NVL(LPAD(DECODE(NVL(TO_CHAR(B.join_day, 'YYYYMMDD'),'99999999'), '00000000', '99999999', TO_CHAR(B.join_day, 'YYYYMMDD')),8,'0'),'99999999') || '|' ||	-- 입사일
+								   NVL(B.emp_name,'')
+	</update>
+	
+	
+	<delete id="ErpOrgchartDAO.deleteTmpEmp" parameterClass="hashmap">
+		delete from $DB_NEOS$t_tmp_emp where sync_seq = #syncSeq#
+	</delete>
+	
+	<delete id="ErpOrgchartDAO.deleteTmpEmpMulti" parameterClass="hashmap">
+		delete from $DB_NEOS$t_tmp_emp_multi where sync_seq = #syncSeq#
+	</delete>
+	
+	<delete id="ErpOrgchartDAO.deleteTmpEmpDept" parameterClass="hashmap">
+		delete from $DB_NEOS$t_tmp_emp_dept where sync_seq = #syncSeq#
+	</delete>
+	
+	<delete id="ErpOrgchartDAO.deleteTmpEmpDeptMulti" parameterClass="hashmap">
+		delete from $DB_NEOS$t_tmp_emp_dept_multi where sync_seq = #syncSeq#
+	</delete>
+	
+	<select id="ErpOrgchartDAO.getDutyPosionOptionInfo" parameterClass="hashmap" resultClass="egovMap">
+		select *From $DB_NEOS$t_co_erp_sync_code
+		where group_Seq = #groupSeq# and  comp_seq = #compSeq# and code_type = #codeType#
+	</select>
+	
+	
+	<update id="ErpOrgchartDAO.updateOrgAutoSyncStatus" parameterClass="hashmap">
+		update $DB_NEOS$t_co_erp set org_auto_sync_status = #orgAutoSyncStatus# where comp_seq = #compSeq#
+	</update>
+</sqlMap>

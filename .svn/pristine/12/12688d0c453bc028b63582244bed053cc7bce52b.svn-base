@@ -1,0 +1,48 @@
+<header class="head" data-height="56" data-role="header" style="height: 56px; z-index: 1">
+	<div class="left_div">
+		<a class="btn_can" ng-click="cancelSetting()"></a>
+	</div>
+	
+	<h1 ng-if="nSettingType==1">문서 보안</h1>
+	<h1 ng-if="nSettingType!=1">암호 변경/해제</h1>
+	
+	<div class="right_div">
+		<a class="btn_check" ng-click="setPassword()"></a>
+	</div>
+</header>
+
+<section class="con passwordCon" data-iscroll="" data-height="*" data-role="content">
+	<div class="con_in">
+		<div class="check ui-field-contain" data-role="fieldcontain">
+			<fieldset data-role="controlgroup">
+				<label for="radio-choice-1">암호 변경</label>
+				<input type="radio" name="radio_group" id="radio-choice-1" value="" ng-click="setType(2)">
+				<label for="radio-choice-2">암호 해제</label>
+				<input type="radio" name="radio_group" id="radio-choice-2" value="" ng-click="setType(0)">
+			</fieldset>
+		</div>
+		<div class="password_input">
+			<div class="cl pt40 current">
+				<p class="tit">현재 암호</p>
+				<div class="input">
+					<input type="password" data-clear-btn="true">
+				</div>
+			</div>
+			
+			<div class="pt20 new">
+				<p class="tit">새 암호</p>
+				<div class="input">
+					<input type="password" data-clear-btn="true">
+				</div>
+			</div>
+			
+			<div class="pt20 confirm">
+				<p class="tit">새 암호 확인</p>
+				<div class="input">
+					<input type="password" data-clear-btn="true">
+				</div>
+			</div>
+		</div>
+		<span class="text">주의 : 암호를 잊으면 문서를 복구할 수 없습니다.<br>암호는 대소문자를 구분하며, 4자 이상 20자 이하로 입력 가능 합니다.</span>
+	</div>
+</section>

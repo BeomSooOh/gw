@@ -1,0 +1,10 @@
+{
+	"ITEMS": {
+		"stamp": {
+			"type": "img",
+			"src": "./image/sample/stamp.png",
+			"alt": "직인",
+			"style": "opacity: 0.3;"
+		}
+	}
+}

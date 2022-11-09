@@ -1,0 +1,16 @@
+{
+	"ITEMS": {
+		"dayoff": "√",
+		"dayoff_morning": "",
+		"dayoff_afternoon": "",
+		"period": "2020년 4월 29일 ~ 2020년 5월 5일",
+		"period_day": null,
+		"reason": "개인적인 사유로 연차휴가를 상신하오니\n확인 후 재가부탁드립니다.",
+		"approval_day": 20200429,
+		"hyperlink_test": {
+			"type": "hyperlink",
+			"href": "http://www.naver.com",
+			"title": "네이버"
+		}
+	}
+}

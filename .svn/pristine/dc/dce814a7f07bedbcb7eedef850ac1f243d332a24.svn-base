@@ -1,0 +1,18 @@
+package ebp.portalView.service;
+
+import java.util.List;
+import java.util.Map;
+
+import ebp.portalView.vo.RelatedLink;
+import ebp.portalView.vo.RelatedSearch;
+
+public interface EbpRelatedSearchService {
+	//연관검색어 조회
+	public List<RelatedSearch> getRelatedSearchKeyword(Map<String, String> reqParams) throws Exception;
+	
+	//연관메뉴/검색어 저장
+	public void saveRelatedSearchKeyword(Map<String, String> reqParams) throws Exception;
+
+	//연관 링크 조회
+	public List<RelatedLink> getRelatedLink(Map<String, Object> reqParams) throws Exception;
+}

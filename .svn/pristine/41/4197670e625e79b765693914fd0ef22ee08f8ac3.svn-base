@@ -1,0 +1,90 @@
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:context="http://www.springframework.org/schema/context" xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:p="http://www.springframework.org/schema/p" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd                             http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd">
+
+<!--
+    수정일      수정자                      수정내용
+  =========     =======    =================================================
+  2011.09.07   	서준식     	 	로그인 체크 인터셉터 추가
+  2011.09.29	이기하			에러페이지 경로수정
+  2013.05.30	이기하			IP정보기록 로직 추가
+  2014.08.14	이기하			mvc:interceptor 추가
+-->
+
+	<context:component-scan base-package="egovframework, neos, erp, restful, main, api, acc, boxformtest, mullen, ebp, derp, FormTable">
+		<context:include-filter expression="org.springframework.stereotype.Controller" type="annotation"/>
+		<context:exclude-filter expression="org.springframework.stereotype.Service" type="annotation"/>
+		<context:exclude-filter expression="org.springframework.stereotype.Repository" type="annotation"/>
+	</context:component-scan>
+
+<!-- 유효성 검사 bean 설정 시작 -->
+   <!-- Enable annotation-based validation using Bean Validation Framework  -->
+    <!-- Using these instead of vld namespace to prevent Eclipse from complaining -->
+    <bean id="configurationLoader"
+        class="org.springmodules.validation.bean.conf.loader.annotation.AnnotationBeanValidationConfigurationLoader"/>
+    <bean id="validator" class="org.springmodules.validation.bean.BeanValidator"
+        p:configurationLoader-ref="configurationLoader"/>
+
+    <!-- Load messages -->
+    <bean id="messageSource"
+        class="org.springframework.context.support.ResourceBundleMessageSource"
+        p:basenames="errors"/>
+	<!-- 유효성 검사 bean 설정 끝 -->
+
+	<!-- 화이트 리스트 매니저를 Bean에 등록한다. -->
+	<bean id="whiteListManager" class="neos.cmm.util.WhiteListManager">
+		<constructor-arg index="0" value="../bizboxaconf/whitelist.conf"></constructor-arg>
+	</bean>
+
+	<!--
+	Controller에서 화면(JSP) 입력값을 받기 위해서 일반적으로 Command(Form Class) 객체를 사용하지만,
+	Map 객체를 사용하는걸 선호할 수 있다.
+	org.springframework.web.method.support.HandlerMethodArgumentResolver의 구현클래스인 AnnotationCommandMapArgumentResolver은
+	HTTP request 객체값을 @CommandMap이 붙은  Map객체에 담아 Controller에서 사용도록 제공한다.
+	기존에 사용하던 CommandMapArgumentResolver은 deprecated되었으며 AnnotationCommandMapArgumentResolver이 이와 동일한 기능을 한다.
+	 -->
+	<bean class="egovframework.rte.ptl.mvc.bind.annotation.EgovRequestMappingHandlerAdapter">
+		<property name="webBindingInitializer">
+			<bean class="egovframework.com.cmm.web.EgovBindingInitializer"/>
+		</property>
+		<property name="customArgumentResolvers">
+			<list>
+				<bean class="egovframework.rte.ptl.mvc.bind.AnnotationCommandMapArgumentResolver"/>
+			</list>
+		</property>
+		<!-- restful json 반환위해 추가 -->
+		<property name="messageConverters">
+			<list>
+				<bean class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter">
+					<property name="supportedMediaTypes">
+					 	<value>application/json;charset=UTF-8</value>
+					</property>
+				</bean>
+			</list>
+		</property> 		
+	</bean>
+    
+    <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping"/>
+
+	<bean class="org.springframework.web.servlet.view.UrlBasedViewResolver" p:order="1" p:prefix="/WEB-INF/jsp/" p:suffix=".jsp" p:viewClass="org.springframework.web.servlet.view.JstlView"/>
+
+	<!-- for JFile -->
+	<bean class="org.springframework.web.servlet.view.BeanNameViewResolver" p:order="0"/>
+
+	<!--  Add Edward Tiles START  -->
+	<bean id="viewResolver"   class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+		<property name="viewClass">
+			<value>org.springframework.web.servlet.view.tiles2.TilesView</value>
+		</property>
+		<property name="order">
+			<value>0</value>
+		</property>
+	</bean>
+	<bean id="tilesConfigurer" class="org.springframework.web.servlet.view.tiles2.TilesConfigurer">
+		<property name="definitions">
+			<list>
+				<value>classpath:tiles2.xml</value>
+			</list>
+		</property>
+	</bean>
+	<!--   Add Edward Tiles2 END  -->
+
+</beans>

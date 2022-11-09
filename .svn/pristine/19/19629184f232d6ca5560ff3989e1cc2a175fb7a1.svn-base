@@ -1,0 +1,67 @@
+<h3>* 테스트 방법</h3>
+<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><span style="font-size:10pt;">1) 양식 편집 에디터 -&nbsp;표 삽입</span></p>
+<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><span style="font-size:10pt;">2) 셀에서 마우스 우측 버튼 클릭 - 외부데이터 영역 - input 추가</span></p>
+<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><span style="font-size:10pt;">2) input 우측 버튼 클릭 -&nbsp;외부 데이터 영역 수정 클릭</span></p>
+<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><span style="font-size:10pt;">3) 표시 형식 탭 클릭</span></p>
+<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><span style="font-size:10pt;">4) 숫자, 통화 선택</span></p>
+<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><span style="font-size:10pt;">5) 셀 내에 숫자/통화 input 이면 바인딩 시, </span><span style="color:rgb(255, 0, 0);font-size:10pt;"><u>부모 셀이 자동 우측 정렬 됨</u></span></p>
+<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><span style="color:rgb(255, 0, 0);font-size:10pt;"><u><br /></u></span></p>
+<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><a href="http://jira.duzon.com:8080/browse/UCDOC-5331" title="http://jira.duzon.com:8080/browse/UCDOC-5331" target="_blank">http://jira.duzon.com:8080/browse/UCDOC-5331</a>&nbsp;<span style="font-size:10pt;"><br /></span></p>
+<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><br /></p>
+<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><br /></p>
+<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><br /></p>
+<table cellspacing="0" cellpadding="3" style="border-collapse:collapse;width:73%;margin-left:auto;margin-right:auto;table-layout:fixed;overflow-wrap:break-word;word-break:normal;">
+	<colgroup>
+	<col style="width:98px;" />
+	<col style="width:207px;" />
+	<col style="width:206px;" />
+	</colgroup>
+	<tbody>
+		<tr style="height:36px;">
+			<td style="width:91px;height:29px;border:1px solid rgb(0, 0, 0);text-align:center;background-color:rgb(222, 235, 247);">
+				<p style="font-family:굴림;font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><b>input 형식</b></p>
+			</td>
+			<td style="width:200px;height:29px;border:1px solid rgb(0, 0, 0);text-align:center;background-color:rgb(222, 235, 247);">
+				<p style="font-family:굴림;font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><b>샘플</b></p>
+			</td>
+			<td style="width:199px;height:29px;border:1px solid rgb(0, 0, 0);text-align:center;background-color:rgb(222, 235, 247);">
+				<p style="font-family:굴림;font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><b>형식 옵션</b></p>
+			</td>
+		</tr>
+		<tr style="height:39px;">
+			<td style="width:91px;height:32px;border:1px solid rgb(0, 0, 0);text-align:center;">
+				<p style="font-family:굴림;font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">general</p>
+			</td>
+			<td style="width:200px;height:32px;border:1px solid rgb(0, 0, 0);text-align:center;">
+				<p style="font-family:굴림;font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><input type="text" class="dze_external_data_area" style="font-size:9pt;width:150px;" value="일반 input" mapping_key="general_text" /><br /></p>
+			</td>
+			<td style="width:199px;height:32px;border:1px solid rgb(0, 0, 0);text-align:center;">
+				<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><span style="font-family:굴림;font-size:9pt;"><br /></span></p>
+			</td>
+		</tr>
+		<tr style="height:39px;">
+			<td style="width:91px;height:32px;border:1px solid rgb(0, 0, 0);text-align:center;">
+				<p style="font-family:굴림;font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">number</p>
+			</td>
+			<td style="width:200px;height:32px;border:1px solid rgb(0, 0, 0);text-align:center;">
+				<p style="font-family:굴림;font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><input type="text" class="dze_external_data_area" style="font-size:9pt;width:150px;" value="숫자" mapping_key="number" readonly="" dze_format_type="number" /><br /></p>
+			</td>
+			<td style="width:199px;height:32px;border:1px solid rgb(0, 0, 0);text-align:center;">
+				<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><span style="font-family:굴림;font-size:9pt;"><br /></span></p>
+			</td>
+		</tr>
+		<tr style="height:39px;">
+			<td style="width:91px;height:32px;border:1px solid rgb(0, 0, 0);text-align:center;">
+				<p style="font-family:굴림;font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">currency</p>
+			</td>
+			<td style="width:200px;height:32px;border:1px solid rgb(0, 0, 0);text-align:center;">
+				<p style="font-size:9pt;font-family:굴림;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><input type="text" class="dze_external_data_area" style="font-size:9pt;width:150px;" value="화폐" mapping_key="currency" readonly="" dze_format_type="currency" dze_format_symbol="won" /><br /></p>
+			</td>
+			<td style="width:199px;height:32px;border:1px solid rgb(0, 0, 0);text-align:center;">
+				<p style="font-size:9pt;font-family:굴림;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><br /></p>
+			</td>
+		</tr>
+	</tbody>
+</table>
+<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><br /></p>
+<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><br /></p>

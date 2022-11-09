@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="ExecuteAlphaDAO">
+
+	<select id="ExecuteAlphaDAO.selectAlphaDocBoxList" parameterClass="hashmap" resultClass="egovMap">
+	
+		select
+			dir_cd,
+			suite_menu_id
+		from
+			$DB_EDMS$bpm_directory
+		where
+			<isNotEmpty property="menuId">
+				suite_menu_id >= $menuId$ and
+			</isNotEmpty>
+			dir_cd != '000' and
+			suite_menu_id is not null
+		order by suite_menu_id;
+	</select>
+	
+	<select id="ExecuteAlphaDAO.selectAlphaElecDocList" parameterClass="hashmap" resultClass="hashmap">
+	
+		select 
+			user_id as 'USER_ID', 
+			doc_no as 'DOC_NO', 
+			dept_nm as 'DEPT_NM', 
+			rep_dt as 'REP_DT', 
+			user_nm as 'CREATE_NM',
+			ta.co_id as 'CO_ID',
+			doc_title as 'DOC_TITLE',
+			ta.form_id as 'FORM_ID',
+			doc_id as 'DOC_ID',
+			dept_id as 'DEPT_ID',
+			ta.modify_dt as 'MODIFY_DT',
+			ta.created_dt as 'CREATED_DT',
+			(
+				case 
+					when doc_sts = '10'
+					then '임시저장'
+					when doc_sts = '20'
+					then '상신'
+					when doc_sts = '30'
+					then '진행'
+					when doc_sts = '40'
+					then '발신종결'
+					when doc_sts = '50'
+					then '수신상신'
+					when doc_sts = '60'
+					then '수신진행'
+					when doc_sts = '70'
+					then '수신반려'
+					when doc_sts = '80'
+					then '수신확인'
+					when doc_sts = '90'
+					then '종결'
+					when doc_sts = '100'
+					then '반려'
+					when doc_sts = '110'
+					then '보류'
+				end
+			) as 'DOC_STSNM',
+			"1" as 'TRANSFER_YN',
+			(select emp_name from $DB_NEOS$t_co_emp_multi where emp_Seq = ta.modify_by and lang_code = 'kr') as 'MODIFY_NM',
+			user_nm as 'USER_NM',
+			doc_sts as 'DOC_STS',
+			end_dt as 'END_DT',
+			form_nm as 'FORM_NM',
+			form_mode as 'FORM_MODE'
+		from 
+			$DB_NEOS$teag_appdoc ta
+		join 
+			$DB_NEOS$teag_form tf on ta.form_id = tf.form_id
+		where
+			doc_id in ($docIdList$)
+	</select>
+
+	<select id="ExecuteAlphaDAO.selectElecDocArtList" parameterClass="hashmap" resultClass="egovMap">
+	
+		select
+			art_seq_no,
+			comp_id,
+			outer_key
+		from
+			$DB_EDMS$bpm_art
+		where
+			outer_key in ($docIdList$)
+	</select>
+	
+	<insert id="ExecuteAlphaDAO.insertAlphaAuthApproveDoc" parameterClass="hashmap">
+	
+		INSERT IGNORE INTO $DB_EDMS$BPM_ART_PERM (
+			art_seq_no,
+			comp_id,
+			perm_id,
+			approval_id,
+			perm_state,
+			reg_date,
+			approval_date,
+			perm_type
+		) VALUES
+		(
+			#artSeqNo#
+			,#compId#
+			,#permId#
+			,#approvalId#
+			,#permState#
+			,#regDate#
+			,#approvalDate#
+			,'M'
+		)
+		
+	</insert>
+	
+	<insert id="ExecuteAlphaDAO.insertAlphaViewDoc" parameterClass="hashmap">
+	
+		INSERT IGNORE INTO $DB_EDMS$BPM_READ_RECORD (
+			record_seq_no,
+			art_seq_no,
+			mbr_id,
+			read_state,
+			reg_date
+		) values
+		(
+			((select MAX(aa.record_seq_no) + 1 from $DB_EDMS$BPM_READ_RECORD aa))
+			,#artSeqNo#
+			,#mbrId#
+			,'A'
+			,#regDate#
+		)
+		
+		
+	</insert>
+	
+	<select id="ExecuteAlphaDAO.GetSuiteInfo" parameterClass="hashmap" resultClass="egovMap">
+    	/* [ eapLogKey : ${eapLogKey}] ExecuteAlphaDAO.GetSuiteInfo - mariadb */
+   		SELECT 
+   			grp_id
+   			, grp_cd
+   			, grp_nm
+   			, build_type  
+   			, db_ip
+   			, db_user_id
+   			, db_password
+   			, db_name
+   		FROM  $DB_NEOS$t_mig_info
+   		WHERE 1 = 1
+		<isNotEmpty property="grpId">
+		   	AND grp_id = #grpId#
+		</isNotEmpty>
+   		
+	</select>
+	
+	<delete id="ExecuteAlphaDAO.deleteBpmArtPerm" parameterClass="hashmap">
+		delete from $DB_EDMS$BPM_ART_PERM where perm_state != 'S'
+	</delete>
+	
+	<!-- 댓글 등록 -->
+	<insert id="CommentMigDAO.insertComment" parameterClass="hashmap">
+	
+		INSERT INTO $DB_NEOS$t_co_comment
+		(
+			  comment_seq
+			, module_gbn_code
+			, module_seq
+			, top_level_comment_seq
+			, parent_comment_seq
+			, sort_comment_seq
+			, depth
+			, contents
+			, comment_type
+			, comp_seq
+			, dept_seq
+			, file_id
+			, high_gbn_code
+			, middle_gbn_code
+			, emp_name
+			, comment_password
+			, comp_name
+			, dept_name
+			, duty_code
+			, duty_name
+			, position_code
+			, position_name
+			, create_ip
+			, create_seq
+			, create_date
+		)
+		VALUES
+		(
+			  #commentSeq#
+			, #moduleGbnCode#
+			, #moduleSeq#
+			, #topLevelCommentSeq#
+			, #parentCommentSeq#
+			, #sortCommentSeq#
+			, #depth#
+			, #contents#
+			, #commentType#
+			, #compSeq#
+			, #deptSeq#
+			, #fileId#
+			, #highGbnCode#
+			, #middleGbnCode#
+			, #empName#
+			, #commentPassword#
+			, #compName#
+			, #deptName#
+			, #dutyCode#
+			, #dutyName#
+			, #positionCode#
+			, #positionName#
+			, #createIp#
+			, #empSeq#
+			, #createDate#
+		)
+	</insert>
+	
+	<update id="ExecuteAlphaDAO.createCommentTableBackup" parameterClass="hashmap">
+		
+		CREATE TABLE IF NOT EXISTS $DB_NEOS$$commentTableName$ select * from $DB_NEOS$t_co_comment;
+	</update>
+	
+	<update id="ExecuteAlphaDAO.createCommentCountTableBackup" parameterClass="hashmap">
+		
+		CREATE TABLE IF NOT EXISTS $DB_NEOS$$commentCountTableName$ select * from $DB_NEOS$t_co_comment_count;
+	</update>
+
+	
+	<update id="ExecuteAlphaDAO.updateDocIdTmigInfo" parameterClass="hashmap">
+		
+		UPDATE $DB_NEOS$T_MIG_INFO
+		   SET file_user_id = #suiteMenuId#,
+		   	   file_password = $docId$;
+	</update>
+	
+	<select id="ExecuteAlphaDAO.selectTmigInfoDoc" parameterClass="hashmap" resultClass="egovMap">
+	
+		select
+			file_user_id as menuId,
+			file_password as docId 
+		from
+			$DB_NEOS$T_MIG_INFO;
+	</select>
+	
+	<update id="ExecuteAlphaDAO.updateFailDocId" parameterClass="hashmap">
+		update $DB_EDMS$bpm_directory 
+		set 
+			fail_elec_doc_id = concat(ifnull(fail_elec_doc_id, ''), #failDocIdList#) 
+		where 
+			dir_cd = '000';
+		
+	</update>
+</sqlMap>

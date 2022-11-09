@@ -1,0 +1,768 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AttachFileUpload">
+	
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+		 <insert id="AttachFileUpload.insertAtchFile" parameterClass="hashmap">
+	     	
+			INSERT INTO $DB_NEOS$`t_co_atch_file` 
+				SET
+					`file_id`         	= #fileId#, 
+					`use_yn`         	= 'Y',
+					`create_seq`		= #createSeq#, 
+					`create_date`		= NOW()
+				ON DUPLICATE KEY UPDATE
+					modify_seq			= #createSeq#, 
+					modify_date			= NOW()
+				
+	     </insert>
+	     
+	      <insert id="AttachFileUpload.insertAtchFileDetail" parameterClass="hashmap">
+		      INSERT INTO $DB_NEOS$`t_co_atch_file_detail` 
+				SET
+					`file_id`         = #fileId#, 
+					`file_sn`         = #fileSn#, 
+					`path_seq` 		  = #pathSeq#, 
+					`file_stre_cours` = #fileStreCours#, 
+					`stre_file_name`  = #streFileName#, 
+					`orignl_file_name`= #orignlFileName#,  
+					`file_extsn`      = #fileExtsn#, 
+					`file_cn`         = #fileCn#, 
+					`file_size`       = #fileSize#
+				ON DUPLICATE KEY UPDATE
+					`path_seq` 		  = #pathSeq#, 
+					`file_stre_cours` = #fileStreCours#, 
+					`stre_file_name`  = #streFileName#, 
+					`orignl_file_name`= #orignlFileName#,  
+					`file_extsn`      = #fileExtsn#, 
+					`file_cn`         = #fileCn#, 
+					`file_size`       = #fileSize#
+	      </insert>
+	      
+	      
+	     <delete id="AttachFileUpload.deleteAtchFile" parameterClass="hashmap">
+	     	DELETE 
+	     	FROM $DB_NEOS$t_co_atch_file
+	     	WHERE file_id = #file_Id# or file_id = concat(#file_Id#,'_poto')
+	     </delete>
+	     
+	     <delete id="AttachFileUpload.deleteAtchFileDetail" parameterClass="hashmap">
+	     	DELETE 
+	     	FROM $DB_NEOS$t_co_atch_file_detail
+	     	WHERE file_id = #file_Id# or file_id = concat(#file_Id#,'_poto')
+	     </delete>
+	     
+	     
+	     <delete id="AttachFileUpload.deleteOrgImg" parameterClass="hashmap">
+	     	DELETE 
+	     	FROM $DB_NEOS$t_co_org_img
+	     	WHERE org_seq = #orgSeq#
+	     		AND img_type = #imgType#
+	     		<isNotEmpty property="dispMode">
+	     		 AND disp_mode = #dispMode#
+	     		</isNotEmpty>
+	     		<isNotEmpty property="appType">
+	     		 AND app_type = #appType#
+	     		</isNotEmpty>
+	     		<isNotEmpty property="osType">
+	     		 AND os_type = #osType#
+	     		</isNotEmpty>
+	     		<isNotEmpty property="dispType">
+	     		 and disp_type = #dispType#
+	     		</isNotEmpty>
+	     		<isNotEmpty property="type">
+	     		 and ph_type = #type#
+	     		</isNotEmpty>
+	     </delete>
+   
+   		<select id="AttachFileUpload.selectAttachFileDetail" parameterClass="hashmap" resultClass="egovMap">
+   			SELECT 
+				a.file_id, 
+				b.file_sn, 
+				b.path_seq, 
+				b.file_stre_cours, 
+				b.stre_file_name, 
+				b.orignl_file_name, 
+				b.file_extsn, 
+				b.file_size
+			FROM $DB_NEOS$t_co_atch_file a, $DB_NEOS$t_co_atch_file_detail b
+			WHERE a.file_id = b.file_id
+			AND a.use_yn = 'Y'
+			AND b.use_yn = 'Y'
+			AND a.file_id = #fileId#
+			<isNotEmpty property="fileSn">
+			AND b.file_sn = #fileSn#
+			</isNotEmpty>
+			<isNotEmpty property="limitCount">
+			limit 1
+			</isNotEmpty>			
+   		</select>
+   		   		
+   		<select id="AttachFileUpload.selectAttachFileDetailApi" parameterClass="hashmap" resultClass="egovMap">
+   			SELECT 
+				a.file_id, 
+				b.file_sn, 
+				b.path_seq, 
+				b.file_stre_cours, 
+				b.stre_file_name, 
+				b.orignl_file_name, 
+				b.file_extsn, 
+				b.file_size,
+				c.absol_path,
+				concat(c.absol_path,b.file_stre_cours,'/') filePath	
+			FROM $DB_NEOS$t_co_atch_file a, $DB_NEOS$t_co_atch_file_detail b, $DB_NEOS$t_co_group_path c 
+			WHERE a.file_id = b.file_id
+			AND a.use_yn = 'Y'
+			AND b.use_yn = 'Y'
+			AND a.file_id = #fileId#
+			<isNotEmpty property="fileSn">
+			AND b.file_sn = #fileSn#
+			</isNotEmpty>
+			AND b.path_seq = c.path_seq 
+			and c.os_type = #osType#
+			<isNotEmpty property="groupSeq">
+			and c.group_seq = #groupSeq#
+			</isNotEmpty>
+			<isEmpty property="groupSeq">
+			limit 1
+			</isEmpty>			
+   		</select>
+   		
+   		<update id="AttachFileUpload.updateAttachFile" parameterClass="hashmap">
+   			UPDATE $DB_NEOS$t_co_atch_file 
+			SET
+				`use_yn` = #useYn#
+			
+			WHERE
+			`file_id` = #fileId#
+			AND
+				create_seq = #empSeq#
+
+   		</update>
+   		
+   		<update id="AttachFileUpload.updateAttachFileDetail" parameterClass="hashmap">
+   			UPDATE $DB_NEOS$t_co_atch_file_detail
+			SET
+				`use_yn` = #useYn#
+			
+			WHERE
+			`file_id` = #fileId#
+			<isNotEmpty property="fileSn">
+			AND
+				file_sn IN ($fileSn$)
+			</isNotEmpty>
+   		</update>
+   		
+   		<select id="AttachFileUpload.selectAttachFileMaxSn" parameterClass="hashmap" resultClass="java.lang.Integer">
+	   		SELECT IFNULL(MAX(b.file_sn),-1) as file_sn
+			FROM $DB_NEOS$t_co_atch_file a, $DB_NEOS$t_co_atch_file_detail b
+			WHERE
+				a.file_id = b.file_id
+				AND a.file_id = #fileId#
+   		</select>
+   		
+   		<delete id="AttachFileUpload.deleteAttachFile" parameterClass="hashmap">
+			DELETE
+			FROM $DB_NEOS$t_co_atch_file
+			WHERE
+				file_id = #Old_picFileId#
+<!-- 				OR file_id = #Old_signFileId# -->
+   		</delete>
+   		
+   		<delete id="AttachFileUpload.deleteAttachFileDetail" parameterClass="hashmap">
+			DELETE
+			FROM $DB_NEOS$t_co_atch_file_detail
+			WHERE
+				file_id = #Old_picFileId#
+<!-- 				OR file_id = #Old_signFileId# -->
+   		</delete>
+   		
+   		<select id="AttachFileUpload.selectEmpProfileList" parameterClass="hashmap" resultClass="egovMap">
+   			select group_seq, emp_seq, b.* 
+			from $DB_NEOS$t_co_emp a join t_co_atch_file_detail b on a.pic_file_id = b.file_id
+			where
+				a.group_seq = #groupSeq#
+				and b.use_yn = 'Y'
+			limit $startIdx$, $endIdx$
+   		</select>
+   		
+   		
+   		<!-- 파일 업로드관련(그룹업로드경로 리스트 조회) -->
+		<select id="AttachFileUpload.selectGroupPathList" parameterClass="hashMap" resultClass="egovMap">
+			SELECT path_seq as pathSeq
+			, os_type as osType
+			, absol_path as absolPath
+			FROM $DB_NEOS$t_co_group_path
+			WHERE group_seq = #groupSeq#
+				AND os_type = #osType#	
+				AND path_seq = #pathSeq#		
+			ORDER BY path_seq				
+			LIMIT 1					
+		</select>
+		
+		<select id="AttachFileUpload.selectGroupPathInfo" parameterClass="hashMap" resultClass="egovMap">		
+			SELECT 
+				*
+			FROM $DB_NEOS$t_co_group_path
+			WHERE 				
+				group_seq = #groupSeq#
+				AND os_type = #osType#	
+				AND path_seq = #pathSeq#		
+			ORDER BY path_seq				
+			LIMIT 1	
+		</select>
+		
+		
+		<!-- 파일id 조회  -->
+		<select id="AttachFileUpload.getAttchFileId" parameterClass="hashMap" resultClass="String">		  
+			SELECT $DB_NEOS$nextval('atchfileid') as nextVal			
+		</select>
+		
+<!-- 		<select id="AttachFileUpload.selectAttachFileMaxSn" parameterClass="hashMap" resultClass="int"> -->
+<!-- 	   		SELECT MAX(b.file_sn) as file_sn -->
+<!-- 			FROM t_co_atch_file a, t_co_atch_file_detail b -->
+<!-- 			WHERE	a.file_id = b.file_id -->
+<!-- 			AND a.file_id = #fileId# -->
+<!-- 			AND a.use_yn = 'Y' -->
+<!-- 		</select> -->
+		
+		
+		<insert id="AttachFileUpload.insertAtchFileInfo" parameterClass="hashMap">
+			INSERT IGNORE INTO $DB_NEOS$t_co_atch_file (
+			   file_id
+			, use_yn
+			, create_seq
+			, create_date		
+			) VALUES (
+			    #fileId#
+			  , 'Y'		  
+			  , #createSeq#
+			  , SYSDATE()
+			)
+		</insert>
+		
+		<insert id="AttachFileUpload.insertAtchFileDetailInfo" parameterClass="hashMap">
+			INSERT INTO $DB_NEOS$t_co_atch_file_detail (
+			   	file_id 
+			,	file_sn 
+			,	path_seq
+			,	file_stre_cours 
+			,	stre_file_name
+			,	orignl_file_name
+			,	file_extsn
+			,	file_cn
+			,	file_size		
+			) VALUES (
+			    #fileId#
+			  , #fileSn#
+			  , #pathSeq#
+			  , #fileStreCours#
+			  , #streFileName#
+			  , #orignlFileName#
+			  , #fileExtsn#  
+			  , #fileCn#
+			  , #fileSize#		  
+			)
+		</insert>
+		
+		
+		<select id="AttachFileUpload.getFilePathInfoGw" parameterClass="hashMap" resultClass="egovMap">
+			select 
+				a.file_id,
+				file_sn,
+				a.path_seq,
+				concat(b.absol_path,file_stre_cours,'/',stre_file_name,'.',file_extsn) fileFullPath, 
+				concat(b.absol_path,file_stre_cours,'/') filePath,
+				concat(stre_file_name,'.',file_extsn) fileName,
+				stre_file_name streFileName,
+				file_extsn fileExtsn,
+				concat(orignl_file_name,'.',file_extsn) as oriFileName
+			From $DB_NEOS$t_co_atch_file_detail a
+			inner join $DB_NEOS$t_co_group_path b 
+				on a.path_seq = b.path_seq and b.os_type = #osType# and b.group_seq = #groupSeq#
+			inner join $DB_NEOS$t_co_atch_file c
+				on a.file_id = c.file_id
+			where 
+				a.file_id = #fileId# and a.file_sn = #fileSn#
+			limit 1
+		</select>
+		
+		<select id="AttachFileUpload.getFilePathInfoBoard" parameterClass="hashMap" resultClass="egovMap">
+			select
+				file_seq_no				
+				,concat((select absol_path From $DB_NEOS$t_co_group_path where path_seq = '1100' and os_type = #osType# limit 1),'/GWPFile_per_BoardNo/',b.cat_seq_no,'/',a.tmp_file_name) fileFullPath
+				,concat((select absol_path From $DB_NEOS$t_co_group_path where path_seq = '1100' and os_type = #osType# limit 1),'/GWPFile_per_BoardNo/',b.cat_seq_no,'/') filePath
+				,concat((select absol_path From $DB_NEOS$t_co_group_path where path_seq = '1100' and os_type = #osType# limit 1),a.file_path_2,a.tmp_file_name) fileFullPathMig
+				,concat((select absol_path From $DB_NEOS$t_co_group_path where path_seq = '1100' and os_type = #osType# limit 1),a.file_path_2) filePathMig
+				,tmp_file_name 
+				,substring_index(tmp_file_name, '.', 1) streFileName
+				,org_file_name oriFileName
+				,substring_index(tmp_file_name, '.', -1) fileExtsn
+				,DATE_FORMAT(reg_date, '%Y%m%d%H%i%s') create_date 
+			from
+				$DB_EDMS$board_attach_file a
+				left join $DB_EDMS$board_art b on a.art_seq_no = b.art_seq_no				
+			where 
+				file_seq_no = #fileId#
+			limit 1
+		</select>
+		
+		
+		<select id="AttachFileUpload.getFilePathInfoBoardReply" parameterClass="hashMap" resultClass="egovMap">
+			select
+				file_seq_no				
+				,concat((select absol_path From $DB_NEOS$t_co_group_path where path_seq = '1100' and os_type = #osType# limit 1),'/GWPFile_per_BoardNo/',b.cat_seq_no,'/',a.tmp_file_name) fileFullPath
+				,concat((select absol_path From $DB_NEOS$t_co_group_path where path_seq = '1100' and os_type = #osType# limit 1),'/GWPFile_per_BoardNo/',b.cat_seq_no,'/') filePath
+				,concat((select absol_path From $DB_NEOS$t_co_group_path where path_seq = '1100' and os_type = #osType# limit 1),a.file_path_2,a.tmp_file_name) fileFullPathMig
+				,concat((select absol_path From $DB_NEOS$t_co_group_path where path_seq = '1100' and os_type = #osType# limit 1),a.file_path_2) filePathMig
+				,tmp_file_name 
+				,substring_index(tmp_file_name, '.', 1) streFileName
+				,org_file_name oriFileName
+				,substring_index(tmp_file_name, '.', -1) fileExtsn
+				,DATE_FORMAT(reg_date, '%Y%m%d%H%i%s') create_date 
+			from
+				$DB_EDMS$board_reply_attach_file a
+				left join $DB_EDMS$board_art b on a.art_seq_no = b.art_seq_no				
+			where 
+				file_seq_no = #fileId#
+			limit 1
+		</select>
+		
+		<select id="AttachFileUpload.getFilePathInfoDoc" parameterClass="hashMap" resultClass="egovMap">	
+ 			select 
+				file_seq_no
+ 				,concat((select absol_path From $DB_NEOS$t_co_group_path where path_seq = '1100' and os_type = #osType# limit 1),'/Files_ArtNo/',b.org_art_no,'/',tmp_file_name) fileFullPath
+ 				,concat((select absol_path From $DB_NEOS$t_co_group_path where path_seq = '1100' and os_type = #osType# limit 1),'/Files_ArtNo/',b.org_art_no,'/') filePath
+ 				,org_file_name oriFileName
+ 				,substring_index(tmp_file_name, '.', -1) fileExtsn
+ 				,substring(tmp_file_name, 1, LOCATE(substring_index(tmp_file_name, '.', -1),tmp_file_name)-2)  streFileName
+ 				,a.* 				
+ 				,tmp_file_name, left(tmp_file_name,14) create_date
+ 			from 
+ 				$DB_EDMS$doc_attach_file a
+ 				left join $DB_EDMS$doc_art b on a.art_seq_no = b.art_seq_no
+ 			where a.file_seq_no = #fileId#
+		</select>
+		
+		<select id="AttachFileUpload.getFilePathInfoDocOld" parameterClass="hashMap" resultClass="egovMap">	
+ 			select 
+				file_seq_no
+ 				,concat((select absol_path From $DB_NEOS$t_co_group_path where path_seq = '1100' and os_type = #osType# limit 1),'/Files_ArtNo/',b.org_art_no,'/',tmp_file_name) fileFullPath
+ 				,concat((select absol_path From $DB_NEOS$t_co_group_path where path_seq = '1100' and os_type = #osType# limit 1),'/Files_ArtNo/',b.org_art_no,'/') filePath
+ 				,org_file_name oriFileName
+ 				,substring_index(tmp_file_name, '.', -1) fileExtsn
+ 				,substring(tmp_file_name, 1, LOCATE(substring_index(tmp_file_name, '.', -1),tmp_file_name)-2)  streFileName
+ 				,a.* 				
+ 				,tmp_file_name, left(tmp_file_name,14) create_date
+ 			from 
+ 				$DB_EDMS$doc_attach_file_old a
+ 				left join $DB_EDMS$doc_art_old b on a.art_seq_no = b.art_seq_no
+ 			where a.file_seq_no = #fileId# and a.art_seq_no = #fileSn#
+		</select>
+		
+		
+		<select id="AttachFileUpload.getFilePathInfoBpm" parameterClass="hashMap" resultClass="egovMap">	
+ 			select 
+				file_seq_no
+ 				,concat((select absol_path From $DB_NEOS$t_co_group_path where path_seq = '1100' and os_type = #osType# limit 1),'/BPM_Files_ArtNo/',b.org_art_no,'/',tmp_file_name) fileFullPath
+ 				,concat((select absol_path From $DB_NEOS$t_co_group_path where path_seq = '1100' and os_type = #osType# limit 1),'/BPM_Files_ArtNo/',b.org_art_no,'/') filePath
+ 				,org_file_name oriFileName
+ 				,substring_index(tmp_file_name, '.', -1) fileExtsn
+ 				,substring_index(tmp_file_name, '.', 1) streFileName
+ 				,a.* 				
+ 				,tmp_file_name, left(tmp_file_name,14) create_date
+ 			from 
+ 				$DB_EDMS$bpm_attach_file a
+ 				left join $DB_EDMS$bpm_art b on a.art_seq_no = b.art_seq_no
+ 			where a.file_seq_no = #fileId#
+		</select>
+		
+		
+		<select id="AttachFileUpload.getFileDetailInfoBoard" parameterClass="hashMap" resultClass="egovMap">
+			select
+				file_seq_no file_id
+				,'0' file_sn
+				,'1100' path_seq
+				,file_path_2 file_stre_cours
+				,substring_index(tmp_file_name, '.', 1) stre_file_name
+				,substring_index(org_file_name, '.', 1) orignl_file_name
+				,substring_index(tmp_file_name, '.', -1) file_extsn
+				,file_size
+				,concat((select absol_path From $DB_NEOS$t_co_group_path where path_seq = '1100' and os_type = #osType# limit 1),'/GWPFile_per_BoardNo',substring_index(file_path_1,'GWPFile_per_BoardNo',-1)) filePath
+			from
+				$DB_EDMS$board_attach_file a
+				left join $DB_EDMS$board_art b on a.art_seq_no = b.art_seq_no
+			where 
+				file_seq_no = #fileSn#
+				AND a.art_seq_no = #fileId#
+		</select>
+		
+		<select id="AttachFileUpload.getFileDetailInfoBoardThume" parameterClass="hashMap" resultClass="egovMap">
+			select
+				'' file_id
+				,'0' file_sn
+				,'1100' path_seq
+				,concat('/GWPFile_per_BoardNo/',cat_seq_no,'/') file_stre_cours
+				,substring_index(org_image, '.', 1) stre_file_name
+				,substring_index(org_image, '.', 1) orignl_file_name				
+				,substring_index(org_image, '.', -1) file_extsn
+				,null
+				,concat((select absol_path From $DB_NEOS$t_co_group_path where path_seq = '1100' and os_type = #osType# limit 1),'/GWPFile_per_BoardNo/',cat_seq_no,'/') filePath
+			from
+				$DB_EDMS$board_art a				
+			where
+				a.art_seq_no = #fileId#
+		</select>
+		
+		<select id="AttachFileUpload.CheckBoardType" parameterClass="hashMap" resultClass="egovMap">
+			select 
+				(select cat_type from $DB_EDMS$board_Category where cat_seq_no = b.cat_seq_no) cat_type,
+				org_image, 
+				img_path,
+				cat_seq_no
+			from $DB_EDMS$board_art b 
+			where 
+				art_seq_no = #fileId#
+		</select>
+		
+		
+		<select id="AttachFileUpload.getFileDetailInfoBoardReply" parameterClass="hashMap" resultClass="egovMap">
+			select
+				file_seq_no file_id
+				,'0' file_sn
+				,'1100' path_seq
+				,file_path_2 file_stre_cours
+				,substring_index(tmp_file_name, '.', 1) stre_file_name
+				,substring_index(org_file_name, '.', 1) orignl_file_name
+				,substring_index(org_file_name, '.', -1) file_extsn
+				,file_size
+				,concat((select absol_path From $DB_NEOS$t_co_group_path where path_seq = '1100' and os_type = #osType# limit 1),'/GWPFile_per_BoardNo',substring_index(file_path_1,'GWPFile_per_BoardNo',-1)) filePath
+			from
+				$DB_EDMS$board_reply_attach_file a
+				left join $DB_EDMS$board_art b on a.art_seq_no = b.art_seq_no
+			where 
+				file_seq_no = #fileSn#
+				AND a.art_seq_no = #fileId#
+		</select>
+		
+		
+		
+		<select id="AttachFileUpload.getFileDetailInfoDoc" parameterClass="hashMap" resultClass="egovMap">
+			select 
+				file_seq_no file_id,
+				'0' file_sn,
+				'600',
+				concat('/Files_ArtNo',substring_index(file_path_1,'Files_ArtNo',-1)) file_stre_cours,
+ 				substring_index(tmp_file_name, '.', 1) stre_file_name,
+ 				substring_index(org_file_name, '.', 1) orignl_file_name,
+ 				substring_index(org_file_name, '.', -1) file_extsn,
+ 				file_size file_size,
+ 				concat((select absol_path From $DB_NEOS$t_co_group_path where path_seq = '1100' and os_type = #osType# limit 1),'/Files_ArtNo',substring_index(file_path_1,'Files_ArtNo',-1)) filePath
+ 			from 
+ 				$DB_EDMS$doc_attach_file a
+ 				left join $DB_EDMS$doc_art b on a.art_seq_no = b.art_seq_no
+ 			where a.file_seq_no = #fileSn#
+				AND a.art_seq_no = #fileId#
+		</select>
+		
+		<select id="AttachFileUpload.getFileDetailInfoDocOld" parameterClass="hashMap" resultClass="egovMap">
+			select 
+				file_seq_no file_id,
+				'0' file_sn,
+				'600',
+				concat('/Files_ArtNo',substring_index(file_path_1,'Files_ArtNo',-1)) file_stre_cours,
+ 				substring_index(tmp_file_name, '.', 1) stre_file_name,
+ 				substring_index(org_file_name, '.', 1) orignl_file_name,
+ 				substring_index(org_file_name, '.', -1) file_extsn,
+ 				file_size file_size,
+ 				concat((select absol_path From $DB_NEOS$t_co_group_path where path_seq = '1100' and os_type = #osType# limit 1),'/Files_ArtNo',substring_index(file_path_1,'Files_ArtNo',-1)) filePath
+ 			from 
+ 				$DB_EDMS$doc_attach_file_old a
+ 				left join $DB_EDMS$doc_art_old b on a.art_seq_no = b.art_seq_no
+ 			where a.file_seq_no = #fileSn#
+				AND a.art_seq_no = #fileId#
+		</select>
+
+
+		<select id="AttachFileUpload.getBaseUploadPath" parameterClass="hashMap" resultClass="egovMap">
+			select
+				*
+			from
+				$DB_NEOS$t_co_group_path
+			where
+				path_seq = '0'
+				AND os_type = #osType#
+			limit 1
+		</select>
+		
+		
+		<select id="boardAttachFileList" resultClass="egovMap" parameterClass="hashmap">
+			select *, substring_index(org_file_name, '.', -1) file_extsn, substring_index(tmp_file_name, '.', -1) file_extsn2
+			from $DB_EDMS$board_attach_file
+			where tmp_file_name = substring_index(tmp_file_name, '.', -1)		
+		</select>
+		
+		<select id="boardReplyAttachFileList" resultClass="egovMap" parameterClass="hashmap">
+			select *, substring_index(org_file_name, '.', -1) file_extsn, substring_index(tmp_file_name, '.', -1) file_extsn2
+			from $DB_EDMS$board_reply_attach_file	
+			where tmp_file_name = substring_index(tmp_file_name, '.', -1)	
+		</select>
+		
+		<update id="boardAttachUpdateFileName" parameterClass="hashmap">
+			update $DB_EDMS$board_attach_file
+			set tmp_file_name = concat(tmp_file_name,'.',substring_index(org_file_name, '.', -1))
+			where tmp_file_name = substring_index(tmp_file_name, '.', -1)
+		</update>
+		
+		<update id="boardReplyAttachUpdateFileName" parameterClass="hashmap">
+			update $DB_EDMS$board_reply_attach_file
+			set tmp_file_name = concat(tmp_file_name,'.',substring_index(org_file_name, '.', -1))
+			where tmp_file_name = substring_index(tmp_file_name, '.', -1)
+		</update>
+		
+		
+		<select id="NpToAlphaEdmsAttachMig" parameterClass="hashmap" resultClass="egovMap">
+			select *from
+			$DB_EDMS$board_attach_file_mig
+		</select>
+		
+		
+		<select id="NpToAlphaEdmsAttachMig2" parameterClass="hashMap" resultClass="egovMap">
+			select
+				*
+			from
+				$DB_EDMS$doc_attach_file_old				
+			where 
+				org_file_name = #fileNm#
+				limit 1
+		</select>
+		
+		
+		<select id="GetGwUploadTotalFileSize" parameterClass="hashmap" resultClass="egovMap">
+			
+			select 
+				round(convert(sum(ifnull(file_size,0))/1024/1024/1024, double),3) total_file_size
+				,(select gw_volume from $DB_NEOS$t_co_group where group_seq = #groupSeq#) gw_volume			 
+			from(
+				select ifnull(sum(ifnull(module_capac,0)),0) as file_size from $DB_NEOS$t_co_group_path where path_seq in ('800','810')
+				union all
+				select sum(ifnull(file_size,0)) file_size From $DB_EDMS$api_attach_file
+				union all
+				select sum(ifnull(file_size,0)) file_size From $DB_EDMS$board_attach_file
+				union all
+				select sum(ifnull(file_size,0)) file_size From $DB_EDMS$board_reply_attach_file
+				union all
+				select sum(ifnull(file_size,0)) file_size From $DB_EDMS$bpm_attach_file
+				union all
+				select sum(ifnull(file_size,0)) file_size From $DB_EDMS$bpm_attach_file_old
+				union all
+				select sum(ifnull(file_size,0)) file_size From $DB_EDMS$doc_attach_file
+				union all
+				select sum(ifnull(file_size,0)) file_size From $DB_EDMS$doc_attach_file_old
+				union all
+				select sum(ifnull(file_size,0)) file_size From $DB_EDMS$doc_temporary_attach_file
+				union all
+				select sum(ifnull(file_size,0)) file_size from $DB_NEOS$t_co_atch_file_detail a
+				inner join $DB_NEOS$t_co_atch_file b on a.file_id = b.file_id
+				and a.use_yn != 'N' and b.use_yn != 'N'
+			)a
+		
+		</select>
+		
+		
+		<select id="AttachFileUpload.getPersonnelCardInfo" parameterClass="hashmap" resultClass="egovMap">
+			select 
+				a.*,
+				c.comp_seq main_comp_seq
+			from 
+				$DB_NEOS$t_at_personnel_card_file a
+				left join $DB_NEOS$t_co_emp b on a.emp_seq = b.emp_seq
+				left join $DB_NEOS$t_co_emp_dept c on b.emp_seq = c.emp_seq
+			where 
+					file_id = #fileId#
+				and b.main_comp_seq = c.comp_seq and c.main_dept_yn = 'Y' and b.use_yn != 'D'
+			limit 1
+		</select>
+		
+		<select id="AttachFileUpload.getPersonnelCardAuthList" parameterClass="hashmap" resultClass="egovMap">
+			SELECT
+			    e.group_seq AS groupSeq
+			    , c.comp_seq AS compSeq
+			    , ed.dept_seq AS deptSeq
+			    , e.emp_seq AS empSeq
+			    , vem.emp_name_multi AS comp_name_multi
+			    , vdm.dept_name_multi AS dept_name_acmulti
+			    , CONCAT(vem.emp_name_multi, '(', e.login_id, ')') AS empName
+			    , ec.work_status
+			    , ed.position_code
+			    , b.file_id AS fileId
+			FROM $DB_NEOS$t_co_emp e
+			LEFT JOIN $DB_NEOS$v_t_co_emp_multi vem
+			    ON vem.emp_seq = e.emp_seq
+			LEFT JOIN $DB_NEOS$t_co_emp_dept ed
+			    ON  e.emp_seq = ed.emp_seq
+			    AND e.group_seq = ed.group_seq
+			LEFT JOIN $DB_NEOS$t_co_comp c
+			    ON e.group_seq = c.group_seq
+			    AND ed.comp_seq = c.comp_seq
+			LEFT JOIN $DB_NEOS$t_co_emp_comp ec
+			    ON  ec.comp_seq = c.comp_seq
+			    AND e.emp_seq = ec.emp_seq
+			LEFT JOIN $DB_NEOS$t_at_personnel_card_file b
+			    ON e.emp_seq = b.emp_seq COLLATE utf8mb4_general_ci
+			INNER JOIN $DB_NEOS$t_co_dept d
+			    ON ed.dept_seq = d.dept_seq
+			LEFT JOIN $DB_NEOS$v_t_co_dept_multi vdm
+			    ON vdm.dept_seq = ed.dept_seq
+			WHERE
+			    e.use_yn != 'D'
+			    AND e.emp_seq IN (
+			        SELECT DISTINCT b.emp_seq
+			        FROM (
+			            SELECT
+			                a.comp_seq AS manage_comp_seq
+			                , a.emp_seq AS manage_emp_seq
+			                , b.group_seq AS group_seq
+			                , b.comp_seq AS comp_seq
+			                , b.work_team_sqno AS work_team_sqno
+			            FROM $DB_NEOS$t_at_work_team_manager a
+			            INNER JOIN $DB_NEOS$t_at_work_team_mst b
+			                ON  a.group_seq = b.group_seq
+			                AND a.comp_seq = b.comp_seq
+			                AND a.work_team_sqno = b.work_team_sqno
+			            WHERE a.use_yn = 'Y'
+			            AND   a.att_manager_code = '220'
+			            AND   b.use_yn = 'Y'
+			        ) a
+			        INNER JOIN $DB_NEOS$v_at_work_team_member b
+			            ON  a.group_seq = b.group_seq
+			            AND a.comp_seq = b.comp_seq
+			            AND a.work_team_sqno = b.work_team_sqno
+			        WHERE a.manage_comp_seq = #compSeq#
+			        AND   a.manage_emp_seq = #empSeq#
+			        
+			        UNION
+			        
+			        SELECT DISTINCT b.emp_seq
+			        FROM (
+			            SELECT
+			                a.comp_seq AS manage_comp_seq
+			                , a.emp_seq AS manage_emp_seq
+			                , b.group_seq AS group_seq
+			                , b.comp_seq AS comp_seq
+			                , b.work_team_sqno AS work_team_sqno
+			                , b.work_team_div_code AS att_manager_code
+			            FROM $DB_NEOS$t_at_work_team_manager a
+			            INNER JOIN $DB_NEOS$t_at_work_team_mst b
+			                ON  a.group_seq = b.group_seq
+			                AND a.comp_seq = b.comp_seq
+			                AND a.work_team_sqno = b.work_team_sqno
+			            WHERE a.use_yn = 'Y'
+			            AND   a.att_manager_code = '220'
+			            AND   b.use_yn = 'Y'
+			            and   a.comp_seq = #compSeq#
+			            AND   a.emp_seq = #empSeq#
+			        ) a
+			        INNER JOIN $DB_NEOS$t_at_work_team_member b
+			            ON  a.group_seq = b.group_seq
+			            AND a.comp_seq = b.comp_seq
+			            AND a.work_team_sqno = b.work_team_sqno
+			            AND a.att_manager_code = '120'
+			        WHERE b.use_yn = 'Y'
+			        
+			        UNION
+			        
+			        SELECT DISTINCT b.emp_seq
+			        FROM $DB_NEOS$t_at_att_manage_dept a
+			        INNER JOIN (
+			            SELECT
+			                DISTINCT e.group_seq
+			                , c.comp_seq
+			                , ed.dept_seq
+			                , e.emp_seq
+			                , ed.dept_seq AS work_team_sqno
+			                , cd.path
+			            FROM $DB_NEOS$t_co_emp e
+			            LEFT JOIN $DB_NEOS$t_co_emp_dept ed
+			                ON  e.emp_seq = ed.emp_seq
+			                AND e.group_seq = ed.group_seq
+			            LEFT JOIN $DB_NEOS$t_co_comp c
+			                ON  e.group_seq = c.group_seq
+			                AND ed.comp_seq = c.comp_seq
+			            LEFT JOIN $DB_NEOS$t_co_emp_comp ec
+			                ON  ec.comp_seq = c.comp_seq
+			                AND e.emp_seq = ec.emp_seq
+			            INNER JOIN $DB_NEOS$t_co_dept cd
+			                ON  ed.dept_seq = cd.dept_seq
+			            WHERE e.group_seq IS NOT NULL
+			            AND   c.comp_seq IS NOT NULL
+			            AND   ed.dept_seq IS NOT NULL
+			            AND   e.emp_seq IS NOT NULL
+			            AND   e.use_yn != 'D'
+			            GROUP BY e.group_seq, c.comp_seq, ed.dept_seq, e.emp_seq
+			        ) b
+			            ON  a.group_seq = b.group_seq
+			            AND a.comp_seq = b.comp_seq
+			            AND CONCAT('|', b.path, '|') LIKE CONCAT('%|', a.dept_seq, '|%')
+			        WHERE a.use_yn = 'Y'
+			        AND   a.att_manager_code = '220'
+			        and   a.manage_comp_seq = #compSeq#
+			        AND   a.manage_emp_seq = #empSeq#
+			)
+			AND e.main_comp_seq = c.comp_seq
+			AND ed.main_dept_yn = 'Y'
+			<isNotEmpty property="targetEmpSeq">
+			AND e.emp_seq = #targetEmpSeq#
+			</isNotEmpty>
+			ORDER BY d.path, d.order_num, ed.order_text
+		</select>
+		
+		
+		<select id="AttachFileUpload.getPersonnelCardMenuAuth" parameterClass="hashmap" resultClass="egovMap">
+			select 
+				menu_no 
+			from 
+				$DB_NEOS$t_co_menu_auth 
+			where 
+				author_code in(
+					select author_code From $DB_NEOS$t_co_auth_relate where emp_seq = #empSeq# and comp_seq = #compSeq#
+				) 
+				and menu_no = #menuNo#
+		</select>
+		
+		<insert id="AttachFileUpload.InsertPersonnelCardHistoryInfo" parameterClass="hashmap">		
+			INSERT INTO $DB_NEOS$`t_at_personnel_card_history` 
+				(`emp_seq`, `target_emp_seq`, `file_id`, `view_date`) 
+			VALUES 
+				(#empSeq#, #targetEmpSeq#, #fileId#, now())
+		</insert>
+		
+		<select id="AttachFileUpload.getFilePathDrmOption" parameterClass="hashMap" resultClass="egovMap">
+		
+			select
+			IF(g.drm_use_yn='Y' and gp.drm_use_yn = 'Y', 'Y', 'N') as drm_use_yn,
+			ifnull(g.drm_type,'') as drm_type,
+			ifnull(g.drm_option_val1,'') as drm_option_val1,
+			ifnull(g.drm_option_val2,'') as drm_option_val2,
+			ifnull(gp.drm_upload,'') as drm_upload,
+			ifnull(gp.drm_download,'') as drm_download,
+			ifnull(gp.drm_file_extsn,'') as drm_file_extsn
+			from $DB_NEOS$t_co_group g
+			join $DB_NEOS$t_co_group_path gp on g.group_seq = gp.group_seq
+			where gp.path_seq = #pathSeq# and gp.os_type = #osType#
+			limit 1;		
+
+		</select>
+		
+		<update id="AttachFileUpload.setEmpProfileFileId" parameterClass="hashMap">
+			update
+				$DB_NEOS$t_co_emp
+			set
+				pic_file_id = #fileId#
+			where
+				emp_seq = #empSeq#
+		</update>		
+</sqlMap>

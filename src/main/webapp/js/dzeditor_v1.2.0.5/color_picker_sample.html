@@ -1,0 +1,126 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+    <head>
+        <!-- UBA-89069, 메일 환경 설정 글자색 선택 다이얼 로그 -->
+		<title>Douzone ColorPicker Sample</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<script language="javascript" src="./js/dze_env_config.js"></script>
+		<script language="javascript" src="./js/dze_ui_config.js"></script>
+        <script>
+            var langDze = "kr";
+
+            if(langDze == "en") {
+                dzeUiConfig.strCustomLanguageSetAndLoad ="en";
+            } else if(langDze == "jp") {
+                dzeUiConfig.strCustomLanguageSetAndLoad ="ja";
+            }else if(langDze == "cn") {
+                dzeUiConfig.strCustomLanguageSetAndLoad ="zh-cn";
+            }
+		</script>
+		<script language="javascript" src="./js/loadlayer.js"></script>			
+		<script>
+            var langDze = "kr";
+
+            if(langDze == "en") {
+                dzeUiConfig.strCustomLanguageSetAndLoad ="en";
+            } else if(langDze == "jp") {
+                dzeUiConfig.strCustomLanguageSetAndLoad ="ja";
+            }else if(langDze == "cn") {
+                dzeUiConfig.strCustomLanguageSetAndLoad ="zh-cn";
+            }
+            
+
+            function viewColorPicker(element) {
+                
+                //var evnt = e ? e : window.event;
+                var nEditNumber = 0;
+                
+                duzon_dialog.nExtendsDlgType = DZE_EXTENDS_COLOR_PICKER;
+                duzon_dialog.viewExtendsDlg(
+                    element,
+                    nEditNumber,
+                    function(color, bCloseDialog) {
+                        duzon_dialog.closeExtendsDlg();
+                        getColorCode(color);
+                    },
+                    [ID_RES_DIALOG_STRING_BASIC,ID_RES_CONST_STRING_OTHER_COLOR],					//상단에 버튼이 있는경우 버튼이름(2개가 최대)
+                    [									
+                        function(evnt){					//버튼 클릭시 실행 함수1 (인자로 이벤트전달)
+                            //툴바에 표기
+                            duzon_dialog.closeExtendsDlg();
+                            getColorCode("");
+                        },
+                        function(evnt) {				//버튼 클릭시 실행 함수2 (인자로 이벤트전달)
+
+                            //상세 색상 다이알로그 띄우기
+                            duzon_dialog.viewDialog(
+                                evnt,													
+                                nEditNumber,											
+                                ID_RES_PROP_TAG_STRING_COLOR,							//타이틀 메세지
+                                "<div id='dze_idx_detail_color_picker_div'></div>",		//내용
+                                2,														//버튼개수
+                                [ID_RES_DIALOG_BTN_OK,ID_RES_ADJUST_VIEW_CLOSE],		//버튼에 표기할 텍스트(순서대로 개수에 맞추어)
+                                [
+                                    //첫번째 버튼 액션
+                                    function() {
+                                        var hexCode = dzeColorPallet.getColorCode("hex");
+                                        duzon_dialog.closeDialog();
+                                        getColorCode(hexCode);
+                                    },
+                                    //두번재 버튼 액션
+                                    function() {
+                                        duzon_dialog.closeDialog();
+                                        if(typeof(parent) != "undefined" && parent != null){
+                                            parent.closeEditorFontColor();
+                                        }
+                                    }
+                                ],
+                                function() {	//onload event
+
+                                    duzon_dialog.closeExtendsDlg();
+
+                                    //현재 셀렉션 영역의 글자색상값 가져오기
+                                    var fontStyleInfo = g_objPropertyUtil.getSelectionAttributeValue(nEditNumber);
+
+                                    dzeColorPallet.showButtons = false;		//기본 다이알로그 버튼을 사용하므로 컬러피커자체의 버튼은 해제
+                                    dzeColorPallet.initialize("dze_idx_detail_color_picker_div", duzon_dialog.selectionFontStyleList.color, null);
+                                    dzeColorPallet.showButtons = true;		//원복
+                                    dzeColorPallet.color_pallet_container_obj.style.padding = "0px";
+                                    
+                                    if(typeof(parent) != "undefined" && parent != null){
+                                        parent.document.getElementById("editor_pop").style.width = "415px";
+                                        parent.document.getElementById("editor_pop_con").style.height = "360px";
+                                    }
+                                },
+                                function() {	//unload event
+                                },
+                                true,
+                                "screen_center"
+                            );
+                        }
+                    ]
+                );			
+                
+            }
+            
+            function getColorCode(code) {
+                //document.body.childNodes[0].style.backgroundColor = code;
+                document.getElementById("idx_apply_color").value = code;
+                document.getElementById("idx_color_box").style.color = code;
+                if(typeof(parent) != "undefined" && parent != null){
+                    parent.document.getElementById("txt_selectEditorFontColor").value = code;
+                    parent.document.getElementById("box_selectEditorFontColor").style.backgroundColor = code;
+                    parent.closeEditorFontColor();
+                }
+            }
+            window.onload = function(evnt) {
+                viewColorPicker(document.getElementById("idx_search_btn"));
+            };
+		</script>
+	<body>
+		<input type="button" name="name" id="idx_search_btn" value="색상찾기" style="display:none;">
+		<span id="idx_color_box" style="display:none;">■</span>
+    </body>
+</html>

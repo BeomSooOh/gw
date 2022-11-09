@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+	
+	<context:annotation-config />
+	
+	<!-- <task:annotation-driven executor="executor"/> -->
+
+	<task:scheduler id="orgSyncScheduler" pool-size="5"/>
+	
+	<!-- polling 조직도 동기화 및 PUSH 서비스  -->
+	
+	<!-- <task:executor id="executor" pool-size="10-20" queue-capacity="100"  rejection-policy="CALLER_RUNS"/> -->		
+
+	<bean id="orgSyncTask" class="api.orgchart.task.OrgSyncTask" />
+  	<bean id="orgSyncAuthTask" class="neos.cmm.erp.task.OrgSyncAutoTask" /> 
+  	<bean id="ldapSyncTask" class="neos.cmm.systemx.ldapAdapter.LdapAdapterTask" />
+    <bean id="menuAccessTask" class="api.menuAccess.task.MenuAccessTask" />
+  	
+  	
+	
+	<!-- 5분마다 스케줄링(이중화 타이머 정보) --> 
+	<task:scheduled-tasks scheduler="orgSyncScheduler">
+		<task:scheduled ref="orgSyncTask" method="pollingOrgSync" cron="#{bizboxa['BizboxA.ReserveMessageTimer']} 0/5 * * * *"/>
+	    <task:scheduled ref="orgSyncAuthTask" method="pollingOrgSyncAuto" cron="0 0/5 * * * ?"/>
+	    <task:scheduled ref="ldapSyncTask" method="pollingLdapOrgSyncAuto" cron="0 0/60 * * * *"/>  
+        <task:scheduled ref="menuAccessTask" method="pollingMenuAccessDelete" cron="0 0 0 * * *"/>
+        <task:scheduled ref="menuAccessTask" method="pollingWebMenuAccessSync" cron="0 0/5 * * * *"/>
+	</task:scheduled-tasks>
+		
+	<!-- 이미지 썸네일생성 비동기처리용 -->
+	<task:annotation-driven executor="callExecutor"/>
+	<task:executor id="callExecutor" pool-size="20-40" queue-capacity="1000"  rejection-policy="CALLER_RUNS"/>
+	
+     <bean id="asyncCallHelper" class="restful.com.helper.AsyncCallHelper"/>
+</beans>

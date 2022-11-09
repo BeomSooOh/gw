@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="visitorManage">
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	
+	<parameterMap id="getVisitorParam" class="hashMap">
+	    <parameter property="nRNo" javaType="java.lang.String" jdbcType="NUMERIC" mode="IN" />
+	    <parameter property="pDist" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="pFrDT" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="pToDT" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="pType" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="pDept" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="pGrade" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="pName" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="pVisitCo" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="pVisitNm" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="empSeq" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="userSe" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    
+	    <parameter property="resultmsg" javaType="java.sql.ResultSet" jdbcType="ORACLECURSOR" mode="OUT" />
+  	</parameterMap>
+  	
+  	<resultMap id="getVisitorResult" class="hashmap">
+		<result property="r_no" column="R_NO"/>
+		<result property="seq" column="SEQ"/>
+		<result property="man_comp_name" column="MAN_COMP_NAME"/>
+		<result property="man_dept_seq" column="MAN_DEPT_SEQ"/>
+		<result property="man_dept_name" column="MAN_DEPT_NAME"/>
+		<result property="man_emp_name" column="MAN_EMP_NAME"/>
+		<result property="man_grade_name" column="MAN_GRADE_NAME"/>
+		<result property="req_comp_seq" column="REQ_COMP_SEQ"/>
+		<result property="req_emp_seq" column="REQ_EMP_SEQ"/>
+		<result property="approver_comp_name" column="APPROVER_COMP_NAME"/>
+		<result property="approver_emp_name" column="APPROVER_EMP_NAME"/>
+		<result property="approver_grade" column="APPROVER_GRADE"/>
+		<result property="visit_distinct" column="VISIT_DISTINCT"/>
+		<result property="visitor_co" column="VISITOR_CO"/>
+		<result property="visitor_nm" column="VISITOR_NM"/>
+		<result property="visit_hp" column="VISIT_HP"/>
+		<result property="visit_car_no" column="VISIT_CAR_NO"/>
+		<result property="visit_aim" column="VISIT_AIM"/>
+		<result property="visit_cnt" column="VISIT_CNT"/>
+		<result property="visit_dt_fr" column="VISIT_DT_FR"/>
+		<result property="visit_dt_to" column="VISIT_DT_TO"/>
+		<result property="visit_tm_fr" column="VISIT_TM_FR"/>
+		<result property="visit_tm_to" column="VISIT_TM_TO"/>
+		<result property="approval_yn" column="APPROVAL_YN"/>
+		<result property="visit_dt" column="VISIT_DT"/>
+		<result property="in_time" column="IN_TIME"/>
+		<result property="out_time" column="OUT_TIME"/>
+		<result property="visit_card_no" column="VISIT_CARD_NO"/>
+		<result property="etc" column="ETC"/>
+	</resultMap>
+		
+  	<parameterMap id="getVisitorCountParam" class="hashMap">
+	    <parameter property="nRNo" javaType="java.lang.String" jdbcType="NUMERIC" mode="IN" />
+	    <parameter property="pDist" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="pFrDT" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="pToDT" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="pType" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="pDept" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="pGrade" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="pName" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="pVisitCo" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="pVisitNm" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="userSe" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="empSeq" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    
+	    <parameter property="resultmsg" javaType="java.sql.ResultSet" jdbcType="ORACLECURSOR" mode="OUT" />
+  	</parameterMap>
+  	
+	<resultMap class="String" id="totalCountResult" >
+		<result property="resultmsg" column="resultmsg" />
+	</resultMap>
+	
+	<procedure id="VisitorManageDAO.getVisitorList" parameterMap="getVisitorParam" resultMap="getVisitorResult">
+	/* VisitorManageDAO.getVisitorList - oracle */
+	
+	<![CDATA[
+		{ CALL Z_DUZONITGROUP_BS_VISITOR_S(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, $startNum$, $endNum$, ?) }
+	]]>
+	</procedure>
+	
+	<procedure id="VisitorManageDAO.getVisitorList_TOTALCOUNT" parameterMap="getVisitorCountParam" resultMap="totalCountResult">
+	<![CDATA[
+		{ CALL Z_DUZON_BS_VISITOR_S_COUNT(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}
+	]]>
+	</procedure>
+	
+	
+	<delete id="VisitorManageDAO.deleteVisitor" parameterClass="java.util.HashMap">
+	/* VisitorManageDAO.deleteVisitor - oracle */
+	
+		UPDATE 
+			Z_DUZONITGROUP_VISITORS_M 
+		SET 
+			del_yn = '1' 
+		WHERE 
+			r_no in($R_NO$)
+	</delete>
+
+	
+	
+	<procedure id="VisitorManageDAO.insertVisitor" parameterClass="java.util.HashMap">
+	/* VisitorManageDAO.insertVisitor - oracle */
+	
+	<![CDATA[
+		{ CALL Z_DUZONITGROUP_BS_VISITOR_I(#man_comp_seq#,#man_emp_seq#,#req_comp_seq#,#req_emp_seq#,#distinct#,#visitor_co#,#visitor_nm#,#visit_hp#,#visit_car_no#,#fr_dt#,#to_dt#,#visit_tm_fr#,#visit_tm_to#,#visit_aim#,#visit_cnt#,#note#,#fr_dt#,#sInTime#,#sOutTime#) }
+	]]>
+	</procedure>
+	
+	
+	<procedure id="VisitorManageDAO.getApproverList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	/* VisitorManageDAO.getApproverList - oracle */
+	
+	<![CDATA[
+		EXEC Z_DUZONITGROUP_BS_APPROVER_S(#comp_seq#,#searchStr#,#langCD#,#groupSeq#)
+		     ]]>
+	</procedure>
+	
+	
+	<update id="VisitorManageDAO.CheckVisitor" parameterClass="java.util.HashMap">
+	/* VisitorManageDAO.CheckVisitor- oracle */
+		UPDATE Z_DUZONITGROUP_VISITORS_D
+			SET
+            <isEqual property="sType" compareValue="in">
+            visit_card_no = #nCardNo#, in_time = #sTime#    
+            </isEqual>
+            <isEqual property="sType" compareValue="out">
+            out_time = #sTime#    
+            </isEqual>
+			WHERE r_no = #nRNo# AND seq = #nSeq#
+	</update> 
+	
+	<procedure id="VisitorManageDAO.SetVisitApproval" parameterClass="java.util.HashMap">
+	/* VisitorManageDAO.SetVisitApproval - oracle */
+	
+	<![CDATA[
+		EXEC Z_DUZONITGROUP_BS_APPROVER_I(#nCoSeq#,#nAppUserSeq#,#nCreatedSeq#)
+		     ]]>
+	</procedure>
+	
+	
+	
+	<select id="VisitorManageDAO.GetAppInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		/* VisitorManageDAO.GetAppInfo - oracle */
+		<isEqual property="nRNo" compareValue="0">
+			SELECT
+				0 AS "r_no",
+				NVL(A.comp_seq, 0) AS "app_comp_seq",
+				NVL(B.comp_name, '') AS "app_comp_name",
+				NVL(A.emp_seq, 0) AS "app_emp_seq",
+				NVL(b.emp_name, '') AS "app_emp_name",
+				NVL(b.dept_seq, 0) AS "app_dept_seq",
+				NVL(b.dept_name, '') AS "app_dept_name",
+				NVL(get_comp_emp_dp(a.comp_seq, b.dept_duty_code, 'DUTY','kr'),'') as "app_grade_name"
+			FROM Z_DUZONITGROUP_APPROVAL A
+			LEFT JOIN V_USER_INFO B ON a.comp_seq = b.comp_seq AND a.emp_seq = b.emp_seq AND B.emp_lang_code = 'kr'
+			WHERE A.comp_seq = #nManCoSeq# 
+			AND ROWNUM = 1
+		</isEqual>
+		<isEqual property="nRNo" compareValue="1">
+			SELECT 
+                A.r_no AS "r_no",
+                A.approver_comp_seq AS "app_comp_seq", 
+                b.comp_name AS "app_comp_name", 
+                A.approver_emp_seq AS "app_emp_seq", 
+                B.emp_name AS "app_emp_name", 
+                b.dept_seq AS "app_dept_seq", 
+                b.dept_name AS "app_dept_name",
+                NVL(get_emp_dp(b.comp_seq,b.duty_code,'kr'),'') "app_grade_name"
+            FROM Z_DUZONITGROUP_VISITORS_M A
+            JOIN V_USER_INFO B ON a.approver_comp_seq = b.comp_seq AND a.approver_emp_seq = b.emp_seq AND B.main_dept_yn = 'Y' 
+            WHERE A.r_no = #nRNo#
+		</isEqual>
+	</select>
+	
+	
+	<select id="VisitorManageDAO.GetVisitorWeekList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	/* VisitorManageDAO.GetVisitorWeekList - oracle */
+	
+		SELECT 
+			r_no as "r_no"
+			, req_comp_seq as "req_comp_seq"
+			, req_emp_seq as "req_emp_seq"
+			, visitor_co as "visitor_co"
+			, visitor_nm as "visitor_nm"
+			, visit_aim as "visit_aim"
+			, visit_hp as "visit_hp"
+			, visit_car_no as "visit_car_no"
+			, visit_cnt as "visit_cnt"
+			, visit_dt_fr as "visit_dt_fr"
+			, visit_tm_fr as "visit_tm_fr"
+			, etc as "etc"
+		FROM 
+			Z_DUZONITGROUP_VISITORS_M
+		WHERE 
+			visit_dt_fr= #sDate# AND visit_distinct = 1 AND del_yn != 1
+	</select>
+	
+	
+	<select id="VisitorManageDAO.GetVisitorListApp" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	/* VisitorManageDAO.GetVisitorListApp - oracle */
+	
+		SELECT
+			a.r_no as "r_no", 
+			c.comp_name as "man_comp_name", 
+			c.dept_seq as "man_dept_seq",
+			c.dept_name as "man_dept_name",
+			get_emp_duty_position_name(c.group_seq, c.comp_seq,c.dept_duty_code,'DUTY', #sLangKind#) as "man_grade_name",
+			c.emp_name as "man_emp_name",
+			a.req_comp_seq as "req_comp_seq", 
+			a.req_emp_seq as "req_emp_seq", 
+			NVL(f.comp_name, 0) AS "approver_comp_name", 
+			NVL(f.emp_name, chr(32)) AS "approver_emp_name", 
+			NVL((CASE WHEN (
+						SELECT approver_emp_seq
+						FROM Z_DUZONITGROUP_VISITORS_M 
+						WHERE r_no = a.r_no) = NULL
+						THEN chr(32) 
+						WHEN (
+							SELECT approver_emp_seq 
+							FROM Z_DUZONITGROUP_VISITORS_M 
+							WHERE r_no = a.r_no) > 0 
+						THEN (
+							SELECT duty_code
+							FROM v_user_info
+							WHERE emp_seq = a.approver_emp_seq
+	                        AND comp_seq = a.approver_comp_seq
+	                        AND main_dept_yn = 'Y' 
+	                        AND emp_lang_code=#sLangKind#
+							<![CDATA[ AND rownum <= 1)  ]]>
+						END), chr(32)) AS "approver_grade",
+			a.visit_distinct as "visit_distinct", 
+			a.visitor_co as "visitor_co", 
+			a.visitor_nm as "visitor_nm", 
+			a.visit_hp as "visit_hp", 
+			a.visit_car_no as "visit_car_no", 
+			a.visit_aim as "visit_aim", 
+			a.visit_cnt as "visit_cnt", 
+			TO_CHAR(TO_DATE(a.visit_dt_fr, 'YYYY-MM-DD'),'YYYY-MM-DD') as "visit_dt_fr",
+			TO_CHAR(TO_DATE(NVL(a.visit_dt_to,chr(32)), 'YYYY-MM-DD'),'YYYY-MM-DD') as "visit_dt_to",
+			a.visit_tm_fr as "visit_tm_fr", 
+			NVL(a.visit_tm_to, chr(32)) AS "visit_tm_to", 
+			case 
+			when a.approval_yn = 0 then get_code_detail_info('0', 'ea0016', '10', #sLangKind#) 
+			when a.approval_yn = 1 then get_code_detail_info('0', 'ATT0021', 'Y', #sLangKind#)  
+			else get_code_detail_info('0', 'ATT0013', '100', #sLangKind#) end approval_yn,
+			chr(32) AS "in_time", 
+			chr(32) AS "out_time", 
+			chr(32) AS "visit_card_no",
+			NVL(a.etc, chr(32)) AS "etc",
+			NVL((CASE WHEN (
+						SELECT N.emp_seq
+						FROM Z_DUZONITGROUP_VISITORS_M M
+						JOIN Z_DUZONITGROUP_APPROVAL N ON M.man_comp_seq = N.comp_seq 
+						WHERE r_no = a.r_no AND N.emp_seq = #nUserSeq#) = NULL
+					THEN '0' 
+					WHEN (
+						SELECT N.emp_seq
+						FROM Z_DUZONITGROUP_VISITORS_M M
+						JOIN Z_DUZONITGROUP_APPROVAL N ON M.man_comp_seq = N.comp_seq
+						WHERE r_no = a.r_no AND N.emp_seq = #nUserSeq#) > 0 
+					THEN '1'
+					WHEN (
+						SELECT d.emp_seq
+						FROM Z_DUZONITGROUP_VISITORS_M M
+						JOIN v_user_info d ON M.man_comp_seq = d.comp_seq
+						WHERE r_no = a.r_no AND d.comp_seq = #nCoSeq# AND d.emp_seq = #nUserSeq# AND d.main_dept_yn = 'Y' AND d.emp_lang_code=#sLangKind#) > 0
+					THEN '1'
+					END), chr(32)) AS "app_auth"
+		FROM Z_DUZONITGROUP_VISITORS_M a
+		JOIN v_user_info c on a.man_emp_seq = c.emp_seq and a.man_comp_seq = c.comp_seq
+		left join v_user_info f on a.approver_emp_seq = f.emp_seq and a.approver_comp_seq = f.comp_seq AND f.main_dept_yn = 'Y' and f.emp_lang_code = #sLangKind#
+		WHERE 
+			a.visit_distinct = 2 
+			AND c.main_dept_yn = 'Y'
+			AND c.emp_lang_code = #sLangKind#
+			AND a.del_yn != 1
+			AND ((a.visit_dt_fr BETWEEN $sFrDT$ AND $sToDT$) or (a.visit_dt_to BETWEEN $sFrDT$ AND $sToDT$))
+			<isNotEmpty property="pDept">
+		   		AND  c.dept_name LIKE '%$pDept$%' 		   
+		    </isNotEmpty>
+		    <isNotEmpty property="pGrade">
+		   		AND  get_emp_duty_position_name(c.group_seq, c.comp_seq,c.dept_duty_code,'DUTY',#sLangKind#) LIKE '%$pGrade$%' 		   
+		    </isNotEmpty>
+		    <isNotEmpty property="pName">
+		   		AND  c.emp_name LIKE '%$pName$%' 		   
+		    </isNotEmpty>
+		    <isNotEmpty property="pVisitCo">
+		   		AND  a.visitor_co LIKE '%$pVisitCo$%' 		   
+		    </isNotEmpty>
+		    <isNotEmpty property="pVisitNm">
+		   		AND  a.visitor_nm LIKE '%$pVisitNm$%' 		   
+		    </isNotEmpty>
+		
+	</select>
+	
+	
+	<select id="VisitorManageDAO.GetVisitorListApp_TOTALCOUNT" parameterClass="java.util.HashMap" resultClass="String">
+		SELECT
+			count(a.r_no)
+		FROM Z_DUZONITGROUP_VISITORS_M a
+		JOIN v_user_info c on a.man_emp_seq = c.emp_seq and a.man_comp_seq = c.comp_seq
+		WHERE 
+			a.visit_distinct = 2 
+			AND c.main_dept_yn = 'Y'
+			AND c.emp_lang_code = #sLangKind#
+			AND a.del_yn != 1
+			AND a.visit_dt_fr BETWEEN #sFrDT# AND #sToDT#
+			<isNotEmpty property="pDept">
+		   		AND  c.dept_name LIKE '%$pDept$%' 		   
+		    </isNotEmpty>
+		    <isNotEmpty property="pGrade">
+		        AND  get_emp_duty_position_name(c.group_seq, c.comp_seq,c.dept_duty_code,'DUTY',#sLangKind#) LIKE '%$pGrade$%'	   
+		    </isNotEmpty>
+		    <isNotEmpty property="pName">
+		   		AND  c.emp_name LIKE '%$pName$%' 		   
+		    </isNotEmpty>
+		    <isNotEmpty property="pVisitCo">
+		   		AND  a.visitor_co LIKE '%$pVisitCo$%' 		   
+		    </isNotEmpty>
+		    <isNotEmpty property="pVisitNm">
+		   		AND  a.visitor_nm LIKE '%$pVisitNm$%' 		   
+		    </isNotEmpty>
+	</select>
+	
+	
+	<update id="VisitorManageDAO.SetVisitorApp" parameterClass="java.util.HashMap">
+	/* VisitorManageDAO.SetVisitorApp - oracle */
+	
+	UPDATE 
+		Z_DUZONITGROUP_VISITORS_M 
+	SET 
+		approval_yn = #sType#, approver_comp_seq = #nCoSeq#, approver_emp_seq = #nUserSeq#
+	WHERE r_no in($nRNo$)
+	</update>
+</sqlMap>

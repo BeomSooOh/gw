@@ -1,0 +1,104 @@
+package ebp.portalView.controller;
+
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import api.common.model.APIResponse;
+import bizbox.orgchart.service.vo.LoginVO;
+import egovframework.com.cmm.util.EgovUserDetailsHelper;
+import main.constants.CommonConstants;
+import main.web.BizboxAMessage;
+import neos.cmm.systemx.secGrade.constant.Constant;
+import neos.cmm.util.MessageUtil;
+import neos.cmm.util.code.CommonCodeUtil;
+import net.sf.json.JSONObject;
+
+
+@Controller
+@RequestMapping("/ebp")
+public class EbpMainController {
+
+	/* 변수정의 로그 */
+	private Logger LOG = LogManager.getLogger(this.getClass());
+
+	@RequestMapping("/portalView.do")
+	public ModelAndView portalView(@RequestParam Map<String, Object> params, HttpServletRequest request) throws Exception {
+		LoginVO loginVO = (LoginVO)EgovUserDetailsHelper.getAuthenticatedUser();
+		org.apache.log4j.Logger.getLogger( EbpMainController.class ).debug( "EbpMainController.portalView.do params : " + params );    
+		org.apache.log4j.Logger.getLogger( EbpMainController.class ).debug( "EbpMainController.portalView.do sessionId : " + request.getSession().getId());
+		org.apache.log4j.Logger.getLogger( EbpMainController.class ).debug( "EbpMainController.portalView.do loginVO : " + loginVO);
+    	
+		ModelAndView mv = new ModelAndView();
+		if(loginVO != null) {
+			mv.addObject("groupSeq", loginVO.getGroupSeq());
+			mv.addObject("compSeq", loginVO.getCompSeq());
+			mv.addObject("deptSeq", loginVO.getOrgnztId());
+			mv.addObject("empSeq", loginVO.getUniqId());
+			mv.addObject("langCode", loginVO.getLangCode());
+		}
+		mv.setViewName("/ebp/portalView");
+		return mv;
+	}
+	
+	/*
+	 * 공통코드 조회 
+	 */
+	@RequestMapping(value="/getDetailCodeInfo.do", method={RequestMethod.GET, RequestMethod.POST})
+	@ResponseBody
+	public APIResponse getCommonCode(@RequestParam Map<String, String> reqParams, HttpServletRequest servletRequest) throws Exception {
+		APIResponse response = new APIResponse();
+	
+		LOG.debug("/getDetailCodeInfo.do Request Params: " + JSONObject.fromObject(reqParams).toString());
+		
+		try{
+			
+			LoginVO loginVO = (LoginVO) EgovUserDetailsHelper.getAuthenticatedUser();
+			
+			if(loginVO == null) {
+				MessageUtil.setApiMessage(response, servletRequest, "systemx.login.", "LOGIN004");
+				return response;
+			}
+			//Validation
+			if(!validateForGetDetailCodeInfo(reqParams, response)) {
+				LOG.debug("/getDetailCodeInfo.do Response: " + JSONObject.fromObject(response).toString());
+				return response;
+			}
+			
+			response.setResult(CommonCodeUtil.getDetailCodeInfo(reqParams.get("code"), reqParams.get("detailCode")));
+			response.setResultCode(CommonConstants.API_RESPONSE_SUCCESS);
+			response.setResultMessage(BizboxAMessage.getMessage("TX000011955","성공하였습니다"));
+		}catch(Exception e){
+			response.setResultCode(CommonConstants.API_RESPONSE_FAIL);
+			response.setResultMessage(e.getMessage());	
+		}
+		
+		LOG.debug("/getDetailCodeInfo.do Response: " + JSONObject.fromObject(response).toString());
+	
+		return response;		
+	}
+	private boolean validateForGetDetailCodeInfo(Map<String, String> reqParams,
+			APIResponse response) {
+		if(!reqParams.containsKey("code")) {
+			response.setResultCode(Constant.API_RESPONSE_FAIL);
+			response.setResultMessage("NOT CONTAINS KEY [code] in body");
+			return false;
+		}
+		if(!reqParams.containsKey("detailCode")) {
+			response.setResultCode(Constant.API_RESPONSE_FAIL);
+			response.setResultMessage("NOT CONTAINS KEY [detailCode] in body");
+			return false;
+		}
+		
+		return true;
+	}
+}

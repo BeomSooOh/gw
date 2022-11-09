@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<namespace>
+	<item>
+		<name>PRETEXT</name>
+		<value>PUDD</value>
+	</item>
+	<item>
+		<name>FAIL</name>
+		<value>FAIL</value>
+	</item>
+	<item>
+		<name>SUCCESS</name>
+		<value>SUCCESS</value>
+	</item>
+    <item>
+        <name>WARNING</name>
+        <value>WARNING</value>
+    </item>
+	<item>
+		<name>THEMA</name>
+		<value>PUDD-COLOR-blue</value>
+	</item>
+	<item>
+		<name>STATE_SUCCESS_MESSAGE</name>
+		<value>성공</value>
+	</item>
+	<item>
+		<name>STATE_ERROR_MESSAGE</name>
+		<value>실패</value>
+	</item>
+	<item>
+		<name>STATE_WARNING_MESSAGE</name>
+		<value>경고</value>
+	</item>
+    <item>
+        <name>NO_DATA_MESSAGE</name>
+        <value>데이터가 존재하지 않습니다.</value>
+    </item>
+	<item>
+		<name>RANDOM_COUNT</name>
+		<value>0</value>
+	</item>
+    <item>
+        <name>COMMON_FUNCTION</name>
+        <value>setStateChange,setSelected,setAddItem,setChecked,setDisabled,setEnabled,getSelected,getChecked</value>
+    </item>
+</namespace>

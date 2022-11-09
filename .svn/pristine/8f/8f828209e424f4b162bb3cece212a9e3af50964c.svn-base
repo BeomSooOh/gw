@@ -1,0 +1,38 @@
+{
+	"ITEMS": {
+		"appYear": "0000",
+		"appMonth": "00",
+		"appDay": "00",
+		"empNm": "김진영",
+		"deptNm": "사업전략본부",
+		"positionNm": "프로",
+		"totalCnt": "2.0",
+		"usedCnt": "0.0",
+		"unusedCnt": "2.0",
+		"progressCnt": "1.0",
+		"minusCnt": "1.0",
+		"sumDy": null,
+		"aruseCnt": null,
+		"appexDy": null,
+		"listNum": 0
+	},
+	"TABLE": {
+		"dbTable1": {
+		"group": [
+			{
+			"items": {
+				"atCdNm": "연차",
+				"year": "2021",
+				"startDt": "2021-12-24",
+				"endDt": "2021-12-24",
+				"appDy": "1",
+				"appTm": "8",
+				"ycUseCnt": "1.0",
+				"appRmkDc": "개인적인 사유로 연차휴가를 상신하오니 확인 후 재가 부탁드립니다."
+			},
+			"group": null
+			}
+		]
+		}
+	}
+}

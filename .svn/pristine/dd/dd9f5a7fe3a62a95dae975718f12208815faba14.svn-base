@@ -1,0 +1,619 @@
+@charset "utf-8";
+
+/*
+	Editor Style
+*/
+
+@font-face {
+    font-family: "[더존] 제목체 30";
+    font-display: fallback;
+    src:
+        local("DOUZONETitle30"),
+        local("DOUZONE Title 30"),
+        local("[더존] 제목체 30"),
+        url(../font/DOUZONETitle30.woff) format('woff');
+}
+@font-face {
+    font-family: "[더존] 제목체 50";
+    font-display: fallback;
+    src:
+        local("DOUZONETitle50"),
+        local("DOUZONE Title 50"),
+        local("[더존] 제목체 50"),
+        url(../font/DOUZONETitle50.woff) format('woff');
+}
+@font-face {
+    font-family: "[더존] 본문체 10";
+    font-display: fallback;
+    src:
+        local("DOUZONEText10"),
+        local("DOUZONE Text 10"),
+        local("[더존] 본문체 10"),
+        url(../font/DOUZONEText10.woff) format('woff');
+}
+@font-face {
+    font-family: "[더존] 본문체 30";
+    font-display: fallback;
+    src:
+        local("DOUZONEText30"),
+        local("DOUZONE Text 30"),
+        local("[더존] 본문체 30"),
+        url(../font/DOUZONEText30.woff) format('woff');
+}
+@font-face {
+    font-family: "[더존] 본문체 50";
+    font-display: fallback;
+    src:
+        local("DOUZONEText50"),
+        local("DOUZONE Text 50"),
+        local("[더존] 본문체 50"),
+        url(../font/DOUZONEText50.woff) format('woff');
+}
+
+@font-face {    /* wehago */
+    font-family: 'douzone';
+    src:
+        local("DOUZONEText10"),
+        local("DOUZONE Text 10"),
+        local("[더존] 본문체 10"),
+        url(../font/DOUZONEText10.woff) format('woff');
+    font-weight: normal;
+    font-display: fallback;
+}
+
+@font-face {	/* wehago */
+    font-family: 'douzone';
+    src:
+        local("DOUZONEText30"),
+        local("DOUZONE Text 30"),
+        local("[더존] 본문체 30"),
+        url(../font/DOUZONEText30.woff) format('woff');
+    font-weight: bold;
+    font-display: fallback;
+}
+
+@font-face {
+	font-family: '[더존] 제목체';
+	font-display: fallback;
+    src:
+        local("DOUZONETitle30"),
+        local("DOUZONE Title 30"),
+        local("[더존] 제목체 30"),
+		url(../font/DOUZONETitle30.woff) format('woff');
+}/* word */
+
+@font-face {
+	font-family: '[더존] 제목체';
+	font-display: fallback;
+    src:
+		local("DOUZONETitle50"),
+		local("DOUZONE Title 50"),
+		local("[더존] 제목체 50"),
+		url(../font/DOUZONETitle50.woff) format('woff');
+		font-weight: bold;
+}/* word */
+
+@font-face {
+	font-family: '[더존] 본문체';
+	font-display: fallback;
+    src:
+        local("DOUZONEText30"),
+        local("DOUZONE Text 30"),
+        local("[더존] 본문체 30"),
+		url(../font/DOUZONEText30.woff) format('woff');
+}/* word */
+
+@font-face {
+	font-family: '[더존] 본문체';
+	font-display: fallback;
+    src:
+        local("DOUZONEText50"),
+        local("DOUZONE Text 50"),
+        local("[더존] 본문체 50"),
+		url(../font/DOUZONEText50.woff) format('woff');
+	font-weight: bold;
+}/* word */
+
+@font-face {
+	font-family: '본고딕';
+	font-display: fallback;
+	src: 
+		/* local("Noto Sans KR"), */
+		url(../font/NotoSans-Regular.woff) format('woff');
+}/* word */
+
+@font-face {
+	font-family: '본고딕';
+	font-display: fallback;
+	font-weight: 700;
+	font-style: bold;
+	src: 
+		/* local("Noto Sans KR"), */
+		url(../font/NotoSans-Bold.woff) format('woff');
+}/* word */
+
+@font-face {
+	font-family: '본명조';
+	font-display: fallback;
+	src: 
+		/* local("Noto Serif KR"), */
+		url(../font/NotoSerifKR.woff) format('woff');
+}/* word */
+
+@font-face {
+	font-family: '본명조';
+	font-display: fallback;
+	src: 
+		/* local("Noto Serif KR"), */
+		url(../font/NotoSerifCJKkr-Bold.woff) format('woff');
+	font-weight: 700;
+	font-style: bold;
+}/* word */
+
+@font-face {
+	font-family: '나눔고딕';
+	font-display: fallback;
+	src: 
+		/* local("NanumGothic"), */
+		url(../font/NanumGothic.woff) format('woff');
+}/* word */
+
+@font-face {
+	font-family: '나눔고딕';
+	font-display: fallback;
+	src: 
+		/* local("NanumGothic Bold"), */
+		url(../font/NanumGothicB.woff) format('woff');
+	font-weight: 700;
+}/* word */
+
+@font-face {
+	font-family: '나눔명조';
+	font-display: fallback;
+	src: 
+		/* local("NanumMyeongjo"), */
+		url(../font/NanumMyeongjo.woff) format('woff');
+}/* word */
+
+@font-face {
+	font-family: '나눔명조';
+	font-display: fallback;
+	src: 
+		/* local("NanumMyeongjo Bold"), */
+		url(../font/NanumMyeongjoB.woff) format('woff');
+	font-weight: 700;
+}/* word */
+
+@font-face {
+	font-family: '나눔바른고딕';
+	font-display: fallback;
+	src: 
+		/* local("나눔바른고딕OTF"),
+		local("NanumBarunGothicOTF"), */
+		url(../font/NanumBarunGothicWeb.woff) format('woff');
+}/* word */
+
+@font-face {
+	font-family: '나눔바른고딕';
+	font-display: fallback;
+	font-weight: 700;
+	src: 
+		/* local("나눔바른고딕OTF Bold"); */
+		/* local("NanumBarunGothicOTF Bold"); */
+		url(../font/NanumBarunGothicWebBold.woff) format('woff');
+}/* word */
+
+@font-face {
+	font-family: '나눔바른펜';
+	font-display: fallback;
+	src: 
+		/* local("나눔바른펜OTF"),
+		local("NanumBarunpenOTF"), */
+		url(../font/NanumBarunpenR.woff) format('woff');
+		/* url(../font/NanumBarunpen.woff) format('woff'); */
+}/* word */
+
+@font-face {
+	font-family: '나눔바른펜';
+	font-display: fallback;
+	src: 
+		/* local("나눔바른펜OTF Bold"),
+		local("NanumBarunpenOTF Bold"), */
+		url(../font/NanumBarunpenB.woff) format('woff');
+	font-weight: 700;
+}/* word */
+
+@font-face {
+	font-family: "나눔손글씨 붓";
+	font-display: fallback;
+	src: 
+		/* local("Nanum Brush Script"), */
+		url(../font/NanumBrushScript.woff) format('woff');
+}/* word */
+
+@font-face {
+	font-family: "나눔손글씨 펜";
+	font-display: fallback;
+	src: 
+		/* local("Nanum Pen"), */
+		url(../font/NanumPenScript.woff) format('woff');
+}/* word */
+
+@font-face {
+	font-family: '나눔스퀘어';
+	font-display: fallback;
+	src: 
+		/* local("나눔스퀘어OTF"),
+		local("NanumSquareOTF"), */
+		url(../font/NanumSquareR.woff) format('woff');
+}/* word */
+
+@font-face {
+	font-family: '나눔스퀘어';
+	font-display: fallback;
+	src: 
+		/* local("나눔스퀘어OTF Bold"),
+		local("NanumSquareOTF Bold"), */
+		url(../font/NanumSquareB.woff) format('woff');
+	font-weight: 700;
+}/* word */
+
+@font-face {
+	font-family: '나눔스퀘어라운드';
+	font-display: fallback;
+	src:
+		/* local("나눔스퀘어라운드OTF"), 
+		local("NanumSquareRoundOTF Regular"),
+		local("NanumSquareRoundOTF"), */
+		url(../font/NanumSquareRoundR.woff) format('woff');
+}/* word */
+
+@font-face {
+	font-family: '나눔스퀘어라운드';
+	font-display: fallback;
+	src:
+		/* local("나눔스퀘어라운드OTF Bold"), 
+		local("NanumSquareRoundOTF Bold"), */
+		url(../font/NanumSquareRoundB.woff) format('woff');
+	font-weight: bold;
+}/* word */
+
+/**
+ *
+ * 기본 글꼴에 대한 재정의.
+**/
+
+/* 크롬/엣지 버그로 인해서 기본 글꼴에 대해 재정의 하지 않음 UBA-97732 2022-06-20 */
+
+html {
+	width:auto;
+	height:auto;
+}
+
+body, td, th {
+	/* 호출페이지에서 기본폰트가 설정되어 있지 않은 경우 선언 */
+	/* 호출페이지에서 선언되어 있는 경우는 주석처리 할 것 */
+	font-family: '돋움', Dotum, '굴림', Gulim, sans-serif;
+	font-size: 9pt;
+}
+
+body {
+	margin: 3px;
+	width:auto;
+	height:auto;
+	word-wrap: break-word;
+	word-break: normal; /* UBA-14575 */
+}
+
+table, td, th {
+	word-break: break-all; /* UBA-14575 */
+}
+
+.dze_table {
+	table-layout: fixed; /* UCDOC-463 */
+	word-wrap: break-word;
+	word-break: normal;
+}
+
+.dze_table td, .dze_table th {
+	word-wrap: break-word; /* UCDOC-463 */
+	word-break: normal;
+}
+
+p, blockquote {
+	margin-top:0px;
+	margin-bottom:0px;
+}
+
+.dze_tb_layout {
+	border-collapse:collapse;
+}
+.dze_tb_layout_td {
+	border:1px dotted #c5c5c5 !important;
+}
+.dze_tb_layout_dummy {
+	
+}
+.dze_tb_layout_td_dummy {
+	
+}
+
+/* 내용이 있는 북마크 표식 */
+.dze_bookmark_flag {
+    margin-left: 2px;
+    margin-right: 2px;
+    padding: 0 0 0 8px;
+    background: url('../image/toolbar/ico_bookmark.png') no-repeat 0 0;
+}
+.dze_bookmark_flag_dummy {
+}
+
+/* 초기 커서 위치 설정 표식 */
+.dze_init_cursor_flag {
+	margin-left: 2px;
+	
+    margin-right: 2px;
+/*	width:14px;
+	height:14px;
+	display: inline-block;*/
+	padding:2px 7px 5px 7px;
+	background: url('../image/toolbar/ico_init_cursor.png') !important;
+	background-repeat: no-repeat !important;
+    background-position-x: 0;
+    background-position-y: 0;
+}
+
+input[type=radio] {
+	position:relative; 
+	visibility:visible;
+}
+
+input[type=radio] + label {
+	background: none;
+}
+
+input[type=radio]:checked + label {
+	background: none;
+}
+
+input[type=radio]:disabled + label {
+	background: none;
+}
+
+input[type=checkbox] {
+	position:relative; 
+	visibility:visible;
+}
+input::-webkit-inner-spin-button {
+	appearance: none;
+	-moz-appearance: none;
+	-webkit-appearance: none;
+}
+.dze_printpagebreak {
+	page-break-after:always;
+}
+.dze_printpagebreak_guide {
+	width: 100%;
+	margin: 10px 0 10px 0;
+	height: 0;
+	border-width: 3px 0 0 0;
+	border-style: dashed;
+	border-color: #d9d9d9;
+}
+.dze_printpagebreak_guide_dummy {
+}
+
+.dze_external_data_area {
+	background: #FFFFAF;
+	border: none !important;
+	border-bottom:1px solid gray !important; 
+	color: black;
+	text-align: center;
+	display: inline;
+}
+
+/* cell select (UCDOC-432) */
+td[cusflag]:not([bg_changing]), th[cusflag]:not([bg_changing]) {
+	background-image: url(../image/dialog/bg_selected_cell.png) !important;
+	background-repeat: repeat !important;
+}
+
+input[dze_bind_key]:not(:active):not(:focus) {
+	border:1px solid #A6C7FF !important; 
+}
+
+.tabSpan {
+	white-space: pre;
+    display: inline-block;
+    text-indent: 0px;
+    pointer-events: none;
+}
+
+body[contenteditable="true"] td[contenteditable="false"],	/* 셀 편집 제한 A10D-569 */
+body[contenteditable="true"] th[contenteditable="false"] {
+	position: relative;
+}
+
+body[contenteditable="true"] td[contenteditable="false"]:before,
+body[contenteditable="true"] th[contenteditable="false"]:before {
+	content: '';
+	position: absolute;
+	width: 14px;
+	height: 14px;
+	right: 2px;
+	bottom: 2px;
+	background-image: url(../image/toolbar/ico_incell_lock.png);
+	background-repeat: no-repeat;
+	background-position: 0 0;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	pointer-events: none;
+}
+
+/* ---------------------------------------- */
+/* 기존 비즈박스에서 사용하던 에디터 스타일 */
+/* ---------------------------------------- */
+
+/* 보여주는 영역 #tdEditor 에 사용되는 스타일을 에디터에도 동일하게 적용 */
+
+/*#tdEditor*/ em{font-style: italic;}
+/*#tdEditor*/ h1{display: block;font-size: 2em;margin-top: 0.67em;margin-bottom: 0.67em;margin-left: 0;margin-right: 0;font-weight: bold;}
+/*#tdEditor*/ h2{display: block;font-size: 1.5em;margin-top: 0.83em;margin-bottom: 0.83em;margin-left: 0;margin-right: 0;font-weight: bold;}
+/*#tdEditor*/ h3{display: block;font-size: 1.17em;margin-top: 1em;margin-bottom: 1em;margin-left: 0;margin-right: 0;font-weight: bold;}
+/*#tdEditor*/ h4{display: block;margin-top: 1.33em;margin-bottom: 1.33em;margin-left: 0;margin-right: 0;font-weight: bold;}
+/*#tdEditor*/ h5{display: block;font-size: .83em;margin-top: 1.67em;margin-bottom: 1.67em;margin-left: 0;margin-right: 0;font-weight: bold;}
+/*#tdEditor*/ h6{display: block;font-size: .67em;margin-top: 2.33em;margin-bottom: 2.33em;margin-left: 0;margin-right: 0;font-weight: bold;}
+/* 원래 주석임 #tdEditor p{display: block;margin-top: 1em;margin-bottom: 1em;margin-left: 0;margin-right: 0;}*/
+/*#tdEditor*/ strong{font-weight: bold;}
+/*#tdEditor*/ sub{vertical-align: sub;font-size: smaller;}
+/*#tdEditor*/ sup{vertical-align: super;font-size: smaller;}
+/*#tdEditor*/ var{font-style: italic;}
+/*#tdEditor*/ b{font-weight: bold;}
+/*#tdEditor*/ u{text-decoration: underline;}
+/*#tdEditor*/ i{font-style: italic;}
+/*#tdEditor*/ div{display: block;}
+/*#tdEditor*/ blockquote{display: block;margin-top: 1em;margin-bottom: 1em;margin-left: 40px;margin-right: 40px;}
+/*#tdEditor*/ pre{display: block;font-family: monospace;white-space: pre;margin: 1em 0;}
+/*#tdEditor*/ a{text-decoration:underline;}
+/*#tdEditor*/ address{display: block;font-style: italic;}
+/*#tdEditor*/ big{font-size: larger;}
+/*#tdEditor*/ cite{font-style: italic;}
+/*#tdEditor*/ code{font-family: monospace;}
+/*#tdEditor*/ del{text-decoration: line-through;}
+/*#tdEditor*/ dfn{font-style: italic;}
+/*#tdEditor*/ img{display: inline-block;}
+/*#tdEditor*/ q {display: inline;}
+/*#tdEditor*/ q:before {content: open-quote;}
+/*#tdEditor*/ q:after {content: close-quote;}
+/*#tdEditor*/ s{text-decoration: line-through;}
+/*#tdEditor*/ samp{font-family: monospace;}
+/*#tdEditor*/ small{font-size: smaller;}
+/*#tdEditor*/ ins{text-decoration: underline;}
+/*#tdEditor*/ strike{text-decoration: line-through;}
+/*#tdEditor*/ fieldset{display: block;margin-left: 2px;margin-right: 2px;padding-top: 0.35em;padding-bottom: 0.625em;padding-left: 0.75em;padding-right: 0.75em;border: 2px groove;}
+/*#tdEditor*/ form{display: block;margin-top: 0em;}
+/*#tdEditor*/ legend{display: block;padding-left: 2px;padding-right: 2px;border: none;}
+/*#tdEditor*/ caption{display: table-caption;text-align: center;}
+/*#tdEditor*/ textarea{background-color: white;border: 1px solid;border-image-source: initial;border-image-slice: initial;border-image-width: initial;border-image-outset: initial;border-image-repeat: initial;flex-direction: column;resize: auto;cursor: auto;padding: 2px;white-space: pre-wrap;word-wrap: break-word;}
+/*#tdEditor*/ input{margin: 0em;color: initial;letter-spacing: normal;word-spacing: normal;text-transform: none;text-indent: 0px;text-shadow: none;display: inline-block;text-align: start;}
+/*#tdEditor*/ ol{display: block;list-style-type: decimal;margin-top: 1em;margin-bottom: 1em;margin-left: 0;margin-right: 0;padding-left: 40px;}
+/*#tdEditor*/ ul{display: block;list-style-type: disc;margin-top: 1em;margin-bottom: 1em;margin-left: 0;margin-right: 0;padding-left: 40px;}
+/*#tdEditor*/ li{display: list-item;list-style: inherit;text-decoration:inherit;}
+/*#tdEditor*/ dl{display: block;margin-top: 1em;margin-bottom: 1em;margin-left: 0;margin-right: 0;}
+/*#tdEditor*/ dt{display: block;}
+/*#tdEditor*/ dd{display: block;margin-left: 40px;}
+/*#tdEditor*/ hr{display: block;margin-top: 0.5em;margin-bottom: 0.5em;margin-left: auto;margin-right: auto;border-style: inset;border-width: 1px;}
+/*#tdEditor*/ ul.dzeExtListStyleTriangle {list-style-type:none;margin-top: 1em;margin-bottom: 1em;margin-left: 0;margin-right: 0;padding-left: 40px;}
+/*#tdEditor*/ ul.dzeExtListStyleTriangle li.dzeExtListStyleTriangleLi:before{content: '\25B6';margin-left:-20px; padding-right: 5px;}
+/*#tdEditor*/ ul.dzeExtListStyleInnerCircle {list-style-type:none;margin-top: 1em;margin-bottom: 1em;margin-left: 0;margin-right: 0;padding-left: 40px;}
+/*#tdEditor*/ ul.dzeExtListStyleInnerCircle li.dzeExtListStyleInnerCircleLi:before{content: '\25CE';margin-left:-20px; padding-right: 5px;}
+/*#tdEditor*/ ul.dzeExtListStyleFillCircle {list-style-type:none;margin-top: 1em;margin-bottom: 1em;margin-left: 0;margin-right: 0;padding-left: 40px;}
+/*#tdEditor*/ ul.dzeExtListStyleFillCircle li.dzeExtListStyleFillCircleLi:before{content: '\25CF';margin-left:-20px; padding-right: 5px;}
+/*#tdEditor*/ ul.dzeExtListStyleDiamond {list-style-type:none;margin-top: 1em;margin-bottom: 1em;margin-left: 0;margin-right: 0;padding-left: 40px;}
+/*#tdEditor*/ ul.dzeExtListStyleDiamond li.dzeExtListStyleDiamondLi:before{content: '\25C6';margin-left:-20px; padding-right: 5px;}
+/*#tdEditor*/ ul.dzeExtListStyleHypon {list-style-type:none;margin-top: 1em;margin-bottom: 1em;margin-left: 0;margin-right: 0;padding-left: 40px;}
+/*#tdEditor*/ ul.dzeExtListStyleHypon li.dzeExtListStyleHyponLi:before {content: '\2574';margin-left:-20px; padding-right: 5px;}
+/***************************/
+
+/* <아마링크 스타일 2022-04-22> */
+/* 동기화 목록 : */
+/*      [klago-ui-oneffice] editor_style_inherit.css */
+/*      [dzeditor] editor_style_inherit.css */
+/*      [klago-ui-gw] editor_style_for_view.css */
+
+/* Amaranth 링크 */
+.dze_oneffice_link_flag:before,
+.dze_oneffice_slide_link_flag:before,
+.dze_onechamber_link_flag:before,
+.dze_amaranth_link:before {
+	background: url('/modules/oneffice/image/ico_amaranth_link_file_s.png') no-repeat center center;
+	content: " ";
+	width: 10pt;
+	height: 10pt;
+	position: absolute;
+	top: 0;
+	left: -11pt;
+}
+
+.dze_oneffice_link_flag,
+.dze_oneffice_slide_link_flag,
+.dze_onechamber_link_flag,
+.dze_amaranth_link {
+	position: relative;
+    margin: 0 0 0 11pt;
+	color: #1C90FB !important;
+	/*background: rgba(28,144,251,.07);*/ /* 원피스/웹에디터, 웹에디터뷰어 처리가 다르니 확인필요 */
+}
+
+.dze_oneffice_link_flag>span,
+.dze_oneffice_slide_link_flag>span,
+.dze_onechamber_link_flag>span,
+.dze_amaranth_link>span {
+	color: #1C90FB !important;
+	background: rgba(28,144,251,.07) !important; /* 원피스/웹에디터, 웹에디터뷰어 처리가 다르니 확인필요 */
+}
+
+/* Amaranth 링크 - 원피스(워드) */
+.dze_oneffice_link_flag:before,
+.dze_amaranth_link.dze_amaranth_link_oneffice:before {
+    background-image: url('/modules/oneffice/image/ico_amaranth_link_oneffice_s.png');
+}
+/* Amaranth 링크 - 원피스(슬라이드) */
+.dze_oneffice_slide_link_flag:before,
+.dze_amaranth_link.dze_amaranth_link_slide:before {
+    background-image: url('/modules/oneffice/image/ico_amaranth_link_slide_s.png');
+}
+/* Amaranth 링크 - 원챔버 */
+.dze_onechamber_link_flag:before,
+.dze_amaranth_link.dze_amaranth_link_onechamber:before {
+    background-image: url('/modules/oneffice/image/ico_amaranth_link_onechamber_s.png');
+}
+/* Amaranth 링크 - 메일 */
+.dze_amaranth_link.dze_amaranth_link_mail:before {
+    background-image: url('/modules/oneffice/image/ico_amaranth_link_mail_s.png');
+}
+/* Amaranth 링크 - 일정 */
+.dze_amaranth_link.dze_amaranth_link_schedule:before {
+    background-image: url('/modules/oneffice/image/ico_amaranth_link_schedule_s.png');
+}
+/* Amaranth 링크 - 결제 (영리) */
+.dze_amaranth_link.dze_amaranth_link_eapproval:before {
+    background-image: url('/modules/oneffice/image/ico_amaranth_link_eapproval_s.png');
+}
+/* Amaranth 링크 - 결제 (비영리) */
+.dze_amaranth_link.dze_amaranth_link_eaproval:before {
+    background-image: url('/modules/oneffice/image/ico_amaranth_link_eaproval_s.png');
+}
+/* Amaranth 링크 - 업무관리 ToDo */
+.dze_amaranth_link.dze_amaranth_link_kiss:before {
+    background-image: url('/modules/oneffice/image/ico_amaranth_link_kiss_s.png');
+}
+/* Amaranth 링크 - 게시판 */
+.dze_amaranth_link.dze_amaranth_link_board:before {
+    background-image: url('/modules/oneffice/image/ico_amaranth_link_board_s.png');
+}
+/* Amaranth 링크 - 쪽지 */
+.dze_amaranth_link.dze_amaranth_link_message:before {
+    background-image: url('/modules/oneffice/image/ico_amaranth_link_message_s.png');
+}
+/* Amaranth 링크 - 업무보고 */
+.dze_amaranth_link.dze_amaranth_link_report:before {
+    background-image: url('/modules/oneffice/image/ico_amaranth_link_report_s.png');
+}
+
+/* </아마링크 스타일> */
+
+/* 알파 양식 코드 A10D-442 */
+span.formCodeContainer,
+input.formCodeContainer {
+	border: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	pointer-events: none;
+	text-align: center;
+	padding: 3px;
+}

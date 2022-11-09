@@ -1,0 +1,13 @@
+@charset "utf-8";
+
+.text_box_define_css {
+	border: #000000 1px solid;
+}
+
+.innoModuleOutline {
+	border: #000000 1px dotted;
+}
+
+.innoModuleSpacer {
+	background-image: url(../image/toolbar/minibar_spacer_bg.gif);
+}

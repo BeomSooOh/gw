@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="OrgChart">
+
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+	<select id="OrgChart.selectGroupInfo" parameterClass="hashmap" resultClass="egovMap" >
+      	SELECT *
+		FROM t_co_group A
+		WHERE use_yn = 'Y'
+			and
+				A.group_seq = #groupSeq#
+    </select>
+    
+    <insert id="OrgChart.insertOrgImg" parameterClass="hashmap">
+	     	INSERT INTO `t_co_org_img`
+			SET 
+				org_seq 				= 			#orgSeq#,
+				img_type				= 			#imgType#,
+				file_id 				= 			#fileId#,
+				os_type					= 			#osType#,
+				app_type				= 			#appType#,
+				disp_mode				= 			#dispMode#,
+				disp_type				= 			#dispType#,
+				display_text 			= 			#displayText#,
+				create_seq 				= 			#createSeq#,
+				create_date 			= 			now(), 
+				modify_seq 				= 			#modifySeq#, 
+				modify_date				 = 			now()
+			ON DUPLICATE KEY UPDATE
+				org_seq 				= 			#orgSeq#,
+				img_type				= 			#imgType#,
+				file_id 				= 			#fileId#,
+				os_type					= 			#osType#,
+				app_type				= 			#appType#,
+				disp_mode				= 			#dispMode#,
+				disp_type				= 			#dispType#,
+				display_text 			= 			#displayText#,
+				modify_seq 				= 			#modifySeq#, 
+				modify_date				 = 			now()
+	     </insert>
+	     
+	     <select id="OrgChart.getOrgImg" parameterClass="hashmap" resultClass="egovMap">
+	     	SELECT 
+	     		a.org_seq, a.img_type, a.file_id, c.orignl_file_name, c.file_extsn
+			FROM t_co_org_img a, t_co_atch_file b, t_co_atch_file_detail c
+			WHERE a.file_id = b.file_id
+			AND b.file_id = c.file_id
+			AND c.file_sn = '0'
+			AND b.use_yn = 'Y'
+			AND c.use_yn = 'Y'
+			AND a.org_seq = #orgSeq#
+				<isNotEmpty property="osType">
+					AND
+						os_type = #osType#
+				</isNotEmpty>
+	     </select>
+	     
+	      <select id="OrgChart.getCompLangList" parameterClass="hashmap" resultClass="egovMap">
+	     	SELECT 	a.code, b.detail_code, c.detail_name, d.main_yn, d.sub_yn
+			FROM 	t_co_code a, 
+				t_co_code_detail b LEFT OUTER JOIN (SELECT * FROM t_co_comp_lang WHERE comp_seq = #compSeq#) d ON b.detail_code = d.lang_code, 
+				t_co_code_detail_multi c
+			WHERE
+				a.code = 'LNG000'
+				AND a.code = b.code
+				AND b.detail_code = c.detail_code
+				AND c.lang_code = #langCode# 
+				<isNotEmpty property="mainYn">
+					<isNotEmpty property="subYn">
+						AND (d.main_yn = #mainYn# OR d.sub_yn = #subYn#)
+					</isNotEmpty>
+				</isNotEmpty>
+			group by detail_code
+	     </select>
+   
+	      <select id="OrgChart.getAuthDeptList" parameterClass="hashmap" resultClass="egovMap">
+			SELECT  
+			     cd.gbn_org AS "gbnOrg"
+			    ,cd.comp_seq AS "compSeq"
+			    ,ccm.comp_name AS "compName"
+			    ,cd.biz_seq AS "bizSeq"
+			    ,IFNULL(cbm.biz_name, '') AS "bizName"
+			    ,cd.dept_seq AS "deptSeq"
+			    ,IFNULL(cdm.dept_name, '') AS "deptName"
+			    ,cd.parent_seq AS "parentSeq"
+			    ,dept_depth AS "deptDepth"
+			    ,cd.order_num AS "order"
+			    ,cd_lv.path
+	                    , CASE WHEN cadr.dept_id IS NULL THEN 'false'
+		                   ELSE 'true'
+	                      END checked		    
+			FROM    (
+			    SELECT  get_org_chart_tree(#groupSeq#) AS id, @dept_depth AS dept_depth, @path AS path
+			    FROM    
+			    (
+			        SELECT  @start_with := '0',
+			        @seq := @start_with,
+			        @dept_depth := 0,
+			        @path := ''
+			    ) vars, v_org_chart
+			    WHERE   @seq IS NOT NULL
+			) cd_lv
+			JOIN    (SELECT 
+			              `cc`.`group_seq` AS `group_seq`,
+			              'c' AS `gbn_org`,
+			              `cc`.`comp_seq` AS `seq`,
+			              `cc`.`parent_comp_seq` AS `parent_seq`,
+			              `cc`.`comp_seq`,
+			              '' AS biz_seq,
+			              '' AS dept_seq,
+	              		  `cc`.`order_num`
+			          FROM `t_co_comp` `cc` 
+			          UNION ALL 
+			          SELECT 
+			              `cb`.`group_seq` AS `group_seq`,
+			              'b' AS `gbn_org`,
+			              `cb`.`biz_seq` AS `seq`,
+			              '0' AS `parent_seq`,
+			              `cb`.comp_seq,
+			              `cb`.biz_seq,
+			              '' AS dept_seq,
+	                 	  `cb`.`order_num`
+			          FROM `t_co_biz` `cb` 
+			          UNION ALL 
+			          SELECT 
+			              `cd`.`group_seq` AS `group_seq`,
+			              'd' AS `gbn_org`,
+			              `cd`.`dept_seq` AS `seq`,
+			              `cd`.`parent_dept_seq` AS `parent_seq`,
+			              `cd`.comp_seq,
+			              `cd`.biz_seq,
+			              `cd`.dept_seq,
+	              		  `cd`.`order_num`
+			          FROM `t_co_dept` `cd`) cd
+			ON      cd.seq = cd_lv.id
+			LEFT JOIN t_co_comp_multi ccm
+			ON      cd.comp_seq = ccm.comp_seq AND ccm.lang_code = #langCode#
+			LEFT JOIN t_co_biz_multi cbm
+			ON      cd.biz_seq = cbm.biz_seq AND cbm.lang_code = #langCode#
+			LEFT JOIN t_co_dept_multi cdm
+			ON      cd.dept_seq = cdm.dept_seq AND cdm.lang_code = #langCode#
+			LEFT JOIN t_co_auth_dept_relate cadr
+			ON      cd.dept_seq = cadr.dept_id AND cdm.lang_code = #langCode# AND cadr.author_code = #authCode#
+	     </select>   
+   
+   
+   		<select id="OrgChart.selectUserPositionList" parameterClass="hashmap" resultClass="egovMap">
+   			SELECT 
+   				a.group_seq, 
+   				a.comp_seq, 
+   				a.emp_seq, 
+   				a.dept_seq,
+   				CONCAT(a.group_seq,'|',	a.comp_seq, '|', a.dept_seq) AS seq, 
+   				get_dept_pathNm(#separator#, a.dept_seq, a.group_seq, #langCode#) as path_name,
+   				IF(#deptSeq# = a.dept_seq, 'selected', '') as isSelected
+			FROM v_user_info a
+			WHERE 
+				a.emp_seq = #empSeq#
+				<isNotEmpty property="deptSeq">
+				AND a.dept_seq = #deptSeq#
+				</isNotEmpty>
+				AND a.use_yn = 'Y'
+				<isNotEmpty property="mainDeptYn">
+				AND a.main_dept_yn = #mainDeptYn#
+				</isNotEmpty>
+				
+   		</select>
+   		
+   		
+   		<select id="OrgChart.selectCompBizDeptList" parameterClass="hashmap" resultClass="egovMap">
+   			SELECT  
+			     oc.group_seq as grp_seq
+			    ,oc.gbn_org as gbn_org
+			    ,oc.comp_seq as comp_seq
+			    ,ccm.comp_name as comp_name
+			    ,oc.biz_seq as biz_seq
+			    ,IFNULL(cbm.biz_name, '') as biz_name
+			    ,oc.dept_seq as dept_seq
+			    ,IFNULL(cdm.dept_name, '') as dept_name
+			    ,oc.parent_seq as parent_seq
+			    ,oc.level as level
+			    ,oc.order_num as "order"
+			    ,oc.path
+			    ,(CASE WHEN oc.gbn_org = 'c' AND cb.display_yn = 'Y' THEN CONCAT(ccm.comp_name, '|', CONCAT(cbm.biz_name, '|', cdm.path_name))
+			        WHEN cb.display_yn = 'N' THEN CONCAT(ccm.comp_name, '|', cdm.path_name) END) as path_name
+			    ,a.member as member
+			FROM v_org_chart oc
+			LEFT JOIN
+			(
+			    SELECT A.path, IFNULL(SUM(B.cnt), 0) AS member
+			    FROM v_org_chart A
+			    LEFT JOIN
+			    (
+			        SELECT CASE WHEN cb.display_yn = 'Y' THEN CONCAT(cb.comp_seq, '|', CONCAT(cb.biz_seq, '|', cd.path))
+			            ELSE CONCAT(cb.comp_seq, '|', cd.path) END as path, COUNT(ed.emp_seq) cnt
+			        FROM t_co_dept cd, t_co_emp_dept ed, t_co_biz cb
+			        WHERE ed.group_seq = #groupSeq#
+			        <isNotEmpty property="compSeqList">
+				    AND ed.comp_seq IN ($compSeqList$)
+				    </isNotEmpty>
+			            AND ed.group_seq = cd.group_seq
+			            AND ed.dept_seq = cd.dept_seq
+			            AND ed.group_seq = cb.group_seq
+			            AND ed.biz_seq = cb.biz_seq
+			            AND ed.use_yn = 'Y'
+			            AND cd.use_yn = 'Y'
+			            AND cb.use_yn = 'Y'
+			        GROUP BY cd.path
+			    ) B
+			    ON B.path like concat(A.path,'%')
+			    WHERE A.group_seq =  #groupSeq#
+			    <isNotEmpty property="compSeqList">
+			    and A.comp_seq IN ($compSeqList$)
+			    </isNotEmpty>
+			    GROUP BY A.path  
+			) a
+			ON oc.path = a.path
+			LEFT JOIN t_co_biz cb
+			ON      oc.biz_seq = cb.biz_seq
+			LEFT JOIN t_co_comp_multi ccm
+			ON      oc.comp_seq = ccm.comp_seq AND ccm.lang_code = #langCode#
+			LEFT JOIN t_co_biz_multi cbm
+			ON      oc.biz_seq = cbm.biz_seq AND cbm.lang_code = #langCode#
+			LEFT JOIN t_co_dept_multi cdm
+			ON      oc.dept_seq = cdm.dept_seq AND cdm.lang_code = #langCode#          
+			WHERE	oc.group_seq =  #groupSeq#
+			<isNotEmpty property="compSeqList">
+				and oc.comp_seq IN ($compSeqList$)
+			</isNotEmpty>
+			<isNotEmpty property="gbnOrgList">
+				and oc.gbn_org IN ($gbnOrgList$)
+			</isNotEmpty>
+			ORDER BY oc.path
+   		</select>
+   		
+   		
+   
+</sqlMap>

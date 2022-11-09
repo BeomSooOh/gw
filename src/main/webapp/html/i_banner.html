@@ -1,0 +1,86 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<!--css-->
+<link rel="stylesheet" type="text/css" href="/gw/js/portlet/css/common.css">
+<link rel="stylesheet" type="text/css" href="/gw/js/portlet/css/portlet.css">
+
+<!--js-->
+<script type="text/javascript" src="/gw/js/portlet/Scripts/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="/gw/js/portlet/Scripts/common.js"></script>
+
+<!-- 메인 js -->
+<script type="text/javascript" src="/gw/js/portlet/Scripts/jquery.alsEN-1.0.min.js"></script>
+<script type="text/javascript" src="/gw/js/portlet/Scripts/jquery.bxslider.min.js"></script>
+
+<script type="text/javascript">
+
+	var portletBannerKey = window.location.search.split("=")[1];
+	var portletInfo = JSON.parse( localStorage.getItem(portletBannerKey) );
+	
+	function fnMoveLink(idx){
+		parent.fnMoveSSOLink(portletInfo.linkList[idx]);
+	}
+
+	$(document).ready(function(){
+		
+		var nowDate = new Date().toISOString().substring(0, 10);
+		
+		console.log(portletInfo)
+		if(portletInfo.val4 == 'Y') {
+			$.each(portletInfo.linkList, function (i, t) {
+		    	
+		    	if(t.use_yn != "N"){
+			    	var showFrom = t.show_from == "" ? "0000-00-00" : t.show_from;
+			    	var showTo = t.show_to == "" ? "9999-99-99" : t.show_to;
+			    	
+					if(showFrom <= nowDate && showTo >= nowDate){
+						$( ".bxslider" ).append("<li " + (t.link_url == "" ? "" : "style='cursor:pointer;' onclick='fnMoveLink(" + i + ")'") + " ><img width='100%' height='100%' src='/gw/cmm/file/fileDownloadProc.do?fileId="+t.file_id+"' alt='"+t.link_nm+"' /></li>");
+					}	    		
+		    	}	    	
+
+		    });			
+		  	
+			// 배너슬라이드
+			$( ".bxslider" ).bxSlider({
+				 pause: portletInfo.val0 == "" ? "3000" : portletInfo.val0,
+				 speed: portletInfo.val1 == "" ? "1000" : portletInfo.val1,
+				 mode:  portletInfo.val2 == "" ? "fade" : portletInfo.val2,
+				 pager: portletInfo.val3 == "false" ? false : true,
+				 auto: true,        					 
+				 autoHover: true,        					 
+				 controls: false,
+				 onSliderLoad: function(){
+					 
+					 if($( ".bxslider li" ).length > 1){
+						 parent.fnBannerImgSetCallback(portletBannerKey);	 
+					 }
+					 
+				 }
+			});
+		} else if(portletInfo.val4 == 'N') {
+			var img_result = '';
+			var img_count = portletInfo.linkList.length;
+			console.log(img_count);
+			$.each(portletInfo.linkList, function (seq, img_info) {
+				console.log(img_info);
+				
+				//width, height, img_info, list, qu_yn, imgUrl, listType
+				//$(".bxslider").append(fnGetImgUrl($(".bxslider").attr("width_set"), $(".bxslider").attr("height_set"), img_info, false, false, '', 'list'));
+				if(img_info) {
+					img_result = "<img style='cursor: pointer; width:100%; height: "+ 100/img_count +"%;' onclick='fnMoveLink(" + seq + ")' src='/gw/cmm/file/fileDownloadProc.do?fileId="+img_info.file_id+"' alt='' />";
+				}
+				
+				img_result = "<li>" + img_result + "</li>";
+				
+				$( ".bxslider" ).append(img_result);
+			}); 			
+			
+			parent.fnBannerImgSetCallback(portletBannerKey);
+		}
+		
+		
+	});
+</script>
+	
+<div class="i_banner">	
+	<ul class="bxslider"></ul>
+<div>

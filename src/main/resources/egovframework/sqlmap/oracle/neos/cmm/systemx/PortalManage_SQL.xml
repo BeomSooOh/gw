@@ -1,0 +1,2864 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="PortalManageDAO">
+
+    <typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+    <typeAlias alias="oracleLobMap" type="bizbox.orgchart.util.OracleLobMap"/>
+	
+	<resultMap id="selectportletCloudInfoMap" class="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<result property="portal_id" column="portal_id" jdbcType="String" javaType="String"/>
+		<result property="portlet_info" column="portlet_info" jdbcType="CLOB" javaType="String"/>
+		<result property="portal_height" column="portal_height" jdbcType="String" javaType="String"/>
+	</resultMap>
+
+	<resultMap id="tCoPortletSet" class="egovMap">
+		<result property="portal_id" column="portal_id" />
+		<result property="portlet_tp" column="portlet_tp" />
+		<result property="portlet_key" column="portlet_key" />
+		<result property="cust_nm" column="cust_nm" />
+		<result property="portlet_nm_kr" column="portlet_nm_kr" />
+		<result property="portlet_nm_en" column="portlet_nm_en" />
+		<result property="portlet_nm_cn" column="portlet_nm_cn" />
+		<result property="portlet_nm_jp" column="portlet_nm_jp" />
+		<result property="position" column="position" />
+		<result property="sort" column="sort" />
+		<result property="link_id" column="link_id" />
+		<result property="if_url" column="if_url" jdbcType="CLOB" javaType="String"/>
+		<result property="use_yn" column="use_yn" />
+		<result property="abjust_height" column="abjust_height" />
+		<result property="val0" column="val0" jdbcType="CLOB" javaType="String"/>
+		<result property="val1" column="val1" jdbcType="CLOB" javaType="String"/>
+		<result property="val2" column="val2" jdbcType="CLOB" javaType="String"/>
+		<result property="val3" column="val3" jdbcType="CLOB" javaType="String"/>
+		<result property="val4" column="val4" jdbcType="CLOB" javaType="String"/>
+	</resultMap>
+    
+    <select id="PortalManageDAO.selectGroupInfo" parameterClass="hashmap" resultClass="egovMap">
+    	/* PortalManageDAO.selectGroupInfo - oracle */
+		select * 
+		from $DB_NEOS$t_co_group 
+		where group_seq=#groupSeq#
+		AND ROWNUM = 1
+	</select>
+    
+    <select id="PortalManageDAO.selectportalId" resultClass="int" parameterClass="hashmap">
+    /* PortalManageDAO.selectportalId - oracle */
+		SELECT 
+			NVL(MAX(portal_id),0) + 1 
+		FROM $DB_NEOS$t_co_portal
+	</select>    
+    
+    <select id="PortalManageDAO.selectCoList" parameterClass="hashmap" resultClass="egovMap">
+    	/* PortalManageDAO.selectCoList - oracle */
+	    SELECT A.comp_seq, $DB_NEOS$FN_GetMultiLang(#langCode#,C.comp_name_multi) AS comp_name
+		FROM $DB_NEOS$t_co_comp A
+	    LEFT JOIN $DB_NEOS$v_t_co_comp_multi C ON A.comp_seq = C.comp_seq
+		WHERE
+	    A.group_seq = #groupSeq#
+		AND	A.use_yn = 'Y'
+	    AND (A.comp_seq = #compSeq# OR #compSeq# = '0')
+	</select>    
+    
+    <select id="PortalManageDAO.selectPortalList" parameterClass="hashmap" resultClass="egovMap">
+    	/* PortalManageDAO.selectPortalList - oracle */
+		SELECT
+		P.portal_id,
+		P.comp_seq,
+		P.portal_div,
+		P.portal_type,
+		P.portal_nm,
+		CASE WHEN P.use_yn = 'Y' THEN $DB_NEOS$get_code_detail_info('0', 'cm0004', '1', #langCode#)
+       		   WHEN P.use_yn = 'N' THEN $DB_NEOS$get_code_detail_info('0', 'cm0004', '0', #langCode#) ELSE ' ' END use_yn,
+		P.created_by, 
+		P.created_dt,
+		P.modify_by,
+		P.modify_dt,
+		P.portal_url,
+		P.portal_color_a,
+		P.portal_color_b,
+		CASE WHEN #compSeq# = '0' THEN 'Y' WHEN #compSeq# = P.comp_seq THEN 'Y' ELSE 'N' END AS edit_yn,
+		CASE WHEN P.comp_seq = '0' THEN 'N' WHEN #compSeq# = 0 THEN 'Y' WHEN 0 = P.comp_seq THEN 'Y' WHEN #compSeq# = P.comp_seq THEN 'Y' ELSE 'N' END AS del_yn,
+		CASE WHEN P.comp_seq = '0' THEN $DB_NEOS$get_code_detail_info('0','option0027','10',#langCode#) ELSE $DB_NEOS$FN_GetMultiLang(#langCode#,CLM.comp_name_multi) END AS comp_nm
+		FROM $DB_NEOS$t_co_portal P
+		LEFT JOIN $DB_NEOS$t_co_comp C ON P.comp_seq = C.comp_seq
+		LEFT JOIN $DB_NEOS$v_t_co_comp_multi CLM ON C.comp_seq = CLM.comp_seq
+		WHERE P.comp_seq = '0' OR P.comp_seq = #compSeq# OR #compSeq# = '0'
+	</select>
+	
+    <select id="PortalManageDAO.selectPortalInfo" parameterClass="hashmap" resultClass="egovMap">
+    /* PortalManageDAO.selectPortalInfo - oracle */
+        <isEqual property="portalId" compareValue="0">
+			SELECT
+				' ' as portal_id,
+				P.comp_seq,
+				P.portal_div,
+				P.portal_type,
+				' ' as portal_nm,
+				'Y' as use_yn,
+				P.created_by, 
+				P.created_dt,
+				P.modify_by,
+				P.modify_dt,
+				' ' as portal_url,
+				P.portal_color_a,
+				P.portal_color_b
+			FROM $DB_NEOS$t_co_portal P
+			WHERE P.portal_id = '1'
+			  AND ROWNUM = 1
+        </isEqual>	
+        <isNotEqual property="portalId" compareValue="0">
+			SELECT
+				P.portal_id,
+				P.comp_seq,
+				P.portal_div,
+				P.portal_type,
+				P.portal_nm,
+				P.use_yn,
+				P.created_by, 
+				P.created_dt,
+				P.modify_by,
+				P.modify_dt,
+				P.portal_url,
+				P.portal_color_a,
+				P.portal_color_b
+			FROM $DB_NEOS$t_co_portal P
+			LEFT JOIN $DB_NEOS$t_co_comp C ON P.comp_seq = C.comp_seq
+			WHERE P.portal_id = #portalId#
+			  AND ROWNUM = 1
+        </isNotEqual>    
+	</select>
+	
+    <select id="PortalManageDAO.selectPortletList" parameterClass="hashmap" resultClass="egovMap">
+    	/* PortalManageDAO.selectPortletList - oracle */
+		SELECT * FROM $DB_NEOS$t_co_portlet
+		WHERE (portlet_tp IN ('lr_tax','cn_tax') AND (select count(*) from t_co_erp where erp_type_code='iCUBE') > 0) OR portlet_tp NOT IN ('lr_tax','cn_tax') 
+		ORDER BY portlet_tp DESC
+
+	</select>
+	
+    <select id="PortalManageDAO.selectPortletSetList" parameterClass="hashmap" resultClass="egovMap">
+    	/* PortalManageDAO.selectPortletSetList - oracle */
+		select
+		l.portlet_tp,
+		l.portlet_nm,
+		l.width_set,
+		case when l.resize_yn = 'Y' and s.abjust_height != 0 then (s.abjust_height*0.8) else (l.height*0.8) end as height_set,
+		l.min_height_set,
+		l.set_btn_yn,
+		s.use_yn,
+		case when s.use_yn = 'Y' then 'portlet_img' else 'portlet_img_not_use' end as portlet_img_css,
+		s.position,
+		s.sort,
+		s.portlet_key,
+		NVL((select concat('/gw/cmm/file/fileDownloadProc.do?fileId=',file_id) from $DB_NEOS$t_co_portlet_link where link_seq != -1 and link_id=s.link_id AND ROWNUM = 1), ('/gw/Images/portal/' || l.portlet_tp || '.png')) as img_url
+		from $DB_NEOS$t_co_portal p
+		join $DB_NEOS$t_co_portlet_set s on p.portal_id = s.portal_id
+		join $DB_NEOS$t_co_portlet l on s.portlet_tp = l.portlet_tp
+		where p.portal_id = #portalId#
+		order by s.sort	
+
+	</select>
+	
+    <select id="PortalManageDAO.selectportletCloudInfo" parameterClass="hashmap" resultMap="selectportletCloudInfoMap">
+    	/* PortalManageDAO.selectportletCloudInfo - oracle */
+		select
+		*
+		from $DB_NEOS$t_co_portlet_cloud_set
+		where portal_id = #portalId#
+		AND ROWNUM = 1
+	</select>
+	
+    <select id="PortalManageDAO.selectPortletSetInfo" parameterClass="hashmap" resultClass="oracleLobMap">
+    	/* PortalManageDAO.selectPortletSetInfo - oracle */
+		select
+		p.portlet_tp as "portletTp",
+		p.position_tp as "positionTp",
+		p.position_d as "positionD",
+		p.sort_d as "sortD",
+		p.portlet_nm as "portletNm",
+		case when NVL(s.cust_nm,' ') = ' ' then p.portlet_nm else s.cust_nm end as "custNm",
+		p.width as "width",
+		p.height as "height",
+		p.min_height as "min_height",
+		p.resize_yn as "resizeYn", 
+		p.iframe_yn as "iframeYn", 
+		p.iframe_url as "iframeUrl",
+		p.package_yn as "packageYn",
+		NVL(s.if_url,' ') as "ifUrl",
+		NVL(s.link_id,0) as "linkId",
+		NVL(s.use_yn,'Y') as "useYn",
+		case when NVL(s.abjust_height,0) = 0 then p.height else s.abjust_height end as "abjustHeight",
+		case when NVL(s.abjust_height,0) = 0 then  p.height*200/p.width else s.abjust_height*200/p.width end as "abjustHeightSet",
+		NVL(DBMS_LOB.SUBSTR( s.val0, 2000, 1),' ') as val0,
+		NVL(DBMS_LOB.SUBSTR( s.val1, 2000, 1),' ') as val1,
+        NVL(DBMS_LOB.SUBSTR( s.val2, 2000, 1),' ') as val2,
+        NVL(DBMS_LOB.SUBSTR( s.val3, 2000, 1),' ') as val3,
+        NVL(DBMS_LOB.SUBSTR( s.val4, 2000, 1),' ') as val4,
+	    NVL(s.portlet_nm_kr, p.portlet_nm) as "portletNmKr",
+	    NVL(s.portlet_nm_en, ' ') as "portletNmEn",
+	    NVL(s.portlet_nm_cn, ' ') as "portletNmCn",
+	    NVL(s.portlet_nm_jp, ' ') as "portletNmJp"
+		from $DB_NEOS$t_co_portlet p
+		left join $DB_NEOS$t_co_portlet_set s on s.portlet_tp = p.portlet_tp and s.portal_id = #portalId# and s.portlet_key=#portletKey#
+		where p.portlet_tp=#portletTp#
+		  and rownum = 1
+
+	</select>	
+	
+    <select id="PortalManageDAO.selectPortletLinkList" parameterClass="hashmap" resultClass="oracleLobMap">
+    	/* PortalManageDAO.selectPortletLinkList - oracle */
+		select A.link_id as "linkId"
+			 , A.link_seq as "linkSeq"
+			 , A.link_nm as "linkNm"
+			 , A.link_url as "linkUrl"
+			 , A.sort as "sort"
+			 , A.file_id as "fileId"
+			 , A.use_yn as "useYn"
+			 , A.show_from as "showFrom"
+			 , A.show_to as "showTo"
+			 , B.link_id as "linkId"
+			 , B.link_tp as "linkTp"
+			 , B.link_seq as "linkSeq"
+			 , B.sso_type as "ssoType"
+			 , B.sso_url as "ssoUrl"
+			 , B.sso_emp_ctl_name as "ssoEmpCtlName"
+			 , B.sso_pwd_ctl_name as "ssoPwdCtlName"
+			 , B.sso_logincd_ctl_name as "ssoLogincdCtlName"
+			 , B.sso_coseq_ctl_name as "ssoCoseqCtlName"
+			 , B.sso_erpempno_ctl_name as "ssoErpempnoCtlName"
+			 , B.sso_erpcocd_ctl_name as "ssoErpcocdCtlName"
+			 , B.sso_encrypt_type as "ssoEncryptType"
+			 , B.sso_encrypt_key as "ssoEncryptKey"
+			 , B.sso_time_link as "ssoTimeLink"
+			 , B.sso_encrypt_scope as "ssoEncryptScope"
+			 , B.sso_etc_ctl_name as "ssoEtcCtlName"
+			 , B.sso_etc_ctl_value as "ssoEtcCtlValue"
+			 , B.create_by as "createBy"
+			 , B.create_dt as "createDt"
+			 , B.edited_by as "editedBy"
+			 , B.edited_dt as "editedDt"
+		, case when TO_CHAR(SYSDATE, 'YYYY-MM-DD') between show_from 
+					and (case when NVL(show_to,' ') = ' ' then '9999-99-99' 
+						  	  else show_to 
+						  	  end) 
+				then 'Y' 
+				else 'N' 
+				end as "showYn"
+		, case when B.link_id is not null then 'Y' 
+				else 'N' 
+				end "ssoUseYn" 
+		from $DB_NEOS$t_co_portlet_link A
+		left join $DB_NEOS$t_co_sso B on A.link_id = B.link_id AND A.link_seq = B.link_seq
+		where A.link_id=#linkId#
+		order by sort
+
+	</select>
+	
+	
+	
+	<insert id="PortalManageDAO.insertPortal" parameterClass="hashmap">
+	/* PortalManageDAO.insertPortal - oracle */
+	    INSERT INTO $DB_NEOS$t_co_portal(portal_id, comp_seq, portal_div, portal_type, portal_nm, use_yn, created_by, created_dt)
+	    VALUES(
+	    #portalId#,
+	    #compSeq#,
+	    #portalDiv#,
+	    #portalType#,
+	    #portalNm#,
+	    #useYn#,
+	    #uniqId#,
+	    SYSDATE
+	    )
+	</insert>
+	
+	<update id="PortalManageDAO.updatePortal" parameterClass="hashmap">
+	/* PortalManageDAO.updatePortal - oracle */
+		UPDATE $DB_NEOS$t_co_portal
+		SET
+			comp_seq = #compSeq#,
+			portal_nm = #portalNm#,
+	    	portal_div = #portalDiv#,
+			portal_type = #portalType#,			
+			use_yn = #useYn#,
+	    	modify_by = #uniqId#,
+	    	modify_dt = SYSDATE		
+		WHERE
+			portal_id = #portalId#
+	</update>
+	
+	<update id="PortalManageDAO.updatePortalUse" parameterClass="hashmap">
+	/* PortalManageDAO.updatePortalUse - oracle */
+		UPDATE $DB_NEOS$t_co_portal
+		SET
+			use_yn = 'N'
+		WHERE
+			comp_seq = #compSeq#
+	</update>	
+	
+	<delete id="PortalManageDAO.deletePortalList" parameterClass="hashmap">
+	/* PortalManageDAO.deletePortalList - oracle */
+		DELETE FROM
+			$DB_NEOS$t_co_portal
+		WHERE
+			portal_id = #portalId#	
+					
+	</delete>
+	
+	<delete id="PortalManageDAO.deleteFootBtnList" parameterClass="hashmap">
+	/* PortalManageDAO.deleteFootBtnList - oracle */
+		DELETE FROM
+			$DB_NEOS$t_co_portlet_footbtn
+		WHERE
+			portal_id = #portalId#
+			
+	</delete>
+	
+	
+	<delete id="PortalManageDAO.deletePortalListSet" parameterClass="hashmap">
+	/* PortalManageDAO.deletePortalListSet - oracle */
+		DELETE FROM
+			$DB_NEOS$t_co_portlet_set
+		WHERE
+			portal_id = #portalId#
+
+	</delete>
+	
+	<delete id="PortalManageDAO.deletePortalListLink" parameterClass="hashmap">
+	/* PortalManageDAO.deletePortalListLink - oracle */
+		DELETE FROM
+			$DB_NEOS$t_co_portlet_link
+	
+		WHERE link_id in	
+		(select link_id from $DB_NEOS$t_co_portlet_set where link_id is not null and portal_id = #portalId#)
+
+	</delete>
+	
+	<delete id="PortalManageDAO.deleteFootBtnListLink" parameterClass="hashmap">
+	/* PortalManageDAO.deleteFootBtnListLink - oracle */
+		DELETE FROM
+			$DB_NEOS$t_co_sso	
+		WHERE link_id in	
+		(select link_id from $DB_NEOS$t_co_portlet_footbtn where link_id is not null and portal_id = #portalId#)
+		AND link_tp = 'footBtn' AND link_seq = '1'
+		
+
+	</delete>
+	
+	
+	
+	
+    <select id="PortalManageDAO.selectLinkId" resultClass="int" parameterClass="hashmap">
+    /* PortalManageDAO.selectLinkId - oracle */
+    
+		SELECT 
+			NVL(MAX(link_id),0) + 1 
+		FROM $DB_NEOS$t_co_portlet_link
+	</select>
+	
+	<delete id="PortalManageDAO.deleteLinkList" parameterClass="hashmap">
+	/* PortalManageDAO.deleteLinkList - oracle */
+	
+		DELETE FROM
+			$DB_NEOS$t_co_portlet_link
+		WHERE
+			link_id = #linkId#
+	</delete>
+	
+	<delete id="PortalManageDAO.deleteSSoLinkList" parameterClass="hashmap">
+	/* PortalManageDAO.deleteSSoLinkList - oracle */
+	
+		DELETE FROM
+			$DB_NEOS$t_co_sso
+		WHERE
+			link_id = #linkId#
+			AND link_tp = #portletTp#
+	</delete>
+
+    <insert id="PortalManageDAO.insertPortletLink" parameterClass="hashmap">
+    /* PortalManageDAO.insertPortletLink - oracle */
+    	
+    	INSERT ALL
+    	<dynamic>
+	       	<iterate conjunction=" " property="linkList">	
+    	 		INTO $DB_NEOS$t_co_portlet_link 
+    	 		(
+    	 		 link_id
+    	 	   , link_seq
+    	 	   , link_nm
+    	 	   , link_url
+    	 	   , sort
+    	 	   , file_id
+    	 	   , use_yn
+    	 	   , show_from
+    	 	   , show_to
+    	 	   ) 
+    	 	   VALUES
+    	 	   (
+	       	   	 #linkList[].link_id#
+	       	   , #linkList[].link_seq#
+	       	   , #linkList[].link_nm#
+	       	   , #linkList[].link_url#
+	       	   , #linkList[].link_seq#
+	       	   , #linkList[].file_id#
+	       	   , #linkList[].use_yn#
+	       	   , #linkList[].show_from#
+	       	   , #linkList[].show_to#
+	       	   )
+	       </iterate>
+	   </dynamic>
+	 	
+	 	SELECT * FROM DUAL
+    </insert>
+    
+    
+    <insert id="PortalManageDAO.insertPortletSSoLink" parameterClass="hashmap">
+     /* PortalManageDAO.insertPortletSSoLink - oracle */
+     
+    	INSERT ALL
+    	<dynamic>
+    		<iterate conjunction=" " property="ssoLinkInfoList">
+    	 		INTO $DB_NEOS$t_co_sso 
+    	 		(
+    	 		 link_id
+    	 	   , link_tp
+    	 	   , link_seq
+    	 	   , sso_type
+    	 	   , sso_url
+    	 	   , sso_emp_ctl_name
+    	 	   , sso_pwd_ctl_name
+    	 	   , sso_logincd_ctl_name
+    	 	   , sso_coseq_ctl_name
+    	 	   , sso_erpempno_ctl_name
+    	 	   , sso_erpcocd_ctl_name
+    	 	   , sso_etc_ctl_name
+    	 	   , sso_etc_ctl_value
+    	 	   , sso_encrypt_type
+    	 	   , sso_encrypt_key
+    	 	   , sso_time_link
+    	 	   , sso_encrypt_scope
+    	 	   , create_by
+    	 	   , create_dt
+    	 	   ) 
+    	 	   VALUES
+	       	   (
+	       	   	 #ssoLinkInfoList[].link_id#
+	       	   , #ssoLinkInfoList[].portletTp#
+	       	   , #ssoLinkInfoList[].link_seq#
+	       	   , #ssoLinkInfoList[].ssoType#
+	       	   , #ssoLinkInfoList[].link_url#
+	       	   , #ssoLinkInfoList[].ssoUserId#
+	       	   , #ssoLinkInfoList[].ssoPwd#
+	       	   , #ssoLinkInfoList[].ssoLoginCd#
+	       	   , #ssoLinkInfoList[].ssoCompSeq#
+	       	   , #ssoLinkInfoList[].sspErpSeq#
+	       	   , #ssoLinkInfoList[].ssoErpCompSeq#
+	       	   , #ssoLinkInfoList[].ssoEtcName#
+	       	   , #ssoLinkInfoList[].ssoEtcValue#
+	       	   , #ssoLinkInfoList[].ssoEncryptType#
+	       	   , #ssoLinkInfoList[].ssoEncryptKey#
+	       	   , #ssoLinkInfoList[].ssoTimeLink#
+	       	   , #ssoLinkInfoList[].ssoEncryptScope#
+	       	   , ' '
+	       	   , ' ')    	       
+	       </iterate>
+	   </dynamic>
+	   
+	   SELECT * FROM DUAL
+    </insert>
+    
+    
+    <insert id="PortalManageDAO.insertPortlet" parameterClass="hashmap">
+    /* PortalManageDAO.insertPortlet - oracle */
+    
+	   MERGE INTO $DB_NEOS$t_co_portlet_set
+			USING DUAL
+				ON (portal_id = #portalId# AND portlet_tp = #portletTp# AND portlet_key = #portletKey#)
+		WHEN MATCHED THEN
+			UPDATE SET
+				  cust_nm = #custNm#,
+				  link_id = #linkId#,
+				  use_yn = #useYn#,
+				  abjust_height = #abjustHeight#,
+				  if_url = #ifUrl#,
+				  val0 = #val0#,
+				  val1 = #val1#,
+				  val2 = #val2#,
+				  val3 = #val3#,
+				  val4 = #val4#,
+				  portlet_nm_kr = #port_name_kr#,
+				  portlet_nm_cn = #port_name_cn#,
+				  portlet_nm_jp = #port_name_jp#,
+				  portlet_nm_en = #port_name_en#
+		WHEN NOT MATCHED THEN
+			INSERT(
+				  portal_id,
+				  portlet_tp,
+				  portlet_key,
+				  cust_nm,
+				  link_id,
+				  use_yn,
+				  abjust_height,
+				  if_url,
+				  val0,
+				  val1,
+				  val2,
+				  val3,
+				  val4,
+				  portlet_nm_kr,
+				  portlet_nm_cn,
+				  portlet_nm_jp,
+				  portlet_nm_en
+			)VALUES(
+			 	  #portalId#,
+				  #portletTp#,
+				  #portletKey#,
+				  #custNm#,
+				  #linkId#,
+				  #useYn#,
+				  #abjustHeight#,
+				  #ifUrl#,
+				  #val0#,
+				  #val1#,
+				  #val2#,
+				  #val3#,
+				  #val4#,
+				  #port_name_kr#,
+				  #port_name_cn#,
+				  #port_name_jp#,
+				  #port_name_en#
+			)
+    </insert>
+    
+    <insert id="PortalManageDAO.insertPortletSet" parameterClass="hashmap">
+	 /* PortalManageDAO.insertPortletSet - oracle */
+	   MERGE INTO $DB_NEOS$t_co_portlet_set
+			USING DUAL
+				ON (portal_id = #portal_id# AND portlet_tp = #portlet_tp# AND portlet_key = #portlet_key#)
+		WHEN MATCHED THEN
+			UPDATE SET
+				  position = #position#,
+				  sort = #sort#
+		WHEN NOT MATCHED THEN
+			INSERT(
+				 	portal_id,
+		  			portlet_tp,
+		  			portlet_key,
+		  			position,
+		  			sort,
+		  			use_yn
+			)VALUES(
+			 		#portal_id#,
+		  			#portlet_tp#,
+		  			#portlet_key#,
+		  			#position#,
+		  			#sort#,
+		  			'Y'
+			)	  
+    </insert>
+    
+    <delete id="PortalManageDAO.deletePortletCloudSet" parameterClass="hashmap">
+    	/* PortalManageDAO.deletePortletCloudSet - oracle */
+    	delete from $DB_NEOS$t_co_portlet_cloud_set where portal_id = #portalId#
+	</delete>     
+    
+    <insert id="PortalManageDAO.insertPortletCloudSet" parameterClass="hashmap">
+    	/* PortalManageDAO.insertPortletCloudSet - oracle */
+		INSERT INTO $DB_NEOS$t_co_portlet_cloud_set(portal_id, portal_height, portlet_info)
+		VALUES(
+			#portalId#,
+			#portalHeight#,
+			#portletInfo#
+		)
+    </insert>
+    
+    <delete id="PortalManageDAO.deletePortletLink" parameterClass="hashmap">
+    /* PortalManageDAO.deletePortletLink - oracle */
+    
+    	delete from $DB_NEOS$t_co_portlet_link where link_id in
+		(select link_id from $DB_NEOS$t_co_portlet_set where link_id is not null and portal_id=#portalId#
+		
+	   <dynamic>
+	       <iterate property="portletList" prepend="and (portal_id,portlet_tp,portlet_key) not in " open="(" close=")"  conjunction="," >
+    	       (#portletList[].portal_id#, #portletList[].portlet_tp#, #portletList[].portlet_key#)
+	       </iterate>
+	   </dynamic>
+	   )
+
+	</delete>    
+    
+    <delete id="PortalManageDAO.deletePortletSet" parameterClass="hashmap">
+    /* PortalManageDAO.deletePortletSet - oracle */
+    
+		delete from $DB_NEOS$t_co_portlet_set where portal_id=#portalId#
+		
+	   <dynamic>
+	       <iterate property="portletList" prepend="and (portal_id,portlet_tp,portlet_key) not in " open="(" close=")"  conjunction="," >
+    	       (#portletList[].portal_id#, #portletList[].portlet_tp#, #portletList[].portlet_key#)
+	       </iterate>
+	   </dynamic>
+		 
+
+	</delete>
+	
+    <select id="PortalManageDAO.selectUserAttPortalInfo" parameterClass="hashmap" resultClass="egovMap">
+    	/* PortalManageDAO.selectUserAttPortalInfo - oracle */
+		select
+		NVL(at.come_dt,'') as come_dt,
+		NVL(at.leave_dt,'') as leave_dt,		
+		case when c_cd.comp_seq is null then 
+		$DB_NEOS$FN_GetLanguageName(#langCode#, m_cd.att_div_name_kr, m_cd.att_div_name_en, m_cd.att_div_name_jp, m_cd.att_div_name_cn) 
+		else 
+		$DB_NEOS$FN_GetLanguageName(#langCode#, c_cd.att_div_name_kr, c_cd.att_div_name_en, c_cd.att_div_name_jp, c_cd.att_div_name_cn) 
+		end as att_nm
+		from $DB_NEOS$t_at_att at
+		left join $DB_NEOS$t_at_att_code_div m_cd on m_cd.comp_seq = 'SYSTEM' and at.att_div_code = m_cd.att_div_code and at.att_item_code = m_cd.att_item_code
+		left join $DB_NEOS$t_at_att_code_div c_cd on c_cd.comp_seq = at.comp_seq and at.att_div_code = c_cd.att_div_code and at.att_item_code = c_cd.att_item_code
+		where at.emp_seq= #empSeq# and at.att_date = TO_CHAR(SYSDATE,'YYYYMMDD') and at.comp_seq = #compSeq# AND at.att_item_code = '10'
+		AND ROWNUM = 1
+	</select>
+	
+    <update id="PortalManageDAO.insertSSoInfo" parameterClass="hashmap">
+		/* PortalManageDAO.insertSSoInfo - oracle */
+		MERGE INTO $DB_NEOS$t_co_sso
+			USING DUAL
+				ON(link_id = #linkId# AND link_tp = #linkTp# AND link_seq = #linkSeq#)
+		WHEN MATCHED THEN
+			UPDATE SET
+				sso_type = #ssoType#,
+				sso_emp_ctl_name = #ssoEmpCtlName#,
+				sso_pwd_ctl_name = #ssoPwdCtlName#,
+				sso_logincd_ctl_name = #ssoLogincdCtlName#,
+				sso_coseq_ctl_name = #ssoCoseqCtlName#,
+				sso_erpempno_ctl_name = #ssoErpempnoCtlName#,
+				sso_erpcocd_ctl_name = #ssoErpcocdCtlName#,
+				sso_etc_ctl_name = #ssoEtcCtlName#,
+				sso_etc_ctl_value = #ssoEtcCtlValue#,
+				sso_encrypt_type = #ssoEncryptType#, 
+				sso_encrypt_key = #ssoEncryptKey#,
+				sso_time_link = #ssoTimeLink#,
+				sso_encrypt_scope = #ssoEncryptScope#
+		WHEN NOT MATCHED THEN
+			INSERT (link_id, link_tp, link_seq, sso_type, sso_emp_ctl_name, sso_pwd_ctl_name, sso_logincd_ctl_name, sso_coseq_ctl_name, sso_erpempno_ctl_name, sso_erpcocd_ctl_name, sso_etc_ctl_name, sso_etc_ctl_value, sso_encrypt_type, sso_encrypt_key, sso_time_link, sso_encrypt_scope)
+			VALUES (#linkId#, #linkTp#, #linkSeq#, #ssoType#, #ssoEmpCtlName#, #ssoPwdCtlName#, #ssoLogincdCtlName#, #ssoCoseqCtlName#, #ssoErpempnoCtlName#, #ssoErpcocdCtlName#, #ssoEtcCtlName#, #ssoEtcCtlValue#, #ssoEncryptType#, #ssoEncryptKey#, #ssoTimeLink#, #ssoEncryptScope#)
+    </update>	
+    
+    <select id="PortalManageDAO.selectSSoInfo" parameterClass="hashmap" resultClass="egovMap">
+		/* PortalManageDAO.selectSSoInfo - oracle */
+	    SELECT
+	    * 
+	    FROM $DB_NEOS$t_co_sso
+	    WHERE 
+		      link_id = #linkId#
+		      AND link_tp = #linkTp#
+		      AND link_seq = #linkSeq#
+		AND ROWNUM = 1
+	</select>  
+	
+	<select id="PortalManageDAO.getEmpWeatherCityInfo" parameterClass="hashMap" resultClass="egovMap">
+		/* PortalManageDAO.getEmpWeatherCityInfo - oracle */
+		SELECT * FROM(
+			SELECT
+				ROWNUM AS rnum
+				, T1.*
+			FROM (
+				SELECT NVL(TO_CHAR(D.custom_value0), TO_CHAR(A.val0)) "weatherCity",
+				A.abjust_height,
+				<isNotEmpty property="langCode">
+					$DB_NEOS$FN_GetMultiLang(#langCode#, C.detail_name_multi) as "cityName"
+				</isNotEmpty>
+				<isEmpty property="langCode">
+					C.detail_name "cityName"
+				</isEmpty>
+				FROM $DB_NEOS$t_co_portlet_set A
+				INNER JOIN $DB_NEOS$t_co_portal B ON (B.comp_seq = #compSeq# or B.comp_seq = '0') AND A.portal_id = B.portal_id
+				LEFT JOIN $DB_NEOS$t_co_portlet_user_set D ON A.portal_id = D.portal_id AND A.portlet_tp = D.portlet_tp AND D.emp_seq = #empSeq#
+				LEFT JOIN $DB_NEOS$v_t_co_code_detail_multi C ON C.code='cm1010' AND NVL(TO_CHAR(D.custom_value0), TO_CHAR(A.val0)) = C.detail_code
+				WHERE
+				A.portlet_tp = 'lr_weather' AND A.portlet_key = '1'
+				ORDER BY B.comp_seq DESC
+			)T1
+		)T2 where rnum = 1
+    </select>
+
+    <select id="PortalManageDAO.selectUserAttOptionInfo" parameterClass="hashMap" resultMap="tCoPortletSet">
+    	/* PortalManageDAO.selectUserAttOptionInfo - oracle */
+    	 select A.* from $DB_NEOS$t_co_portlet_set A
+		 inner join $DB_NEOS$t_co_portal B on A.portal_id = B.portal_id 
+		 	AND  (case when (select count(*) from $DB_NEOS$t_co_portal where use_yn = 'Y' and comp_seq = #compSeq#) > 0 then DECODE(B.comp_seq, #compSeq#,1,0) else DECODE(B.comp_seq, '0',1,0) end) = 1 
+		 	AND B.use_yn = 'Y'
+		 WHERE portlet_tp = 'lr_user' and portlet_key = '1'   
+    </select>
+    
+    <select id="PortalManageDAO.selectPortletBtnList" parameterClass="hashMap" resultClass="egovMap">
+<!--     	select  -->
+<!--     		footbtn_seq, portal_id, btn_nm, link_id, base_yn, order_num, img_url, display_yn, -->
+<!--     		case when display_yn = 'Y' then '노출' when display_yn = 'N' then '미노출' else '' end display_nm -->
+<!--    		from -->
+<!--    			 t_co_portlet_footbtn -->
+<!--    		where -->
+<!--    			portal_id = #portalId#    	 -->
+<!--  		order by  -->
+<!--    			order_num -->
+	/* PortalManageDAO.selectPortletBtnList - oracle */
+		select 
+    		a.footbtn_seq
+    	  , a.portal_id
+    	  , a.btn_nm
+    	  , a.link_id
+    	  , a.base_yn
+    	  , a.order_num
+    	  , a.img_url
+    	  , a.display_yn
+    	  , a.link_url
+    	  , a.file_id
+    	  , case when a.display_yn = 'Y' then '노출' 
+    	  		 when a.display_yn = 'N' then '미노출' 
+    	  		 else ' ' 
+    	  		 end display_nm
+    	  , a.sso_use_yn as sso_use
+    	  , NVL(c.sso_type,' ') sso_type
+    	  , NVL(c.sso_url,' ') sso_url
+    	  , NVL(c.sso_emp_ctl_name,' ') sso_emp_ctl_name
+    	  , NVL(c.sso_pwd_ctl_name,' ') sso_pwd_ctl_name
+    	  , NVL(c.sso_logincd_ctl_name,' ') sso_logincd_ctl_name
+    	  , NVL(c.sso_coseq_ctl_name,' ') sso_coseq_ctl_name
+    	  , NVL(c.sso_erpempno_ctl_name,' ') sso_erpempno_ctl_name
+    	  , NVL(c.sso_erpcocd_ctl_name,' ') sso_erpcocd_ctl_name
+   		from
+   			 $DB_NEOS$t_co_portlet_footbtn a
+   		left join $DB_NEOS$t_co_sso c on a.link_id = c.link_id and c.link_tp='footBtn' and c.link_seq='1'
+   		where
+   			a.portal_id = #portalId#
+   			<isNotEmpty property="flag">
+   			and a.display_yn = 'Y'
+   			</isNotEmpty>
+ 		order by 
+   			order_num			
+    </select>
+    
+    
+    <update id="PortalManageDAO.saveFootBaseBtnInfo" parameterClass="hashMap">
+    /* PortalManageDAO.saveFootBaseBtnInfo - oracle */
+    	update
+    		$DB_NEOS$t_co_portlet_footbtn
+    	set
+    		display_yn = #displayYn#
+    		,order_num = #orderNum#
+   		where
+   			footbtn_seq = #footBtnSeq#
+   			and portal_id = #portalId#
+    </update>
+    
+    
+    <select id="PortalManageDAO.getFootBtnSeq" resultClass="String" parameterClass="hashMap">
+    /* PortalManageDAO.getFootBtnSeq - oracle */
+    
+    		select $DB_NEOS$f_nextval('footBtn') from dual
+    </select>
+	       
+	       
+	<insert id="PortalManageDAO.saveFootAddBtnInfo" parameterClass="hashMap">
+	/* PortalManageDAO.saveFootAddBtnInfo - oracle */
+			
+	   MERGE INTO $DB_NEOS$t_co_portlet_footbtn
+			USING DUAL
+			   ON (footbtn_seq = #footBtnSeq# AND portal_id = #portalId#)
+		WHEN MATCHED THEN
+			UPDATE SET
+					  btn_nm = #btnNm#
+					, link_id = #linkId#
+					, link_url = #linkUrl#
+					, base_yn = #baseYn#
+					, display_yn = #displayYn#
+					, order_num = #orderNum#
+					, img_url = #imgUrl#
+					, sso_use_yn = #ssoYn#
+					, file_id = #fileId#
+					, modify_seq = #empSeq#
+					, modify_date = SYSDATE
+		WHEN NOT MATCHED THEN
+			INSERT(
+				  footbtn_seq
+				, portal_id 
+				, btn_nm 
+				, link_id
+				, link_url 
+				, base_yn 
+				, display_yn
+				, order_num
+				, img_url 
+				, sso_use_yn
+				, file_id 
+				, create_seq
+				, create_date
+			)VALUES(
+			 	  #footBtnSeq#
+				, #portalId#
+				, #btnNm#
+				, #linkId#
+				, #linkUrl#
+				, #baseYn#
+				, #displayYn#
+				, #orderNum#
+				, #imgUrl#
+				, #ssoYn#
+				, #fileId#
+				, #empSeq#
+				, SYSDATE
+			)
+	</insert>
+	
+	
+	<delete id="PortalManageDAO.delFootAddBtnInfo" parameterClass="hashMap">
+	/* PortalManageDAO.delFootAddBtnInfo - oracle */
+	
+		DELETE FROM 
+			$DB_NEOS$t_co_portlet_footbtn
+		WHERE
+			footbtn_seq in($delList$)
+			AND portal_id = #portalId#
+	</delete>
+	
+	<delete id="PortalManageDAO.delFootAddBtnLinkInfo" parameterClass="hashMap">
+	/* PortalManageDAO.delFootAddBtnLinkInfo - oracle */
+	
+		DELETE FROM 
+			$DB_NEOS$t_co_sso
+		WHERE
+			link_id in($delLinkList$)
+			AND link_tp = 'footBtn'
+			AND link_seq = '1'
+	</delete>
+	
+	
+	
+	<insert id="PortalManageDAO.saveFootBtnSsoInfo" parameterClass="hashMap">
+	/* PortalManageDAO.saveFootBtnSsoInfo - oracle */
+			
+	   MERGE INTO $DB_NEOS$t_co_sso
+			USING DUAL
+			   ON (link_id = #linkId# AND link_tp = 'footBtn' AND link_seq = '1')
+		WHEN MATCHED THEN
+			UPDATE SET
+					  sso_type = #ssoType#
+					, sso_url = #ssoUrl#
+					, sso_emp_ctl_name = #pUserId#
+					, sso_pwd_ctl_name = #pPwd#
+					, sso_logincd_ctl_name = #pLoginCd#
+					, sso_coseq_ctl_name = #pCompCd#
+					, sso_erpempno_ctl_name = #pErpEmpCd#
+					, sso_erpcocd_ctl_name = #pErpCompCd#
+					, edited_by = #empSeq#
+					, edited_dt = SYSDATE
+		WHEN NOT MATCHED THEN
+			INSERT(
+					link_id 
+				  , link_tp 
+				  , link_seq
+				  , sso_type
+				  , sso_url 
+				  , sso_emp_ctl_name 
+				  , sso_pwd_ctl_name 
+				  , sso_logincd_ctl_name 
+				  , sso_coseq_ctl_name 
+				  , sso_erpempno_ctl_name 
+				  , sso_erpcocd_ctl_name 
+				  , create_by 
+				  , create_dt 
+			)VALUES(
+			 		#linkId#
+				  , 'footBtn'
+				  , '1'
+				  , #ssoType#
+				  , #ssoUrl#
+				  , #pUserId#
+				  , #pPwd#
+				  , #pLoginCd#
+				  , #pCompCd#
+				  , #pErpEmpCd#
+				  , #pErpCompCd#
+				  , #empSeq#
+				  , SYSDATE
+			)
+	</insert>
+	
+	<select id="PortalManageDAO.selectFootBtnLinkId" resultClass="String" parameterClass="hashmap">
+	/* PortalManageDAO.selectFootBtnLinkId - oracle */
+	
+		select $DB_NEOS$f_nextval('footBtnLink') from dual
+	</select>
+	
+	<insert id="PortalManageDAO.insertFootBaseBtn" parameterClass="hashmap">
+	/* PortalManageDAO.insertFootBaseBtn - oracle */
+		insert into $DB_NEOS$t_co_portlet_footbtn
+		(
+			select 
+				a.footbtn_seq, #portalId# as portal_id, a.btn_nm, a.link_id, a.link_url, a.base_yn, a.diplay_yn, a.order_num, a.img_url, a.sso_use_yn, a.file_id, a.create_seq, a.create_date, a.modify_seq, a.modify_date
+				 from 
+				(
+						select '1' as footbtn_seq, $DB_NEOS$get_code_detail_info('0', 'TX000003211', '1', 'kr')		as btn_nm, NULL as link_id, NULL as link_url, 'Y' as base_yn, 'Y' as diplay_yn, 0 as order_num, '/gw/Images/ico/etc_01.png' as img_url, NULL as sso_use_yn, NULL as file_id, NULL as create_seq, NULL as create_date, NULL as modify_seq, NULL as modify_date FROM DUAL
+				union	select '2' as footbtn_seq,  $DB_NEOS$get_code_detail_info('0', 'option0054', '1', 'kr')		as btn_nm, NULL as link_id, NULL as link_url, 'Y' as base_yn, 'Y' as diplay_yn, 1 as order_num, '/gw/Images/ico/etc_02.png' as img_url, NULL as sso_use_yn, NULL as file_id, NULL as create_seq, NULL as create_date, NULL as modify_seq, NULL as modify_date FROM DUAL
+				union	select '3' as footbtn_seq, $DB_NEOS$get_code_detail_info('0', 'TX000004025', '1', 'kr')		as btn_nm, NULL as link_id, NULL as link_url, 'Y' as base_yn, 'Y' as diplay_yn, 2 as order_num, '/gw/Images/ico/etc_03.png' as img_url, NULL as sso_use_yn, NULL as file_id, NULL as create_seq, NULL as create_date, NULL as modify_seq, NULL as modify_date FROM DUAL
+				union	select '4' as footbtn_seq,  $DB_NEOS$get_code_detail_info('0', 'TX000016180', '1', 'kr')	as btn_nm, NULL as link_id, NULL as link_url, 'Y' as base_yn, 'N' as diplay_yn, 3 as order_num, '/gw/Images/ico/etc_04.png' as img_url, NULL as sso_use_yn, NULL as file_id, NULL as create_seq, NULL as create_date, NULL as modify_seq, NULL as modify_date FROM DUAL
+				union	select '5' as footbtn_seq,  $DB_NEOS$get_code_detail_info('0', 'TX000007387', '1', 'kr')	as btn_nm, NULL as link_id, NULL as link_url, 'Y' as base_yn, 'Y' as diplay_yn, 4 as order_num, '/gw/Images/ico/etc_05.png' as img_url, NULL as sso_use_yn, NULL as file_id, NULL as create_seq, NULL as create_date, NULL as modify_seq, NULL as modify_date FROM DUAL
+				) a
+		 )	
+	</insert>
+	
+	<select id="PortalManageDAO.selectEncPassword" parameterClass="hashMap" resultClass="String">
+		select login_passwd 
+		from $DB_NEOS$t_co_emp 
+		where emp_seq=#empSeq#
+		limit 1
+	</select>
+	
+	<select id="EaDocDAO.GetPortletInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT PORTAL_ID
+               , PORTLET_TP
+               , PORTLET_KEY
+               , POSITION
+               , SORT
+               , LINK_ID
+               , USE_YN
+               , VAL0
+               , VAL1
+               , VAL2
+               , VAL3
+               , VAL4
+        FROM $DB_NEOS$`T_CO_PORTLET_SET` WHERE PORTLET_TP = #portletTp#
+        AND PORTAL_ID = (
+				SELECT PORTAL_ID FROM $DB_NEOS$T_CO_PORTAL 
+				WHERE comp_seq = NVL((SELECT COMP_SEQ FROM $DB_NEOS$T_CO_PORTAL WHERE COMP_SEQ = #loginVo.compSeq# AND USE_YN = 'Y'), '0'))
+		AND USE_YN = 'Y'
+		LIMIT 1
+	</select>
+	
+	<select id="EaDocDAO.GetOrgChartParents" parameterClass="java.util.HashMap" resultClass="java.lang.String">
+		/* EaDocDAO.GetOrgChartParents" 상위부서 조회*/
+		SELECT GROUP_CONCAT(PATH SEPARATOR  '|')  FROM $DB_NEOS$`v_org_chart` a
+		<isEmpty property="draftDept">
+		INNER JOIN (SELECT dept_seq FROM $DB_NEOS$T_CO_emp_dept WHERE comp_seq = #loginVo.compSeq# AND emp_seq  = #loginVo.uniqId# AND use_yn = 'Y') b
+		WHERE PATH LIKE CONCAT('%|' ,b.dept_seq, '')
+		</isEmpty>
+		<isNotEmpty property="draftDept">
+		WHERE PATH LIKE CONCAT('%|' ,#draftDept#, '')
+		</isNotEmpty>
+		AND   GBN_ORG = 'd'
+<!-- 		SELECT PATH FROM `v_org_chart` -->
+<!-- 		WHERE PATH LIKE CONCAT('%|' ,#loginVo.orgnztId#, '') -->
+<!-- 		AND   GBN_ORG = 'd' -->
+	</select>
+	
+	<select id="EaDocDAO.GetHihgMenu" parameterClass="java.util.HashMap" resultClass="java.lang.String">
+		/* EaDocDAO.GetHihgMenu - oracle (개인결재함일때 최상위 결재함 아디디 조회) */
+		SELECT NVL ((SELECT ROOT_MENU_NO FROM $DB_NEOS$T_EA_BOX WHERE MENU_NO = #nMenuID# AND COMP_SEQ = #loginVo.compSeq# AND EMP_SEQ = #loginVo.uniqId# AND MENU_GUBUN = 'MENU010'), '') AS ROOT_MENU
+	</select>
+	
+	<select id="EaDocDAO.GetGrouppingCompList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		/* EaDocDAO.GetGrouppingCompList - Groupping 회사 리스트(oracle) */
+		SELECT DISTINCT A.COMP_SEQ FROM T_CO_GROUPPING_COMP A
+		INNER JOIN $DB_NEOS$T_CO_COMP B 
+		ON A.COMP_SEQ = B.COMP_SEQ
+		WHERE GROUPPING_SEQ IN (
+			SELECT GRPCO.GROUPPING_SEQ FROM $DB_NEOS$T_CO_GROUPPING_COMP GRPCO
+			INNER JOIN $DB_NEOS$T_CO_GROUPPING GRP ON GRP.GROUPPING_SEQ = GRPCO.GROUPPING_SEQ
+			WHERE GRPCO.COMP_SEQ = #compSeq#
+			<isNotEmpty property="groupSeq">
+			AND GRP.GROUP_SEQ = #groupSeq#
+			</isNotEmpty>
+		    AND GRP.USE_YN = 'Y' 
+		    AND GRPCO.USE_YN = 'Y'
+		    )
+		AND B.USE_YN = 'Y' 
+		
+	</select>
+	
+	<select id="EaDocDAO.GetEAPortletDocDraftList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+        /* EaDocDAO.GetEAPortletDocDraftList - oracle */    	
+        SELECT  AD.DOC_ID				AS DOC_ID
+             ,	AD.FORM_ID				AS FORM_ID
+             ,	AD.DOC_NO				AS DOC_NO
+             ,	DATE_FORMAT(AD.REP_DT, '%y.%m.%d')	AS REP_DT
+             ,  AD.DOC_TITLE AS DOC_TITLE_ORIGIN
+             ,  CONCAT('[', $DB_NEOS$FN_GETLANGUAGENAME(#loginVo.langCode#, AD.DEPT_NM,AD.DEPT_NM_EN,AD.DEPT_NM_JP,AD.DEPT_NM_CN), ' ', $DB_NEOS$FN_GETLANGUAGENAME(#loginVo.langCode#, AD.USER_NM,AD.USER_NM_EN,AD.USER_NM_JP,AD.USER_NM_CN), '] ', AD.DOC_TITLE) AS DISP_TITLE             
+             ,	FORM.FORM_MODE				AS FORM_MODE
+             ,  IF (FORM.FORM_MODE = '1', '900', '1024' )  AS DOC_WIDTH
+	     	 , '' AS READYN
+	     	 , '' AS OPERYN
+	     	 ,	CASE WHEN NVL(C.FILE_CNT, 0) = 0 THEN '' ELSE 'attach' END AS DISP_ATTACH
+	     	 ,	AD.DOC_STS				AS RET_ITEM_CD
+             ,  $DB_NEOS$GET_CODE_DETAIL_Info('0', 'ea0015', AD.DOC_STS ,#loginVo.langCode#) AS RET_ITEM_NM
+	
+        FROM $DB_NEOS$TEAG_APPDOC AD
+        INNER JOIN $DB_NEOS$TEAG_APPDOC_CONTENTS CON ON AD.DOC_ID = CON.DOC_ID
+        INNER JOIN $DB_NEOS$TEAG_FORM FORM ON  AD.FORM_ID = FORM.FORM_ID
+        LEFT OUTER JOIN (
+				SELECT DOC_ID 
+				FROM $DB_NEOS$TEAG_DOCTRAY A
+				INNER JOIN $DB_NEOS$v_ea_box_chart B ON A.MENU_ID = B.MENU_NO
+				AND INSTR(PATH , CONCAT('|' , #menu_id# , '|'))
+				<isNotEmpty property="highMenuID"> <!-- 개인결재함일떄  -->
+				WHERE B.MENU_NO = #menu_id#
+				</isNotEmpty>
+				<isEmpty property="highMenuID"> <!-- 개인결재함아닐떄 -->
+				WHERE B.MENU_NO <![CDATA[ <> ]]> #menu_id#
+				</isEmpty>
+				AND A.CREATED_BY = #loginVo.uniqId#
+			    AND comp_seq = #loginVo.compSeq#
+			) TRAY ON AD.DOC_ID = TRAY.DOC_ID
+		LEFT OUTER JOIN ( SELECT DOC_ID, COUNT(*) AS FILE_CNT FROM $DB_NEOS$TEAG_FILE GROUP BY DOC_ID ) C ON AD.DOC_ID = C.DOC_ID
+        WHERE AD.USE_YN = '1'
+        AND AD.CO_ID <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+        <isNotEmpty property="highMenuID"> <!-- 개인결재함일떄  -->
+        AND   NVL(TRAY.DOC_ID,0) <![CDATA[ <> ]]> 0
+        </isNotEmpty>
+        <isEmpty property="highMenuID"> <!-- 개인결재함아닐떄 -->
+        AND   NVL(TRAY.DOC_ID,0) = 0
+        </isEmpty>
+        AND   AD.USER_ID = #loginVo.uniqId#
+        AND   AD.DOC_STS != '10'
+        AND   CON.CONTENTS_TP = '10'
+        <isNotEmpty property="sfrDt"> <!-- 검색시작일 -->
+        <isNotEmpty property="stoDt"> <!-- 검색종료일 --> 
+        <!-- AND 	AD.rep_dt BETWEEN #sfrDt# AND #stoDt# -->        
+			AND   (DATE_FORMAT(AD.rep_dt, '%Y-%m-%d') BETWEEN #sfrDt# AND #stoDt#)
+        </isNotEmpty>
+        </isNotEmpty> 
+        <isNotEmpty property="sDocTp"> <!-- 문서분류   -->
+        AND   FORM.FORM_NM LIKE CONCAT('%', ifnull(#sDocTp#,''), '%')  
+        </isNotEmpty>
+        <isNotEmpty property="sDocSts"> <!-- 문사상태 -->
+        AND   (#sDocSts# = '' OR AD.DOC_STS = #sDocSts# )   
+        </isNotEmpty>
+        <isNotEmpty property="sTitle"> <!-- 문서제목 -->
+        AND AD.DOC_TITLE LIKE CONCAT('%', ifnull(#sTitle#,''), '%')  
+        </isNotEmpty> 
+        <isNotEmpty property="sContents"> <!-- 문서내용 -->
+        AND CON.DOC_CONTENTS LIKE CONCAT('%', ifnull(#sContents#,''), '%') 
+        </isNotEmpty>
+        <isNotEmpty property="sDocNo">  <!-- 문서번호 -->
+        AND (#sDocNo# = '' OR AD.DOC_NO like CONCAT('%', ifnull(#sDocNo#,''), '%'))  
+        </isNotEmpty>
+        ORDER BY REP_DT DESC , AD.DOC_ID DESC
+         LIMIT $limitValue$
+	</select>
+	
+	<select id="EaDocDAO.GetEAPortletDocList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	/* EaDocDAO.GetEAPortletDocList - 포틀릿 전자결재문서 리스트 */
+	SELECT  
+	     	AD.DOC_ID				AS DOC_ID
+         ,	AD.FORM_ID				AS FORM_ID
+         ,	AD.DOC_NO				AS DOC_NO
+         ,	DATE_FORMAT(AD.REP_DT, '%y.%m.%d')	AS REP_DT
+         ,	AD.DOC_TITLE AS DOC_TITLE_ORIGIN
+         ,  CONCAT('[', $DB_NEOS$FN_GETLANGUAGENAME(#loginVo.langCode#, AD.DEPT_NM,AD.DEPT_NM_EN,AD.DEPT_NM_JP,AD.DEPT_NM_CN), ' ', $DB_NEOS$FN_GETLANGUAGENAME(#loginVo.langCode#, AD.USER_NM,AD.USER_NM_EN,AD.USER_NM_JP,AD.USER_NM_CN), '] ', AD.DOC_TITLE) AS DISP_TITLE 
+         ,	FORM.FORM_MODE				AS FORM_MODE
+         ,  CASE FORM.FORM_MODE WHEN '1' THEN 900 ELSE 1024 END AS DOC_WIDTH 
+         ,	$DB_NEOS$GET_CODE_DETAIL_Info('0', 'ea0021', readYN ,#loginVo.langCode#) AS READYN
+         ,	$DB_NEOS$GET_CODE_DETAIL_Info('0', 'ea0034', operYN ,#loginVo.langCode#) AS OPERYN
+         ,	CASE WHEN NVL(C.FILE_CNT, 0) = 0 THEN '' ELSE 'attach' END AS DISP_ATTACH
+         ,	EA.RET_ITEM_CD			AS RET_ITEM_CD
+         ,	CODE.DETAIL_NAME 		AS RET_ITEM_NM
+	FROM (
+	      SELECT DOC_ID , MIN(readYN) AS readYN ,MIN(operYN) AS operYN, RET_ITEM_CD FROM (
+	            SELECT '' doc_id , '' readYN , '' operYN, '' RET_ITEM_CD FROM DUAL
+	            
+	     <isNotEmpty property="RET_ITEM_CD_10">
+	            UNION ALL  /* 상신내역 */
+	            SELECT  A.doc_id
+			          , '10' readYN
+			          , ''
+			          , #RET_ITEM_CD_10#
+	            FROM  $DB_NEOS$TEAG_APPDOC A
+<!-- 	            INNER JOIN TEAG_APPDOC_CONTENTS B ON A.DOC_ID = B.DOC_ID -->
+<!-- 	            INNER JOIN   C ON A.FORM_ID = C.FORM_ID -->
+	            WHERE A.USE_YN  = '1'
+	            AND   A.USER_ID = #loginVo.uniqId#
+	            AND   A.DOC_STS IN ('20', '30', '40', '50', '60', '70','80','90','100','110')
+	     </isNotEmpty>
+	     
+	     <isNotEmpty property="RET_ITEM_CD_20">
+	            UNION ALL  /* 미결내역 */
+	            SELECT  DISTINCT A.doc_id
+	                  , CASE WHEN (B.VIEW_TIME IS NOT NULL) THEN '10' ELSE '20' END
+	                  , '' 
+	                  , #RET_ITEM_CD_20#  
+	            FROM  $DB_NEOS$TEAG_APPDOC A
+	            INNER JOIN (
+	                    SELECT X.doc_id, X.VIEW_TIME
+	                    FROM  $DB_NEOS$TEAG_APPDOC_LINE X
+	                    LEFT  OUTER JOIN $DB_NEOS$TEAG_PROXY_APP Y 
+	                    ON    X.co_id = Y.co_id  
+	                    AND   X.user_id = Y.user_id  
+	                    AND   (NOW() <![CDATA[ >= ]]>  Y.proxy_app_start_dt AND NOW() <![CDATA[  <= ]]>  Y.proxy_app_end_dt)
+	                    WHERE X.doc_line_sts = '20'
+	                    AND (((X.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND X.user_id = #loginVo.uniqId#) 
+                    		OR (Y.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND Y.proxy_app_user_id = #loginVo.uniqId#))
+			                  <!-- 부서결재라인 -->
+			                 <isNotEmpty property="parentsDeptList">   
+			                  OR (X.USER_ID = 0 AND   X.APP_YN <![CDATA[ <> ]]> '1' AND X.DEPTLINE_YN = '1'
+			                      AND X.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			                      AND X.DEPT_ID <iterate prepend="IN" property="parentsDeptList" open="(" close=")" conjunction=","> #parentsDeptList[]# </iterate>
+			                      )
+			                 </isNotEmpty>
+			                 )
+	                    GROUP BY doc_id, VIEW_TIME ) B 
+	            ON    (A.DOC_ID = B.DOC_ID)
+	            WHERE A.USE_YN = '1'
+	            AND   A.doc_sts IN ('20', '30', '40', '50', '60')
+	     </isNotEmpty>
+	     
+	     <isNotEmpty property="RET_ITEM_CD_30">
+	            UNION ALL  /* 기결내역 (종결) */       
+	            SELECT  A.doc_id
+	                  , CASE WHEN (B.view_time) IS NOT NULL THEN '10' ELSE '20' END
+	                  , ''
+	                  , #RET_ITEM_CD_30#
+	            FROM  $DB_NEOS$TEAG_APPDOC A
+<!-- 	            INNER JOIN TEAG_APPDOC_CONTENTS CON ON A.DOC_ID = CON.DOC_ID -->
+<!-- 	            INNER JOIN TEAG_FORM C ON A.FORM_ID = C.FORM_ID -->
+	            INNER JOIN (
+                        SELECT X.doc_id, X.VIEW_TIME
+                        FROM   $DB_NEOS$TEAG_APPDOC_LINE X
+                        WHERE  X.doc_line_sts IN ('30', '40', '50', '80', '100')
+<!--                         AND    (@sDecideYn = '0' OR (X.proxy_app_yn='1')) -->
+						 
+	                    AND ((X.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND X.user_id = #loginVo.uniqId#) 
+                    		OR (X.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND X.proxy_app_user_id = #loginVo.uniqId#))
+						
+						<!--  
+	                    <isEqual property="ea320" compareValue="1">
+                        AND   ((X.co_id IN (SELECT COMP_SEQ FROM T_CO_COMP WHERE GROUP_SEQ IN (SELECT GROUP_SEQ FROM T_CO_COMP WHERE COMP_SEQ = #loginVo.compSeq#)) AND X.user_id = #loginVo.uniqId# )
+                               OR ( X.proxy_app_co_id IN (SELECT COMP_SEQ FROM T_CO_COMP WHERE GROUP_SEQ IN (SELECT GROUP_SEQ FROM T_CO_COMP WHERE COMP_SEQ = #loginVo.compSeq#)) AND X.proxy_app_user_id = #loginVo.uniqId#))
+	                    </isEqual>		         
+	                    <isNotEqual property="ea320" compareValue="1">
+                        AND   ((X.co_id = #loginVo.compSeq# AND X.user_id = #loginVo.uniqId# )
+                               OR ( X.proxy_app_co_id = #loginVo.compSeq# AND X.proxy_app_user_id = #loginVo.uniqId#))
+	                    </isNotEqual>
+	                     -->
+                        
+                        GROUP BY doc_id, VIEW_TIME) B 
+	            ON    (A.DOC_ID = B.DOC_ID)
+	            WHERE A.use_yn = '1'
+	            AND   A.doc_sts IN ('80', '90')            
+	     </isNotEmpty> 
+	     
+	     <isNotEmpty property="RET_ITEM_CD_40">
+	            UNION ALL  /* 기결내역 (진행) */
+	            SELECT  A.doc_id  
+        		      , CASE WHEN (B.view_time) IS NOT NULL THEN '10' ELSE '20' END   
+        		      , ''
+        		      , #RET_ITEM_CD_40# 
+                FROM $DB_NEOS$TEAG_APPDOC A
+<!-- 	            INNER JOIN TEAG_APPDOC_CONTENTS CON ON A.DOC_ID = CON.DOC_ID -->
+<!-- 	            INNER JOIN TEAG_FORM C ON A.FORM_ID = C.FORM_ID -->
+	            INNER JOIN (
+                        SELECT X.doc_id, X.VIEW_TIME
+                        FROM $DB_NEOS$TEAG_APPDOC_LINE X
+                        WHERE X.doc_line_sts IN ('30', '40', '50', '80', '100') 
+<!--                         AND    (@sDecideYn = '0' OR (X.proxy_app_yn='1')) -->
+						 
+						AND ((X.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND X.user_id = #loginVo.uniqId#) 
+                    		OR (X.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND X.proxy_app_user_id = #loginVo.uniqId#))
+						
+						<!--  
+	                    <isEqual property="ea320" compareValue="1">
+                        AND   ((X.co_id IN (SELECT COMP_SEQ FROM T_CO_COMP WHERE GROUP_SEQ IN (SELECT GROUP_SEQ FROM T_CO_COMP WHERE COMP_SEQ = #loginVo.compSeq#)) AND X.user_id = #loginVo.uniqId# )
+                               OR ( X.proxy_app_co_id IN (SELECT COMP_SEQ FROM T_CO_COMP WHERE GROUP_SEQ IN (SELECT GROUP_SEQ FROM T_CO_COMP WHERE COMP_SEQ = #loginVo.compSeq#)) AND X.proxy_app_user_id = #loginVo.uniqId#))
+	                    </isEqual>		         
+	                    <isNotEqual property="ea320" compareValue="1">
+                        AND   ((X.co_id = #loginVo.compSeq# AND X.user_id = #loginVo.uniqId# )
+                               OR ( X.proxy_app_co_id = #loginVo.compSeq# AND X.proxy_app_user_id = #loginVo.uniqId#))
+	                    </isNotEqual>
+	                     -->                    
+<!--                         AND X.co_id IN (SELECT COMP_SEQ FROM T_CO_COMP WHERE GROUP_SEQ IN (SELECT GROUP_SEQ FROM T_CO_COMP WHERE COMP_SEQ = #loginVo.compSeq#)) -->
+<!--                         AND  ((X.user_id = #loginVo.uniqId#) OR (X.proxy_app_user_id = #loginVo.uniqId#)) -->
+                        GROUP BY doc_id, VIEW_TIME) B 
+	            ON (A.DOC_ID = B.DOC_ID)
+	            WHERE A.use_yn = '1'
+	            AND A.doc_sts IN ('20', '30', '40', '50', '60', '70')            
+	     </isNotEmpty>
+	     
+	     <isNotEmpty property="RET_ITEM_CD_50">
+	            UNION ALL  /* 반려내역(반려이후결재자 포함) */       
+	            SELECT  A.doc_id  
+	                  , CASE WHEN (B.view_time) IS NOT NULL THEN '10' ELSE '20' END   
+	                  , ''
+	                  , #RET_ITEM_CD_50#
+	            FROM  $DB_NEOS$TEAG_APPDOC A  
+	            INNER JOIN (
+	                    SELECT DISTINCT doc_id, VIEW_TIME
+	                    FROM   $DB_NEOS$TEAG_APPDOC_LINE
+	                    WHERE ( (co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> and user_id = #loginVo.uniqId#)
+	                            or (proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND proxy_app_user_id = #loginVo.uniqId#)
+	                          )
+	                    ) B 
+	            ON (A.doc_id = B.doc_id)
+	            WHERE A.use_yn = '1'
+	            AND A.doc_sts = '100'          
+	     </isNotEmpty>
+	     
+	     <isNotEmpty property="RET_ITEM_CD_51">
+	            UNION ALL  /* 반려내역(반려이후결재자 미포함) */
+	            SELECT  A.doc_id  
+	                  , CASE WHEN (B.view_time IS NOT NULL) THEN '10' ELSE '20' END   
+	                  , '' 
+	                  , #RET_ITEM_CD_51#
+	            FROM $DB_NEOS$TEAG_APPDOC A  
+	            INNER JOIN (
+	                    SELECT DISTINCT T1.doc_id, VIEW_TIME  
+	                    FROM $DB_NEOS$TEAG_APPDOC_LINE T1
+	                    INNER JOIN (
+	                            SELECT DOC_ID, MAX(DOC_LINE_M_SEQ) AS DOC_LINE_M_SEQ
+	                            FROM   $DB_NEOS$TEAG_APPDOC_LINE
+	                            WHERE  DOC_LINE_STS = '50'
+	                            GROUP BY DOC_ID ) T2 
+	                    ON T1.DOC_ID = T2.DOC_ID
+	                    WHERE ( (co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> and user_id = #loginVo.uniqId#)
+	                            or (proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND proxy_app_user_id = #loginVo.uniqId#)
+	                          )
+	                    AND   T1.DOC_LINE_M_SEQ <![CDATA[ <= ]]> T2.DOC_LINE_M_SEQ) B 
+	            ON (A.doc_id = B.doc_id)
+	            WHERE A.use_yn = '1'  
+	            AND A.doc_sts = '100'          
+	     </isNotEmpty>
+	     
+	     <isNotEmpty property="RET_ITEM_CD_60">
+	            UNION ALL  /* 수신참조 */       
+	            SELECT  A.doc_id  
+	                  , CASE WHEN (B.firstcheck_time) IS NOT NULL THEN '10' ELSE '20' END   
+	                  , ''
+	                  , #RET_ITEM_CD_60# 
+	            FROM  $DB_NEOS$TEAG_APPDOC A
+<!-- 	            INNER JOIN TEAG_APPDOC_CONTENTS CON ON A.DOC_ID = CON.DOC_ID   -->
+<!-- 	            INNER JOIN TEAG_FORM C ON A.FORM_ID = C.FORM_ID -->
+	            INNER JOIN $DB_NEOS$TEAG_APPDOC_RECEIVEUSER B ON A.doc_id = B.doc_id
+	            WHERE A.use_yn = '1'
+	            AND ((A.doc_sts IN ('20','30','40','50','60','70','80','90') AND NVL(#ea310#,'0') = '1') 
+	                 OR (A.doc_sts IN ('20','30','40','50','60','70','80','90','100') AND NVL(#ea310#,'0') = '2') 
+	                 OR (A.doc_sts IN ('80','90') AND NVL(#ea310#,'0') = '0'))
+	                  
+	            AND B.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+	            
+	            <!--  
+	            <isEqual property="ea320" compareValue="1">
+	            AND B.co_id IN (SELECT COMP_SEQ FROM T_CO_COMP WHERE GROUP_SEQ IN (SELECT GROUP_SEQ FROM T_CO_COMP WHERE COMP_SEQ = #loginVo.compSeq#))
+	            </isEqual>		         
+	            <isNotEqual property="ea320" compareValue="1">
+	            AND B.co_id = #loginVo.compSeq#
+	            </isNotEqual>
+	             -->
+	            AND B.user_id = #loginVo.uniqId# 
+	            AND B.receive_div = '10'  
+<!-- 		                    AND (NVL(B.firstcheck_time,'') = (CASE WHEN (#sReadYN#='') THEN NVL(B.firstcheck_time,'') WHEN (#sReadYN# ='20') THEN '' END)             -->
+<!--                                          OR NVL(B.firstcheck_time,'') <![CDATA[ <> ]]> (CASE WHEN #sReadYN# ='10' THEN '' END))           -->
+	     </isNotEmpty>	
+	     <isNotEmpty property="RET_ITEM_CD_70">
+	            UNION ALL  /* 예결내역  */       
+	            SELECT  A.doc_id  
+			          , CASE WHEN (B.view_time) IS NOT NULL THEN '10' ELSE '20' END   
+	                  , ''
+	                  , #RET_ITEM_CD_70# 
+	            FROM  $DB_NEOS$TEAG_APPDOC A
+<!-- 	            INNER JOIN TEAG_APPDOC_CONTENTS CON ON A.DOC_ID = CON.DOC_ID   -->
+<!-- 	            INNER JOIN TEAG_FORM C ON A.FORM_ID = C.FORM_ID -->
+	            INNER JOIN (
+	                    SELECT X.doc_id, X.VIEW_TIME  
+	                    FROM   $DB_NEOS$TEAG_APPDOC_LINE X
+	                    LEFT OUTER JOIN $DB_NEOS$TEAG_PROXY_APP Y ON (X.co_id = Y.co_id
+	                    AND X.user_id = Y.user_id
+	                    AND (NOW() <![CDATA[ >= ]]> Y.proxy_app_start_dt AND NOW() <![CDATA[ <= ]]> Y.proxy_app_end_dt))
+	                    WHERE X.doc_line_sts = '70'
+	                     
+	                    AND (((X.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND X.user_id = #loginVo.uniqId#) 
+                    		OR (Y.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND Y.proxy_app_user_id = #loginVo.uniqId#))
+			                  <!-- 부서결재라인 -->
+			                 <isNotEmpty property="parentsDeptList">   
+			                  OR (X.USER_ID = 0 AND   X.APP_YN <![CDATA[ <> ]]> '1' AND X.DEPTLINE_YN = '1'
+			                      AND X.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			                      AND X.DEPT_ID <iterate prepend="IN" property="parentsDeptList" open="(" close=")" conjunction=","> #parentsDeptList[]# </iterate>
+			                      )
+			                 </isNotEmpty>
+			                 ) 
+	                    GROUP BY doc_id, VIEW_TIME ) B 
+	            ON (A.DOC_ID = B.DOC_ID)
+	            WHERE A.use_yn = '1'
+	            AND A.doc_sts IN ('20', '30', '40', '50', '60')
+	     </isNotEmpty>
+	     
+	     <isNotEmpty property="RET_ITEM_CD_71">
+	     		UNION ALL  /* 예결내역(예결 미사용 포함)  */       
+	            SELECT  A.doc_id  
+			          , CASE WHEN (B.view_time) IS NOT NULL THEN '10' ELSE '20' END   
+	                  , '' 
+	                  , #RET_ITEM_CD_71#
+	            FROM  $DB_NEOS$TEAG_APPDOC A
+	            INNER JOIN (
+	                    SELECT X.doc_id, X.VIEW_TIME  
+	                    FROM   $DB_NEOS$TEAG_APPDOC_LINE X
+	                    LEFT OUTER JOIN $DB_NEOS$TEAG_PROXY_APP Y ON (X.co_id = Y.co_id AND X.user_id = Y.user_id
+	                    AND (NOW() <![CDATA[ >= ]]> Y.proxy_app_start_dt AND NOW() <![CDATA[ <= ]]> Y.proxy_app_end_dt))
+	                    WHERE X.doc_line_sts IN ('70', '10')
+	                    AND (((X.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND X.user_id = #loginVo.uniqId#) 
+                    		OR (Y.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND Y.proxy_app_user_id = #loginVo.uniqId#))
+			                  <!-- 부서결재라인 -->
+			                 <isNotEmpty property="parentsDeptList">   
+			                  OR (X.USER_ID = 0 AND   X.APP_YN <![CDATA[ <> ]]> '1' AND X.DEPTLINE_YN = '1'
+			                      AND X.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			                      AND X.DEPT_ID <iterate prepend="IN" property="parentsDeptList" open="(" close=")" conjunction=","> #parentsDeptList[]# </iterate>
+			                      )
+			                 </isNotEmpty>
+			                 )
+	                    GROUP BY doc_id, VIEW_TIME ) B 
+	            ON (A.DOC_ID = B.DOC_ID)
+	            WHERE A.use_yn = '1'
+	            AND A.doc_sts IN ('20', '30', '40', '50', '60')
+	     </isNotEmpty>
+	     
+	     
+	     <isNotEmpty property="RET_ITEM_CD_80">
+	            UNION ALL  /* 후결내역  */
+	            SELECT  A.doc_id  
+	                  , CASE WHEN (B.view_time) IS NOT NULL THEN '10' ELSE '20' END   
+	                  , ''
+	                  , #RET_ITEM_CD_80# 
+	            FROM $DB_NEOS$TEAG_APPDOC A
+	            INNER JOIN (
+	                    SELECT X.doc_id, X.view_time  
+	                    FROM $DB_NEOS$TEAG_APPDOC_LINE X
+	                    LEFT OUTER JOIN $DB_NEOS$TEAG_PROXY_APP Y ON (X.co_id = Y.co_id
+	                    AND X.user_id = Y.user_id
+	                    AND (NOW() <![CDATA[ >= ]]> Y.proxy_app_start_dt AND NOW() <![CDATA[ <= ]]> Y.proxy_app_end_dt))
+	                    WHERE X.doc_line_sts = '60'
+					    AND (((X.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND X.user_id = #loginVo.uniqId#) 
+                    		OR (Y.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND Y.proxy_app_user_id = #loginVo.uniqId#))
+			                  <!-- 부서결재라인 -->
+			                 <isNotEmpty property="parentsDeptList">   
+			                  OR (X.USER_ID = 0 AND   X.APP_YN <![CDATA[ <> ]]> '1' AND X.DEPTLINE_YN = '1'
+			                      AND X.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			                      AND X.DEPT_ID <iterate prepend="IN" property="parentsDeptList" open="(" close=")" conjunction=","> #parentsDeptList[]# </iterate>
+			                      )
+			                 </isNotEmpty>
+			                 )
+	                    GROUP BY doc_id, view_time) B 
+	            ON (A.DOC_ID = B.DOC_ID)
+	            WHERE A.use_yn = '1'
+	            AND A.doc_sts IN ('20', '30', '40', '50', '60', '70', '80', '90')
+	     </isNotEmpty>
+	     
+	     <isNotEmpty property="RET_ITEM_CD_90">
+	            UNION ALL  /* 전결내역  */
+	            SELECT  A.doc_id  
+	                  , CASE WHEN (B.view_time) IS NOT NULL THEN '10' ELSE '20' END   
+	                  , ''
+	                  , #RET_ITEM_CD_90# 
+	            FROM  $DB_NEOS$TEAG_APPDOC A
+<!-- 	            INNER JOIN TEAG_APPDOC_CONTENTS CON ON A.DOC_ID = CON.DOC_ID   -->
+<!-- 	            INNER JOIN TEAG_FORM FORM ON A.FORM_ID = FORM.FORM_ID -->
+	            INNER JOIN (
+	                    SELECT doc_id, view_time  
+	                    FROM $DB_NEOS$TEAG_APPDOC_LINE
+	                    WHERE doc_line_sts = '40'
+	                     
+	                    AND co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+	                    
+	                    <!--  
+	                    <isEqual property="ea320" compareValue="1">
+	                    AND co_id IN (SELECT COMP_SEQ FROM T_CO_COMP WHERE GROUP_SEQ IN (SELECT GROUP_SEQ FROM T_CO_COMP WHERE COMP_SEQ = #loginVo.compSeq#))
+	                    </isEqual>		         
+	                    <isNotEqual property="ea320" compareValue="1">
+	                    AND co_id = #loginVo.compSeq# 
+	                    </isNotEqual>
+	                     -->
+	                    AND user_id = #loginVo.uniqId#  
+	                    GROUP BY doc_id, view_time) B 
+	            ON (A.DOC_ID = B.DOC_ID)
+	            WHERE A.use_yn = '1'
+	     </isNotEmpty>
+	     	     
+	     <isNotEmpty property="RET_ITEM_CD_100">
+	            UNION ALL  /* 수신내역  */
+	            SELECT  A.doc_id  
+	                  , CASE WHEN (B.firstcheck_time) IS NOT NULL THEN '10' ELSE '20' END   
+	                  , ''
+	                  , #RET_ITEM_CD_100# 
+	            FROM  $DB_NEOS$TEAG_APPDOC A
+<!-- 	            INNER JOIN TEAG_APPDOC_CONTENTS CON ON A.DOC_ID = CON.DOC_ID   -->
+<!-- 	            INNER JOIN TEAG_FORM FORM ON A.FORM_ID = FORM.FORM_ID -->
+	            INNER JOIN $DB_NEOS$TEAG_APPDOC_RECEIVEUSER B ON (A.doc_id = B.doc_id)
+	            LEFT  OUTER JOIN $DB_NEOS$TEAG_APPDOC C ON (A.doc_id = C.related_doc_no)
+	            WHERE A.use_yn = '1'  
+	            AND   B.user_id = #loginVo.uniqId# 
+	            AND   B.receive_div = '20' 
+	            AND   A.doc_sts = '40'
+	            AND   C.doc_id IS NULL
+	            UNION
+	            -- 협조전
+	            SELECT  A.doc_id  
+	                  , CASE WHEN (B.firstcheck_time) IS NOT NULL THEN '10' ELSE '20' END   
+	                  , ''
+	                  , #RET_ITEM_CD_100# 
+	            FROM $DB_NEOS$TEAG_APPDOC A
+	            INNER JOIN $DB_NEOS$TEAG_APPDOC_CONTENTS CON ON A.DOC_ID = CON.DOC_ID  
+	            INNER JOIN $DB_NEOS$TEAG_FORM FORM ON A.FORM_ID = FORM.FORM_ID
+	            INNER JOIN $DB_NEOS$TEAG_APPDOC_RECEIVEUSER B ON (A.doc_id = B.doc_id)
+	            LEFT OUTER JOIN $DB_NEOS$TEAG_APPDOC C ON (A.doc_id = C.related_doc_no AND b.user_id = c.user_id)
+	            WHERE A.use_yn = '1'  
+	            AND B.user_id = #loginVo.uniqId#  
+	            AND B.receive_div = '30'
+	            AND A.doc_sts = '90'
+	            AND C.doc_id IS NULL
+	     </isNotEmpty>
+	     
+	     <isNotEmpty property="RET_ITEM_CD_110">
+	            UNION ALL  /* 보류내역  */
+	            SELECT  A.doc_id
+	                  , CASE WHEN (B.view_time IS NOT NULL) THEN '10' ELSE '20' END
+	                  , ''
+	                  , #RET_ITEM_CD_110#
+	            FROM $DB_NEOS$TEAG_APPDOC A
+<!-- 	            INNER JOIN TEAG_APPDOC_CONTENTS CON ON A.DOC_ID = CON.DOC_ID -->
+<!-- 	            INNER JOIN TEAG_FORM C ON A.FORM_ID = C.FORM_ID -->
+	            INNER JOIN (
+	                    SELECT X.doc_id, X.view_time
+	                    FROM   $DB_NEOS$TEAG_APPDOC_LINE X
+<!-- 	                    LEFT   OUTER JOIN TEAG_PROXY_APP Y  -->
+<!-- 	                    ON     (X.co_id = Y.co_id AND X.user_id = Y.user_id  -->
+<!-- 	                    AND    (NOW() <![CDATA[ >= ]]> Y.proxy_app_start_dt AND NOW() <![CDATA[ <= ]]> Y.proxy_app_end_dt)) -->
+	                     
+	                    WHERE ((X.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND X.user_id = #loginVo.uniqId#) 
+                    		OR (X.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND X.proxy_app_user_id = #loginVo.uniqId#))
+	                    AND  doc_line_sts = '90'
+	                    <!--  
+	                    <isEqual property="ea320" compareValue="1">
+	                    WHERE    ((X.co_id IN (SELECT COMP_SEQ FROM T_CO_COMP WHERE GROUP_SEQ IN (SELECT GROUP_SEQ FROM T_CO_COMP WHERE COMP_SEQ = #loginVo.compSeq#)) AND X.user_id = #loginVo.uniqId# )
+	                           OR ( y.proxy_app_co_id IN (SELECT COMP_SEQ FROM T_CO_COMP WHERE GROUP_SEQ IN (SELECT GROUP_SEQ FROM T_CO_COMP WHERE COMP_SEQ = #loginVo.compSeq#)) AND Y.proxy_app_user_id = #loginVo.uniqId#))
+	                    </isEqual>		         
+	                    <isNotEqual property="ea320" compareValue="1">
+	                    WHERE    ((X.co_id = #loginVo.compSeq# AND X.user_id = #loginVo.uniqId# )
+	                           OR ( y.proxy_app_co_id = #loginVo.compSeq# AND Y.proxy_app_user_id = #loginVo.uniqId#))
+	                    </isNotEqual>
+	                     -->
+<!-- 	                    WHERE X.co_id IN (SELECT COMP_SEQ FROM T_CO_COMP WHERE GROUP_SEQ IN (SELECT GROUP_SEQ FROM T_CO_COMP WHERE COMP_SEQ = #loginVo.compSeq#)) -->
+<!-- 	                    AND  ((X.user_id = #loginVo.uniqId#) OR (Y.proxy_app_user_id = #loginVo.uniqId#)) -->
+	                    GROUP BY doc_id, view_time) B 
+	            ON    (A.doc_id = B.doc_id)
+	            WHERE A.USE_YN = '1'
+	            AND A.doc_sts = '110'
+	     </isNotEmpty>
+	     	    
+	     <isNotEmpty property="RET_ITEM_CD_120">
+	            UNION ALL  /* 시행내역  */
+	            SELECT  A.doc_id
+	                  , CASE WHEN (B.firstcheck_time IS NOT NULL) THEN '10' ELSE '20' END
+	                  , CASE WHEN (B.proc_time IS NOT NULL) THEN '10' ELSE '20' END
+	                  , #RET_ITEM_CD_120# 
+	            FROM  $DB_NEOS$TEAG_APPDOC A
+<!-- 	            INNER JOIN TEAG_APPDOC_CONTENTS CON ON A.DOC_ID = CON.DOC_ID -->
+<!-- 	            INNER JOIN TEAG_FORM C ON A.FORM_ID = C.FORM_ID -->
+	            INNER JOIN $DB_NEOS$TEAG_APPDOC_RECEIVEUSER B ON (A.doc_id = B.doc_id)
+	            WHERE A.use_yn = '1'  
+	            AND   A.doc_sts IN ('80', '90')  
+	            AND   B.co_id   = #loginVo.compSeq#  
+	            AND   B.user_id = #loginVo.uniqId#
+	            AND   B.receive_div = '40'
+<!-- 	            AND  (NVL(B.proc_time,'') = (CASE WHEN #sExecYN#='' THEN NVL(B.proc_time,'') WHEN #sExecYN# ='20' THEN '' END)             -->
+<!-- 	                  OR NVL(B.proc_time,'') <![CDATA[ <> ]]> (CASE WHEN #sExecYN# ='10' THEN '' END)) -->
+	     </isNotEmpty>
+	     <isNotEmpty property="RET_ITEM_CD_130">
+	            UNION ALL  /* 회람내역  */
+	            SELECT  A.doc_id  
+	                  , CASE WHEN (B.firstcheck_time IS NOT NULL) THEN '10' ELSE '20' END   
+	                  , ''
+	                  , #RET_ITEM_CD_130#
+	            FROM  $DB_NEOS$TEAG_APPDOC A  
+<!-- 	            INNER JOIN TEAG_APPDOC_CONTENTS CON ON A.DOC_ID = CON.DOC_ID   -->
+<!-- 	            INNER JOIN TEAG_FORM C ON A.FORM_ID = C.FORM_ID   -->
+	            INNER JOIN $DB_NEOS$TEAG_APPDOC_RECEIVEUSER B ON (A.doc_id = B.doc_id)  
+	            WHERE A.use_yn = '1'  
+	            AND   A.doc_sts IN ('80', '90')  
+	            AND   B.co_id = #loginVo.compSeq#  
+	            AND   B.user_id = #loginVo.uniqId#  
+	            AND   B.receive_div = '50'
+	     </isNotEmpty>
+	      ) W
+	      GROUP BY DOC_ID
+	) EA     
+	INNER JOIN $DB_NEOS$TEAG_APPDOC AD ON AD.DOC_ID = EA.DOC_ID
+	
+	INNER JOIN (SELECT COMP_SEQ FROM $DB_NEOS$T_CO_COMP WHERE COMP_SEQ <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND GROUP_SEQ = #loginVo.groupSeq#) CO
+	
+	<!--  
+	<isEqual property="ea320" compareValue="0">
+	INNER JOIN (SELECT #loginVo.compSeq# AS COMP_SEQ FROM DUAL) CO
+	</isEqual>		         
+	<isNotEqual property="ea320" compareValue="0">
+	INNER JOIN (SELECT COMP_SEQ FROM T_CO_COMP WHERE GROUP_SEQ IN (SELECT GROUP_SEQ FROM T_CO_COMP WHERE COMP_SEQ = #loginVo.compSeq#)) CO
+	</isNotEqual> 
+	 -->
+	ON AD.CO_ID = CO.COMP_SEQ        
+	INNER JOIN $DB_NEOS$TEAG_APPDOC_CONTENTS CON ON AD.DOC_ID = CON.DOC_ID
+	INNER JOIN $DB_NEOS$TEAG_FORM FORM ON  AD.FORM_ID = FORM.FORM_ID
+	LEFT OUTER JOIN ( SELECT DOC_ID, COUNT(*) AS FILE_CNT FROM $DB_NEOS$TEAG_FILE GROUP BY DOC_ID ) C ON AD.DOC_ID = C.DOC_ID
+	INNER JOIN (SELECT DETAIL_CODE, DETAIL_NAME FROM $DB_NEOS$T_CO_CODE_DETAIL_MULTI WHERE CODE = 'ea0040' AND LANG_CODE = #loginVo.langCode#) CODE ON CODE.DETAIL_CODE = EA.RET_ITEM_CD
+	
+	WHERE DATE_FORMAT(AD.rep_dt, '%Y-%m-%d') BETWEEN #sfrDt# AND #stoDt#
+   
+	<isNotEmpty property="sDocTp"> <!-- 문서분류   -->
+	AND   FORM.FORM_NM LIKE CONCAT('%', ifnull(#sDocTp#,''), '%')  
+	</isNotEmpty>
+	<isNotEmpty property="sDocSts"> <!-- 문사상태 -->
+	AND   (#sDocSts# = '' OR AD.DOC_STS = #sDocSts# )   
+	</isNotEmpty>
+	<isNotEmpty property="sTitle"> <!-- 문서제목 -->
+	AND AD.DOC_TITLE LIKE CONCAT('%', ifnull(#sTitle#,''), '%')  
+	</isNotEmpty> 
+	<isNotEmpty property="sContents"> <!-- 문서내용 -->
+	AND CON.DOC_CONTENTS LIKE CONCAT('%', ifnull(#sContents#,''), '%') 
+	</isNotEmpty>
+	<isNotEmpty property="sDocNo">  <!-- 문서번호 -->
+	AND (#sDocNo# = '' OR AD.DOC_NO like CONCAT('%', ifnull(#sDocNo#,''), '%'))  
+	</isNotEmpty>
+	<isNotEmpty property="sDeptNm">  <!-- 부서 -->
+	AND AD.DEPT_NM LIKE CONCAT('%', ifnull(#sDeptNm#,''), '%')
+	</isNotEmpty>
+	<isNotEmpty property="sReadYN">  <!-- 열람/미열람 -->
+	AND EA.readYN  = #sReadYN#
+	</isNotEmpty>
+	<isNotEmpty property="sExecYN">  <!-- 시행구분 -->
+	AND EA.operYN  = #sExecYN#
+	</isNotEmpty>
+	<isNotEmpty property="sUserNm"> <!-- 기안자 -->
+	AND AD.USER_NM = #sUserNm#
+	</isNotEmpty>
+    ORDER BY REP_DT DESC , AD.DOC_ID DESC
+    LIMIT $limitValue$
+	</select>
+	
+	<select id="EaDocDAO.GetEAPortletDocListTotalCount" parameterClass="java.util.HashMap" resultClass="Integer">
+	/* EaDocDAO.GetEAPortletDocList - 포틀릿 전자결재문서 리스트 */
+	SELECT  
+		COUNT(*) TOTAL_COUNT	    
+	FROM (
+	      SELECT DOC_ID , MIN(readYN) AS readYN ,MIN(operYN) AS operYN, RET_ITEM_CD FROM (
+	            SELECT '' doc_id , '' readYN , '' operYN, '' RET_ITEM_CD FROM DUAL
+	            
+	     <isNotEmpty property="RET_ITEM_CD_10">
+	            UNION ALL  /* 상신내역 */
+	            SELECT  A.doc_id
+			          , '10' readYN
+			          , ''
+			          , #RET_ITEM_CD_10#
+	            FROM  $DB_NEOS$TEAG_APPDOC A
+<!-- 	            INNER JOIN TEAG_APPDOC_CONTENTS B ON A.DOC_ID = B.DOC_ID -->
+<!-- 	            INNER JOIN   C ON A.FORM_ID = C.FORM_ID -->
+	            WHERE A.USE_YN  = '1'
+	            AND   A.USER_ID = #loginVo.uniqId#
+	            AND   A.DOC_STS IN ('20', '30', '40', '50', '60', '70','80','90','100','110')
+	     </isNotEmpty>
+	     
+	     <isNotEmpty property="RET_ITEM_CD_20">
+	            UNION ALL  /* 미결내역 */
+	            SELECT  DISTINCT A.doc_id
+	                  , CASE WHEN (B.VIEW_TIME IS NOT NULL) THEN '10' ELSE '20' END
+	                  , '' 
+	                  , #RET_ITEM_CD_20#  
+	            FROM  $DB_NEOS$TEAG_APPDOC A
+	            INNER JOIN (
+	                    SELECT X.doc_id, X.VIEW_TIME
+	                    FROM  $DB_NEOS$TEAG_APPDOC_LINE X
+	                    LEFT  OUTER JOIN $DB_NEOS$TEAG_PROXY_APP Y 
+	                    ON    X.co_id = Y.co_id  
+	                    AND   X.user_id = Y.user_id  
+	                    AND   (NOW() <![CDATA[ >= ]]>  Y.proxy_app_start_dt AND NOW() <![CDATA[  <= ]]>  Y.proxy_app_end_dt)
+	                    WHERE X.doc_line_sts = '20'
+	                    AND (((X.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND X.user_id = #loginVo.uniqId#) 
+                    		OR (Y.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND Y.proxy_app_user_id = #loginVo.uniqId#))
+			                  <!-- 부서결재라인 -->
+			                 <isNotEmpty property="parentsDeptList">   
+			                  OR (X.USER_ID = 0 AND   X.APP_YN <![CDATA[ <> ]]> '1' AND X.DEPTLINE_YN = '1'
+			                      AND X.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			                      AND X.DEPT_ID <iterate prepend="IN" property="parentsDeptList" open="(" close=")" conjunction=","> #parentsDeptList[]# </iterate>
+			                      )
+			                 </isNotEmpty>
+			                 )
+				        GROUP BY doc_id, VIEW_TIME ) B 
+	            ON    (A.DOC_ID = B.DOC_ID)
+	            WHERE A.USE_YN = '1'
+	            AND   A.doc_sts IN ('20', '30', '40', '50', '60')
+	     </isNotEmpty>
+	     
+	     <isNotEmpty property="RET_ITEM_CD_30">
+	            UNION ALL  /* 기결내역 (종결) */       
+	            SELECT  A.doc_id
+	                  , CASE WHEN (B.view_time) IS NOT NULL THEN '10' ELSE '20' END
+	                  , ''
+	                  , #RET_ITEM_CD_30#
+	            FROM  $DB_NEOS$TEAG_APPDOC A
+<!-- 	            INNER JOIN TEAG_APPDOC_CONTENTS CON ON A.DOC_ID = CON.DOC_ID -->
+<!-- 	            INNER JOIN TEAG_FORM C ON A.FORM_ID = C.FORM_ID -->
+	            INNER JOIN (
+                        SELECT X.doc_id, X.VIEW_TIME
+                        FROM   $DB_NEOS$TEAG_APPDOC_LINE X
+                        WHERE  X.doc_line_sts IN ('30', '40', '50', '80', '100')
+<!--                         AND    (@sDecideYn = '0' OR (X.proxy_app_yn='1')) -->
+						 
+	                    AND ((X.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND X.user_id = #loginVo.uniqId#) 
+                    		OR (X.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND X.proxy_app_user_id = #loginVo.uniqId#))
+						
+						<!--  
+	                    <isEqual property="ea320" compareValue="1">
+                        AND   ((X.co_id IN (SELECT COMP_SEQ FROM T_CO_COMP WHERE GROUP_SEQ IN (SELECT GROUP_SEQ FROM T_CO_COMP WHERE COMP_SEQ = #loginVo.compSeq#)) AND X.user_id = #loginVo.uniqId# )
+                               OR ( X.proxy_app_co_id IN (SELECT COMP_SEQ FROM T_CO_COMP WHERE GROUP_SEQ IN (SELECT GROUP_SEQ FROM T_CO_COMP WHERE COMP_SEQ = #loginVo.compSeq#)) AND X.proxy_app_user_id = #loginVo.uniqId#))
+	                    </isEqual>		         
+	                    <isNotEqual property="ea320" compareValue="1">
+                        AND   ((X.co_id = #loginVo.compSeq# AND X.user_id = #loginVo.uniqId# )
+                               OR ( X.proxy_app_co_id = #loginVo.compSeq# AND X.proxy_app_user_id = #loginVo.uniqId#))
+	                    </isNotEqual>
+	                     -->
+                        
+                        GROUP BY doc_id, VIEW_TIME) B 
+	            ON    (A.DOC_ID = B.DOC_ID)
+	            WHERE A.use_yn = '1'
+	            AND   A.doc_sts IN ('80', '90')            
+	     </isNotEmpty> 
+	     
+	     <isNotEmpty property="RET_ITEM_CD_40">
+	            UNION ALL  /* 기결내역 (진행) */
+	            SELECT  A.doc_id  
+        		      , CASE WHEN (B.view_time) IS NOT NULL THEN '10' ELSE '20' END   
+        		      , ''
+        		      , #RET_ITEM_CD_40# 
+                FROM $DB_NEOS$TEAG_APPDOC A
+<!-- 	            INNER JOIN TEAG_APPDOC_CONTENTS CON ON A.DOC_ID = CON.DOC_ID -->
+<!-- 	            INNER JOIN TEAG_FORM C ON A.FORM_ID = C.FORM_ID -->
+	            INNER JOIN (
+                        SELECT X.doc_id, X.VIEW_TIME
+                        FROM $DB_NEOS$TEAG_APPDOC_LINE X
+                        WHERE X.doc_line_sts IN ('30', '40', '50', '80', '100') 
+<!--                         AND    (@sDecideYn = '0' OR (X.proxy_app_yn='1')) -->
+						 
+						AND ((X.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND X.user_id = #loginVo.uniqId#) 
+                    		OR (X.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND X.proxy_app_user_id = #loginVo.uniqId#))
+						
+						<!--  
+	                    <isEqual property="ea320" compareValue="1">
+                        AND   ((X.co_id IN (SELECT COMP_SEQ FROM T_CO_COMP WHERE GROUP_SEQ IN (SELECT GROUP_SEQ FROM T_CO_COMP WHERE COMP_SEQ = #loginVo.compSeq#)) AND X.user_id = #loginVo.uniqId# )
+                               OR ( X.proxy_app_co_id IN (SELECT COMP_SEQ FROM T_CO_COMP WHERE GROUP_SEQ IN (SELECT GROUP_SEQ FROM T_CO_COMP WHERE COMP_SEQ = #loginVo.compSeq#)) AND X.proxy_app_user_id = #loginVo.uniqId#))
+	                    </isEqual>		         
+	                    <isNotEqual property="ea320" compareValue="1">
+                        AND   ((X.co_id = #loginVo.compSeq# AND X.user_id = #loginVo.uniqId# )
+                               OR ( X.proxy_app_co_id = #loginVo.compSeq# AND X.proxy_app_user_id = #loginVo.uniqId#))
+	                    </isNotEqual>
+	                     -->                    
+<!--                         AND X.co_id IN (SELECT COMP_SEQ FROM T_CO_COMP WHERE GROUP_SEQ IN (SELECT GROUP_SEQ FROM T_CO_COMP WHERE COMP_SEQ = #loginVo.compSeq#)) -->
+<!--                         AND  ((X.user_id = #loginVo.uniqId#) OR (X.proxy_app_user_id = #loginVo.uniqId#)) -->
+                        GROUP BY doc_id, VIEW_TIME) B 
+	            ON (A.DOC_ID = B.DOC_ID)
+	            WHERE A.use_yn = '1'
+	            AND A.doc_sts IN ('20', '30', '40', '50', '60', '70')            
+	     </isNotEmpty>
+	     
+	     <isNotEmpty property="RET_ITEM_CD_50">
+	            UNION ALL  /* 반려내역(반려이후결재자 포함) */       
+	            SELECT  A.doc_id  
+	                  , CASE WHEN (B.view_time) IS NOT NULL THEN '10' ELSE '20' END   
+	                  , ''
+	                  , #RET_ITEM_CD_50#
+	            FROM  $DB_NEOS$TEAG_APPDOC A  
+	            INNER JOIN (
+	                    SELECT DISTINCT doc_id, VIEW_TIME
+	                    FROM   $DB_NEOS$TEAG_APPDOC_LINE
+	                    WHERE ( (co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> and user_id = #loginVo.uniqId#)
+	                            or (proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND proxy_app_user_id = #loginVo.uniqId#)
+	                          )
+	                     ) B 
+	            ON (A.doc_id = B.doc_id)
+	            WHERE A.use_yn = '1'
+	            AND A.doc_sts = '100'          
+	     </isNotEmpty>
+	     
+	     <isNotEmpty property="RET_ITEM_CD_51">
+	            UNION ALL  /* 반려내역(반려이후결재자 미포함) */       
+	            SELECT  A.doc_id  
+	                  , CASE WHEN (B.view_time IS NOT NULL) THEN '10' ELSE '20' END   
+	                  , '' 
+	                  , #RET_ITEM_CD_51#
+	            FROM $DB_NEOS$TEAG_APPDOC A  
+	            INNER JOIN (
+	                    SELECT DISTINCT T1.doc_id, VIEW_TIME  
+	                    FROM $DB_NEOS$TEAG_APPDOC_LINE T1
+	                    INNER JOIN (
+	                            SELECT DOC_ID, MAX(DOC_LINE_M_SEQ) AS DOC_LINE_M_SEQ
+	                            FROM   $DB_NEOS$TEAG_APPDOC_LINE
+	                            WHERE  DOC_LINE_STS = '50'
+	                            GROUP BY DOC_ID ) T2 
+	                    ON T1.DOC_ID = T2.DOC_ID
+	                    WHERE ( (co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> and user_id = #loginVo.uniqId#)
+	                            or (proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND proxy_app_user_id = #loginVo.uniqId#)
+	                          )
+	                    AND   T1.DOC_LINE_M_SEQ <![CDATA[ <= ]]> T2.DOC_LINE_M_SEQ) B 
+	            ON (A.doc_id = B.doc_id)
+	            WHERE A.use_yn = '1'  
+	            AND A.doc_sts = '100'          
+	     </isNotEmpty>
+	     
+	     <isNotEmpty property="RET_ITEM_CD_60">
+	            UNION ALL  /* 수신참조 */       
+	            SELECT  A.doc_id  
+	                  , CASE WHEN (B.firstcheck_time) IS NOT NULL THEN '10' ELSE '20' END   
+	                  , ''
+	                  , #RET_ITEM_CD_60# 
+	            FROM  $DB_NEOS$TEAG_APPDOC A
+<!-- 	            INNER JOIN TEAG_APPDOC_CONTENTS CON ON A.DOC_ID = CON.DOC_ID   -->
+<!-- 	            INNER JOIN TEAG_FORM C ON A.FORM_ID = C.FORM_ID -->
+	            INNER JOIN $DB_NEOS$TEAG_APPDOC_RECEIVEUSER B ON A.doc_id = B.doc_id
+	            WHERE A.use_yn = '1'
+	            AND ((A.doc_sts IN ('20','30','40','50','60','70','80','90') AND NVL(#ea310#,'0') = '1') 
+	                 OR (A.doc_sts IN ('20','30','40','50','60','70','80','90','100') AND NVL(#ea310#,'0') = '2') 
+	                 OR (A.doc_sts IN ('80','90') AND NVL(#ea310#,'0') = '0'))
+	                  
+	            AND B.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+	            
+	            <!--  
+	            <isEqual property="ea320" compareValue="1">
+	            AND B.co_id IN (SELECT COMP_SEQ FROM T_CO_COMP WHERE GROUP_SEQ IN (SELECT GROUP_SEQ FROM T_CO_COMP WHERE COMP_SEQ = #loginVo.compSeq#))
+	            </isEqual>		         
+	            <isNotEqual property="ea320" compareValue="1">
+	            AND B.co_id = #loginVo.compSeq#
+	            </isNotEqual>
+	             -->
+	            AND B.user_id = #loginVo.uniqId# 
+	            AND B.receive_div = '10'  
+<!-- 		                    AND (NVL(B.firstcheck_time,'') = (CASE WHEN (#sReadYN#='') THEN NVL(B.firstcheck_time,'') WHEN (#sReadYN# ='20') THEN '' END)             -->
+<!--                                          OR NVL(B.firstcheck_time,'') <![CDATA[ <> ]]> (CASE WHEN #sReadYN# ='10' THEN '' END))           -->
+	     </isNotEmpty>	
+	     <isNotEmpty property="RET_ITEM_CD_70">
+	            UNION ALL  /* 예결내역  */       
+	            SELECT  A.doc_id  
+			          , CASE WHEN (B.view_time) IS NOT NULL THEN '10' ELSE '20' END   
+	                  , ''
+	                  , #RET_ITEM_CD_70# 
+	            FROM  $DB_NEOS$TEAG_APPDOC A
+	            INNER JOIN (
+	                    SELECT X.doc_id, X.VIEW_TIME  
+	                    FROM   $DB_NEOS$TEAG_APPDOC_LINE X
+	                    LEFT OUTER JOIN $DB_NEOS$TEAG_PROXY_APP Y ON (X.co_id = Y.co_id
+	                    AND X.user_id = Y.user_id
+	                    AND (NOW() <![CDATA[ >= ]]> Y.proxy_app_start_dt AND NOW() <![CDATA[ <= ]]> Y.proxy_app_end_dt))
+	                    WHERE X.doc_line_sts = '70'
+	                     
+	                    AND (((X.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND X.user_id = #loginVo.uniqId#) 
+                    		OR (Y.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND Y.proxy_app_user_id = #loginVo.uniqId#))
+			                  <!-- 부서결재라인 -->
+			                 <isNotEmpty property="parentsDeptList">   
+			                  OR (X.USER_ID = 0 AND   X.APP_YN <![CDATA[ <> ]]> '1' AND X.DEPTLINE_YN = '1'
+			                      AND X.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			                      AND X.DEPT_ID <iterate prepend="IN" property="parentsDeptList" open="(" close=")" conjunction=","> #parentsDeptList[]# </iterate>
+			                      )
+			                 </isNotEmpty>
+			                 )
+	                    GROUP BY doc_id, VIEW_TIME ) B 
+	            ON (A.DOC_ID = B.DOC_ID)
+	            WHERE A.use_yn = '1'
+	            AND A.doc_sts IN ('20', '30', '40', '50', '60')
+	     </isNotEmpty>
+	     
+	     <isNotEmpty property="RET_ITEM_CD_71">
+	     		UNION ALL  /* 예결내역(예결 미사용 포함)  */       
+	            SELECT  A.doc_id  
+			          , CASE WHEN (B.view_time) IS NOT NULL THEN '10' ELSE '20' END   
+	                  , '' 
+	                  , #RET_ITEM_CD_71#
+	            FROM  $DB_NEOS$TEAG_APPDOC A
+	            INNER JOIN (
+	                    SELECT X.doc_id, X.VIEW_TIME  
+	                    FROM   $DB_NEOS$TEAG_APPDOC_LINE X
+	                    LEFT OUTER JOIN $DB_NEOS$TEAG_PROXY_APP Y ON (X.co_id = Y.co_id AND X.user_id = Y.user_id
+	                    AND (NOW() <![CDATA[ >= ]]> Y.proxy_app_start_dt AND NOW() <![CDATA[ <= ]]> Y.proxy_app_end_dt))
+	                    WHERE X.doc_line_sts IN ('70', '10')
+	                    AND (((X.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND X.user_id = #loginVo.uniqId#) 
+                    		OR (Y.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND Y.proxy_app_user_id = #loginVo.uniqId#))
+			                  <!-- 부서결재라인 -->
+			                 <isNotEmpty property="parentsDeptList">   
+			                  OR (X.USER_ID = 0 AND   X.APP_YN <![CDATA[ <> ]]> '1' AND X.DEPTLINE_YN = '1'
+			                      AND X.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			                      AND X.DEPT_ID <iterate prepend="IN" property="parentsDeptList" open="(" close=")" conjunction=","> #parentsDeptList[]# </iterate>
+			                      )
+			                 </isNotEmpty>
+			                 )
+	                    GROUP BY doc_id, VIEW_TIME ) B 
+	            ON (A.DOC_ID = B.DOC_ID)
+	            WHERE A.use_yn = '1'
+	            AND A.doc_sts IN ('20', '30', '40', '50', '60')
+	     </isNotEmpty>
+	     
+	     
+	     <isNotEmpty property="RET_ITEM_CD_80">
+	            UNION ALL  /* 후결내역  */
+	            SELECT  A.doc_id  
+	                  , CASE WHEN (B.view_time) IS NOT NULL THEN '10' ELSE '20' END   
+	                  , ''
+	                  , #RET_ITEM_CD_80# 
+	            FROM $DB_NEOS$TEAG_APPDOC A
+	            INNER JOIN (
+	                    SELECT X.doc_id, X.view_time  
+	                    FROM $DB_NEOS$TEAG_APPDOC_LINE X
+	                    LEFT OUTER JOIN $DB_NEOS$TEAG_PROXY_APP Y ON (X.co_id = Y.co_id
+	                    AND X.user_id = Y.user_id
+	                    AND (NOW() <![CDATA[ >= ]]> Y.proxy_app_start_dt AND NOW() <![CDATA[ <= ]]> Y.proxy_app_end_dt))
+	                    WHERE X.doc_line_sts = '60'
+					    AND (((X.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND X.user_id = #loginVo.uniqId#) 
+                    		OR (Y.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND Y.proxy_app_user_id = #loginVo.uniqId#))
+			                  <!-- 부서결재라인 -->
+			                 <isNotEmpty property="parentsDeptList">   
+			                  OR (X.USER_ID = 0 AND   X.APP_YN <![CDATA[ <> ]]> '1' AND X.DEPTLINE_YN = '1'
+			                      AND X.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			                      AND X.DEPT_ID <iterate prepend="IN" property="parentsDeptList" open="(" close=")" conjunction=","> #parentsDeptList[]# </iterate>
+			                      )
+			                 </isNotEmpty>
+			                 )
+	                    GROUP BY doc_id, view_time) B 
+	            ON (A.DOC_ID = B.DOC_ID)
+	            WHERE A.use_yn = '1'
+	            AND A.doc_sts IN ('20', '30', '40', '50', '60', '70', '80', '90')
+	     </isNotEmpty>
+	     
+	     <isNotEmpty property="RET_ITEM_CD_90">
+	            UNION ALL  /* 전결내역  */
+	            SELECT  A.doc_id  
+	                  , CASE WHEN (B.view_time) IS NOT NULL THEN '10' ELSE '20' END   
+	                  , ''
+	                  , #RET_ITEM_CD_90# 
+	            FROM  $DB_NEOS$TEAG_APPDOC A
+<!-- 	            INNER JOIN TEAG_APPDOC_CONTENTS CON ON A.DOC_ID = CON.DOC_ID   -->
+<!-- 	            INNER JOIN TEAG_FORM FORM ON A.FORM_ID = FORM.FORM_ID -->
+	            INNER JOIN (
+	                    SELECT doc_id, view_time  
+	                    FROM $DB_NEOS$TEAG_APPDOC_LINE
+	                    WHERE doc_line_sts = '40'
+	                     
+	                    AND co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+	                    
+	                    <!--  
+	                    <isEqual property="ea320" compareValue="1">
+	                    AND co_id IN (SELECT COMP_SEQ FROM T_CO_COMP WHERE GROUP_SEQ IN (SELECT GROUP_SEQ FROM T_CO_COMP WHERE COMP_SEQ = #loginVo.compSeq#))
+	                    </isEqual>		         
+	                    <isNotEqual property="ea320" compareValue="1">
+	                    AND co_id = #loginVo.compSeq# 
+	                    </isNotEqual>
+	                     -->
+	                    AND user_id = #loginVo.uniqId#  
+	                    GROUP BY doc_id, view_time) B 
+	            ON (A.DOC_ID = B.DOC_ID)
+	            WHERE A.use_yn = '1'
+	     </isNotEmpty>
+	     	     
+	     <isNotEmpty property="RET_ITEM_CD_100">
+	            UNION ALL  /* 수신내역  */
+	            SELECT  A.doc_id  
+	                  , CASE WHEN (B.firstcheck_time) IS NOT NULL THEN '10' ELSE '20' END   
+	                  , ''
+	                  , #RET_ITEM_CD_100# 
+	            FROM  $DB_NEOS$TEAG_APPDOC A
+<!-- 	            INNER JOIN TEAG_APPDOC_CONTENTS CON ON A.DOC_ID = CON.DOC_ID   -->
+<!-- 	            INNER JOIN TEAG_FORM FORM ON A.FORM_ID = FORM.FORM_ID -->
+	            INNER JOIN $DB_NEOS$TEAG_APPDOC_RECEIVEUSER B ON (A.doc_id = B.doc_id)
+	            LEFT  OUTER JOIN $DB_NEOS$TEAG_APPDOC C ON (A.doc_id = C.related_doc_no)
+	            WHERE A.use_yn = '1'  
+	            AND   B.user_id = #loginVo.uniqId# 
+	            AND   B.receive_div = '20' 
+	            AND   A.doc_sts = '40'
+	            AND   C.doc_id IS NULL
+	            UNION
+	            -- 협조전
+	            SELECT  A.doc_id  
+	                  , CASE WHEN (B.firstcheck_time) IS NOT NULL THEN '10' ELSE '20' END   
+	                  , ''
+	                  , #RET_ITEM_CD_100# 
+	            FROM $DB_NEOS$TEAG_APPDOC A
+	            INNER JOIN $DB_NEOS$TEAG_APPDOC_CONTENTS CON ON A.DOC_ID = CON.DOC_ID  
+	            INNER JOIN $DB_NEOS$TEAG_FORM FORM ON A.FORM_ID = FORM.FORM_ID
+	            INNER JOIN $DB_NEOS$TEAG_APPDOC_RECEIVEUSER B ON (A.doc_id = B.doc_id)
+	            LEFT OUTER JOIN $DB_NEOS$TEAG_APPDOC C ON (A.doc_id = C.related_doc_no AND b.user_id = c.user_id)
+	            WHERE A.use_yn = '1'  
+	            AND B.user_id = #loginVo.uniqId#  
+	            AND B.receive_div = '30'
+	            AND A.doc_sts = '90'
+	            AND C.doc_id IS NULL
+	     </isNotEmpty>
+	     
+	     <isNotEmpty property="RET_ITEM_CD_110">
+	            UNION ALL  /* 보류내역  */
+	            SELECT  A.doc_id
+	                  , CASE WHEN (B.view_time IS NOT NULL) THEN '10' ELSE '20' END
+	                  , ''
+	                  , #RET_ITEM_CD_110#
+	            FROM $DB_NEOS$TEAG_APPDOC A
+<!-- 	            INNER JOIN TEAG_APPDOC_CONTENTS CON ON A.DOC_ID = CON.DOC_ID -->
+<!-- 	            INNER JOIN TEAG_FORM C ON A.FORM_ID = C.FORM_ID -->
+	            INNER JOIN (
+	                    SELECT X.doc_id, X.view_time
+	                    FROM   $DB_NEOS$TEAG_APPDOC_LINE X
+<!-- 	                    LEFT   OUTER JOIN TEAG_PROXY_APP Y  -->
+<!-- 	                    ON     (X.co_id = Y.co_id AND X.user_id = Y.user_id  -->
+<!-- 	                    AND    (NOW() <![CDATA[ >= ]]> Y.proxy_app_start_dt AND NOW() <![CDATA[ <= ]]> Y.proxy_app_end_dt)) -->
+	                     
+	                    WHERE ((X.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND X.user_id = #loginVo.uniqId#) 
+                    		OR (X.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND X.proxy_app_user_id = #loginVo.uniqId#))
+	                    AND  doc_line_sts = '90'
+	                    GROUP BY doc_id, view_time) B 
+	            ON    (A.doc_id = B.doc_id)
+	            WHERE A.USE_YN = '1'
+	            AND A.doc_sts = '110'
+	     </isNotEmpty>
+	     	    
+	     <isNotEmpty property="RET_ITEM_CD_120">
+	            UNION ALL  /* 시행내역  */
+	            SELECT  A.doc_id
+	                  , CASE WHEN (B.firstcheck_time IS NOT NULL) THEN '10' ELSE '20' END
+	                  , CASE WHEN (B.proc_time IS NOT NULL) THEN '10' ELSE '20' END
+	                  , #RET_ITEM_CD_120# 
+	            FROM  $DB_NEOS$TEAG_APPDOC A
+<!-- 	            INNER JOIN TEAG_APPDOC_CONTENTS CON ON A.DOC_ID = CON.DOC_ID -->
+<!-- 	            INNER JOIN TEAG_FORM C ON A.FORM_ID = C.FORM_ID -->
+	            INNER JOIN $DB_NEOS$TEAG_APPDOC_RECEIVEUSER B ON (A.doc_id = B.doc_id)
+	            WHERE A.use_yn = '1'  
+	            AND   A.doc_sts IN ('80', '90')  
+	            AND   B.co_id   = #loginVo.compSeq#  
+	            AND   B.user_id = #loginVo.uniqId#
+	            AND   B.receive_div = '40'
+<!-- 	            AND  (NVL(B.proc_time,'') = (CASE WHEN #sExecYN#='' THEN NVL(B.proc_time,'') WHEN #sExecYN# ='20' THEN '' END)             -->
+<!-- 	                  OR NVL(B.proc_time,'') <![CDATA[ <> ]]> (CASE WHEN #sExecYN# ='10' THEN '' END)) -->
+	     </isNotEmpty>
+	     <isNotEmpty property="RET_ITEM_CD_130">
+	            UNION ALL  /* 회람내역  */
+	            SELECT  A.doc_id  
+	                  , CASE WHEN (B.firstcheck_time IS NOT NULL) THEN '10' ELSE '20' END   
+	                  , ''
+	                  , #RET_ITEM_CD_130#
+	            FROM  $DB_NEOS$TEAG_APPDOC A  
+<!-- 	            INNER JOIN TEAG_APPDOC_CONTENTS CON ON A.DOC_ID = CON.DOC_ID   -->
+<!-- 	            INNER JOIN TEAG_FORM C ON A.FORM_ID = C.FORM_ID   -->
+	            INNER JOIN $DB_NEOS$TEAG_APPDOC_RECEIVEUSER B ON (A.doc_id = B.doc_id)  
+	            WHERE A.use_yn = '1'  
+	            AND   A.doc_sts IN ('80', '90')  
+	            AND   B.co_id = #loginVo.compSeq#  
+	            AND   B.user_id = #loginVo.uniqId#  
+	            AND   B.receive_div = '50'
+	     </isNotEmpty>
+	      ) W
+	      GROUP BY DOC_ID
+	) EA     
+	INNER JOIN $DB_NEOS$TEAG_APPDOC AD ON AD.DOC_ID = EA.DOC_ID
+	 
+	INNER JOIN (SELECT COMP_SEQ FROM $DB_NEOS$T_CO_COMP WHERE COMP_SEQ <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND GROUP_SEQ = #loginVo.groupSeq#) CO
+	
+	<!--  
+	<isEqual property="ea320" compareValue="0">
+	INNER JOIN (SELECT #loginVo.compSeq# AS COMP_SEQ FROM DUAL) CO
+	</isEqual>		         
+	<isNotEqual property="ea320" compareValue="0">
+	INNER JOIN (SELECT COMP_SEQ FROM T_CO_COMP WHERE GROUP_SEQ IN (SELECT GROUP_SEQ FROM T_CO_COMP WHERE COMP_SEQ = #loginVo.compSeq#)) CO
+	</isNotEqual> 
+	 -->
+	ON AD.CO_ID = CO.COMP_SEQ        
+	INNER JOIN $DB_NEOS$TEAG_APPDOC_CONTENTS CON ON AD.DOC_ID = CON.DOC_ID
+	INNER JOIN $DB_NEOS$TEAG_FORM FORM ON  AD.FORM_ID = FORM.FORM_ID
+	LEFT OUTER JOIN ( SELECT DOC_ID, COUNT(*) AS FILE_CNT FROM $DB_NEOS$TEAG_FILE GROUP BY DOC_ID ) C ON AD.DOC_ID = C.DOC_ID
+	INNER JOIN (SELECT DETAIL_CODE, DETAIL_NAME FROM $DB_NEOS$T_CO_CODE_DETAIL_MULTI WHERE CODE = 'ea0040' AND LANG_CODE = #loginVo.langCode#) CODE ON CODE.DETAIL_CODE = EA.RET_ITEM_CD
+	
+	WHERE DATE_FORMAT(AD.rep_dt, '%Y-%m-%d') BETWEEN #sfrDt# AND #stoDt#
+   
+	<isNotEmpty property="sDocTp"> <!-- 문서분류   -->
+	AND   FORM.FORM_NM LIKE CONCAT('%', ifnull(#sDocTp#,''), '%')  
+	</isNotEmpty>
+	<isNotEmpty property="sDocSts"> <!-- 문사상태 -->
+	AND   (#sDocSts# = '' OR AD.DOC_STS = #sDocSts# )   
+	</isNotEmpty>
+	<isNotEmpty property="sTitle"> <!-- 문서제목 -->
+	AND AD.DOC_TITLE LIKE CONCAT('%', ifnull(#sTitle#,''), '%')  
+	</isNotEmpty> 
+	<isNotEmpty property="sContents"> <!-- 문서내용 -->
+	AND CON.DOC_CONTENTS LIKE CONCAT('%', ifnull(#sContents#,''), '%') 
+	</isNotEmpty>
+	<isNotEmpty property="sDocNo">  <!-- 문서번호 -->
+	AND (#sDocNo# = '' OR AD.DOC_NO like CONCAT('%', ifnull(#sDocNo#,''), '%'))  
+	</isNotEmpty>
+	<isNotEmpty property="sDeptNm">  <!-- 부서 -->
+	AND AD.DEPT_NM LIKE CONCAT('%', ifnull(#sDeptNm#,''), '%')
+	</isNotEmpty>
+	<isNotEmpty property="sReadYN">  <!-- 열람/미열람 -->
+	AND EA.readYN  = #sReadYN#
+	</isNotEmpty>
+	<isNotEmpty property="sExecYN">  <!-- 시행구분 -->
+	AND EA.operYN  = #sExecYN#
+	</isNotEmpty>
+	<isNotEmpty property="sUserNm"> <!-- 기안자 -->
+	AND AD.USER_NM = #sUserNm#
+	</isNotEmpty>
+    ORDER BY REP_DT DESC , AD.DOC_ID DESC
+	</select>
+	
+   <select id="OptionManageDAO.GetOptionList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	  /* OptionManageDAO.GetOptionList - oracle */
+      SELECT DATA1.OPTION_ID
+           , OPTION_NM
+           , CASE WHEN DATA2.OPTION_ID IS NULL  /* 부모 옵션이 있는지 체크  */
+	              THEN DATA1.OPTION_VALUE /* 부모옵션이 없으면 자신의 설정값  */ 
+	              ELSE( CASE WHEN DATA2.OPTION_VALUE = '0' THEN '0' ELSE DATA1.OPTION_VALUE END) /*  부모옵션이 있으면 부모옵션의 설정값을 먼저체크  */
+	          END AS OPTION_VALUE
+           , P_OPTION_ID
+           , OPTION_LEVEL
+           , CO_ID
+           , USE_YN
+           , DISPLAY_YN
+        FROM
+        (
+           SELECT M.OPTION_ID OPTION_ID
+                , M.OPTION_NM OPTION_NM
+                , CASE WHEN VALUE.OPTION_ID IS NULL THEN M.OPTION_D_VALUE ELSE NVL(VALUE.OPTION_VALUE,M.OPTION_D_VALUE) END AS OPTION_VALUE
+                , M.P_OPTION_ID 
+                , M.OPTION_LEVEL 
+                , NVL(VALUE.CO_ID,0) CO_ID
+                , NVL(M.USE_YN,1)  USE_YN
+                , NVL(M.DISPLAY_YN,1) DISPLAY_YN
+             FROM $DB_NEOS$TCMG_OPTIONSET M
+	         LEFT OUTER JOIN $DB_NEOS$TCMG_OPTIONVALUE VALUE 
+	           ON M.OPTION_ID = VALUE.OPTION_ID 
+	          AND VALUE.CO_ID = #loginVo.compSeq#
+	        WHERE M.MODULE_GB = #sMODULE_TP#
+         )DATA1
+         LEFT OUTER JOIN 
+         (
+           SELECT T1.OPTION_ID 
+                , CASE WHEN T2.OPTION_ID IS NULL THEN T1.OPTION_D_VALUE ELSE NVL(T2.OPTION_VALUE,T1.OPTION_D_VALUE) END AS OPTION_VALUE
+	         FROM $DB_NEOS$TCMG_OPTIONSET T1
+	         LEFT OUTER JOIN $DB_NEOS$TCMG_OPTIONVALUE T2 
+	           ON T1.OPTION_ID = T2.OPTION_ID 
+	          AND T2.CO_ID = #loginVo.compSeq#
+	        WHERE T1.MODULE_GB = #sMODULE_TP#
+          )DATA2 
+         ON DATA1.P_OPTION_ID = DATA2.OPTION_ID /* 부모의 옵션 값 체크  */
+        <isNotEmpty property="option_id">
+         WHERE DATA1.OPTION_ID = #option_id#
+        </isNotEmpty>         	  
+	</select>
+	
+	<select id="BoxManageDAO.GetEABoxItems" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		/* EaDocDAO.GetEABoxItems" 결재함 속성정보(중복제거)*/
+
+		SELECT DISTINCT A.RET_ITEM_CD FROM $DB_NEOS$TEAG_EA_BOX_ITEM A
+		JOIN $DB_NEOS$TEAG_EA_BOX_ITEMVALUE B ON A.RET_ITEM_CD = B.RET_ITEM_CD
+		 <isNotEmpty property = "boxList">
+		 	WHERE EA_BOX_ID IN 
+            <iterate  property = "boxList"  open = "(" close = ")"  conjunction=",">
+            	#boxList[]#
+          	</iterate>
+         </isNotEmpty>
+	</select>
+	
+	
+    <select id="restDAO.getEaBoxList" parameterClass="hashMap" resultClass="egovMap">
+        /* restDAO.getEaBoxList - oracle */
+        <![CDATA[
+        SELECT     CONVERT(0 , CHAR) AS doc_cnt
+             ,     CONVERT(0 , CHAR) AS alram_cnt
+             ,     CONVERT(0 , CHAR) AS display_cnt
+             ,     CONVERT(A.menu_no , CHAR) AS menu_id 
+             ,     CONVERT(C.upper_menu_no , CHAR) AS par_menu_id
+             ,     CONVERT('1' , CHAR) AS menu_level
+             ,     CONVERT($DB_NEOS$FN_GetMultiLang(#langCode#, menu_nm_multi) , CHAR) AS menu_name
+             ,     CONVERT(A.leaf_yn , CHAR) AS leaf_y_n
+             ,     CONVERT(A.read_yn , CHAR) AS read_y_n
+             ,     CONVERT(A.oper_yn , CHAR) AS oper_y_n
+             ,     CONVERT(A.app_yn , CHAR) AS app_y_n 
+             ,     CONVERT(A.icon_id , CHAR) AS icon_id
+             ,     CONVERT(A.doc_cnt , CHAR) AS doc_cnt_yn
+             ,     CONVERT(NVL(C.menu_type, '') , CHAR) AS menu_type 
+        FROM      (SELECT menu_no, 'Y' doc_cnt
+                        , (CASE MIN(ret_item_cd) WHEN  '20' THEN '001' WHEN  '30' THEN '002' WHEN  '40' THEN '004' WHEN  '50' THEN '003' WHEN  '51' THEN '014' 
+                                                WHEN  '60' THEN '006' WHEN  '70' THEN '008' WHEN  '10' THEN '005' WHEN  '71' THEN '015' WHEN  '80' THEN '013'
+                                                WHEN  '90' THEN '009' WHEN  '100' THEN '010' WHEN  '110' THEN '011' WHEN  '120' THEN '012' WHEN  '130' THEN '007' END) AS icon_id
+                        , 'N' leaf_yn
+                        , IF((SELECT COUNT(*) FROM $DB_NEOS$TEAG_EA_BOX_ITEM WHERE ret_item_cd = '60' AND ea_box_id = t.menu_no) > 0 , 'Y', 'N') AS read_yn
+                        , IF((SELECT COUNT(*) FROM $DB_NEOS$TEAG_EA_BOX_ITEM WHERE ret_item_cd = '120' AND ea_box_id = t.menu_no) > 0 , 'Y', 'N') oper_yn
+                        , IF(( SELECT COUNT(*) FROM $DB_NEOS$TEAG_EA_BOX_ITEM WHERE ret_item_cd = '20' AND ea_box_id = t.menu_no)  > 0 , 'Y', 'N') AS app_yn
+                        , 1 AS lvl                         
+                   FROM $DB_NEOS$t_co_menu t
+                   INNER JOIN $DB_NEOS$teag_ea_box_item i ON t.menu_no = i.ea_box_id
+                   WHERE menu_type ='eaBox'
+                   GROUP BY menu_no
+                   UNION ALL
+                   SELECT menu_no, 'Y' doc_cnt, icon_id , leaf_yn, read_yn, oper_yn, app_yn
+                        , 2 AS lvl 
+                   FROM $DB_NEOS$t_co_menu_api
+                   WHERE use_yn = 'Y'
+                   AND MENU_GUBUN = #menuGubun#) A
+        INNER JOIN $DB_NEOS$t_co_menu C 
+                ON A.menu_no = C.menu_no
+        INNER JOIN $DB_NEOS$t_co_menu CA 
+                ON C.upper_menu_no =  CA.menu_no
+        INNER JOIN $DB_NEOS$v_t_co_menu_multi m 
+                ON C.menu_no = M.menu_no        
+        LEFT OUTER JOIN $DB_NEOS$t_co_menu_comp E 
+                ON C.menu_no = E.menu_no AND E.comp_seq = #compSeq#
+        INNER JOIN (SELECT menu_no FROM $DB_NEOS$t_co_menu_auth MA
+                     INNER JOIN $DB_NEOS$t_co_authcode AC 
+                       ON MA.author_code = AC.author_code AND   AC.comp_seq =  #compSeq# AND AC.author_type IN('001', '002') AND   AC.author_use_yn = 'Y'
+                     INNER JOIN ( SELECT author_code FROM $DB_NEOS$t_co_auth_relate U
+                     WHERE  (author_type = '002' AND u.dept_seq = #deptSeq#) 
+                       OR (author_type = '001' AND u.dept_seq = #deptSeq# AND u.emp_seq = #empSeq#)) AR 
+                ON AR.author_code = AC.author_code
+                GROUP BY menu_no
+                ) MA  
+                ON C.menu_no = MA.menu_no
+        WHERE IF(C.public_yn = 'Y' , #compSeq# , NVL(E.comp_seq, '0')) =  #compSeq#
+        AND   NVL(C.delete_yn , 'N') <> 'Y'
+        AND   C.use_yn  = 'Y'
+        ]]>
+        <isNotEmpty property="menuGubun">
+        AND   C.MENU_GUBUN = #menuGubun#
+        </isNotEmpty>
+        <isNotEmpty property="menuId">
+        AND   C.menu_no = #menuId#
+        limit 1
+        </isNotEmpty>
+        <isEmpty property="menuId">
+        ORDER BY lvl , CA.menu_ordr, C.menu_ordr
+        </isEmpty>
+    </select>
+    
+    	<select id="restDAO.GetEaBoxCount" parameterClass="java.util.HashMap" resultClass="egovMap">
+	    /* restDAO.GetEaBoxCount - oracle */
+		SELECT DISTINCT CONVERT(COUNT(doc_id) , CHAR) AS doc_cnt 
+		     , CONVERT(NVL(SUM(cnt), 0) , CHAR) AS alram_cnt
+		FROM ( 
+		    SELECT 0 AS doc_id
+		         , 1 AS read_yn
+		         , 0 cnt
+		<isNotEmpty property="RET_ITEM_CD_10">
+		/* 상신내역 */
+			UNION
+			<!-- 상신내역 : 10 -->
+			SELECT a.doc_id
+			     , 1 AS read_yn
+			     , CASE WHEN doc_sts in ('80' , '90' , '100') THEN 0 ELSE 1 END cnt
+			FROM $DB_NEOS$teag_appdoc a
+			WHERE a.doc_sts != '10'
+			AND a.use_yn = '1'
+			AND a.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			AND a.user_id = #empSeq#
+		    <isNotEqual property="leftMenuCntYn" compareValue="Y">
+			AND rep_dt <![CDATA[>=]]> DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y-%m-%d 00:00:00') 
+			AND rep_dt <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y-%m-%d 23:59:59') 
+			</isNotEqual>					
+		</isNotEmpty>
+
+		<isNotEmpty property="RET_ITEM_CD_20">
+		/* 미결내역 */
+			UNION
+			<!-- 미결내역 : 20 -->
+			SELECT a.doc_id
+			     , 1 AS read_yn
+			     , 1 cnt
+			FROM (
+			    SELECT doc_id
+			    FROM $DB_NEOS$teag_appdoc
+			    WHERE ( doc_sts = '20' OR doc_sts = '30' OR doc_sts = '40' OR doc_sts = '50' OR doc_sts = '60' )
+<!-- 				AND ( DATE_FORMAT(rep_dt, '%Y%m%d') <![CDATA[>=]]> DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y%m%d')  -->
+<!-- 				AND DATE_FORMAT(rep_dt, '%Y%m%d') <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y%m%d') ) AND use_yn = '1' -->
+				AND use_yn = '1'
+				AND co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			) a
+			INNER JOIN (SELECT b.* FROM $DB_NEOS$teag_appdoc_line b
+			            LEFT OUTER JOIN $DB_NEOS$teag_proxy_app c ON b.co_id = c.co_id AND b.user_id = c.user_id 
+			            AND ( NOW() BETWEEN c.proxy_app_start_dt AND c.proxy_app_end_dt )
+                        WHERE b.doc_line_sts = '20'
+			            AND (((b.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND b.user_id = #empSeq#) 
+			                	OR (c.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND c.proxy_app_user_id = #empSeq#))
+			                 <isNotEmpty property="parentsDeptList">   
+			                  OR (b.user_id = '0' AND b.app_yn <![CDATA[ <> ]]> '1' AND b.deptline_yn = '1'
+			                      AND b.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			                      AND b.DEPT_ID <iterate prepend="IN" property="parentsDeptList" open="(" close=")" conjunction=","> #parentsDeptList[]# </iterate>
+			                      )
+			                 </isNotEmpty>
+			                 )			            
+			           ) b ON a.doc_id = b.doc_id
+			INNER JOIN $DB_NEOS$teag_appdoc_contents d ON a.doc_id = d.doc_id
+		</isNotEmpty>
+
+		<isNotEmpty property="RET_ITEM_CD_30">
+		/* 기결내역 (종결) */
+			UNION
+			<!-- 기결내역 ( 종결 ) : 30 -->
+			SELECT a.doc_id
+			     , 1 AS read_yn
+			     , 0 cnt
+			FROM (
+			 	SELECT doc_id
+			 	FROM $DB_NEOS$teag_appdoc a
+			 	WHERE ( doc_sts = '80' OR doc_sts = '90' )
+				AND use_yn = '1'
+				AND a.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+		        <isNotEqual property="leftMenuCntYn" compareValue="Y">
+			    AND rep_dt <![CDATA[>=]]> DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y-%m-%d 00:00:00') 
+			    AND rep_dt <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y-%m-%d 23:59:59') 
+			    </isNotEqual>					
+			) a
+			INNER JOIN (SELECT b.* FROM $DB_NEOS$teag_appdoc_line b
+			            WHERE ((b.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND b.user_id = #empSeq#) 
+       			               OR (b.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND b.proxy_app_user_id = #empSeq#))
+			            AND ( b.doc_line_sts = '30' OR b.doc_line_sts = '40' OR b.doc_line_sts = '50' OR b.doc_line_sts = '80' OR b.doc_line_sts = '100' )
+			           ) b ON a.doc_id = b.doc_id
+			INNER JOIN $DB_NEOS$teag_appdoc_contents c ON a.doc_id = c.doc_id
+		</isNotEmpty>
+
+		<isNotEmpty property="RET_ITEM_CD_40">
+		/* 기결내역 (진행) */
+			UNION
+			<!-- 기결내역 ( 진행 ) : 40 -->
+			SELECT a.doc_id
+			     , 1 AS read_yn
+			     , 0 cnt
+			FROM (
+			 	SELECT doc_id
+			 	FROM $DB_NEOS$teag_appdoc a
+			 	WHERE ( a.doc_sts = '20' OR a.doc_sts = '30' OR a.doc_sts = '40' OR a.doc_sts = '50' OR a.doc_sts = '60' OR a.doc_sts = '70' )
+				AND use_yn = '1'
+				AND a.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+				<isNotEqual property="leftMenuCntYn" compareValue="Y">
+				AND rep_dt <![CDATA[>=]]> DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y-%m-%d 00:00:00') 
+				AND rep_dt <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y-%m-%d 23:59:59') 
+				</isNotEqual>				
+			) a
+			INNER JOIN (SELECT b.* FROM $DB_NEOS$teag_appdoc_line b
+			            WHERE ((b.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND b.user_id = #empSeq#) 
+       			               OR (b.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND b.proxy_app_user_id = #empSeq#))
+			            AND ( b.doc_line_sts = '30' OR b.doc_line_sts = '40' OR b.doc_line_sts = '50' OR b.doc_line_sts = '80' OR b.doc_line_sts = '100' )
+			           ) b ON a.doc_id = b.doc_id
+			INNER JOIN $DB_NEOS$teag_appdoc_contents c ON a.doc_id = c.doc_id
+		</isNotEmpty>
+
+		<isNotEmpty property="RET_ITEM_CD_50">
+		/* 반려내역 ( 반려이후결재자 포함 ) */
+			UNION
+			<!-- 반려내역 ( 반려이후결재자 포함 ) : 50 -->
+			SELECT a.doc_id
+			     , 1 AS read_yn
+			     , 0 cnt
+			FROM (
+			 	SELECT doc_id
+			 	FROM $DB_NEOS$teag_appdoc a
+			 	WHERE a.doc_sts = '100'
+				AND use_yn = '1'
+				AND a.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+				<isNotEqual property="leftMenuCntYn" compareValue="Y">
+				AND rep_dt <![CDATA[>=]]> DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y-%m-%d 00:00:00') 
+				AND rep_dt <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y-%m-%d 23:59:59') 
+				</isNotEqual>				
+			) a
+			INNER JOIN (SELECT b.* FROM $DB_NEOS$teag_appdoc_line b
+			            WHERE ((b.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND b.user_id = #empSeq#) 
+       			               OR (b.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND b.proxy_app_user_id = #empSeq#))
+			            ) b ON a.doc_id = b.doc_id
+<!-- 			INNER JOIN teag_appdoc_line b ON a.doc_id = b.doc_id -->
+			INNER JOIN $DB_NEOS$teag_appdoc_contents c ON a.doc_id = c.doc_id
+		</isNotEmpty>
+
+		<isNotEmpty property="RET_ITEM_CD_51">
+		/* 반려내역 ( 반려이후결재자 미포함 ) */
+			UNION
+			<!-- 반려내역 ( 반려이후결재자 미포함 ) : 51 -->
+			SELECT a.doc_id
+			     , 1 AS read_yn
+			     , 0 cnt
+			FROM (
+			 	SELECT doc_id
+			 	FROM $DB_NEOS$teag_appdoc a
+			 	WHERE a.doc_sts = '100'
+				AND use_yn = '1'
+				AND a.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+				<isNotEqual property="leftMenuCntYn" compareValue="Y">
+				AND rep_dt <![CDATA[>=]]> DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y-%m-%d 00:00:00') 
+				AND rep_dt <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y-%m-%d 23:59:59') 
+				</isNotEqual>				
+			) a 
+			INNER JOIN (
+	                    SELECT DISTINCT T1.doc_id, VIEW_TIME  
+	                    FROM $DB_NEOS$TEAG_APPDOC_LINE T1
+	                    INNER JOIN (
+	                            SELECT DOC_ID, MAX(DOC_LINE_M_SEQ) AS DOC_LINE_M_SEQ
+	                            FROM   $DB_NEOS$TEAG_APPDOC_LINE
+	                            WHERE  DOC_LINE_STS = '50'
+	                            GROUP BY DOC_ID ) T2 
+	                    ON T1.DOC_ID = T2.DOC_ID
+	                    WHERE ( (co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> and user_id = #empSeq#)
+	                            or (proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND proxy_app_user_id = #empSeq#)
+	                          ) 
+	                    AND   T1.DOC_LINE_M_SEQ <![CDATA[ <= ]]> T2.DOC_LINE_M_SEQ 
+			           ) b ON a.doc_id = b.doc_id
+			INNER JOIN $DB_NEOS$teag_appdoc_contents d ON a.doc_id = d.doc_id
+		</isNotEmpty>
+
+		<isNotEmpty property="RET_ITEM_CD_60">
+		/* 수신참조내역 */
+			UNION
+			<!-- 수신참조내역 : 60 -->
+			SELECT a.doc_id
+			     , 1 AS read_yn
+			     , CASE WHEN (b.LASTCHECK_TIME) IS NOT NULL THEN 0 ELSE 1 END AS cnt
+			FROM (
+			 	SELECT doc_id
+			 	FROM $DB_NEOS$teag_appdoc a
+			 	WHERE ( 
+				( 
+					( a.doc_sts = '20' OR a.doc_sts = '30' OR a.doc_sts = '40' OR a.doc_sts = '50' OR a.doc_sts = '60' OR a.doc_sts = '70' OR a.doc_sts = '80' OR a.doc_sts = '90' )
+					AND NVL(#ea310#, 0) = '1'
+				)
+				OR
+				(
+					( a.doc_sts = '20' OR a.doc_sts = '30' OR a.doc_sts = '40' OR a.doc_sts = '50' OR a.doc_sts = '60' OR a.doc_sts = '70' OR a.doc_sts = '80' OR a.doc_sts = '90' OR a.doc_sts = '100' )
+					AND NVL(#ea310#, 0) = '2'
+				)
+				OR
+				(
+					( a.doc_sts = '80' OR a.doc_sts = '90' ) 
+					AND NVL(#ea310#, 0) = '0'
+				)
+			   )
+				AND use_yn = '1'
+				AND a.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+				<isNotEqual property="leftMenuCntYn" compareValue="Y">
+				AND rep_dt <![CDATA[>=]]> DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y-%m-%d 00:00:00') 
+				AND rep_dt <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y-%m-%d 23:59:59') 
+				</isNotEqual>				
+			) a 
+			INNER JOIN $DB_NEOS$teag_appdoc_receiveuser b ON a.doc_id = b.doc_id
+			INNER JOIN $DB_NEOS$teag_appdoc_contents c ON a.doc_id = c.doc_id
+			WHERE b.receive_div = '10'
+			AND b.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			AND b.user_id = #empSeq#
+		</isNotEmpty>
+
+		<isNotEmpty property="RET_ITEM_CD_70">
+		/* 예결내역 */
+			UNION
+			<!-- 예결내역 : 70 -->
+			SELECT a.doc_id
+			     , 1 AS read_yn
+			     , 1 cnt
+			FROM (
+			 	SELECT doc_id
+			 	FROM $DB_NEOS$teag_appdoc a
+			 	WHERE ( a.doc_sts = '20' OR a.doc_sts = '30' OR a.doc_sts = '40' OR a.doc_sts = '50' OR a.doc_sts = '60' )
+				AND use_yn = '1'
+				AND a.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>		
+			) a  
+			INNER JOIN (SELECT b.* FROM teag_appdoc_line b
+			            LEFT OUTER JOIN $DB_NEOS$teag_proxy_app c ON b.co_id = c.co_id AND b.user_id = c.user_id 
+			            AND ( NOW() BETWEEN c.proxy_app_start_dt AND c.proxy_app_end_dt )
+                        WHERE b.doc_line_sts = '70'
+			            AND (((b.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND b.user_id = #empSeq#) 
+			                	OR (c.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND c.proxy_app_user_id = #empSeq#))
+			                  <!-- 부서결재라인 -->
+			                 <isNotEmpty property="parentsDeptList">   
+			                  OR (b.user_id = '0' AND b.app_yn <![CDATA[ <> ]]> '1' AND b.deptline_yn = '1'
+			                      AND b.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			                      AND b.DEPT_ID <iterate prepend="IN" property="parentsDeptList" open="(" close=")" conjunction=","> #parentsDeptList[]# </iterate>
+			                      )
+			                 </isNotEmpty>
+			                 )			            
+			           ) b ON a.doc_id = b.doc_id
+			INNER JOIN $DB_NEOS$teag_appdoc_contents d ON a.doc_id = d.doc_id
+<!-- 			WHERE ( DATE_FORMAT(a.rep_dt, '%Y%m%d') <![CDATA[>=]]> 	DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y%m%d') AND DATE_FORMAT(a.rep_dt, '%Y%m%d') <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y%m%d') ) -->
+		</isNotEmpty>
+		
+		<!-- 예결내역(예결 미사용 포함) -->
+		<isNotEmpty property="RET_ITEM_CD_71">
+		/* 예결내역(예결 미사용 포함) */
+			UNION
+			
+			SELECT a.doc_id
+			     , 1 AS read_yn
+			     , 1 cnt
+			FROM (
+			 	SELECT doc_id
+			 	FROM $DB_NEOS$teag_appdoc a
+			 	WHERE ( a.doc_sts = '20' OR a.doc_sts = '30' OR a.doc_sts = '40' OR a.doc_sts = '50' OR a.doc_sts = '60' )
+				AND use_yn = '1'
+				AND a.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>		
+			) a
+			INNER JOIN (SELECT b.* FROM $DB_NEOS$teag_appdoc_line b
+			            LEFT OUTER JOIN $DB_NEOS$teag_proxy_app c ON b.co_id = c.co_id AND b.user_id = c.user_id 
+			            AND ( NOW() BETWEEN c.proxy_app_start_dt AND c.proxy_app_end_dt )
+                        WHERE b.doc_line_sts IN ('70', '10')
+			            AND (((b.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND b.user_id = #empSeq#) 
+			                	OR (c.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND c.proxy_app_user_id = #empSeq#))
+			                  <!-- 부서결재라인 -->
+			                 <isNotEmpty property="parentsDeptList">   
+			                  OR (b.user_id = '0' AND b.app_yn <![CDATA[ <> ]]> '1' AND b.deptline_yn = '1'
+			                      AND b.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			                      AND b.DEPT_ID <iterate prepend="IN" property="parentsDeptList" open="(" close=")" conjunction=","> #parentsDeptList[]# </iterate>
+			                      )
+			                 </isNotEmpty>
+			                 )			            
+			           ) b ON a.doc_id = b.doc_id
+			INNER JOIN $DB_NEOS$teag_appdoc_contents d ON a.doc_id = d.doc_id
+<!-- 			WHERE ( DATE_FORMAT(a.rep_dt, '%Y%m%d') <![CDATA[>=]]> 	DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y%m%d') AND DATE_FORMAT(a.rep_dt, '%Y%m%d') <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y%m%d') ) -->
+		</isNotEmpty>
+
+		<isNotEmpty property="RET_ITEM_CD_80">
+		/* 후결내역 */
+			UNION
+			<!-- 후결내역 : 80 -->
+			SELECT a.doc_id
+			     , 1 AS read_yn
+			     , 1 cnt
+			FROM (
+			 	SELECT doc_id
+			 	FROM $DB_NEOS$teag_appdoc a
+			 	WHERE ( a.doc_sts = '20' OR a.doc_sts = '30' OR a.doc_sts = '40' OR a.doc_sts = '50' OR a.doc_sts = '60' OR a.doc_sts = '70' OR a.doc_sts = '80' OR a.doc_sts = '90' )
+				AND use_yn = '1'
+				AND a.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>		
+			) a
+			INNER JOIN (SELECT b.* FROM $DB_NEOS$teag_appdoc_line b
+			            LEFT OUTER JOIN $DB_NEOS$teag_proxy_app c ON b.co_id = c.co_id AND b.user_id = c.user_id 
+			            AND ( NOW() BETWEEN c.proxy_app_start_dt AND c.proxy_app_end_dt )
+                        WHERE b.doc_line_sts = '60'
+			            AND (((b.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND b.user_id = #empSeq#) 
+			                	OR (c.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND c.proxy_app_user_id = #empSeq#))
+			                  <!-- 부서결재라인 -->
+			                 <isNotEmpty property="parentsDeptList">   
+			                  OR (b.user_id = '0' AND b.app_yn <![CDATA[ <> ]]> '1' AND b.deptline_yn = '1'
+			                      AND b.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			                      AND b.DEPT_ID <iterate prepend="IN" property="parentsDeptList" open="(" close=")" conjunction=","> #parentsDeptList[]# </iterate>
+			                      )
+			                 </isNotEmpty>
+			                 )			            
+			           ) b ON a.doc_id = b.doc_id			
+			INNER JOIN $DB_NEOS$teag_appdoc_contents c ON a.doc_id = c.doc_id
+<!-- 			WHERE ( DATE_FORMAT(a.rep_dt, '%Y%m%d') <![CDATA[>=]]> DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y%m%d') AND DATE_FORMAT(a.rep_dt, '%Y%m%d') <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y%m%d') )  -->
+		</isNotEmpty>
+
+		<isNotEmpty property="RET_ITEM_CD_90">
+		/* 전결내역 */
+			UNION
+			<!-- 전결내역 : 90 -->
+			SELECT a.doc_id
+			     , 1 AS read_yn
+			     , 0 cnt
+			FROM ( SELECT * FROM $DB_NEOS$teag_appdoc a
+			       WHERE doc_sts = '40'
+			       AND a.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			       AND use_yn = '1'
+				   <isNotEqual property="leftMenuCntYn" compareValue="Y">
+				   AND rep_dt <![CDATA[>=]]> DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y-%m-%d 00:00:00') 
+				   AND rep_dt <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y-%m-%d 23:59:59') 
+				   </isNotEqual>
+			) a 			
+			INNER JOIN (SELECT b.* 
+			            FROM $DB_NEOS$teag_appdoc_line b
+			            WHERE b.doc_line_sts = '40'
+			            AND ((b.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND b.user_id = #empSeq#) 
+       			             OR (b.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND b.proxy_app_user_id = #empSeq#))
+			            ) b ON a.doc_id = b.doc_id		
+			INNER JOIN $DB_NEOS$teag_appdoc_contents c ON a.doc_id = c.doc_id
+			LEFT OUTER JOIN $DB_NEOS$teag_proxy_app d ON b.co_id = d.co_id AND b.user_id = d.user_id AND ( NOW() BETWEEN d.proxy_app_start_dt AND d.proxy_app_end_dt )			
+		</isNotEmpty>
+
+		<isNotEmpty property="RET_ITEM_CD_100">
+		/* 수신내역 */
+			UNION
+			<!-- 수신내역 : 100 -->
+			SELECT doc_id
+			     , read_yn
+			     , cnt
+			FROM (
+			   <!-- 수발신 -->
+			   SELECT a.doc_id
+			        , 1 AS read_yn
+			        , 1 cnt
+			   FROM ( SELECT * FROM $DB_NEOS$teag_appdoc
+			          WHERE doc_sts = '40'
+			          AND co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			          AND use_yn = '1'
+<!-- 			          AND rep_dt <![CDATA[>=]]> DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y-%m-%d 00:00:00') -->
+<!-- 			          AND rep_dt <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y-%m-%d 23:59:59') -->
+			        ) a 
+			   INNER JOIN (
+			          SELECT *
+			          FROM $DB_NEOS$teag_appdoc_receiveuser
+			          WHERE user_id = #empSeq#
+			          AND co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			          AND receive_div = '30'
+			        ) b ON a.doc_id = b.doc_id			   
+			   LEFT OUTER JOIN $DB_NEOS$teag_appdoc c ON a.doc_id = c.related_doc_no
+			   WHERE c.doc_id IS NULL 
+			UNION
+
+               <!-- 협조전 -->
+			   SELECT a.doc_id
+			        , 1 AS read_yn
+			        , 1 cnt
+			   FROM ( SELECT * FROM $DB_NEOS$teag_appdoc
+			          WHERE doc_sts = '90'
+			          AND use_yn = '1'
+<!-- 			          AND rep_dt <![CDATA[>=]]> DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y-%m-%d 00:00:00') -->
+<!-- 			          AND rep_dt <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y-%m-%d 23:59:59') -->
+			        ) a 
+			   INNER JOIN (
+			          SELECT *
+			          FROM $DB_NEOS$teag_appdoc_receiveuser
+			          WHERE user_id = #empSeq#
+			          AND co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			          AND receive_div = '30'
+			        ) b ON a.doc_id = b.doc_id
+			   LEFT OUTER JOIN $DB_NEOS$teag_appdoc c ON a.doc_id = c.related_doc_no AND b.user_id = c.user_id
+			   WHERE c.doc_id IS NULL 
+			) a
+		</isNotEmpty>
+
+		<isNotEmpty property="RET_ITEM_CD_110">
+		/* 보류내역 */
+			UNION
+			<!-- 보류내역 : 110 -->
+			SELECT a.doc_id
+			     , 1 AS read_yn
+			     , 0 cnt
+			FROM ( SELECT * FROM $DB_NEOS$teag_appdoc a
+			       WHERE doc_sts = '110'
+			       AND a.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			       AND use_yn = '1'
+				   <isNotEqual property="leftMenuCntYn" compareValue="Y">
+				   AND rep_dt <![CDATA[>=]]> DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y-%m-%d 00:00:00') 
+				   AND rep_dt <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y-%m-%d 23:59:59') 
+				   </isNotEqual>
+			) a 
+			INNER JOIN (SELECT b.* 
+			            FROM $DB_NEOS$teag_appdoc_line b
+			            WHERE b.doc_line_sts = '90'
+			            AND ((b.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND b.user_id = #empSeq#)
+			                 OR (b.proxy_app_co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate> AND b.proxy_app_user_id = #empSeq#) 
+       			             )
+			            )b ON a.doc_id = b.doc_id				
+			INNER JOIN $DB_NEOS$teag_appdoc_contents c ON a.doc_id = c.doc_id			
+		</isNotEmpty>
+
+		<isNotEmpty property="RET_ITEM_CD_120">
+		/* 시행내역 */
+			UNION
+			<!-- 시행내역 : 120 -->
+			SELECT a.doc_id
+			     , 1 AS read_yn
+			     , 0 cnt
+			FROM ( SELECT * FROM $DB_NEOS$teag_appdoc a
+			       WHERE ( a.doc_sts = '80' OR a.doc_sts = '90' )
+			       AND a.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			       AND use_yn = '1'
+				   <isNotEqual property="leftMenuCntYn" compareValue="Y">
+				   AND rep_dt <![CDATA[>=]]> DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y-%m-%d 00:00:00') 
+				   AND rep_dt <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y-%m-%d 23:59:59') 
+				   </isNotEqual>
+			) a
+			INNER JOIN $DB_NEOS$teag_appdoc_receiveuser b ON a.doc_id = b.doc_id
+			INNER JOIN $DB_NEOS$teag_appdoc_contents c ON a.doc_id = c.doc_id
+			WHERE b.receive_div = '40'
+			AND b.user_id = #empSeq#
+		</isNotEmpty>
+		
+		<isNotEmpty property="RET_ITEM_CD_130">
+			/* 회람 내역 */
+			UNION
+			SELECT a.doc_id
+			     , 1 AS read_yn
+			     , 0 cnt
+			FROM ( SELECT * FROM $DB_NEOS$teag_appdoc a
+			       WHERE ( a.doc_sts = '80' OR a.doc_sts = '90' )
+			       AND a.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			       AND use_yn = '1'
+				   <isNotEqual property="leftMenuCntYn" compareValue="Y">
+				   AND rep_dt <![CDATA[>=]]> DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y-%m-%d 00:00:00') 
+				   AND rep_dt <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y-%m-%d 23:59:59') 
+				   </isNotEqual>
+			) a
+			INNER JOIN $DB_NEOS$teag_appdoc_receiveuser b ON a.doc_id = b.doc_id
+			INNER JOIN $DB_NEOS$teag_appdoc_contents c ON a.doc_id = c.doc_id
+			WHERE b.receive_div = '50'
+			AND b.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			AND b.user_id = #empSeq#
+		</isNotEmpty>
+<!-- 					"2001050000" "회람요청문서" "017" -->
+<!-- 					"2002120000" "시행확인문서" "018" -->
+<!-- 					"2002130000" "공문발송문서" "016" -->
+<!-- 					"2003010000" "이전문서" "020" -->
+<!-- 					"2006020000" "인수인계문서" "019"	     -->
+<!-- docCntKind_2002120000 -->
+        <isNotEmpty property="docCntKind_016">
+			/* 공문발송문서 */
+			UNION
+			SELECT a.doc_id
+				 , 1 AS read_yn
+			     , 0 cnt
+			FROM 
+ a
+			WHERE use_yn = '1'
+			AND official_doc_sts = '20'
+			AND created_by = #empSeq#
+			AND ( DATE_FORMAT(a.rep_dt, '%Y%m%d') <![CDATA[>=]]> DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y%m%d') 
+			        AND DATE_FORMAT(a.rep_dt, '%Y%m%d') <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y%m%d') )
+			AND a.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>					     			        
+        </isNotEmpty>
+        <isNotEmpty property="docCntKind_017">
+			/* 회람요청문서 */
+			UNION
+			SELECT a.doc_id
+				 , 1 AS read_yn
+			     , 1 cnt
+			FROM(
+			    SELECT AD.DOC_ID
+			    FROM ( SELECT * FROM $DB_NEOS$teag_appdoc a
+			       WHERE DOC_STS = '90'
+			       AND a.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			       AND use_yn = '1'
+			       AND USER_ID = #empSeq#
+				   <isNotEqual property="leftMenuCntYn" compareValue="Y">
+				   AND rep_dt <![CDATA[>=]]> DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y-%m-%d 00:00:00') 
+				   AND rep_dt <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y-%m-%d 23:59:59') 
+				   </isNotEqual>
+			    ) AD		    
+			    INNER JOIN $DB_NEOS$TEAG_APPDOC_CONTENTS CON ON AD.DOC_ID = CON.DOC_ID
+			    WHERE CON.CONTENTS_TP = '10'
+			    
+			    UNION ALL
+			    
+			    SELECT AD.DOC_ID
+			    FROM ( SELECT * FROM $DB_NEOS$teag_appdoc a
+			       WHERE DOC_STS = '90'
+			       AND a.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			       AND use_yn = '1'
+			       AND USER_ID = #empSeq#
+				   <isNotEqual property="leftMenuCntYn" compareValue="Y">
+				   AND rep_dt <![CDATA[>=]]> DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y-%m-%d 00:00:00') 
+				   AND rep_dt <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y-%m-%d 23:59:59') 
+				   </isNotEqual>
+			    ) AD
+			    INNER JOIN $DB_NEOS$TEAG_APPDOC_CONTENTS CON ON AD.DOC_ID = CON.DOC_ID
+			    INNER JOIN (
+						SELECT DOC_ID 
+						FROM $DB_NEOS$TEAG_APPDOC_RECEIVE RE2
+						WHERE receive_div = '50'
+						GROUP BY DOC_ID
+					) RE ON AD.DOC_ID = RE.DOC_ID
+			    WHERE CON.CONTENTS_TP = '10'
+			) a            
+        </isNotEmpty>        
+		<isNotEmpty property="docCntKind_018">
+			/* 시행확인문서 */
+			UNION
+			SELECT a.doc_id
+			     , 1 AS read_yn
+			     , 0 cnt
+			FROM  ( SELECT * FROM $DB_NEOS$teag_appdoc
+			          WHERE doc_sts = '90'
+			          AND use_yn = '1'
+			          AND co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			          AND user_id = #empSeq# 
+				      <isNotEqual property="leftMenuCntYn" compareValue="Y">
+				      AND rep_dt <![CDATA[>=]]> DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y-%m-%d 00:00:00') 
+				      AND rep_dt <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y-%m-%d 23:59:59') 
+				      </isNotEqual>
+			        ) a			
+			INNER JOIN $DB_NEOS$teag_appdoc_contents c ON a.doc_id = c.doc_id
+			INNER JOIN $DB_NEOS$teag_form d ON a.form_id = d.form_id
+		    INNER JOIN (SELECT doc_id
+		                  FROM $DB_NEOS$teag_appdoc_receive
+		                  WHERE receive_div = '40'
+		                  GROUP BY doc_id
+		                ) e 
+		    ON a.doc_id = e.doc_id
+			WHERE c.contents_tp = '10'
+			
+			UNION
+			SELECT a.doc_id 
+			     , 1 AS read_yn
+			     , 0 cnt
+			FROM  ( SELECT * FROM $DB_NEOS$teag_appdoc
+			          WHERE doc_sts = '90'
+			          AND use_yn = '1'
+			          AND co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+				      <isNotEqual property="leftMenuCntYn" compareValue="Y">
+				      AND rep_dt <![CDATA[>=]]> DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y-%m-%d 00:00:00') 
+				      AND rep_dt <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y-%m-%d 23:59:59') 
+				      </isNotEqual>
+			        ) a			
+			INNER JOIN $DB_NEOS$teag_appdoc_contents b ON a.doc_id = b.doc_id
+			INNER JOIN $DB_NEOS$teag_form c ON a.form_id = c.form_id
+			INNER JOIN (SELECT doc_id
+		           FROM $DB_NEOS$teag_appdoc_receive
+		           WHERE receive_div = '40'
+		           GROUP BY doc_id) d 
+			ON a.doc_id = d.doc_id
+			INNER JOIN (SELECT doc_id 
+			           FROM $DB_NEOS$teag_appdoc_line app
+			           WHERE APP.user_id = #empSeq#
+			           AND APP.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			           GROUP BY doc_id) e
+			ON a.doc_id = e.doc_id
+			WHERE b.contents_tp = '10'
+			UNION
+			SELECT a.doc_id
+			     , 1 AS read_yn 
+			     , 0 cnt
+			FROM  ( SELECT * FROM $DB_NEOS$teag_appdoc
+			          WHERE doc_sts = '90'
+			          AND use_yn = '1'
+			          AND co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+				      <isNotEqual property="leftMenuCntYn" compareValue="Y">
+				      AND rep_dt <![CDATA[>=]]> DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y-%m-%d 00:00:00') 
+				      AND rep_dt <![CDATA[<=]]> DATE_FORMAT(NOW(), '%Y-%m-%d 23:59:59') 
+				      </isNotEqual>
+			        ) a			
+			INNER JOIN $DB_NEOS$teag_appdoc_contents b ON a.doc_id = b.doc_id
+			INNER JOIN $DB_NEOS$teag_form c on a.form_id = c.form_id 
+			INNER JOIN (SELECT doc_id
+			
+				            FROM $DB_NEOS$teag_appdoc_receive
+				            WHERE receive_div = '40'
+			    	        GROUP BY doc_id) d 
+			ON a.doc_id = d.doc_id
+			INNER JOIN (SELECT DOC_ID
+				            FROM $DB_NEOS$teag_appdoc_receiveuser RU
+				            WHERE RU.user_id = #empSeq#
+				            AND RU.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+		              		GROUP BY doc_id) e 
+		  	ON a.doc_id = e.doc_id
+			WHERE b.contents_tp = '10'
+		</isNotEmpty>
+<!-- docCntKind_2006020000 -->
+		<isNotEmpty property="docCntKind_019">
+			/* 인수인계문서 : 300 */
+			UNION
+			SELECT a.doc_id
+			     , 1 AS read_yn
+			     , 0 cnt
+			FROM $DB_NEOS$teag_appdoc_giveandtake a
+			INNER JOIN $DB_NEOS$teag_appdoc b ON a.doc_id = b.doc_id
+			INNER JOIN $DB_NEOS$teag_appdoc_contents c ON b.doc_id = c.doc_id
+			WHERE ( DATE_FORMAT(b.rep_dt, '%Y%m%d') <![CDATA[>=]]>
+			DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y%m%d') AND
+			DATE_FORMAT(b.rep_dt, '%Y%m%d') <![CDATA[<=]]>
+			DATE_FORMAT(NOW(), '%Y%m%d') )
+			AND b.use_yn = '1'
+			AND b.doc_sts != '10'
+			AND c.contents_tp = '10'
+			AND a.user_id = #empSeq#
+			AND a.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+			AND b.co_id <iterate prepend="IN" property="grouppingComp" open="(" close=")" conjunction=","> #grouppingComp[]# </iterate>
+		</isNotEmpty>
+		<isNotEmpty property="docCntKind_020">
+			UNION /* 이전문서 */
+			SELECT a.doc_id
+				 , 1 AS read_yn
+			     , 0 cnt		
+			FROM	$DB_NEOS$teag_mig_doc a
+			INNER JOIN (
+				SELECT	doc_id
+				FROM	$DB_NEOS$teag_mig_appline
+				WHERE	user_id = #empSeq# 
+				GROUP	BY doc_id
+			) b ON a.doc_id = b.doc_id
+			WHERE (DATE_FORMAT(created_dt,'%Y%m%d') BETWEEN DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 YEAR), '%Y%m%d')  AND DATE_FORMAT(NOW(), '%Y%m%d') )
+		</isNotEmpty>		
+		) a
+		WHERE doc_id != 0
+	</select>
+	
+	<select id="restDAO.GetGrouppingCompList" parameterClass="hashmap" resultClass="java.util.HashMap">
+		/* restDAO.GetGrouppingCompList - Groupping 회사 리스트(oracle) */
+		SELECT DISTINCT A.COMP_SEQ , b.USE_YN FROM $DB_NEOS$T_CO_GROUPPING_COMP A
+		INNER JOIN $DB_NEOS$T_CO_COMP B 
+		ON A.COMP_SEQ = B.COMP_SEQ
+		WHERE GROUPPING_SEQ IN (
+			SELECT GRPCO.GROUPPING_SEQ FROM $DB_NEOS$T_CO_GROUPPING_COMP GRPCO
+			INNER JOIN $DB_NEOS$T_CO_GROUPPING GRP ON GRP.GROUPPING_SEQ = GRPCO.GROUPPING_SEQ
+			WHERE GRPCO.COMP_SEQ = #compSeq#
+			<isNotEmpty property="groupSeq">
+			AND GRP.GROUP_SEQ = #groupSeq#
+			</isNotEmpty>
+			AND GRP.USE_YN = 'Y' AND GRPCO.USE_YN = 'Y'
+	     )
+	     AND B.USE_YN = 'Y'
+	</select>	
+	
+	<select id="EaDocDAO.GetEABoxItem" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		/* EaDocDAO.GetEABoxItem" 결재함 속성정보*/
+		SELECT A.EA_BOX_ID AS EA_BOX_ID
+		     , A.RET_ITEM_CD AS RET_ITEM_CD
+		     , B.RET_ITEM_NM AS RET_ITEM_NM
+		     , CONCAT('RET_ITEM_CD_' ,   A.RET_ITEM_CD) AS ITEM_KEY 
+		FROM $DB_NEOS$TEAG_EA_BOX_ITEM A
+		JOIN $DB_NEOS$TEAG_EA_BOX_ITEMVALUE B ON A.RET_ITEM_CD = B.RET_ITEM_CD
+		<isNotEmpty property="nMenuID">
+		WHERE EA_BOX_ID = #nMenuID#
+		</isNotEmpty>
+	</select>
+	
+	<update id="PortalManageDAO.updateMessengerUse" parameterClass="hashmap">
+	/* PortalManageDAO.updateMessengerUse - oracle */
+		UPDATE $DB_NEOS$t_msg_tcmg_link
+		SET
+			use_yn = #messengerUseYn#
+		WHERE msg_target = 'tax'	
+        <isNotEqual property="compSeq" compareValue="0">
+       	AND comp_seq = #compSeq#
+        </isNotEqual>			
+	</update>	
+	
+	<select id="PortalManageDAO.getTaxMessengerCheck" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		/* PortalManageDAO.getTaxMessengerCheck 연말정산 메신저 사용옵션정보 - oracle*/
+		SELECT comp_seq
+		     , link_nm_kr
+		     , link_nm_en
+		     , msg_target
+		     , use_yn
+		FROM $DB_NEOS$t_msg_tcmg_link
+		WHERE comp_seq = #compSeq#
+		AND msg_target = 'tax'
+		AND use_yn = 'Y'
+	</select>
+	
+    <select id="PortalManageDAO.selectPortletUserSetList" parameterClass="hashMap" resultClass="egovMap">
+    	/* PortalManageDAO.selectPortletUserSetList - oracle */
+		select 
+		portal_id,
+		portlet_tp,
+		portlet_key,
+		position,
+		emp_seq,
+		to_char(custom_value0) as cust_value0
+		from $DB_NEOS$t_co_portlet_user_set where portal_id=#portalId# and emp_seq=#empSeq#
+    </select>	
+	
+	
+	<select id="PortalManageDAO.selectBoardCatType" parameterClass="hashMap" resultClass="String">
+		select
+			cat_type as "cat_type"
+		from
+			$DB_EDMS$board_category
+		where
+			cat_seq_no = #boardId#
+    </select>
+    
+    
+    <select id="PortalManageDAO.selectWeatherApiKey" parameterClass="hashMap" resultClass="String">
+    	select
+    		weather_api_key
+    	from
+    		$DB_NEOS$t_co_group
+    	where
+    		group_seq = #groupSeq#
+    </select>
+</sqlMap>

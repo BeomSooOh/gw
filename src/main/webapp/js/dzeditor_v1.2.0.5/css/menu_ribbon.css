@@ -1,0 +1,660 @@
+.dze_ribbon_menu_tb_container {
+	background-color:#FFFFFF;
+}
+
+.dze_ribbon_menu_left {
+	width:5px;
+	height:24px;
+	border-width:0 0 1px 0;
+	border-color:#d9d9d9;
+	border-style: solid;
+
+}
+.dze_ribbon_menu_off {
+	font-size:12px;
+	font-family: "[더존] 본문체 30", 굴림, Gulim, 돋움, Dotum;
+	width:60px;
+	height:24px;
+	text-align:center;
+	border-width:0 0 1px 0;
+	border-color:#d9d9d9;
+	border-style: solid;
+
+	cursor:default;
+	color:#000000;
+}
+.dze_ribbon_menu_off_over {
+	font-size:12px;
+	font-family: "[더존] 본문체 30", 굴림, Gulim, 돋움, Dotum;
+	width:60px;
+	height:24px;
+	text-align:center;
+	border-width:0 0 1px 0;
+	border-color:#d9d9d9;
+	border-style: solid;
+
+	cursor:default;
+	color:#316AC5;
+}
+.dze_ribbon_menu_on {
+	font-size:12px;
+	font-family: "[더존] 본문체 30", 굴림, Gulim, 돋움, Dotum;
+	width:58px;
+	height:24px;
+	text-align:center;
+	border-width:1px 1px 0 1px;
+	border-color:#d9d9d9;
+	border-style: solid;
+	background-color:#FFFFFF;
+	cursor:default;
+	color:#316AC5;
+}
+
+.dze_ribbon_d_menu_hide {
+	width:60px;
+	height:24px;
+	display:none;
+}
+.dze_ribbon_d_menu_off {
+	font-size:12px;
+	font-family: "[더존] 본문체 30", 굴림, Gulim, 돋움, Dotum;
+	width:60px;
+	height:24px;
+	text-align:center;
+	border-width:0 0 1px 0;
+	border-color:#d9d9d9;
+	border-style: solid;
+	cursor:default;
+	color:#e68a3a;
+}
+.dze_ribbon_d_menu_on {
+	font-size:12px;
+	font-family: "[더존] 본문체 30", 굴림, Gulim, 돋움, Dotum;
+	width:58px;
+	height:24px;
+	text-align:center;
+	border-width:1px 1px 0 1px;
+	border-color:#e68a3a;
+	border-style: solid;
+	background-color:#FFFFFF;
+	cursor:default;
+	color:#e68a3a;
+}
+
+
+.dze_ribbon_menu_text_gray {
+	opacity: 0.3;
+}
+.dze_ribbon_menu_text_normal {
+	opacity: 1;
+}
+.dze_ribbon_menu_right {
+	height:24px;
+	border-width:0 0 1px 0;
+	border-color:#d9d9d9;
+	border-style: solid;
+	position:relative;
+}
+.dze_ribbon_tb_content {
+	width: auto;
+	height: auto;
+	background-color:#FFFFFF;
+	display:none;
+	height:50px;
+}
+.dze_ribbon_tb_item_box {
+	text-align:left;
+	vertical-align: top;
+}
+
+.dze_ribbon_tb_item_box .dze_color_picker_result_line {
+	margin-top:-6px;
+	margin-left:3px;
+	width:20px;
+	height:4px;
+	position:relative;
+	display:block;
+	border-width:1px;
+	border-color:#d9d9d9;
+	border-style:solid;
+}
+
+.dze_ribbon_tb_item_text {
+	top:34px;
+	left:1px;
+	width:46px;
+	height:13px;
+	font-size:11px;
+	overflow:hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	line-height:1.2;
+	text-align:center;
+	/*background-color:#ffffff;*/
+	padding:2px 1px 1px 1px;
+	cursor:default;
+	margin:4px 1px 0px 1px;
+}
+.dze_ribbon_tb_item_text_dropbox {
+	top:34px;
+	left:1px;
+	width:46px;
+	height:13px;
+	font-size:11px;
+	overflow:hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	line-height:1.2;
+	text-align:center;
+	/*background-color:#ffffff;*/
+/*	border-width:0 1px 1px 1px;
+	border-color:#ffffff;
+	border-style:solid;*/
+	padding:2px 1px 1px 1px;
+	cursor:default;
+	margin:3px 1px 0px 1px;
+}
+.dze_ribbon_tb_spinner_item_text {
+	font-size:11px;
+	overflow:hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	line-height:1.2;
+	text-align:left;
+}
+.dze_ribbon_tb_spinner_unit_text {
+	font-size:11px;
+	overflow:hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	line-height:1.2;
+	text-align:center;
+	color:#a0a0a0;
+}
+.dze_ribbon_tb_spinner_btns {
+	width:11px;
+	height:19px;
+	border-width: 0;
+}
+.dze_ribbon_tb_spinner_btns:hover {
+	width:10px;
+	height:19px;
+	border-width: 0 0 0 1px;
+	border-color:orange;
+	border-style:solid;	
+}
+.dze_ribbon_tb_spinner_input_form_container {
+	border-collapse:collapse;
+	border-width:1px;
+	border-style:solid;
+	border-color:#a0a0a0;
+}
+.dze_ribbon_tb_spinner_input_form_container:hover {
+	border-collapse:collapse;
+	border-width:1px;
+	border-style:solid;
+	border-color:orange;
+}
+.dze_ribbon_tb_spinner_input_form {
+	width:32px !important;
+	height:16px !important;
+	border:0 solid #a0a0a0 !important;
+	color:#000000 !important;
+	padding:2px 1px 0px 1px !important;
+	font-size:12px !important;
+	text-align:right !important;
+	background-color:#FFFFFF !important;
+	margin:0 !important;
+}
+.dze_ribbon_tb_spinner_input_form:focus {
+    outline: none;
+}
+.dze_ribbon_tb_content_left {
+	width:auto;
+	height:50px;
+}
+.dze_ribbon_tb_content_left_td {
+    border-width: 0 1px 0 0;
+	border-color: #dedede;
+	border-style:solid;
+}
+.dze_ribbon_tb_content_bottom {
+	width:auto;
+	height:28px;
+	border-width:0;
+	border-color:#d9d9d9;
+	border-style:solid;
+	
+}
+.dze_ribbon_tb_content_bottom_td {
+	border-width:1px 0 0 0;
+	border-color:#d9d9d9;
+	border-style:solid;
+}
+.dze_ribbon_tb_item_box_left {
+	height:20px;
+	overflow:hidden;
+}
+.dze_ribbon_tb_item_box_bottom {
+	height:28px;
+	overflow:hidden;
+}
+.dze_ribbon_tb_left_separator {
+    background-color: #dedede;
+    width: 1px;
+    height: 45px;
+}
+.dze_ui_toggle_btn_container {
+	width: 160px;
+	height: auto;
+	background-color:#ffffff;
+	position: absolute;
+	display: none;
+	z-index: 20302;
+	padding:0px;
+	border-width: 1px;
+	border-color:#a0a0a0;
+	border-style:solid;
+	font-size: 12px;
+	font-family: "[더존] 본문체 30", 굴림, Gulim, 돋움, Dotum;
+}
+.dze_ui_toggle_btn_unit {
+	height:22px;
+	background-color:#FFFFFF;
+	padding:5px;
+	font-size: 12px;
+	cursor:default;	
+}
+.dze_ui_toggle_btn_over {
+	height:22px;
+	background-color:#ebebeb;
+	padding:5px;
+	font-size: 12px;
+	cursor:default;
+}
+.dze_ui_toggle_btn_down {
+	height:22px;
+	background-color:#d9d9d9;
+	padding:5px;
+	font-size: 12px;
+	cursor:default;
+}
+.dze_ui_toggle_btn_underline {
+	height:0px;
+	border-width: 0 0 1px 0;
+	border-color:#ebebeb;
+	border-style:solid;
+	background-color:#FFFFFF;
+}
+.dze_help_btn_container {
+	width: 150px;
+	height: auto;
+	background-color:#d9d9d9;
+	position: absolute;
+	left:-111px;
+	top: 23px;
+	display: none;
+	z-index: 20302;
+	padding:0px;
+	border-width: 1px;
+	border-color:#a0a0a0;
+	border-style:solid;
+}
+
+
+
+
+
+
+
+
+/* 기존 Basic스타일버튼을 리본스타일 버튼으로  */
+.duzon_tb_button_image_ribbon {
+    overflow: hidden;
+    width: 24px;
+    height: 24px;
+	margin:auto;
+    margin-top: 5px;
+	margin-bottom: 1px;
+    background-repeat: no-repeat;	
+}
+.duzon_tb_button_image_ribbon img {
+    width: 24px;
+    height: 24px;
+    border: 0;
+}
+.duzon_tb_button_ribbon {
+    margin: 2px;
+    border: 0;
+    background-color: #ffffff;
+    width: 50px;
+    height: 50px;
+}
+.duzon_tb_button_over_ribbon {
+    margin: 2px;
+    border: 0;
+    background-color: #dedede;
+    width: 50px;
+    height: 50px;
+}
+.duzon_tb_button_down_ribbon {
+    margin: 2px;
+    border: 0;
+    background-color: #d9d9d9;
+    width: 50px;
+    height: 50px;
+}
+.duzon_tb_button_up_ribbon {
+    margin: 2px;
+    border: 0;
+    background-color: #dedede;
+    width: 50px;
+    height: 50px;
+}
+
+
+
+
+.duzon_tb_dropdown_ribbon {
+    margin: 2px;
+    border: 0;
+    background-color: #ffffff;
+    width: 50px;
+    height: 50px;
+}
+.duzon_tb_dropdown_over_ribbon {
+    margin: 2px;
+    border: 0;
+    background-color: #dedede;
+    width: 50px;
+    height: 50px;
+}
+.duzon_tb_dropdown_down_ribbon {
+    margin: 2px;
+    border: 0;
+    background-color: #dedede;
+    width: 50px;
+    height: 50px;
+}
+.duzon_tb_dropdown_up_ribbon {
+    margin: 2px;
+    border: 0;
+    background-color: #dedede;
+    width: 50px;
+    height: 50px;
+}
+.tb_DropDown_Button_Image_ribbon {
+    overflow: hidden;
+    width: 24px;
+    height: 24px;
+    margin: 5px 0 1px 2px;
+    background-repeat: no-repeat;	
+}
+.tb_DropDown_Button_Image_ribbon img{
+    width: 24px;
+    height: 24px;
+	border: 0;
+}
+.tbDropDown_AreaButton_ribbon {
+    white-space: nowrap;
+    width: 26px;
+    height: 30px;
+    cursor: default;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+.duzon_tb_dropdown_arrow_ribbon {
+	background-position: center center;
+    background-image: url(../image/toolbar/toolbar_btn_dropdown_arrow.png);
+    width: 13px;
+    height: 24px;
+    background-repeat: no-repeat;	
+	margin: 5px 0px 1px 0px;
+}
+.duzon_tb_dropdown_arrow_over_ribbon {
+	background-position: center center;
+    background-image: url(../image/toolbar/toolbar_btn_dropdown_arrow.png);
+    width: 13px;
+    height: 24px;
+    background-repeat: no-repeat;
+	background-color: #dedede;
+	margin: 5px 0px 1px 0px;	
+}
+.duzon_tb_dropdown_arrow_down_ribbon {
+	background-position: center center;
+    background-image: url(../image/toolbar/toolbar_btn_dropdown_arrow.png);
+    width: 13px;
+    height: 24px;
+    background-repeat: no-repeat;
+	background-color: #dedede;
+	margin: 5px 0px 1px 0px;
+}
+.duzon_tb_dropdown_arrow_up_ribbon {
+	background-position: center center;
+    background-image: url(../image/toolbar/toolbar_btn_dropdown_arrow.png);
+    width: 13px;
+    height: 24px;
+    background-repeat: no-repeat;
+	margin: 5px 0px 1px 0px;	
+}
+
+
+
+.duzon_btn_view_hidden_ribbon_toolbar_next {
+	border-width:0 0 0 1px ;
+	border-style:solid;
+	border-color:#dedede;
+	width:12px;
+	height:54px;
+	background-color: #f2f2f2;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_next.png);
+	background-repeat: no-repeat;
+}
+.duzon_btn_view_hidden_ribbon_toolbar_next_over{
+	border-width:0 0 0 1px ;
+	border-style:solid;
+	border-color:#dedede;
+	width:12px;
+	height:54px;
+	background-color: #dedede;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_next.png);
+	background-repeat: no-repeat;
+}
+.duzon_btn_view_hidden_ribbon_toolbar_next_down{
+	border-width:0 0 0 1px ;
+	border-style:solid;
+	border-color:#d9d9d9;
+	width:12px;
+	height:54px;
+	background-color: #d9d9d9;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_next.png);
+	background-repeat: no-repeat;
+}
+.duzon_btn_view_hidden_ribbon_toolbar_prev {
+	border-width:0 1px 0 0;
+	border-style:solid;
+	border-color:#dedede;
+	width:12px;
+	height:54px;
+	background-color: #f2f2f2;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_prev.png);
+	background-repeat: no-repeat;
+}
+.duzon_btn_view_hidden_ribbon_toolbar_prev_over{
+	border-width:0 1px 0 0;
+	border-style:solid;
+	border-color:#d9d9d9;
+	width:12px;
+	height:54px;
+	background-color: #d9d9d9;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_prev.png);
+	background-repeat: no-repeat;
+}
+.duzon_btn_view_hidden_ribbon_toolbar_prev_down{
+	border-width:0 1px 0 0;
+	border-style:solid;
+	border-color:#dedede;
+	width:12px;
+	height:54px;
+	background-color: #dedede;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_prev.png);
+	background-repeat: no-repeat;
+}
+
+
+
+.duzon_btn_view_hidden_ribbon_toolbar_next_bottom {
+	border-width:0 0 0 1px ;
+	border-style:solid;
+	border-color:#dedede;
+	width:12px;
+	height:28px;
+	background-color: #f2f2f2;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_next.png);
+	background-repeat: no-repeat;
+}
+.duzon_btn_view_hidden_ribbon_toolbar_next_over_bottom{
+	border-width:0 0 0 1px ;
+	border-style:solid;
+	border-color:#dedede;
+	width:12px;
+	height:28px;
+	background-color: #dedede;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_next.png);
+	background-repeat: no-repeat;
+}
+.duzon_btn_view_hidden_ribbon_toolbar_next_down_bottom{
+	border-width:0 0 0 1px ;
+	border-style:solid;
+	border-color:#d9d9d9;
+	width:12px;
+	height:28px;
+	background-color: #d9d9d9;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_next.png);
+	background-repeat: no-repeat;
+}
+.duzon_btn_view_hidden_ribbon_toolbar_prev_bottom {
+	border-width:0 1px 0 0;
+	border-style:solid;
+	border-color:#dedede;
+	width:12px;
+	height:28px;
+	background-color: #f2f2f2;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_prev.png);
+	background-repeat: no-repeat;
+}
+.duzon_btn_view_hidden_ribbon_toolbar_prev_over_bottom{
+	border-width:0 1px 0 0;
+	border-style:solid;
+	border-color:#d9d9d9;
+	width:12px;
+	height:28px;
+	background-color: #d9d9d9;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_prev.png);
+	background-repeat: no-repeat;
+}
+.duzon_btn_view_hidden_ribbon_toolbar_prev_down_bottom{
+	border-width:0 1px 0 0;
+	border-style:solid;
+	border-color:#dedede;
+	width:12px;
+	height:28px;
+	background-color: #dedede;
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_btn_prev.png);
+	background-repeat: no-repeat;
+}
+
+/* Table - Style */
+.dze_table_style_container {
+	width:200px;
+	height:155px;
+	clear:both;
+        padding:5px;
+	background-color:#FFFFFF;
+}
+.dze_table_style_unit {
+	float:left;
+	width:50px;
+	height:35px;
+	margin:1px;
+	background-color:#FFFFFF;
+	padding:7px;
+	cursor:default;
+	display: table-cell; 
+	vertical-align: middle;
+}
+.dze_table_style_unit_over {
+	float:left;
+	width:50px;
+	height:35px;
+	margin:1px;
+	background-color:#EBEBEB;
+	padding:7px;
+	cursor:default;
+	display: table-cell; 
+	vertical-align: middle;
+}
+.dze_table_style_unit_down {
+	float:left;
+	width:50px;
+	height:35px;
+	margin:1px;
+	background-color:#d9d9d9;
+	padding:7px;
+	cursor:default;
+	display: table-cell; 
+	vertical-align: middle;
+}
+
+/* 표 - 셀 정렬 Ext 팝업 */
+.dze_table_cell_align_ext_container {
+	width:108px;
+	height:108px;
+	clear:both;
+	background-color:#FFFFFF;
+}
+.dze_table_cell_align_ext_unit {
+	float:left;
+	width:24px;
+	height:24px;
+	margin:1px;
+	background-color:#FFFFFF;
+	padding:5px;
+	cursor:default;
+	display: table-cell; 
+	vertical-align: middle;
+}
+.dze_table_cell_align_ext_unit_over {
+	float:left;
+	width:24px;
+	height:24px;
+	margin:1px;
+	background-color:#EBEBEB;
+	padding:5px;
+	cursor:default;
+	display: table-cell; 
+	vertical-align: middle;
+}
+.dze_table_cell_align_ext_unit_down {
+	float:left;
+	width:24px;
+	height:24px;
+	margin:1px;
+	background-color:#d9d9d9;
+	padding:5px;
+	cursor:default;
+	display: table-cell; 
+	vertical-align: middle;
+}

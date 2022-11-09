@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMapConfig PUBLIC "-//iBATIS.com//DTD SQL Map Config 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-config-2.dtd">
+
+<sqlMapConfig>						
+	<sqlMap resource="egovframework/sqlmap/oracle/api/Account_SQL.xml"/>	
+	<sqlMap resource="egovframework/sqlmap/oracle/api/Orgchart_SQL.xml"/>
+	<sqlMap resource="egovframework/sqlmap/oracle/api/Task_SQL.xml"/>
+	<sqlMap resource="egovframework/sqlmap/oracle/api/Fax_SQL.xml"/>
+	<sqlMap resource="egovframework/sqlmap/oracle/api/ApiMain_SQL.xml"/>
+	<sqlMap resource="egovframework/sqlmap/oracle/api/AlarmModule_SQL.xml"/>
+	<sqlMap resource="egovframework/sqlmap/oracle/api/Msg_SQL.xml"/>
+	<sqlMap resource="egovframework/sqlmap/oracle/api/Ext_SQL.xml"/>
+	<sqlMap resource="egovframework/sqlmap/oracle/api/Hdcs_SQL.xml"/>
+	<sqlMap resource="egovframework/sqlmap/oracle/api/HrExtInterlock_SQL.xml"/>
+	<sqlMap resource="egovframework/sqlmap/oracle/api/Sms_SQL.xml"/>
+	<sqlMap resource="egovframework/sqlmap/oracle/api/Comment_SQL_Oracle.xml"/>
+	<sqlMap resource="egovframework/sqlmap/oracle/api/Oneffice_SQL_Oracle.xml"/>	
+</sqlMapConfig>

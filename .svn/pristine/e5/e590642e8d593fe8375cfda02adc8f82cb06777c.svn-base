@@ -1,0 +1,97 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<!--css-->
+<link rel="stylesheet" type="text/css" href="/gw/js/portlet/css/common.css">
+<link rel="stylesheet" type="text/css" href="/gw/js/portlet/css/portlet.css">
+
+<!--js-->
+<script type="text/javascript" src="/gw/js/portlet/Scripts/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="/gw/js/portlet/Scripts/common.js"></script>
+
+<!-- 메인 js -->
+<script type="text/javascript" src="/gw/js/portlet/Scripts/jquery.bxslider.min.js"></script>
+
+<script type="text/javascript">
+
+	var portletInfo = JSON.parse( localStorage.getItem(window.location.search.split("=")[1]) );
+	
+	function fnMoveLink(idx){
+		parent.fnMoveSSOLink(portletInfo.linkList[idx]);
+	}	
+
+	$(document).ready(function() {
+		var slider = null;		
+		var nowDate = new Date().toISOString().substring(0, 10);
+
+	    $.each(portletInfo.linkList, function (i, t) {
+	    	
+	    	if(t.use_yn != "N"){
+		    	var showFrom = t.show_from == "" ? "0000-00-00" : t.show_from;
+		    	var showTo = t.show_to == "" ? "9999-99-99" : t.show_to;
+		    	
+				if(showFrom <= nowDate && showTo >= nowDate){
+					$( ".bx-container" ).append("<li" + (t.link_url == "" ? "" : " onclick='fnMoveLink(" + i + ")'") + " ><img width='210' height='90' src='/gw/cmm/file/fileDownloadProc.do?fileId="+t.file_id+"' alt='"+t.link_nm+"'/></li>");
+				}	    		
+	    	}
+
+	    });
+	    
+	    var autoscroll_yn = "yes";
+	    var visible_items_cnt = 5;
+	    var bannerCnt = $( ".bx-container li" ).length;
+	    var slider_auto = true;
+	   	    	    	    	    
+	    if(bannerCnt < 6){
+	    	visible_items_cnt = bannerCnt;
+	    	autoscroll_yn = "no";
+	    	$(".als-prev,.als-next").hide();
+	    	slider_auto = false;
+	    }
+	    	    
+	    slider = $(".bx-container").bxSlider({
+	    	slideWidth: 210,
+	    	slideMargin: 8,
+	    	auto: slider_auto,
+	    	pause: portletInfo.val0 == "" ? "3000" : portletInfo.val0,
+	    	mode: 'horizontal',
+	    	autoDirection: portletInfo.val1 == "right" ? "prev" : "next",
+	    	startSlides: 0,
+	    	moveSlides: 1,
+	    	maxSlides: 5,
+	    	controls: false,
+	    	pager: false
+	    });
+	   	
+	    /*
+	    $("#quick").als({
+			visible_items: visible_items_cnt,
+			scrolling_items: 1,
+			orientation: "horizontal",
+			circular: "yes",
+			autoscroll: autoscroll_yn,
+			interval:  portletInfo.val0 == "" ? "3000" : portletInfo.val0,
+			direction: portletInfo.val1 == "" ? "right" : portletInfo.val1
+		});	    
+	    */
+	    
+	    $('.als-next').click(function(){
+	    	slider.goToNextSlide();
+	        return false;
+	    });
+	
+	    $('.als-prev').click(function(){
+	    	slider.goToPrevSlide();
+	        return false;
+	    });
+
+	});	
+</script>
+
+<div class="i_quick">
+	<div id="quick" style="padding-top:10px;">
+		<span class="als-prev"><img src="/gw/js/portlet/Images/btn/btn_quick_prev.png" alt="이전" /></span>
+		<div>
+			<ul class="bx-container"></ul>
+		</div>
+		<span class="als-next"><img src="/gw/js/portlet/Images/btn/btn_quick_next.png" alt="다음" /></span>
+	</div>
+</div>

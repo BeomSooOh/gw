@@ -1,0 +1,72 @@
+﻿@charset "utf-8"; 
+
+/**************************************************
+   main layout
+**************************************************/
+#wrap { position: relative; width: 100%; height: 100%; overflow: hidden;}
+#side { position: absolute; width: 48px; top: 0; left: 0; bottom: 0; background: #333948 url('../Images/side.png') no-repeat top;}
+#container {position: absolute;top: 0;left: 48px;right: 0;bottom: 0;}
+#container .header {width: 100%;height: 94px;background: #1c90fb;}
+#container .header .header_top { width: 100%; height: 50px; background: #ffffff; overflow: hidden;}
+#container .header .header_top .logo{ float: left; margin: 15px 0 0 15px;}
+#container .header .header_top .logo img{ width: 100%;}
+#container .header .header_top .header_util{ position: relative; float: right; width: 430px; height: 32px; margin: 11px 20px 0 0; background: url(../Images/header_util.png) no-repeat;}
+#container .header .header_top .header_util .header_menu_btn{ position: absolute; top: 8px; left: 220px; display: block; width: 16px; height: 16px; background: url(../Images/header_menu_btn.png) no-repeat;}
+#container .header .header_bot { width: 100%; height: 44px; overflow: hidden;}
+#container .header .header_bot .menu_search{ float: left; width: 179px; height: 34px; margin: 5px 0 0 10px; background: url(../Images/header_bot.png) no-repeat;}
+#container .contents {position: absolute;top: 94px;left: 0;right: 0;bottom: 0;overflow: auto;background: #e1e2e3;}
+#container .contents .gnb_wrap{min-width: 1100px;height: 180px;margin: 0 auto;background: url(../Images/gnb_bg.png) no-repeat;background-size: cover;}
+#container .contents .gnb_wrap .gnb{min-width: 1084px;height: 180px;margin: 0 auto;background: url(../Images/gnb.png) no-repeat center;}
+#container .contents .portlet{position: relative;width: 1100px;height: 714px;margin: 0 auto;padding: 20px 0;background: url(../Images/contents.png) no-repeat center 20px;background-size: contain;}
+#container .contents .portlet .wehago_menu{position: absolute;top: 20px;right: 0;width: 212px;height: 212px;background: url(../Images/wehago_menu.png) no-repeat top;transition: 0.3s;background-size: contain;}
+
+/**************************************************
+   search layout
+**************************************************/
+#searchWrap{ position: relative; width: 100%; height: 100%; overflow: hidden; background: url(../Images/klago_sc_bg.png) no-repeat center; background-size: cover;}
+#searchWrap .searchHeader{width: 90%;height: 95px;margin: 0 5% 25px 5%;overflow: hidden;box-sizing: border-box;border-bottom: 1px solid rgba(255,255,255,0.2);transition: 0.3s;}
+#searchWrap .searchHeader .logo{ float: left; margin: 44px 0 0 0;}
+#searchWrap .searchHeader .logo img{ width: 100%;}
+#searchWrap .searchHeader .search_util{ position: relative; float: right; width: 279px; height: 32px; margin: 42px 0 0 0; background: url(../Images/klago_sc_util.png) no-repeat;}
+#searchWrap .searchHeader .search_util .search_menu_btn{ position: absolute; top: 9px; left: 223px; display: block; width: 16px; height: 16px; background: url(../Images/klago_sc_menu_btn.png) no-repeat;}
+#searchWrap .searchBox{position: relative;top: 0;width: 500px;margin: 0 auto;z-index: 1;transition: 0.3s;}
+#searchWrap .search_btn{position: absolute;top: 17px;right: 22px;display: block; width: 22px; height: 22px; background: url(../Images/klago_sc_icon.png) no-repeat; z-index: 1;}
+#searchWrap .searchBox .autoText{position: relative;top: -28px;height: 319px;padding: 28px 0 0 0;z-index: 0;background: rgba(193,198,216,0.25);border-bottom-right-radius: 28px;border-bottom-left-radius: 28px;overflow: hidden;transition: 0.3s;}
+#searchWrap .searchBox .autoText dl{padding: 23px 20px 0 20px;}
+#searchWrap .searchBox .autoText dt{font-size: 15px; font-weight: bold; color: #ffffff; padding: 0 0 7px 12px; background: url(../Images/klago_sc_arrow.png) no-repeat left 6px;}
+#searchWrap .searchBox .autoText dd{font-size: 13px; color: #ffffff; padding: 0 12px; line-height: 22px;}
+#searchWrap .searchBox .autoText dd .match{color:#fec95a;}
+
+#searchWrap .searchResult{position: absolute;top: 197px;left: 0;right: 0;bottom: 0;background: rgba(255,255,255,0.9);transition: 0.5s;overflow: auto;display:none}
+#searchWrap .searchResult .srWrap{ width: 1100px; height: 100%; margin: 0 auto; overflow: hidden;}
+#searchWrap .searchResult .srWrap .unitbox1{position: relative;float: left;width: 400px;height: 100%;}
+#searchWrap .searchResult .srWrap .unitbox1 .tit{ font-size: 15px; margin: 40px 0 0 0; padding: 0 0 10px 0; border-bottom: 1px solid #e5e5e5;}
+#searchWrap .searchResult .srWrap .unitbox1 .tit b{ display: inline-block;font-size: 16px;}
+#searchWrap .searchResult .srWrap .unitbox1 .tit span.line{ display: inline-block; color: #d9d9d9;}
+#searchWrap .searchResult .srWrap .unitbox1 .tit span.cnt{color: #f74ca0;}
+#searchWrap .searchResult .srWrap .unitbox2{position: relative;float: left;width: 390px;margin: 0px 0 0 30px;height: 100%;}
+#searchWrap .searchResult .srWrap .unitbox2 .tit{ font-size: 15px; margin: 40px 0 0 0; padding: 0 0 10px 0;}
+#searchWrap .searchResult .srWrap .unitbox2 .tit b{ display: inline-block;font-size: 16px;}
+#searchWrap .searchResult .srWrap .unitbox2 .tit span.line{ display: inline-block; color: #d9d9d9;}
+#searchWrap .searchResult .srWrap .unitbox2 .tit span.cnt{color: #f74ca0;}
+#searchWrap .searchResult .srWrap .unitbox3{position: relative;float: left;width: 250px;margin: 0 0 0 30px;height: 100%;overflow-y: auto;}
+#searchWrap .searchResult .srWrap .srCon01{position: absolute; top: 68px; left: 0; right: 0; bottom: 0; overflow-y: auto;}
+#searchWrap .searchResult .srWrap .srCon01 dl{ margin: 30px 0 0 0;}
+#searchWrap .searchResult .srWrap .srCon01 dt{font-size: 15px;font-weight: bold;color: #000000;padding: 0 0 7px 0;}
+#searchWrap .searchResult .srWrap .srCon01 dd{font-size: 13px;color: #000000;padding: 0;line-height: 22px;}
+#searchWrap .searchResult .srWrap .srCon01 dd .match{color:#1c90fb;}
+
+#searchWrap .searchResult .srWrap .srCon02{position: absolute;top: 68px;left: 0;right: 0;bottom: 0;overflow-y: auto;}
+#searchWrap .searchResult .srWrap .srCon03{position: absolute;top: 40px;left: 0px;right: 0;bottom: 0;padding: 0 0 0 20px;border-left: 1px solid #e5e5e5;overflow-y: auto;}
+#searchWrap .searchResult .srWrap .srCon03 .tit{ font-size: 16px; padding: 0 0 15px 0;}
+#searchWrap .searchResult .srWrap .srCon03 .list{ padding: 0 0 20px 0;}
+#searchWrap .searchResult .srWrap .srCon03 .list li{ margin: 0 0 10px 0;} 
+#searchWrap .searchResult .srWrap .srCon03 .list li a{ display: block; text-decoration: none; font-size: 15px; color: #000000;}
+
+#searchWrap .searchResult .srWrap .srCon03 .keyword{}
+#searchWrap .searchResult .srWrap .srCon03 .keyword li{ float: left; margin: 0 0 5px 5px;} 
+#searchWrap .searchResult .srWrap .srCon03 .keyword li a{ display: block; text-decoration: none; color: #2e3645; border: 1px solid #bdcded; padding: 10px; border-radius: 30px;}
+
+#searchWrap .timeLine{position: relative;top: 0;width: 480px;height: 299px;margin: 0 auto 20px auto;background: url(../Images/klago_sc_con01.png) no-repeat;transition: 0.3s;}
+#searchWrap .userApp{position: relative;top: 0;width: 480px; height: 119px; margin: 0 auto; background: url(../Images/klago_sc_con02.png) no-repeat;transition: 0.3s;}
+#searchWrap .copy{ position: absolute; left: 0; right: 0; bottom: 50px; height: 13px; background: url(../Images/klago_sc_copy.png) no-repeat center;}

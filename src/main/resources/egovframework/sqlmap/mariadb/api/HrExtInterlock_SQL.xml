@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="HrExtInterlock">
+	<select id="HrExtInterlock.getViewSelect" parameterClass="hashmap" resultClass="hashmap" remapResults="true">
+		
+		SELECT * FROM $DB_NEOS$$apiTp$
+		<isNotEmpty property="filter">
+		WHERE $filter$
+		</isNotEmpty>
+
+	</select>
+	
+	<select id="HrExtInterlock.getGroupLicenseCheck" parameterClass="hashmap" resultClass="Int">
+		SELECT
+			COUNT(*)
+		FROM
+			$DB_NEOS$t_co_group_api
+		WHERE
+			group_seq = #groupSeq#
+			AND api_tp = #apiTp#
+			AND license_key = #licenseKey#
+			AND use_yn = 'Y'
+			OR api_tp = 'masterLicense'
+	</select>
+	
+	<insert id="HrExtInterlock.setApiLog" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_group_api_history (group_seq, api_tp, req_type, data, req_date) VALUES
+		(#groupSeq#, #apiTp#, #reqType#, #data#, now());
+	</insert>
+	
+</sqlMap>

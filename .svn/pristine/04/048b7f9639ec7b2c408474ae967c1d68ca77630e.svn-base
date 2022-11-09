@@ -1,0 +1,34 @@
+package api.menuAccess.constants;
+
+public class MenuAccessConstants {
+    /**
+     * 메뉴 인덱스명
+     * 대문자가 포함되면 안됨.
+     * 인덱스 관련해서는 prefix 문구로 사용됨. (인덱스명 구조 : MENU_ACCESS_201905, MENU_ACCESS_201906 ... ) 
+     * 별칭명으로 사용됨.
+     */
+    public static final String EL_INDEX_MENU_ACCESS = "menu_access";
+
+    /**
+     * 타입 별 이름들
+     */
+    public static final String EL_TYPE_MENU_ACCESS = "menu_access";
+
+    /**
+     * web, mobile 메뉴사용내역 조회/저장
+     */
+    public static final String TYPE_MENU_ACCESS_WEB = "0"; // web 메뉴사용내역 조회/저장
+
+    public static final String TYPE_MENU_ACCESS_MOBILE = "1"; // mobile 메뉴사용내역 조회/저장
+    
+    public static final int INSERT_BULK_CNT = 100; // 메뉴사용내역 insert bulk 갯수
+
+    public static final int DELETE_BULK_CNT = 1000; // 메뉴사용내역 delete bulk 갯수
+    
+
+    /**
+     * 에러 코드
+     */
+    public static final String EL_CREATE_MENU_ACCESS_FAIL = "FAIL";
+    public static final int EL_CREATE_MENU_ACCESS_FAIL_CODE = 500;
+}

@@ -1,0 +1,26 @@
+<p>안녕하세요. 제 이름은&nbsp;<input type="text" class="dze_external_data_area" readonly="" size="10" style="font-family:굴림;font-size:9pt;" value="이름" mapping_key="name" />&nbsp;입니다.</p>
+<p><br /></p>
+<p><br /></p>
+<table width="100%" cellspacing="0" cellpadding="1" style="border-collapse:collapse;">
+	<tbody>
+		<tr>
+			<td width="349" style="border:1px solid rgb(0, 0, 0);height:81px;text-align:center;" align="center">
+				<p style="text-align:center;">출발지 IP /&nbsp;<span style="font-size:9pt;">도착지 IP</span></p>
+			</td>
+			<td width="349" style="border:1px solid rgb(0, 0, 0);height:81px;text-align:center;" align="center">
+				<p style="text-align:center;">금액</p>
+			</td>
+		</tr>
+		<tr>
+			<td width="349" style="border:1px solid rgb(0, 0, 0);height:100px;text-align:center;" align="center">
+				<p style="text-align:center;"><input type="text" class="dze_external_data_area" readonly="" size="10" style="font-family:굴림;font-size:9pt;" value="출발지 IP" mapping_key="ip_start" />&nbsp;/&nbsp;<input type="text" class="dze_external_data_area" readonly="" size="10" style="font-family:굴림;font-size:9pt;" value="도착지 IP" mapping_key="ip_end" /></p>
+			</td>
+			<td width="349" style="border:1px solid rgb(0, 0, 0);height:100px;text-align:center;" align="center">
+				<p style="text-align:center;"><input type="text" class="dze_external_data_area" readonly="" size="10" style="font-family:굴림;font-size:9pt;" value="금액" mapping_key="money" />&nbsp;원<br /></p>
+			</td>
+		</tr>
+	</tbody>
+</table>
+<p><br /></p>
+<p><br /></p>
+<p><br /></p>

@@ -1,0 +1,727 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="AccMoneyAuthDAO">
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+	<!-- 조회 -->
+	<!-- 조회 - 권한목록 조회  -->
+	<select id="AccMoneyAuthDAO.AuthListInfoSelect" resultClass="hashmap" parameterClass="hashmap">
+    	/* AccMoneyAuthDAO.AuthListInfoSelect - oracle */
+		SELECT X.auth_code      AS "auth_code"     
+		     , X.auth_code_nm   AS "auth_code_nm"
+		     , X.use_yn         AS "use_yn"
+		     , X.erp_co_cd     AS "erp_co_cd"
+		     , X.emp_cnt        AS "emp_cnt"
+		     , X.comp_cnt       AS "comp_cnt"
+		     , X.erp_co_cd_name AS "erp_co_cd_name"
+		     , X.order_num      AS "order_num"
+          FROM (
+		        SELECT     A.auth_code 
+		        		 , MIN(B.auth_code_nm) KEEP (DENSE_RANK FIRST ORDER BY A.auth_code, A.comp_seq) AS auth_code_nm
+		        		 , MIN($DB_NEOS$get_code_detail_info('0', 'COM521',  NVL(A.use_yn, 'N'), #langCode#)) KEEP (DENSE_RANK FIRST ORDER BY A.auth_code, A.comp_seq) AS use_yn	 
+		        		 , MIN(C.erp_co_cd) KEEP (DENSE_RANK FIRST ORDER BY A.auth_code, A.comp_seq) AS erp_co_cd
+		        		 , MIN(NVL(cnt, 0)) KEEP (DENSE_RANK FIRST ORDER BY A.auth_code, A.comp_seq) emp_cnt 
+		        		 <isEqual property="userSe" compareValue="ADMIN">
+		        		 , 0 as comp_cnt
+		        		 </isEqual>
+		        		 <isEqual property="userSe" compareValue="MASTER">
+		        		 , MIN(comp_cnt) KEEP (DENSE_RANK FIRST ORDER BY A.auth_code, A.comp_seq) AS comp_cnt
+		        		 </isEqual>
+		        		 , MIN(C.erp_co_cd_name) KEEP (DENSE_RANK FIRST ORDER BY A.auth_code, A.comp_seq) AS erp_co_cd_name
+		        		 , MIN(A.order_num) KEEP (DENSE_RANK FIRST ORDER BY A.auth_code, A.comp_seq) AS order_num
+		        FROM     $DB_NEOS$t_smart_authcode	 	 A
+		        JOIN	 $DB_NEOS$t_smart_authcode_multi  B
+		        	ON	 A.auth_code = B.auth_code
+		        INNER JOIN 	(
+		        	SELECT	DISTINCT auth_code, erp_co_cd, erp_co_cd_name
+		        	FROM	$DB_NEOS$t_smart_authcode_menu
+		        )	C
+		        	ON	 A.auth_code = C.auth_code
+		        LEFT OUTER JOIN (
+		        	SELECT auth_code, COUNT(auth_code) AS cnt
+		        	FROM  $DB_NEOS$t_smart_authcode_emp 
+		        	<isEqual property="userSe" compareValue="ADMIN">
+		        	WHERE  comp_seq = #compSeq# 
+		        	</isEqual>	
+		        	GROUP BY auth_code
+		        ) D
+		        	ON A.auth_code = D.auth_code
+		         INNER JOIN (
+	              select auth_code, count(auth_code) as comp_cnt
+	              from   (
+	                  SELECT	DISTINCT auth_code, erp_co_cd, erp_co_cd_name
+	                  FROM	$DB_NEOS$t_smart_authcode_menu
+	              ) E
+	              group by auth_code
+	            )  F
+	            ON A.auth_code = F.auth_code	
+		        <isEqual property="userSe" compareValue="ADMIN">
+		        INNER JOIN $DB_NEOS$t_co_erp		tce
+		        	ON		tce.erp_comp_seq = C.erp_co_cd
+		        </isEqual>
+		        WHERE (A.auth_code LIKE 'A%' OR A.auth_code LIKE 'U%')
+		        <isEqual property="userSe" compareValue="ADMIN">
+		        	AND tce.comp_seq = #compSeq#
+		        </isEqual>
+		        <isNotEmpty property="erpSeq">
+		        	AND C.erp_co_cd = #erpSeq#
+		        </isNotEmpty>
+		        	AND B.auth_code_nm like '%' || #authName# || '%'
+		        GROUP BY A.auth_code
+		        
+		        
+		        UNION
+		        
+		        SELECT   A.auth_code,
+		        	 MIN(B.auth_code_nm) KEEP (DENSE_RANK FIRST ORDER BY A.auth_code, A.comp_seq) AS auth_code_nm,
+		        	 MIN($DB_NEOS$get_code_detail_info('0', 'COM521',  NVL(A.use_yn, 'N'), #langCode#)) KEEP (DENSE_RANK FIRST ORDER BY A.auth_code, A.comp_seq) AS use_yn,
+		        	 '' AS erp_co_cd,
+		        	 MIN(NVL(cnt, 0)) KEEP (DENSE_RANK FIRST ORDER BY A.auth_code, A.comp_seq) AS emp_cnt,
+		        	 0 AS comp_cnt,
+		        	 '' AS erp_co_cd_name,
+		        	 1 AS order_num
+		         FROM    $DB_NEOS$t_smart_authcode 	A
+		         JOIN	 $DB_NEOS$t_smart_authcode_multi B
+		         ON	 A.auth_code = B.auth_code
+		         LEFT OUTER JOIN (
+		         	SELECT 'USERREG' as auth_code, COUNT(auth_code) cnt
+		         	FROM   $DB_NEOS$t_smart_authcode_emp
+		         	WHERE  auth_code NOT LIKE 'A%' AND auth_code != 'USERREG'
+	 	        <isEqual property="userSe" compareValue="ADMIN">
+		        	AND comp_seq = #compSeq#
+		        </isEqual>
+		         ) C
+		         ON	A.auth_code = C.auth_code
+		         WHERE   A.auth_code NOT LIKE 'A%' AND	 A.auth_code = 'USERREG'
+		        GROUP BY A.auth_code	
+               ) X
+		ORDER BY NVL(X.order_num, 0) DESC
+    </select>
+    
+   	<select id="AccMoneyAuthDAO.AuthListInfoSearchSelect" resultClass="hashmap" parameterClass="hashmap">
+    	/* AccMoneyAuthDAO.AuthListInfoSearchSelect - oracle */
+		SELECT   A.auth_code AS "auth_code", 
+			 B.auth_code_nm AS "auth_code", 
+			 $DB_NEOS$get_code_detail_info('0', 'COM521',  NVL(A.use_yn, 'N'), #langCode#) AS "use_yn",	  
+			 C.erp_co_cd AS "erp_co_cd",  
+			 NVL(cnt, 0) AS "emp_cnt", 
+			 C.erp_co_cd_name AS "erp_co_cd_name",
+			 A.order_num AS "order_num"
+			 
+		FROM     $DB_NEOS$t_smart_authcode	 A
+		JOIN	 $DB_NEOS$t_smart_authcode_multi  B
+		ON	 A.auth_code = B.auth_code
+			INNER JOIN 	(
+				SELECT	DISTINCT auth_code, erp_co_cd, erp_co_cd_name
+				FROM	$DB_NEOS$t_smart_authcode_menu
+			)	C
+		ON	 A.auth_code = C.auth_code
+		LEFT OUTER JOIN (
+			SELECT auth_code, COUNT(auth_code) AS cnt
+			FROM  $DB_NEOS$t_smart_authcode_emp 	
+			GROUP BY auth_code
+		) D
+		ON A.auth_code = D.auth_code
+		WHERE (A.auth_code LIKE 'A%' OR A.auth_code LIKE 'U%')
+		<isNotEmpty property="erpSeq">
+			AND C.erp_co_cd = #erpSeq#
+		</isNotEmpty>
+			AND B.auth_code_nm like '%' || #authName# || '%'
+		
+		UNION
+		
+		SELECT   MIN(A.auth_code) KEEP (DENSE_RANK FIRST ORDER BY auth_code_nm) AS "auth_code",
+			 B.auth_code_nm AS "auth_code_nm",
+			 MIN($DB_NEOS$get_code_detail_info('0', 'COM521',  NVL(A.use_yn, 'N'), 'kr')) KEEP (DENSE_RANK FIRST ORDER BY auth_code_nm) AS "use_yn",
+			 '' AS "erp_co_cde",
+			 NVL(COUNT(B.auth_code_nm), 0) AS "emp_cnt",
+			 '' AS "erp_co_cd_name",
+			 1 AS "order_num"
+		 FROM    $DB_NEOS$t_smart_authcode 	A
+		 JOIN	 $DB_NEOS$t_smart_authcode_multi B
+		 ON	 A.auth_code = B.auth_code
+		 WHERE   A.auth_code NOT LIKE 'A%' AND A.auth_code != 'USERREG'
+		GROUP BY auth_code_nm	
+		
+		ORDER BY "order_num" DESC
+    </select>
+    
+	<!-- 조회 - 권한대상자 조회 -->
+	<select id="AccMoneyAuthDAO.AuthEmpListInfoSelect" resultClass="hashmap" parameterClass="hashmap">
+			/* AccMoneyAuthDAO.AuthEmpListInfoSelect - oracle */
+			SELECT	v.group_seq	"groupSeq"
+				, v.comp_seq	"compSeq"
+				, v.dept_seq	"deptSeq"
+				, v.emp_seq	"empSeq"
+				, ''	AS	"parentDeptSeq"
+				, '(' || login_id || ')'	AS "empNameAdv"
+				, comp_name	"compName"
+				, dept_name	"deptName"
+				, emp_name	"empName"
+				, ''	AS 	"pathName"
+				, ''	AS	"deptPath"
+				, ($DB_NEOS$get_emp_duty_position_name(v.group_seq,v.comp_seq, dept_duty_code, 'DUTY', native_lang_code))		AS "dutyName"
+				, ($DB_NEOS$get_emp_duty_position_name(v.group_seq,v.comp_seq, dept_position_code, 'POSITION', native_lang_code))	AS "positionName"
+				, duty_code 	AS	"dutyCode"
+				, position_code 	AS	"positionCode"
+				, 'u'	AS 	"empDeptFlag"
+				, v.group_seq || '|' || v.comp_seq || '|' || v.dept_seq || '|' || v.emp_seq || '|u'	"superKey"
+				, NVL(sae.auth_code, '') AS "authCode"
+				, NVL(sam.auth_code_nm, '') AS "authCodeName"
+				, vc.path AS "path"
+			FROM	$DB_NEOS$v_user_info	v
+			INNER JOIN $DB_NEOS$t_co_comp_duty_position dP
+				ON 	v.group_seq = dP.group_seq
+				AND	dP.dp_type = 'POSITION'
+				AND 	v.position_code = dP.dp_seq
+			INNER JOIN $DB_NEOS$t_co_comp_duty_position dD
+				ON 	v.group_seq = dD.group_seq
+				AND	dD.dp_type = 'DUTY'
+				AND 	v.duty_code = dD.dp_seq
+			LEFT OUTER JOIN $DB_NEOS$t_smart_authcode_emp sae
+				ON	v.emp_seq = sae.emp_seq
+			LEFT OUTER JOIN $DB_NEOS$t_smart_authcode_multi sam
+				ON	sae.auth_code = sam.auth_code	
+			INNER JOIN	$DB_NEOS$v_org_chart vc
+				ON	v.dept_seq = vc.dept_seq
+			WHERE	v.group_seq 	= #groupSeq#
+			AND		v.dept_seq 	= #selectedId#
+			AND		v.orgchart_display_yn = 'Y'
+			AND 	v.use_yn 		= 'Y'
+			AND		v.work_status = '999'
+			ORDER BY dP.order_num, dD.order_num, v.join_day, v.emp_name
+	</select>
+
+	<!-- 조회 - 검색 -->
+	<select id="AccMoneyAuthDAO.AuthEmpListInfoSearchSelect" resultClass="hashmap" parameterClass="hashmap">
+			/* AccMoneyAuthDAO.AuthEmpListInfoSelect - oracle */
+			SELECT	v.group_seq	"groupSeq"
+				, v.comp_seq	"compSeq"
+				, v.dept_seq	"deptSeq"
+				, v.emp_seq	"empSeq"
+				, ''	AS	"parentDeptSeq"
+				, '(' || login_id || ')'	AS "empNameAdv"
+				, comp_name	"compName"
+				, dept_name	"deptName"
+				, emp_name	"empName"
+				, ''	AS 	"pathName"
+				, ''	AS	"deptPath"
+				, ($DB_NEOS$get_emp_duty_position_name(v.group_seq,v.comp_seq, dept_duty_code, 'DUTY', native_lang_code))		AS "dutyName"
+				, ($DB_NEOS$get_emp_duty_position_name(v.group_seq,v.comp_seq, dept_position_code, 'POSITION', native_lang_code))	AS "positionName"
+				, duty_code 	AS	"dutyCode"
+				, position_code 	AS	"positionCode"
+				, 'u'	AS 	"empDeptFlag"
+				, v.group_seq || '|' || v.comp_seq || '|' || v.dept_seq || '|' || v.emp_seq || '|u'	"superKey"
+				, NVL(sae.auth_code, '') AS "authCode"
+				, NVL(sam.auth_code_nm, '') AS "authCodeName"
+				, vc.path AS "path"
+				-- , dP.order_num = 'p_order_num'
+				-- , dD.order_num = 'd_order_num'
+			FROM	$DB_NEOS$v_user_info	v
+			INNER JOIN $DB_NEOS$t_co_comp_duty_position dP
+				ON 	v.group_seq = dP.group_seq
+				AND	dP.dp_type = 'POSITION'
+				AND 	v.position_code = dP.dp_seq
+			INNER JOIN $DB_NEOS$t_co_comp_duty_position dD
+				ON 	v.group_seq = dD.group_seq
+				AND	dD.dp_type = 'DUTY'
+				AND 	v.duty_code = dD.dp_seq
+			LEFT OUTER JOIN $DB_NEOS$t_smart_authcode_emp sae
+				ON	v.emp_seq = sae.emp_seq
+			LEFT OUTER JOIN $DB_NEOS$t_smart_authcode_multi sam
+				ON	sae.auth_code = sam.auth_code	
+			INNER JOIN	$DB_NEOS$v_org_chart vc
+				ON	v.dept_seq = vc.dept_seq
+			WHERE	v.group_seq 	= #groupSeq#
+			AND		v.emp_name like '%' || #search# || '%'
+			<isNotEmpty property="selectCompSeq">
+			AND		v.comp_seq = #selectCompSeq#	
+			</isNotEmpty>
+			
+			AND		v.orgchart_display_yn = 'Y'
+			AND 	v.use_yn 		= 'Y'
+			AND		v.work_status = '999'
+			ORDER BY dP.order_num, dD.order_num, v.join_day, v.emp_name
+	</select>
+	
+	<!-- 조회 - 메뉴목록 조회 -->
+	<select id="AccMoneyAuthDAO.AuthMenuListInfoSelect" resultClass="hashmap" parameterClass="hashmap">
+		/* AccMoneyAuthDAO.AuthMenuListInfoSelect - oracle */
+        SELECT A.detail_code AS "detail_code", $DB_NEOS$FN_GetMultiLang(#langCode#, B.detail_name_multi) as "detail_name"
+		FROM   $DB_NEOS$t_co_code_detail A
+		JOIN   $DB_NEOS$v_t_co_code_detail_multi B
+		ON     A.code = B.code and A.detail_code = B.detail_code
+		WHERE  A.code = 'ac0001'
+		
+		UNION
+		
+		SELECT '' as "detail_code", $DB_NEOS$FN_GetMultiLang(#langCode#, name_multi) as "detail_name"
+		FROM   $DB_NEOS$t_co_code A
+		JOIN   $DB_NEOS$v_t_co_code_multi B
+		ON     A.code = B.code
+		WHERE  A.code = 'ac0001'
+    </select>
+	<!-- 조회 - ERP 조직도 정보 조회 -->
+	
+	<!-- 조회 - GW ERP 정보 조회 -->
+	<select id = "AccMoneyAuthDAO.GWErpInfoSelect" resultClass="hashmap" parameterClass="hashmap">
+		/* AccMoneyAuthDAO.GWErpInfoSelect - oracle */
+		SELECT 		A.group_seq AS "group_seq", 
+					A.comp_seq AS "comp_seq", 
+					A.erp_seq AS "erp_seq", 
+					A.erp_type_code AS "erp_type_code", 
+					A.database_type AS "database_type", 
+					A.driver AS "driver", 
+					A.url AS "url", 
+					A.userid AS "userid", 
+					A.password AS "password", 
+					A.erp_comp_seq AS "erp_comp_seq", 
+					A.erp_comp_name AS "erp_comp_name", 
+					A.use_yn AS "use_yn",
+					$DB_NEOS$FN_GetMultiLang(#langCode#, B.comp_name_multi) AS "comp_name"
+		FROM  		$DB_NEOS$t_co_erp A
+		INNER JOIN	$DB_NEOS$v_t_co_comp_multi B
+		ON			A.comp_seq = B.comp_seq
+		WHERE  		A.group_seq = #groupSeq# 
+		AND			A.erp_type_code = #erpType# 
+		AND 		A.achr_gbn = #erpGubun#
+		<isEqual property="userSe" compareValue="ADMIN">
+		AND			A.comp_seq = #compSeq#	
+		</isEqual>
+	</select>
+	
+	<select id="AccMoneyAuthDAO.AuthMappingData" resultClass="hashmap" parameterClass="hashmap">
+		/* AccMoneyAuthDAO.AuthMappingData - oracle */
+		SELECT MIN(sam.auth_code) KEEP (DENSE_RANK FIRST ORDER BY sa.comp_seq, sam.erp_co_cd, sam.erp_biz_cd, sam.erp_biz_cd_name) AS "auth_code",
+		       MIN(NVL(emp_seq, '')) KEEP (DENSE_RANK FIRST ORDER BY sa.comp_seq, sam.erp_co_cd, sam.erp_biz_cd, sam.erp_biz_cd_name) AS "emp_seq",
+		       sam.erp_co_cd AS "erp_co_cd",
+		       sam.erp_biz_cd AS "erp_biz_cd",
+		       MIN(sa.etc) KEEP (DENSE_RANK FIRST ORDER BY sa.comp_seq, sam.erp_co_cd, sam.erp_biz_cd, sam.erp_biz_cd_name) AS "etc",
+		       MIN(sa.use_yn) KEEP (DENSE_RANK FIRST ORDER BY sa.comp_seq, sam.erp_co_cd, sam.erp_biz_cd, sam.erp_biz_cd_name) AS "use_yn",
+		       MIN(saMul.auth_code_nm) KEEP (DENSE_RANK FIRST ORDER BY sa.comp_seq, sam.erp_co_cd, sam.erp_biz_cd, sam.erp_biz_cd_name) AS "auth_code_nm",
+		       MIN(sam.erp_co_cd_name) KEEP (DENSE_RANK FIRST ORDER BY sa.comp_seq, sam.erp_co_cd, sam.erp_biz_cd, sam.erp_biz_cd_name) AS "erp_co_cd_name",
+		       sam.erp_biz_cd_name AS "erp_biz_cd_name",
+		       sa.comp_seq AS "comp_seq",
+		       REGEXP_REPLACE(LISTAGG(sam.menu_code, ',') WITHIN GROUP(ORDER BY sam.menu_code ASC), '([^,]+)(,\1)+', '\1') AS "menu_code"
+		  FROM $DB_NEOS$t_smart_authcode_menu sam
+		 INNER JOIN	$DB_NEOS$t_smart_authcode sa
+	    	ON sam.auth_code = sa.auth_code
+		   AND sam.comp_seq = sa.comp_seq
+		 INNER JOIN $DB_NEOS$t_smart_authcode_multi saMul
+		    ON sa.auth_code = saMul.auth_code
+		 WHERE sam.auth_code = #authCode#
+		 GROUP BY sa.comp_seq, sam.erp_co_cd, sam.erp_biz_cd, sam.erp_biz_cd_name
+	</select>
+
+	<!-- 조회 - 권한 사용자 조회 -->
+	<select id="AccMoneyAuthDAO.AccPopAuthUserSelect" resultClass="hashmap" parameterClass="hashmap">
+		/* AccMoneyAuthDAO.AccPopAuthUserSelect - oracle */
+		SELECT   A.auth_code AS "auth_code", 
+			 B.auth_code_nm AS "auth_code_nm", 
+			 $DB_NEOS$get_code_detail_info('0', 'COM521',  NVL(A.use_yn, 'N'), #langCode#) AS "use_yn",	 
+			 C.erp_co_cd AS "erp_co_cd", 
+			 C.erp_co_cd_name AS "erp_co_cd_name",
+			 comp_cnt AS "comp_cnt",
+			 D.emp_seq AS "emp_seq",
+			 $DB_NEOS$FN_GetMultiLang(#langCode#, v.dept_name_multi) as "dept_name",
+			 $DB_NEOS$FN_GetMultiLang(#langCode#, v.comp_name_multi) as "comp_name",
+			 $DB_NEOS$get_emp_duty_position_name(v.group_seq, v.comp_seq, position_code, 'POSITION', #langCode#) AS "position_code_name",
+			 $DB_NEOS$FN_GetMultiLang(#langCode#, v.emp_name_multi) as "emp_name",
+			 v.login_id AS "login_id",
+			 v.dept_seq AS "dept_seq",
+			 v.comp_seq AS "comp_seq",
+			 v.group_seq AS "group_seq",
+			 vo.path AS "path"
+		FROM     $DB_NEOS$t_smart_authcode	 A
+		JOIN	 $DB_NEOS$t_smart_authcode_multi  B
+		ON	 A.auth_code = B.auth_code
+			INNER JOIN 	(
+				SELECT	DISTINCT auth_code, erp_co_cd, erp_co_cd_name
+				FROM	$DB_NEOS$t_smart_authcode_menu
+			)	C
+		ON	 A.auth_code = C.auth_code
+		JOIN    (
+				SELECT COUNT(erp_co_cd) AS comp_cnt, auth_code
+				FROM  ( 
+					SELECT DISTINCT auth_code, erp_co_cd
+					FROM   $DB_NEOS$t_smart_authcode_menu
+				) T
+				GROUP BY auth_code
+		) E	
+		ON A.auth_code = E.auth_code
+		RIGHT OUTER JOIN $DB_NEOS$t_smart_authcode_emp D
+		ON      A.auth_code = D.auth_code
+		JOIN    $DB_NEOS$v_user_info v
+		ON     D.emp_seq = v.emp_seq AND D.comp_seq = v.comp_seq AND D.dept_seq=v.dept_seq
+		INNER JOIN $DB_NEOS$v_org_chart vo
+		ON	v.dept_seq = vo.dept_seq
+		<isEqual property="authCode" compareValue="userAuth">
+			WHERE  A.auth_code NOT LIKE 'A%'
+		</isEqual>
+		<isNotEqual property="authCode" compareValue="userAuth">
+			WHERE  A.auth_code = #authCode#
+		</isNotEqual>
+		<isEqual property="userSe" compareValue="ADMIN">
+				AND D.comp_seq = #compSeq#
+		</isEqual>	
+		
+	</select>
+	
+	<!-- erp 맵핑된 GW회사 가져오기 -->
+	<select id="AccMoneyAuthDAO.AccGWCompSelect" resultClass="hashmap" parameterClass="hashmap">
+	    /* AccMoneyAuthDAO.AccGWCompSelect - oracle */
+		SELECT A.comp_seq AS "comp_seq", 
+		       C.comp_seq AS "comp_seq", 
+		       C.erp_comp_seq AS "erp_comp_seq", 
+		       C.erp_comp_name AS "erp_comp_name", 
+		       B.comp_name AS "comp_name"
+		FROM   $DB_NEOS$t_co_comp A
+		INNER JOIN $DB_NEOS$t_co_comp_multi B
+		ON A.comp_seq = B.comp_seq
+		INNER JOIN (
+			SELECT *
+			FROM   $DB_NEOS$t_co_erp
+			WHERE  achr_gbn='ac'
+			  AND  erp_type_code = 'iCUBE'
+			  
+		) C
+		ON A.comp_seq = C.comp_seq
+	</select>
+	
+	<!-- 권한 Key 가져오기 -->
+	<select id="AccMoneyAuthDAO.AccAuthCodeSelect" resultClass="hashmap" parameterClass="hashmap">
+		/* AccMoneyAuthDAO.AccAuthCodeSelect - oracle */
+		SELECT 'A' || $DB_NEOS$f_nextval('accMoneyAuthSeq') as "accMoneyAuthSeq" from dual
+	</select>
+
+	<!-- 생성 -->
+	<!-- 생성 - 권한 생성  -->
+	<insert id="AccMoneyAuthDAO.AuthInfoInsert" parameterClass="hashMap">
+<!-- 		<isEqual property="init" compareValue="Y"> -->
+<!--         <selectKey keyProperty="accMoneyAuthSeq" resultClass="String"> -->
+           
+<!--         </selectKey> -->
+<!--         </isEqual> -->
+        <![CDATA[   
+           /* AccMoneyAuthDAO.AuthInfoInsert - oracle */ 
+           INSERT INTO $DB_NEOS$t_smart_authcode 
+           (        
+                    auth_code
+                  , comp_seq  
+                  , use_yn
+                  , order_num
+                  , etc
+                  , create_seq
+                  , create_date
+           )
+           VALUES ( 
+                    #accMoneyAuthSeq#
+                  , #compSeq#  
+                  , #authUseYN#  
+                  , #orderNum#
+                  , #authEtc#
+                  , #empSeq#
+                  , SYSDATE
+           )
+        ]]>  
+	</insert>
+	
+	<!-- 생성 - 사용자 지정 권한 -->
+	<insert id="AccMoneyAuthDAO.AuthUserInsert" parameterClass="hashMap">
+<!--         <selectKey keyProperty="accMoneyAuthSeq" resultClass="String"> -->
+<!--            SELECT #authCode# as authCode -->
+<!--         </selectKey> -->
+        <![CDATA[   
+           /* AccMoneyAuthDAO.AuthUserInsert - oracle */ 
+           MERGE INTO $DB_NEOS$t_smart_authcode
+		   USING DUAL
+		      ON (auth_code = #authCode#
+		     AND  comp_seq  = #gwCompSeq#)
+            WHEN MATCHED THEN
+                 UPDATE SET use_yn  = 'Y'
+                          , order_num = #orderNum#
+                          , etc = #authEtc#
+                          , modify_seq = #empSeq#
+                          , modify_date = SYSDATE 
+            WHEN NOT MATCHED THEN
+                 INSERT (
+                         auth_code
+                       , comp_seq  
+                       , use_yn
+                       , order_num
+                       , etc
+                       , create_seq
+                       , create_date			
+		   		     )
+		   		    
+		         VALUES (
+		                 #authCode#
+                       , #gwCompSeq#  
+                       , 'Y'  
+                       , #orderNum#
+                       , #authEtc#
+                       , #empSeq#
+                       , SYSDATE
+		                )  
+        ]]>  
+	</insert>	
+	
+	<!-- 생성 - 권한 생성 멀티  -->
+	<insert id="AccMoneyAuthDAO.AuthInfoInsertMulti" parameterClass="hashMap">
+        <![CDATA[   
+           /* AccMoneyAuthDAO.AuthInfoInsertMulti - oracle */ 
+           INSERT INTO $DB_NEOS$t_smart_authcode_multi 
+           (        
+                    auth_code
+                  , auth_code_nm  
+                  , lang_code
+                  , create_seq
+                  , create_date
+           )
+           VALUES ( 
+                    #accMoneyAuthSeq#
+                  , #authName#  
+                  , #langCode#  
+                  , #empSeq#
+                  , SYSDATE
+           )
+        ]]>  
+	</insert>
+	
+	<!-- 생성 - 사용자 지정 권한 생성 멀티  -->
+	<insert id="AccMoneyAuthDAO.AuthUserInsertMulti" parameterClass="hashMap">
+        <![CDATA[   
+           /* AccMoneyAuthDAO.AuthUserInsertMulti - oracle */ 
+           MERGE INTO $DB_NEOS$t_smart_authcode_multi
+		   USING DUAL
+		      ON (auth_code = #authCode#
+		     AND  lang_code	= #langCode#)
+            WHEN MATCHED THEN
+                 UPDATE SET auth_code_nm = '사용자 지정권한' 
+                          , modify_seq   = #empSeq#
+                          , modify_date  = SYSDATE 
+            WHEN NOT MATCHED THEN
+                 INSERT (
+                         auth_code
+                       , auth_code_nm  
+                       , lang_code
+                       , create_seq
+                       , create_date			
+		   		        )
+		   		    
+		         VALUES (
+		                 #authCode#
+                       , '사용자 지정권한'  
+                       , #langCode#  
+                       , #empSeq#
+                       , SYSDATE
+		                )  
+        ]]>  
+	</insert>
+	
+	<!-- 생성 - 권한 대상자 생성 -->
+	<insert id="AccMoneyAuthDAO.AuthEmpInfoInsert" parameterClass="hashMap">
+		/* AccMoneyAuthDAO.AuthEmpInfoInsert - oracle */
+		MERGE INTO $DB_NEOS$t_smart_authcode_emp
+		USING DUAL
+		   ON (auth_code = #authCode#
+		  AND  emp_seq	 = #authEmp# 
+		  AND  comp_seq  = #authComp# 
+		  AND  dept_seq	 = #authDept#)
+         WHEN MATCHED THEN
+              UPDATE SET modify_seq  = #empSeq#
+                       , modify_date = SYSDATE 
+         WHEN NOT MATCHED THEN
+              INSERT (
+                      auth_code
+				    , emp_seq
+				    , comp_seq
+				    , dept_seq
+				    , create_seq
+				    , create_date				
+				     )
+				    
+		      VALUES (
+		              #authCode#
+		            , #authEmp# 
+		            , #authComp# 
+		            , #authDept#
+		            , #empSeq#
+		            , SYSDATE
+		             )  
+         
+	</insert>
+	
+	<!-- 생성 - 권한 메뉴, ERP 조직도 생성 -->
+	<insert id="AccMoneyAuthDAO.AuthMenuDeptInfoInsert" parameterClass="hashMap">
+		/* AccMoneyAuthDAO.AuthMenuDeptInfoInsert - oracle */
+		INSERT INTO $DB_NEOS$t_smart_authcode_menu
+		(
+				  auth_code
+				, menu_code
+				, comp_seq
+				, emp_seq
+				, erp_co_cd
+				, erp_co_cd_name
+				, erp_biz_cd
+				, erp_biz_cd_name
+				, create_seq
+				, create_date
+		)
+		VALUES (
+				  #authCode#
+				, #menuCode#
+				, #gwCompSeq#
+				, #authEmp#
+				, #erpComp#
+				, #erpCompName#
+				, #erpBiz#
+				, #erpBizName#
+				, #empSeq#
+				, SYSDATE
+		)
+	</insert>
+
+	<!-- 수정 -->
+	<!-- 수정 - 권한 erp 조직도 수정 -->
+	<update id="AccMoneyAuthDAO.AuthMenuDeptInfoAuthUpdate" parameterClass="hashMap">
+		/* AccMoneyAuthDAO.AuthMenuDeptInfoAuthUpdate - oracle */
+		UPDATE $DB_NEOS$t_smart_authcode SET
+		etc = #authEtc#
+		WHERE  auth_code = #authCode#
+	</update>
+	
+	<update id="AccMoneyAuthDAO.AuthMenuDeptInfoAuthMultiUpdate" parameterClass="hashMap">
+		/* AccMoneyAuthDAO.AuthMenuDeptInfoAuthMultiUpdate - oracle */
+		UPDATE $DB_NEOS$t_smart_authcode_multi SET
+		auth_code_nm = #authName#
+		WHERE  auth_code = #authCode#
+	</update>
+	
+	<insert id="AccMoneyAuthDAO.AuthMenuDeptInfoAuthInsert" parameterClass="hashMap">
+		<![CDATA[   
+           /* AccMoneyAuthDAO.AuthMenuDeptInfoAuthInsert - oracle */ 
+           MERGE INTO $DB_NEOS$t_smart_authcode
+		   USING DUAL
+		      ON (auth_code = #authCode#
+		     AND  comp_seq  = #gwCompSeq#)
+            WHEN MATCHED THEN
+                 UPDATE SET use_yn      = 'Y'  
+                          , order_num   = #orderNum#
+                          , etc         = #authEtc#
+                          , modify_seq  = #empSeq#
+                          , modify_date = SYSDATE 
+            WHEN NOT MATCHED THEN
+                 INSERT (
+                         auth_code
+                       , comp_seq  
+                       , use_yn
+                       , order_num
+                       , etc
+                       , create_seq
+                       , create_date		
+		   		     )
+		   		    
+		         VALUES (
+		                 #authCode#
+                       , #gwCompSeq#  
+                       , 'Y'  
+                       , #orderNum#
+                       , #authEtc#
+                       , #empSeq#
+                       , SYSDATE
+		                )  
+        ]]>  
+	</insert>
+	
+	<insert id="AccMoneyAuthDAO.AuthMenuDeptInfoAuthNewMenuInsert" parameterClass="hashMap">
+		/* AccMoneyAuthDAO.AuthMenuDeptInfoAuthNewMenuInsert - oracle */ 
+		INSERT INTO $DB_NEOS$t_smart_authcode_menu
+		(
+				  auth_code
+				, menu_code
+				, comp_seq
+				, emp_seq
+				, erp_co_cd
+				, erp_co_cd_name
+				, erp_biz_cd
+				, erp_biz_cd_name
+				, create_seq
+				, create_date
+		)
+		VALUES (
+				  #authCode#
+				, #menuCode#
+				, #gwCompSeq#
+				, #empSeq#
+				, #erpComp#
+				, #erpCompName#
+				, #erpBiz#
+				, #erpBizName#
+				, #empSeq#
+				, SYSDATE
+		)
+	</insert>
+	
+	<!-- 삭제 -->
+	<!-- 삭제 - 권한 대상자 삭제  -->
+	<!-- 삭제 - 권한 메뉴, ERP 조직도 삭제  -->
+	<delete id="AccMoneyAuthDAO.AuthMenuDeptInfoMenuDelete" parameterClass="hashMap">
+		/* AccMoneyAuthDAO.AuthMenuDeptInfoMenuDelete - oracle */
+		DELETE FROM $DB_NEOS$t_smart_authcode_menu
+		WHERE auth_code = #authCode# 
+	</delete>
+	
+	<delete id="AccMoneyAuthDAO.AuthMenuDeptInfoEmpDelete" parameterClass="hashMap">
+		/* AccMoneyAuthDAO.AuthMenuDeptInfoEmpDelete - oracle */
+		DELETE FROM $DB_NEOS$t_smart_authcode_emp
+		WHERE auth_code = #authCode#
+	</delete>
+	
+	<delete id="AccMoneyAuthDAO.AuthMenuDeptInfoAuthDelete" parameterClass="hashMap">
+		/* AccMoneyAuthDAO.AuthMenuDeptInfoAuthDelete - oracle */
+		DELETE FROM $DB_NEOS$t_smart_authcode
+		WHERE auth_code = #authCode#
+	</delete>
+	
+	<delete id="AccMoneyAuthDAO.AuthMenuDeptInfoAuthMultiDelete" parameterClass="hashMap">
+		/* AccMoneyAuthDAO.AuthMenuDeptInfoAuthMultiDelete - oracle */
+		DELETE FROM $DB_NEOS$t_smart_authcode_multi
+		WHERE auth_code = #authCode#
+	</delete>
+
+	<delete id="AccMoneyAuthDAO.AuthEmpInfoDelete" parameterClass="hashMap">
+		/* AccMoneyAuthDAO.AuthEmpInfoDelete - oracle */
+		DELETE FROM $DB_NEOS$t_smart_authcode_emp
+		WHERE  auth_code = #baseAuthCode# and emp_seq = #authEmp#
+	</delete>
+    
+    <!-- 삭제 - 유저 권한 -->
+    <delete id="AccMoneyAuthDAO.AccEmpAuthDelete" parameterClass="hashMap">
+    	/* AccMoneyAuthDAO.AccEmpAuthDelete - oracle */
+    	DELETE FROM $DB_NEOS$t_smart_authcode_emp
+    	WHERE  emp_seq = #empSeq#
+    </delete>
+   
+    <!--  삭제 - 사용자지정권한  -->
+    <delete id="AccMoneyAuthDAO.AccUserAuthDelete" parameterClass="hashMap">
+    	/* AccMoneyAuthDAO.AccUserAuthDelete - oracle */
+     	DELETE FROM $DB_NEOS$t_smart_authcode
+    	WHERE  auth_code NOT like 'A%' AND auth_code like CONCAT('%_%_', #empSeq#)
+    </delete>
+
+    <!--  삭제 - 사용자지정권한 멀티 -->
+    <delete id="AccMoneyAuthDAO.AccUserAuthMultiDelete" parameterClass="hashMap">
+    	/* AccMoneyAuthDAO.AccUserAuthMultiDelete - oracle */
+     	DELETE FROM $DB_NEOS$t_smart_authcode_multi
+    	WHERE  auth_code NOT like 'A%' AND auth_code like CONCAT('%_%_', #empSeq#)
+    </delete>
+    
+    <!--  삭제 - 사용자 지정권한 메뉴 -->
+    <delete id="AccMoneyAuthDAO.AccUserAuthMenuDelete" parameterClass="hashMap">
+    	/* AccMoneyAuthDAO.AccUserAuthMenuDelete - oracle */
+     	DELETE FROM $DB_NEOS$t_smart_authcode_menu
+    	WHERE  auth_code NOT like 'A%' AND auth_code like CONCAT('%_%_', #empSeq#)
+    </delete>
+    	
+</sqlMap>

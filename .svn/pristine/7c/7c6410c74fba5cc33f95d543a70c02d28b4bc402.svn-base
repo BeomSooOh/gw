@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<b:beans  xmlns="http://www.springframework.org/schema/security"
+    xmlns:b="http://www.springframework.org/schema/beans"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+                        http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-2.0.2.xsd
+                        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+                        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd">
+<!--
+	수정일                 수정자                          수정내용
+  =========     =======    =================================================
+  2011.09.07   	서준식     	 	일반, 업무사용자의 경우 조직아이디가 없어 로그인이 안되던 문제 수정(SQL 수정)
+  2011.09.25    서준식              usersByUsernameQuery 쿼리의 조직 아이디 비교 부분  오류 수정 > alias 추가
+-->
+
+	<util:properties id="bizboxa" location="file:../bizboxaconf/bizboxa.properties" />
+	
+    <b:bean id="securedObjectService"
+        class="egovframework.com.sec.security.securedobject.impl.SecuredObjectServiceImpl">
+        <b:property name="securedObjectDAO" ref="securedObjectDAO"/>
+    </b:bean>
+
+    <b:bean id="securedObjectDAO" class="egovframework.com.sec.security.securedobject.impl.SecuredObjectDAO" >
+        <b:property name="dataSource" ref="egov.dataSource"/>
+    </b:bean>
+
+    <b:bean id="userDetailsServiceWrapper"
+            class="org.springframework.security.userdetails.hierarchicalroles.UserDetailsServiceWrapper" >
+        <b:property name="roleHierarchy" ref="roleHierarchy"/>
+        <b:property name="userDetailsService" ref="jdbcUserService"/>
+    </b:bean>
+
+    <b:bean id="roleHierarchy"
+            class="org.springframework.security.userdetails.hierarchicalroles.RoleHierarchyImpl" >
+        <b:property name="hierarchy" ref="hierarchyStrings"/>
+    </b:bean>
+
+    <b:bean id="hierarchyStrings"
+        class="egovframework.com.sec.security.userdetails.hierarchicalroles.HierarchyStringsFactoryBean"
+        init-method="init">
+        <b:property name="securedObjectService" ref="securedObjectService"/>
+    </b:bean>
+
+    <b:bean id="accessDecisionManager"
+        class="org.springframework.security.vote.AffirmativeBased">
+        <b:property name="allowIfAllAbstainDecisions" value="false" />
+        <b:property name="decisionVoters">
+            <b:list>
+                <b:bean
+                    class="org.springframework.security.vote.RoleVoter">
+                    <b:property name="rolePrefix" value="" />
+                </b:bean>
+                <b:bean
+                    class="org.springframework.security.vote.AuthenticatedVoter" />
+            </b:list>
+        </b:property>
+    </b:bean>
+
+    <b:bean id="filterSecurityInterceptor"
+        class="org.springframework.security.intercept.web.FilterSecurityInterceptor">
+        <custom-filter before="FILTER_SECURITY_INTERCEPTOR" /> 
+        <b:property name="authenticationManager" ref="authenticationManager" />
+        <b:property name="accessDecisionManager" ref="accessDecisionManager" />
+        <b:property name="objectDefinitionSource" ref="databaseObjectDefinitionSource" />
+    </b:bean>
+
+    <b:bean id="databaseObjectDefinitionSource"
+        class="org.springframework.security.intercept.web.EgovReloadableDefaultFilterInvocationDefinitionSource">
+        <b:constructor-arg ref="regexUrlPathMatcher" />
+        <b:constructor-arg ref="requestMap" />
+        <b:property name="securedObjectService" ref="securedObjectService"/>
+    </b:bean>
+
+    <!--  url  -->
+    <b:bean id="requestMap"
+        class="egovframework.com.sec.security.intercept.ResourcesMapFactoryBean" init-method="init">
+        <b:property name="securedObjectService" ref="securedObjectService"/>
+        <b:property name="resourceType" value="url"/>
+    </b:bean>
+
+    <b:bean id="regexUrlPathMatcher"
+        class="org.springframework.security.util.RegexUrlPathMatcher" />
+
+    <http access-denied-page="/sec/ram/accessDenied.do" path-type="regex" lowercase-comparisons="false">
+
+        <form-login login-processing-url="/j_spring_security_check"
+                    authentication-failure-url="/uat/uia/egovLoginUsr.do?login_error=1"
+                    default-target-url="/forwardIndex.do"
+                    login-page="/uat/uia/egovLoginUsr.do" />
+        <anonymous/>
+        <logout logout-url="/j_spring_security_logout" logout-success-url="/forwardIndex.do" />
+        <concurrent-session-control max-sessions="#{bizboxa['BizboxA.MaxSessions'] != null ? bizboxa['BizboxA.MaxSessions'] : 500}" exception-if-maximum-exceeded="false" expired-url="/forwardIndex.do?maxSessionOut=Y" />
+    </http>
+
+    <authentication-provider user-service-ref="jdbcUserService"/>
+    <authentication-manager alias="authenticationManager"/>
+
+    <b:bean id="jdbcUserService"
+            class="egovframework.com.sec.security.userdetails.jdbc.EgovJdbcUserDetailsManager" >
+        <!--  # ORACLE  -->
+        <b:property name="usersByUsernameQueryOracle" value = "SELECT M.LOGIN_ID AS USER_ID, M.EMP_SEQ AS PASSWORD, 1 ENABLED, O.EMP_NAME AS USER_NM
+                                                              , M.EMAIL_ADDR AS USER_EMAIL
+                                                              , SP.user_se AS USER_SE
+                                                              , N.DEPT_SEQ AS ORGNZT_ID, M.EMP_SEQ AS ESNTL_ID
+                                                              , (SELECT A.DEPT_NAME
+                                                                   FROM t_co_dept_multi A
+                                                                  WHERE A.DEPT_SEQ = N.DEPT_SEQ) ORGNZT_NM
+                                                              , N.duty_code AS CLASS_CODE
+                                                              , N.position_code as POSITION_CODE
+                                                              , get_emp_duty_position_name(N.GROUP_SEQ, N.comp_seq, N.duty_code, 'DUTY', O.lang_code) as CLASS_NM
+                                                              , get_emp_duty_position_name(N.GROUP_SEQ, N.comp_seq, N.position_code, 'POSITION', O.lang_code) as POSITION_NM
+                                                              , N.COMP_SEQ AS ORGAN_ID
+                                                              , (SELECT F.COMP_NAME
+                                                                   FROM t_co_comp_multi F
+                                                                  WHERE N.COMP_SEQ=F.COMP_SEQ) AS ORGAN_NM
+                                                              ,get_auth_group_concat(N.COMP_SEQ, N.DEPT_SEQ, M.EMP_SEQ, N.DUTY_CODE, N.POSITION_CODE) AS AUTHOR_CODE    
+                                                              ,NVL((SELECT erp_emp_seq FROM t_co_emp_comp WHERE comp_seq = N.COMP_SEQ AND emp_seq = N.EMP_SEQ AND ROWNUM = 1) , '')AS ERP_EMP_CD
+                                                              , '' AS ERP_EMP_NM
+                                                              ,NVL((SELECT erp_comp_seq FROM t_co_erp_comp WHERE comp_seq = N.COMP_SEQ AND ROWNUM = 1), '') AS ERP_CO_CD
+                                                              ,M.EMP_NUM AS EMPL_NO
+                                                              ,get_lang_code(M.emp_seq,null) as LANG_CODE
+                                                              ,N.GROUP_SEQ
+                                                              ,N.COMP_SEQ 
+                                                              ,N.BIZ_SEQ
+                                                              ,PIC_FILE_ID
+															  ,TCC.EMAIL_DOMAIN
+                                                              ,TCC.EA_TYPE
+                                                              ,NVL((SELECT erp_biz_seq FROM t_co_erp_biz WHERE comp_seq = N.COMP_SEQ AND biz_seq = N.BIZ_SEQ AND ROWNUM = 1), '') AS ERP_BIZ_CD
+                                                              ,NVL((SELECT erp_dept_seq FROM t_co_erp_dept WHERE comp_seq = N.COMP_SEQ AND biz_seq = N.BIZ_SEQ AND dept_seq = N.DEPT_SEQ AND ROWNUM = 1), '') AS ERP_DEPT_CD
+                                                              ,DECODE(M.MAIN_COMP_SEQ , N.COMP_SEQ , 1, 0)AS OrderFlag
+                                                              ,TO_CHAR(SYSDATE,'yyyy-mm-dd') AS last_login_date
+                                                              ,NVL(M.LICENSE_CHECK_YN,'1') AS licenseCheckYn        
+                                                              ,M.passwd_date AS passwdChangeDate
+                                                              ,SYSDATE AS lastLoginDateTime
+                                                              ,NVL(M.passwd_status_code,'P') AS passwdStatusCode
+                                                              ,tcd.path as orgnztPath                                                   
+                                                         FROM T_CO_EMP M, T_CO_EMP_DEPT N, T_CO_EMP_MULTI O, T_CO_COMP TCC, T_CO_DEPT TCD
+                                                          ,(
+                                                            (
+                                                              SELECT
+                                                              REGEXP_SUBSTR(sp_param.sp_param,'[^$]+',1,1) AS user_se,
+                                                              REGEXP_SUBSTR(sp_param.sp_param,'[^$]+',1,2) AS comp_seq,
+                                                              REGEXP_SUBSTR(sp_param.sp_param,'[^$]+',1,3) AS dept_seq,
+                                                              REGEXP_SUBSTR(sp_param.sp_param,'[^$]+',1,4) AS spring_secu
+                                                              FROM (SELECT ? AS sp_param FROM dual) sp_param														    
+                                                            )
+                                                          ) SP                                                         
+                                                         WHERE M.EMP_SEQ = N.EMP_SEQ
+                                                         AND M.EMP_SEQ = O.EMP_SEQ
+                                                         AND M.WORK_STATUS = '999'
+                                                         AND N.COMP_SEQ = TCC.COMP_SEQ
+                                                         AND M.WORK_STATUS = '999'
+                                                         AND N.DEPT_SEQ = TCD.DEPT_SEQ
+                                                         AND M.GROUP_SEQ||M.SPRING_SECU = SP.spring_secu
+                                                         AND M.SPRING_DATE > (sysdate + interval '-30' second)
+                                                         AND get_lang_code(M.emp_seq, M.login_id) = O.lang_code
+                                                         AND N.MAIN_DEPT_YN = (CASE WHEN SP.dept_seq = '_' THEN 'Y' ELSE N.MAIN_DEPT_YN END)
+                                                         AND N.DEPT_SEQ = (CASE WHEN SP.dept_seq = '_'  THEN N.DEPT_SEQ ELSE SP.dept_seq END)                                                          
+                                                         AND M.USE_YN = 'Y'
+                                                         AND N.USE_YN = 'Y'
+                                                         AND O.USE_YN = 'Y'
+                                                         AND TCC.USE_YN = 'Y'
+                                                         AND TCC.comp_seq = (CASE WHEN SP.comp_seq = '_' THEN TCC.comp_seq ELSE SP.comp_seq END)
+                                                         ORDER BY OrderFlag DESC, ORGAN_ID ASC
+                                                         "/>
+        <!--  # MARIADB  -->                          
+        <b:property name="usersByUsernameQuery" value="SELECT 
+														M.LOGIN_ID AS USER_ID
+														, M.EMP_SEQ AS PASSWORD
+														, 1 ENABLED
+														, FN_GetMultiLang(get_lang_code(M.emp_seq, null),O.EMP_NAME_MULTI) AS USER_NM
+														, IF(IF(IFNULL(TCC.email_domain,'') = '', IFNULL(M.out_mail,''), M.email_addr )='',M.email_addr, IF(IFNULL(TCC.email_domain,'') = '', IFNULL(M.out_mail,''), M.email_addr )) AS USER_EMAIL
+														, SP.user_se AS USER_SE
+														, N.DEPT_SEQ AS ORGNZT_ID, M.EMP_SEQ AS ESNTL_ID
+														, (SELECT FN_GetMultiLang(get_lang_code(M.emp_seq,null),A.dept_name_multi)
+															FROM v_t_co_dept_multi A
+															WHERE A.DEPT_SEQ = N.DEPT_SEQ LIMIT 1) ORGNZT_NM
+														, N.duty_code AS CLASS_CODE
+														, N.position_code as POSITION_CODE
+														, get_emp_duty_position_name(N.GROUP_SEQ, N.comp_seq, N.duty_code, 'DUTY', get_lang_code(M.emp_seq, null)) as CLASS_NM
+														, get_emp_duty_position_name(N.GROUP_SEQ, N.comp_seq, N.position_code, 'POSITION', get_lang_code(M.emp_seq, M.login_id)) as POSITION_NM
+														, N.COMP_SEQ AS ORGAN_ID
+														, (SELECT FN_GetMultiLang(get_lang_code(M.emp_seq, null),F.COMP_NAME_MULTI)
+															FROM v_t_co_comp_multi F WHERE N.COMP_SEQ=F.COMP_SEQ LIMIT 1) AS ORGAN_NM
+														, get_auth_group_concat(N.COMP_SEQ, N.DEPT_SEQ, M.EMP_SEQ, N.DUTY_CODE, N.POSITION_CODE) AS AUTHOR_CODE
+														,(SELECT erp_emp_seq FROM t_co_emp_comp WHERE comp_seq = N.COMP_SEQ AND emp_seq = N.EMP_SEQ LIMIT 1) AS ERP_EMP_CD
+														, '' AS ERP_EMP_NM
+														,IFNULL((SELECT erp_comp_seq FROM t_co_erp_comp WHERE comp_seq = N.COMP_SEQ LIMIT 1), '') AS ERP_CO_CD
+														,M.EMP_NUM AS EMPL_NO
+														,get_lang_code(M.emp_seq,null) as LANG_CODE
+														,N.GROUP_SEQ
+														,N.COMP_SEQ
+														,N.BIZ_SEQ
+														,PIC_FILE_ID
+														,N.DEPT_SEQ
+														, IF( IFNULL(TCC.email_domain,'') = '', IFNULL(M.out_domain,''), TCC.email_domain ) AS EMAIL_DOMAIN
+														,TCC.EA_TYPE
+														,IFNULL((SELECT erp_biz_seq FROM t_co_erp_biz WHERE comp_seq = N.COMP_SEQ AND biz_seq = N.BIZ_SEQ LIMIT 1), '') AS ERP_BIZ_CD
+														,IFNULL((SELECT erp_dept_seq FROM t_co_erp_dept WHERE comp_seq = N.COMP_SEQ AND biz_seq = N.BIZ_SEQ AND dept_seq = N.DEPT_SEQ LIMIT 1), '') AS ERP_DEPT_CD
+														,M.MAIN_COMP_SEQ = N.COMP_SEQ AS OrderFlag  
+														,NOW() AS last_login_date             
+														,IFNULL(license_check_yn,'1') AS licenseCheckYn
+														,IFNULL(M.passwd_date, NOW()) AS passwdChangeDate
+														,date_format(now(6),'%Y-%m-%d %H:%i:%s.%f') AS lastLoginDateTime
+														,IFNULL(M.passwd_status_code,'P') AS passwdStatusCode
+														,TCD.path AS orgnztPath                                           
+														FROM T_CO_EMP M, T_CO_EMP_DEPT N, V_T_CO_EMP_MULTI O, T_CO_COMP TCC, T_CO_DEPT TCD
+														,(
+														  (
+														    SELECT
+														    SUBSTRING_INDEX(SUBSTRING_INDEX(sp_param.sp_param,'$',1),'$',1) AS user_se,
+														    SUBSTRING_INDEX(SUBSTRING_INDEX(sp_param.sp_param,'$',2),'$',-1) AS comp_seq,
+														    SUBSTRING_INDEX(SUBSTRING_INDEX(sp_param.sp_param,'$',3),'$',-1) AS dept_seq,
+														    SUBSTRING_INDEX(sp_param.sp_param,'$',-1) AS spring_secu
+														    FROM (SELECT ? AS sp_param) sp_param														    
+														  )
+														) SP
+														WHERE M.EMP_SEQ = N.EMP_SEQ
+														AND M.EMP_SEQ = O.EMP_SEQ
+														AND N.DEPT_SEQ = TCD.DEPT_SEQ
+														AND M.WORK_STATUS = '999'
+														AND N.COMP_SEQ = TCC.COMP_SEQ
+														AND M.WORK_STATUS = '999'
+														AND CONCAT(M.GROUP_SEQ, M.SPRING_SECU) = SP.spring_secu
+														AND M.SPRING_DATE > DATE_ADD(NOW(),INTERVAL -30 SECOND)
+														AND N.MAIN_DEPT_YN = (CASE WHEN SP.dept_seq = '_' THEN 'Y' ELSE N.MAIN_DEPT_YN END)
+														AND N.DEPT_SEQ = (CASE WHEN SP.dept_seq = '_' THEN N.DEPT_SEQ ELSE SP.dept_seq END)
+														AND M.USE_YN = 'Y'
+														AND N.USE_YN = 'Y'
+														AND O.USE_YN = 'Y'
+														AND TCC.USE_YN = 'Y'
+														AND TCD.USE_YN = 'Y'
+														AND M.license_check_yn != '3'
+														AND TCC.comp_seq = (CASE WHEN SP.comp_seq = '_' THEN TCC.comp_seq ELSE SP.comp_seq END)
+														ORDER BY OrderFlag DESC, ORGAN_ID ASC
+														LIMIT 1"/>                                                          
+                                                          
+        <!--  # ORACLE  -->
+        <b:property name="authoritiesByUsernameQueryOracle" value="SELECT 
+                                                              B.EMP_SEQ USER_ID, A.dept_seq DEPT_ID,  A.AUTHOR_CODE AUTHORITY
+                                                             FROM t_co_auth_relate A
+                                                             INNER JOIN t_co_authcode T
+                                                              ON T.author_use_yn = 'Y'
+                                                              AND T.author_code = A.author_code
+                                                             INNER JOIN (  SELECT  C.EMP_SEQ, D.DEPT_SEQ, D.comp_seq
+                                                                           FROM t_co_emp C, t_co_emp_dept D
+                                                                           WHERE  C.emp_seq = D.emp_seq 
+                                                                           AND C.GROUP_SEQ || C.LOGIN_ID =? 
+                                                                           AND D.DEPT_SEQ = ? AND C.WORK_STATUS = '999'
+                                                                           AND ROWNUM = 1
+                                                                         ) B
+                                                              ON (T.author_type = '002' AND A.dept_seq = B.DEPT_SEQ)
+                                                              or ( T.author_type != '002' AND A.emp_seq  = B.EMP_SEQ)
+                                                              AND A.comp_seq = B.comp_seq"/> 
+        <!--  # MARIADB  -->
+        <b:property name="authoritiesByUsernameQuery" value="
+	        SELECT e.EMP_SEQ USER_ID, ed.dept_seq DEPT_ID, T.AUTHOR_CODE AUTHORITY
+			FROM t_co_emp e
+	    	JOIN t_co_emp_dept ed on e.emp_seq = ed.emp_seq 
+	    	JOIN t_co_emp_comp ec on ed.comp_seq = ec.comp_seq and ed.emp_seq = ec.emp_seq and ec.work_status != '001'
+			LEFT JOIN t_co_auth_relate B ON e.emp_seq = B.emp_seq
+			LEFT JOIN t_co_authcode T ON T.author_code = B.author_code AND T.author_use_yn = 'Y'
+			WHERE CONCAT(e.group_seq, e.login_id) = ?
+	    	AND ed.dept_seq = ?
+	    	AND CASE WHEN e.license_check_yn = '1' THEN 
+			(CASE WHEN B.author_type = '002' THEN ed.dept_seq = B.dept_seq AND ed.comp_seq = B.comp_seq ELSE e.emp_seq = B.emp_seq AND ed.dept_seq = B.dept_seq AND ed.comp_seq = B.comp_seq END) WHEN e.license_check_yn = '2' THEN
+			(T.author_code IS NULL or T.author_code is not null) END
+		"/> 		
+																													     
+        <b:property name="roleHierarchy" ref="roleHierarchy"/>
+        <b:property name="dataSource" ref="egov.dataSource"/>
+        <b:property name="mapClass" value="egovframework.com.sec.security.common.EgovSessionMapping"/>
+        
+        
+        
+        
+    </b:bean>
+
+    <b:bean id="methodDefinitionSources"
+        class="org.springframework.security.intercept.method.MapBasedMethodDefinitionSource">
+        <b:constructor-arg ref="methodMap" />
+    </b:bean>
+
+    <b:bean id="methodMap"
+        class="egovframework.com.sec.security.intercept.ResourcesMapFactoryBean"
+        init-method="init">
+        <b:property name="securedObjectService" ref="securedObjectService"/>
+        <b:property name="resourceType" value="method"/>
+    </b:bean>
+
+    <!--  method  -->
+    <b:bean id="_methodDefinitionSourceAdvisor" class="org.springframework.security.intercept.method.aopalliance.MethodDefinitionSourceAdvisor">
+        <b:constructor-arg value="_methodSecurityInterceptor" />
+        <b:constructor-arg ref="_delegatingMethodDefinitionSource" />
+    </b:bean>
+
+    <b:bean id="_methodSecurityInterceptor" class="org.springframework.security.intercept.method.aopalliance.MethodSecurityInterceptor">
+        <b:property name="validateConfigAttributes" value="false" />
+        <b:property name="authenticationManager" ref="authenticationManager"/>
+        <b:property name="accessDecisionManager" ref="accessDecisionManager"/>
+        <b:property name="objectDefinitionSource" ref="_delegatingMethodDefinitionSource" />
+    </b:bean>
+
+    <b:bean id="_delegatingMethodDefinitionSource" class="org.springframework.security.intercept.method.DelegatingMethodDefinitionSource">
+        <b:property name="methodDefinitionSources">
+            <b:list>
+                <b:ref bean="methodDefinitionSources"/>
+                <b:bean class="org.springframework.security.annotation.SecuredMethodDefinitionSource" />
+                <b:bean class="org.springframework.security.annotation.Jsr250MethodDefinitionSource" />
+            </b:list>
+        </b:property>
+    </b:bean>
+
+    <!--  pointcut
+    <b:bean id="_protectPointcutPostProcessor" class="org.springframework.security.intercept.method.ProtectPointcutPostProcessor">
+        <b:constructor-arg ref="methodDefinitionSources" />
+        <b:property name="pointcutMap" ref="pointcutMap"/>
+    </b:bean>
+
+    <b:bean id="pointcutMap"
+        class="egovframework.rte.fdl.security.intercept.ResourcesMapFactoryBean"
+        init-method="init">
+        <b:property name="securedObjectService" ref="securedObjectService"/>
+        <b:property name="resourceType" value="pointcut"/>
+    </b:bean>
+    -->
+    <!-- customizing method security end -->
+</b:beans>

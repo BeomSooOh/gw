@@ -1,0 +1,195 @@
+#-----------------------------------------------------------------------
+#
+#   neos.properties : neos \uad00\ub828 message
+#
+#-----------------------------------------------------------------------
+#   1.  key = value \uad6c\uc870\uc785\ub2c8\ub2e4.
+#   2.  key\uac12\uc740 \uacf5\ubc31\ubb38\uc790\ub97c \ud3ec\ud568\ubd88\uac00, value\uac12\uc740 \uacf5\ubc31\ubb38\uc790\ub97c \uac00\ub2a5
+#   3.  key\uac12\uc73c\ub85c \ud55c\uae00\uc744 \uc0ac\uc6a9\ubd88\uac00,   value\uac12\uc740 \ud55c\uae00\uc0ac\uc6a9\uc774 \uac00\ub2a5
+#   4.  \uc904\uc744 \ubc14\uafc0 \ud544\uc694\uac00 \uc788\uc73c\uba74 '\'\ub97c \ub77c\uc778\uc758 \ub05d\uc5d0 \ucd94\uac00(\ub9cc\uc57d  '\'\ubb38\uc790\ub97c \uc0ac\uc6a9\ud574\uc57c \ud558\ub294 \uacbd\uc6b0\ub294 '\\'\ub97c \uc0ac\uc6a9)
+#   5.  Windows\uc5d0\uc11c\uc758 \ub514\ub809\ud1a0\ub9ac \ud45c\uc2dc : '\\' or '/'  ('\' \uc0ac\uc6a9\ud558\uba74 \uc548\ub428)
+#   6.  Unix\uc5d0\uc11c\uc758 \ub514\ub809\ud1a0\ub9ac \ud45c\uc2dc : '/'
+#   7.  \uc8fc\uc11d\ubb38 \ucc98\ub9ac\ub294  #\uc0ac\uc6a9
+#   8.  value\uac12 \ub4a4\uc5d0 \uc2a4\ud398\uc774\uc2a4\uac00 \uc874\uc7ac\ud558\ub294 \uacbd\uc6b0 \uc11c\ube14\ub9bf\uc5d0\uc11c \ucc38\uc870\ud560\ub54c\ub294 \uc5d0\ub7ec\ubc1c\uc0dd\ud560 \uc218 \uc788\uc73c\ubbc0\ub85c trim()\ud558\uac70\ub098 \ub9c8\uc9c0\ub9c9 \uacf5\ubc31\uc5c6\uc774 properties \uac12\uc744 \uc124\uc815\ud560\uac83
+#-----------------------------------------------------------------------
+
+
+
+#\uae30\uad00 \ucd5c\uc0c1\uc704 \ucf54\ub4dc
+neos.organ_id = NKRPC00001
+
+# \uc9c1\uc704, \uc9c1\uae09 \uacf5\ud1b5\ucf54\ub4dc
+position.code = COM077
+class.code = COM152
+
+
+#\ubb38\uc11c\uc591\uc2dd\ud154\ud50c\ub9bf\ud30c\uc77c##################################################
+doc.template.windows = D:\\upload\\doc\\template
+doc.template.linux = /ispdata/basic/template
+#####################################################################
+
+
+#\uc804\uc790\uacb0\uc7ac\ubb38\uc11c \ub514\ub809\ud1a0\ub9ac \uad6c\ubd84##########################################
+#dir.seperate =\\
+dir.seperate =/
+#####################################################################
+
+#\uc804\uc790\uacb0\uc7ac\ubb38\uc11c \ud30c\uc77c\uc5c5\ub85c\ub4dc \uacbd\ub85c########################################
+upload.approval.doc.file.size=1024000000
+upload.approval.doc.file.path.windows =  D:\\upload\\doc
+upload.approval.doc.file.path.linux =  /ispdata/doc/documentDir
+upload.approval.doc.file.cnt = 0
+upload.approval.doc.file.convertname = Y
+upload.approval.doc.file.restrict = class|asp|jsp|java|js
+upload.approval.doc.file.permission = hwp|gif
+#####################################################################
+
+#mobile \ud30c\uc77c\uc5c5\ub85c\ub4dc \uacbd\ub85c########################################
+upload.mobile.file.size=1024000000
+upload.mobile.file.path.windows =  D:\\upload\\doc\\temp\\mobile
+upload.mobile.file.path.linux =  /ispdata/basic/temp/mobile
+upload.mobile.file.cnt = 0
+upload.mobile.file.convertname = N
+upload.mobile.file.restrict = class|asp|jsp|java|js|php
+upload.mobile.file.permission = 
+#####################################################################
+
+#\uc804\uc790\uacb0\uc7ac\ubb38\uc11c \uc784\uc2dc\ud30c\uc77c\uc5c5\ub85c\ub4dc \uacbd\ub85c####################################
+upload.approval.doc.temp.file.size=1024000000
+upload.approval.doc.temp.file.path.windows =  D:\\upload\\doc\\temp
+upload.approval.doc.temp.file.path.linux =  /ispdata/doc/documentDir/temp
+upload.approval.doc.temp.file.cnt = 0
+upload.approval.doc.temp.convertname = Y
+upload.approval.doc.temp.file.restrict = class|asp|jsp|java|js
+upload.approval.doc.temp.file.permission = hwp|gif
+#####################################################################
+
+#\uc804\uc790\uacb0\uc7ac \ud30c\uc77c\uc5c5\ub85c\ub4dc \uacbd\ub85c############################################
+upload.approvalline.file.size=0
+upload.approvalline.file.path.windows =  D:\\upload\\doc
+upload.approvalline.file.path.linux =  /ispdata/doc/file
+upload.approvalline.file.cnt = 0
+upload.approvalline.file.convertname = Y
+upload.approvalline.file.restrict = java|jsp|asp|js|class|exe
+upload.approvalline.file.permission =
+#####################################################################
+
+#\uad6c\ubb38\uc11c\ud568  \ud30c\uc77c \uc800\uc7a5 \uacbd\ub85c #################################################
+save.olddocument.file.path.windows =  D:\\olddoc
+save.olddocument.file.path.linux = /
+#####################################################################
+
+#\uc804\uc790\uacb0\uc7ac \ud6c4 \uc218\uc2e0\ucc98\uc774\ub3d9##############################################
+upload.receiver.file.path.linux = /ispdata/doc/temporary/send/hml
+#\uc811\uc218\ud6c4 \uc811\uc218\ubd80\uc11c\uad00\ub828 \ub514\ub809\ud1a0\ub9ac\ub85c \uc774\ub3d9#################################
+upload.receiver.file.completepath = /ispdata/doc/recv
+upload.receiver.file.path.windows = D:\\upload\\doc\\temporary\\send\\hml
+#####################################################################
+
+#\uc804\uc790\uacb0\uc7ac \uac1c\uc778\uc0ac\uc778###################################################
+upload.approvalsign.file.size=1024000
+upload.approvalsign.file.path.windows =  D:\\upload\\sign
+upload.approvalsign.file.path.linux =  /ispdata/basic/sign
+upload.approvalsign.file.cnt = 1
+upload.approvalsign.file.convertname = Y
+upload.approvalsign.file.restrict =
+upload.approvalsign.file.permission = jpg|jpeg|gif|png
+#####################################################################
+
+#\uba54\ubaa8\ubcf4\uace0 \ucca8\ubd80\ud30c\uc77c\uc5c5\ub85c\ub4dc \uacbd\ub85c########################################
+upload.memoreport.file.size=54000000
+upload.memoreport.file.path.windows =  D:\\upload\\memoreport
+upload.memoreport.file.path.linux =  /ispdata/basic/memoreport
+upload.memoreport.file.cnt = 3
+upload.memoreport.file.convertname = Y
+upload.memoreport.file.restrict = java|jsp|asp|js|class|exe
+upload.memoreport.file.permission =
+#####################################################################
+
+#\uc804\uc790\uacb0\uc7ac \ubc1c\uc1a1\uc2dc xml\ubcc0\ud658#############################################
+upload.makexml.file.dtd = /ispdata/transfer/relay/dtd
+upload.makexml.file.xml = /ispdata/transfer/temp
+upload.senddaemon.file.xml = /ispdata/doc/temporary/send/hml
+#####################################################################
+
+###\ucd98\ucc9c \ub3c4\uc2dc\uacf5\uc0ac \uba54\uc2e0\uc800\uc640 \uacb0\uc7ac\ud6c4 \ubbf8\uacb0\uc7ac \uac74\uc218 \uc5f0\ub3d9\uc8fc\uc18c######################
+messenger.approval.url = 
+###########################################################################
+
+icon.tree.dep1 = /images/neos/ico/icon_tree_dep1.gif
+icon.tree.dep2 = /images/neos/ico/icon_tree_dep2.gif
+icon.tree.dep3 = /images/neos/ico/icon_tree_dep3.gif
+icon.tree.people = /images/neos/ico/icon_tree_people.gif
+icon.tree.system = /images/neos/ico/icon_tree_img01.gif
+icon.tree.peopleplus = /images/neos/ico/icon_tree_peoplus.gif
+
+#PIMS \ucca8\ubd80\ud30c\uc77c\uacbd\ub85c ########################################
+upload.pims.file.size=1024000000
+upload.pims.shcedule.file.path.windows =  D:\\upload\\schedule
+upload.pims.shcedule.file.path.linux =  /ispdata/portal/pims/schedule
+upload.pims.work.file.path.windows =  D:\\upload\\work
+upload.pims.work.file.path.linux = /ispdata/portal/pims/work
+upload.pims.file.cnt = 0
+upload.pims.file.restrict = class|asp|jsp|java|js
+upload.pims.file.permission = hwp|gif
+#####################################################################
+
+###\uc678\ubd80\uc811\uc218 ACK######################################################
+ack.receive.accept.linux = /ispdata/relay/data/send
+ack.receive.accepttemp.linux = /ispdata/relay/data/sendtemp
+ack.receive.accept.windows = D:\\/send
+ack.receive.accepttemp.windows = D:\\/sendtemp
+###################################################################
+
+###########################################################################
+# protal url
+###########################################################################
+portal.crmUrl = http://intra.kofia.or.kr
+portal.eisUrl = http://intra.kofia.or.kr
+portal.gwUrl = http://intra.kofia.or.kr
+portal.portalUrl = http://intra.kofia.or.kr
+portal.mailUrl = http://172.16.1.21:8900
+portal.messengerUrl = http://1.244.118.117:8090
+#portal.messengerUrl = http://1.244.118.117:8090
+board.notInBoardCode =
+
+#ckeditor \uc774\ubbf8\uc9c0 \uc5c5\ub85c\ub4dc \uacbd\ub85c ####################################
+upload.ckeditor.image.file.size=10240000
+upload.ckeditor.image.file.path.windows = /ispdata/basic/portal/bbs/images
+upload.ckeditor.image.file.path.linux =  /ispdata/basic/portal/bbs/images
+upload.ckeditor.image.file.cnt = 1
+upload.ckeditor.image.convertname = Y
+upload.ckeditor.image.file.restrict = class|asp|jsp|java|js
+upload.ckeditor.image.file.permission = jpeg|bmp|gif|jpg|png
+#####################################################################
+
+###########################################################################
+# mobile messenger config
+###########################################################################
+mobile.messenger.url = http://1.244.118.117:8090/DZMA
+mobile.file.download.url = http://1.244.118.117:8090/gw/anonymous/note/noteFileDown.do
+mobile.photo.download.url = http://1.244.118.117:8090/gw/anonymous/getImage.do?fileSn=0&atchFileId=
+mobile.messenger.filepath = /home/neos/duzon/storage
+
+#\uba54\ubaa8\ubcf4\uace0\ubcf8\ubb38 \ud30c\uc77c \uc5c5\ub85c\ub4dc\uacbd\ub85c########################################
+upload.memoreport.doc.file.size=1024000000
+upload.memoreport.doc.file.path.windows =  D:\\upload\\memoreport
+upload.memoreport.doc.file.path.linux =  /ispdata/doc/memoreport
+upload.memoreport.doc.file.cnt = 0
+upload.memoreport.doc.file.convertname = Y
+upload.memoreport.doc.file.restrict = class|asp|jsp|java|js
+upload.memoreport.doc.file.permission = hwp|gif
+#####################################################################
+
+#\uac8c\uc2dc\ud310 \ud30c\uc77c \uc5c5\ub85c\ub4dc \uccb4\ud06c ########################################
+upload.board.file.size= 0
+upload.board.file.cnt = 10
+upload.board.file.restrict = class|asp|jsp|java|js|exe|php
+upload.board.file.permission =
+upload.board.file.attchFlag = 1000
+#####################################################################
+
+###########################################################################
+# ESS \uadfc\ud0dc/\ubcf5\ub9ac\ud6c4\uc0dd/\uc99d\uba85\uc6d0 \uc2ec\uc0ac\uc720\ubb34
+###########################################################################
+kofia.ac.approval.ess = N

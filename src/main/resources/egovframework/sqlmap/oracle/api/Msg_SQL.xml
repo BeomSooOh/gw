@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="MsgDAO">
+
+	<typeAlias alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+    <typeAlias alias="oracleLobMap" type="bizbox.orgchart.util.OracleLobMap"/>
+    
+   	<resultMap id="tMsgTcmhLinkMap" class="egovMap">
+		<result property="link_seq" column="link_seq" />
+		<result property="link_type" column="link_type" />
+		<result property="event_type" column="event_type" />
+		<result property="event_sub_type" column="event_sub_type" />
+		<result property="url_path" column="url_path" jdbcType="CLOB" javaType="String"/>
+		<result property="group_seq" column="group_seq" />
+		<result property="comp_seq" column="comp_seq" />
+		<result property="emp_seq" column="emp_seq" />
+		<result property="login_ip" column="login_ip" />
+		<result property="token" column="token" />
+		<result property="create_date" column="create_date" />
+		<result property="seq" column="seq" />
+		<result property="sub_seq" column="sub_seq" />
+	</resultMap>
+
+	<select id="MsgDAO.selectMenuVersion" parameterClass="hashmap" resultClass="string">
+		/* MsgDAO.selectMenuVersion oracle */
+		
+		SELECT	NVL(max(TO_NUMBER(icon_ver)), 0) AS link_version
+			FROM $DB_NEOS$t_msg_tcmg_link
+		WHERE	group_seq = #groupSeq#
+				and comp_seq = #compSeq#
+				and use_yn = 'Y'
+	</select>
+	
+	
+	
+	<select id="MsgDAO.selectMenuList" parameterClass="hashmap" resultClass="egovMap">
+		/* MsgDAO.selectMenuList oracle */
+		
+		SELECT	A.link_seq,
+				A.link_position,
+				A.link_kind,
+				A.link_nm_kr,
+				A.link_nm_en,
+				A.link_nm_jp,
+				A.link_nm_cn,
+				A.menu_no,
+				A.msg_target,
+				A.target_url,
+				A.map_key,
+				A.link_param,
+				A.encrypt_seq,
+				concat(#scheme#, B.comp_domain) as comp_domain,
+				A.icon_path,
+				A.icon_ver,
+				(select count(C.link_seq) from $DB_NEOS$t_msg_tcmg_link C where C.link_upper_seq = A.link_seq and C.use_yn = 'Y' and C.group_seq = A.group_seq and C.comp_seq=A.comp_seq) as "subCnt"
+			FROM $DB_NEOS$t_msg_tcmg_link A, $DB_NEOS$t_co_comp B
+			WHERE	A.group_seq = #groupSeq#
+				and A.comp_seq = #compSeq#
+				and B.group_seq = A.group_seq
+				and B.comp_seq = A.comp_seq
+				and A.link_upper_seq = '0'
+				and A.use_yn = 'Y'
+				order by A.order_num
+	</select>
+	
+	
+	
+	<select id="MsgDAO.selectBaseMenuList" parameterClass="hashmap" resultClass="egovMap">
+		/* MsgDAO.selectBaseMenuList oracle */
+		
+		SELECT	A.link_seq,
+				A.link_position,
+				A.link_kind,
+				A.link_nm_kr,
+				A.link_nm_en,
+				A.link_nm_jp,
+				A.link_nm_cn,
+				A.menu_no,
+				A.msg_target,
+				A.target_url,
+				A.map_key,
+				A.link_param,
+				A.encrypt_seq,
+				concat(#scheme#, B.comp_domain) as comp_domain,
+				A.icon_path,
+				A.icon_ver,
+				(select count(C.link_seq) from $DB_NEOS$t_msg_tcmg_link C where C.link_upper_seq = A.link_seq and C.use_yn = 'Y' and C.group_seq = A.group_seq and C.comp_seq='0') as "subCnt"
+			FROM $DB_NEOS$t_msg_tcmg_link A
+			inner join $DB_NEOS$t_co_comp b on b.comp_seq = #compSeq#
+		WHERE	A.group_seq = #groupSeq# and A.comp_seq = '0' and A.use_yn = 'Y' and A.link_upper_seq = '0'
+	</select>
+	
+	
+	<select id="MsgDAO.selectSubMenuList" parameterClass="hashmap" resultClass="egovMap">
+		/* MsgDAO.selectSubMenuList oracle */
+		
+		SELECT	A.link_seq,
+				A.link_position,
+				A.link_kind,
+				A.link_nm_kr,
+				A.link_nm_en,
+				A.link_nm_jp,
+				A.link_nm_cn,
+				A.menu_no,
+				A.msg_target,
+				A.target_url,
+				A.map_key,
+				A.link_param,
+				A.encrypt_seq,
+				concat(#scheme#, B.comp_domain) as comp_domain,
+				A.icon_path,
+				A.icon_ver
+			FROM $DB_NEOS$t_msg_tcmg_link A, $DB_NEOS$t_co_comp B
+		WHERE	A.group_seq = #groupSeq#
+				and A.comp_seq = #compSeq#
+				and B.group_seq = A.group_seq
+				and B.comp_seq = A.comp_seq
+				and A.link_upper_seq = #upperSeq#
+				and A.use_yn = 'Y'
+	</select>
+	
+	
+	<procedure id="MsgDAO.getSSOToken" parameterClass="hashmap" resultClass="string">
+	    <![CDATA[
+	    	call $DB_NEOS$P_TCMH_selectSSOToken(#groupSeq#, #compSeq#, #empSeq#, #linkSeq#, #linkType#, #eventType#, #eventSubType#, #urlPath#, #userIP#)
+	     ]]>
+    </procedure>
+
+	<select id="MsgDAO.getEncryptSeq" parameterClass="hashmap" resultClass="string">
+		SELECT	NVL(max(cast(ENCRYPT_SEQ as int)+1), '0') AS encrypt_seq
+		FROM $DB_NEOS$t_co_encrypt
+	</select>
+	
+	<insert id="MsgDAO.setEncrypt" parameterClass="hashmap">
+		/* MsgDAO.setEncrypt - oracle */
+		INSERT INTO $DB_NEOS$t_co_encrypt (
+			   encrypt_seq
+			  ,group_seq
+			  ,comp_seq
+			  ,encrypt_type
+			  ,encrypt_key
+			  ,use_yn
+			  ,create_seq
+			  ,create_date
+			  ,modify_seq
+			  ,modify_date
+		) VALUES (
+			   #encryptSeq#
+			  ,#groupSeq#
+			  ,#newCompSeq#
+			  ,'none'
+			  ,null
+			  ,'Y'
+			  ,#empSeq#
+			  ,SYSDATE
+			  ,#empSeq#
+			  ,SYSDATE
+		)
+	</insert>
+	
+	<insert id="MsgDAO.setMsgMenu" parameterClass="hashmap">
+		/* MsgDAO.setMsgMenu - oracle */
+		INSERT INTO $DB_NEOS$t_msg_tcmg_link (
+			   link_seq
+			  ,link_upper_seq
+			  ,link_position
+			  ,group_seq
+			  ,comp_seq
+			  ,link_kind
+			  ,link_nm_kr
+			  ,link_nm_en
+			  ,link_nm_jp
+			  ,link_nm_cn
+			  ,menu_no
+			  ,gnb_menu_no
+			  ,lnb_menu_no
+			  ,msg_target
+			  ,target_url
+			  ,link_param
+			  ,encrypt_seq
+			  ,map_key
+			  ,use_yn
+			  ,icon_nm
+			  ,icon_path
+			  ,icon_ver
+			  ,order_num
+			  ,create_seq
+			  ,create_date
+			  ,modify_seq
+			  ,modify_date
+		) SELECT 
+			   (#newCompSeq# || '_' || link_seq)
+			  ,CASE when link_upper_seq = '0' then '0' ELSE (#newCompSeq# || '_' || link_upper_seq) END 
+			  ,link_position
+			  ,#groupSeq#
+			  ,#newCompSeq#
+			  ,link_kind
+			  ,link_nm_kr
+			  ,link_nm_en
+			  ,link_nm_jp
+			  ,link_nm_cn
+			  ,menu_no
+			  ,gnb_menu_no
+			  ,lnb_menu_no
+			  ,msg_target
+			  ,target_url
+			  ,link_param
+			  ,#encryptSeq#
+			  ,map_key
+			  ,use_yn
+			  ,icon_nm
+			  ,icon_path
+			  ,'1'
+			  ,order_num
+			  ,#empSeq#
+			  ,SYSDATE
+			  ,#empSeq#
+			  ,SYSDATE
+		 FROM $DB_NEOS$t_msg_tcmg_link where comp_seq = '0'
+	</insert>
+	
+	
+	<select id="MsgDAO.checkLinkInfo" parameterClass="hashmap" resultMap="tMsgTcmhLinkMap">
+		/* MsgDAO.checkLinkInfo - oracle */
+		SELECT * 
+      		  FROM $DB_NEOS$t_msg_tcmh_link 
+    	WHERE group_seq = #groupSeq# 
+		      AND comp_seq = #compSeq# 
+		      AND emp_seq = #empSeq# 
+		      AND link_seq = #linkSeq#
+		      AND link_seq <![CDATA[ <> ]]> '0'
+		      AND ROUND((SYSDATE - create_date)*24*60) <![CDATA[ < ]]> #lT#
+      	AND ROWNUM = 1
+      	ORDER BY create_date DESC
+	</select>
+	
+	<select id="MsgDAO.getTokenFromLinkInfo" parameterClass="hashmap" resultClass="string">
+		/* MsgDAO.getTokenFromLinkInfo - oracle */
+		SELECT token AS "token" FROM(
+			SELECT
+				ROWNUM AS rnum
+				, T1.*
+			FROM (
+				SELECT token
+					FROM $DB_NEOS$t_msg_tcmh_link 
+				WHERE group_seq = #groupSeq# 
+					AND comp_seq = #compSeq# 
+					AND emp_seq = #empSeq#
+					AND link_seq = #linkSeq#
+					AND ROUND((SYSDATE - create_date)*24*60) <![CDATA[ < ]]> #lT#
+				ORDER BY create_date DESC 
+			)T1
+		)T2 where rnum = 1	
+	</select>
+	
+	<select id="MsgDAO.getToken" parameterClass="hashmap" resultClass="string">
+		SELECT DBMS_RANDOM.STRING('U', 36) FROM DUAL
+	</select>
+	
+	<select id="MsgDAO.getLinkUrlPath" parameterClass="hashmap" resultClass="string">
+		/* MsgDAO.getLinkUrlPath - oracle */
+		SELECT NVL(B.url_path,'') 
+			FROM $DB_NEOS$t_msg_tcmg_link A, $DB_NEOS$t_co_menu B 
+		WHERE A.link_seq = #linkSeq# AND A.menu_no = B.menu_no AND ROWNUM = 1
+	</select>
+	
+	<insert id="MsgDAO.insertLinkInfo" parameterClass="hashmap">
+		/* MsgDAO.insertLinkInfo - oracle */
+		INSERT INTO $DB_NEOS$t_msg_tcmh_link (
+	      link_seq, link_type, event_type, event_sub_type, url_path, group_seq, comp_seq, emp_seq, login_ip, token, create_date, seq, sub_seq
+	    ) VALUES (
+	      #linkSeq#, #linkType#, #eventType#, #eventSubType#, #urlPath#, #groupSeq#, #compSeq#, #empSeq#, #userIP#, #sRet#, SYSDATE, #seq#, #subSeq#
+	    )
+	</insert>
+	
+	
+	
+	<select id="MsgDAO.getGerpUserInfo" parameterClass="hashmap" resultClass="egovMap">
+		/* MsgDAO.getGerpUserInfo - oracle */
+		SELECT
+			*
+		FROM
+			$DB_NEOS$t_co_emp_comp
+		WHERE
+			gerp_no_gemp = #gerpId#
+			
+			<isNotEmpty property="compSeq">
+			  	AND comp_seq = #compSeq#
+			</isNotEmpty>
+						
+		AND ROWNUM = 1
+	</select>
+	
+	<select id="MsgDAO.getGerpLinkInfo" parameterClass="hashmap" resultClass="egovMap">
+		/* MsgDAO.getGerpLinkInfo - oracle */
+		SELECT
+			*
+		FROM
+			$DB_NEOS$t_msg_tcmg_link
+		WHERE
+			msg_target = #msgTarget#
+			AND menu_no = #menuNo#
+			AND comp_seq = #compSeq#
+		AND ROWNUM = 1
+	</select>
+</sqlMap>

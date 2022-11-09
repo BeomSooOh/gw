@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ErpManageDAO">
+
+    <typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+    <typeAlias alias="oracleLobMap" type="bizbox.orgchart.util.OracleLobMap"/>
+	
+	<select id="ErpManageDAO.selectEmpInfo" parameterClass="hashmap" resultClass="egovMap">
+		select  A.group_seq, B.comp_seq, A.emp_seq
+		from  $DB_NEOS$t_co_emp A, $DB_NEOS$t_co_emp_dept B, $DB_NEOS$t_co_menu C
+		where A.login_id = #loginId#
+		    and A.group_seq = B.group_seq
+		    and A.emp_seq = B.emp_seq
+		    and B.comp_seq = #compSeq#
+		    and B.main_dept_yn = 'Y' 
+		    AND ROWNUM = 1
+	</select>
+	
+	<select id="ErpManageDAO.selectLinkMenuInfo" parameterClass="hashmap" resultClass="oracleLobMap">
+		SELECT
+			comp_seq as "compSeq",
+			portlet_type as "portletType",
+			order_num as "orderNum",
+			gnb_menu_no as "gnbMenuNo",
+			lnb_menu_no as "lnbMenuNo",
+			lnb_menu_gubun as "lnbMenuGubun",
+			url_path as "urlPath",
+			error_url_path as "errorUrlPath",
+			create_seq as "createSeq",
+			create_date as "createDate",
+			modify_seq as "modifySeq",
+			modify_date as "modifyDate", 
+			$DB_NEOS$get_menu_info('1', gnb_menu_no, #langCode#) AS "gnbMenuNm"
+		FROM 
+			$DB_NEOS$t_co_main_portlet
+		WHERE
+			comp_seq = #compSeq#
+		<isNotEmpty property="portletType">
+			AND
+				portlet_type = #portletType#
+		</isNotEmpty>
+		ORDER BY order_num
+	</select>
+	
+
+    <select id="ErpManageDAO.selectErpInfo" parameterClass="hashmap" resultClass="egovMap" remapResults="true">
+        /* ErpManageDAO.selectErpInfo - oracle */
+        SELECT group_seq
+             , comp_seq
+             , erp_seq
+             , achr_gbn
+             , erp_type_code
+             , CASE 
+                 WHEN erp_type_code = 'ERPiU' THEN 'iu'
+                 WHEN erp_type_code = 'iCUBE' THEN 'icube'
+                 WHEN erp_type_code = 'GERP'  THEN 'gerp'
+                 ELSE 'etc'
+               END AS erp_type
+             , erp_name
+             , database_type
+             , driver
+             , url
+             , userid
+             , password
+             , create_seq
+             , create_date
+             , modify_seq
+             , modify_date
+             , erp_comp_name
+             , erp_comp_seq
+             , use_yn
+             , org_sync_status
+             <isEqual property="autoSyncTime" compareValue="Y">
+                , TO_CHAR(org_sync_date, 'YYYYMMDDHH24MI') AS auto_org_sync_date
+             </isEqual>
+             , TO_CHAR(org_sync_date, 'YYYY-MM-DD HH24MISS') AS org_sync_date
+          FROM $DB_NEOS$t_co_erp
+         WHERE comp_seq = #compSeq#
+           AND achr_gbn = #achrGbn#
+    </select>
+
+</sqlMap>

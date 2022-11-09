@@ -1,0 +1,380 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="now" />
+    <meta http-equiv="Cache-Control" content="private" />
+    <meta http-equiv="Cache-Control" content="No-Cache" />
+    <meta http-equiv="Pragma" content="No-Cache" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <title>[DZEditor] Data Binding</title>
+
+    <style>
+        #menu {
+            margin-right: 20px;
+            border: 1px solid gray;
+            height: 700px;
+            overflow-y: scroll;
+        }
+
+        #menu div,
+        #menu_title {
+            padding: 5px 10px;
+        }
+
+        #menu_title {
+            background-color: lightblue;
+            margin-right: 20px;
+        }
+
+        #menu div:not(:last-child) {
+            border-bottom: 1px solid gray;
+        }
+
+        #menu div.select {
+            background-color: lightyellow;
+        }
+
+        .vertical_bar {
+            border-right: 1px dashed gray;
+            margin: 0px 20px;
+            height: 700px;
+        }
+    </style>
+
+    <script>
+        g_dzEditorBasePath = "./";
+    </script>
+
+    <script language="javascript" src="./js/dze_env_config_bizboxA_doc_box.js"></script>
+    <script language="javascript" src="./js/dze_ui_config_bizboxA_doc_box_form_manager.js"></script>
+    <script language="javascript" src="./js/loadlayer.js"></script>
+
+    <script>
+        dzeEnvConfig.iFrameLayer = false;
+        dzeUiConfig.strLoadingDoneFunction = "dzeditorLoadComplete";
+        dzeUiConfig.bCustomEditorHeightIFrameYN = false;
+        dzeUiConfig.nEditorHeight = 700;
+        dzeUiConfig.strChangeFormCodeFunction = "dzeditorFomrCodeChange";
+
+        // 더존웹에디터 로딩 완료 시점에 호출되는 함수
+        // 함수 호출은 sample_suite_iframe.html 파일에서 선언함
+        function dzeditorLoadComplete(dzeditor_no) {
+
+            setSample(0);
+        }
+
+        function dzeditorFomrCodeChange() {
+
+            updateFormCodeMenu();
+
+        }
+
+        function setSample(num) {
+            var content = document.getElementById("content");
+            var form_code = document.getElementById("form_code");
+
+            var num_content = document.getElementById("content_" + num);
+            var num_form_code = document.getElementById("form_code_" + num);
+
+            content.value = num_content.value;
+            form_code.value = num_form_code.value;
+
+            setFormCode();
+            setHtml();
+        }
+
+        //에디터 dzeUiConfig.arrFormCodeString set
+        function setFormCode() {
+            var textarea = document.getElementById("form_code");
+            var arrFormCode = JSON.parse(textarea.value);
+
+            dzeUiConfig.arrFormCodeString = arrFormCode;
+
+            updateFormCodeMenu();
+        }
+
+        function updateFormCodeMenu() {
+
+            var arrFormCode = dzeUiConfig.arrFormCodeString;
+
+            var container = document.getElementById("menu");
+            container.innerHTML = "";
+
+            var name = "";
+            var code = "";
+            var select = false;
+
+            var div = null;
+
+            for (var i = 0, len = arrFormCode.length; i < len; i++) {
+                code = arrFormCode[i][0];
+                name = arrFormCode[i][9];
+                select = arrFormCode[i][2] > 0 ? true : false;
+
+                div = document.createElement("div");
+                div.className = select ? "select" : "";
+                div.innerHTML = name + ' <span style="color:blue;">' + code + '</span>';
+                container.appendChild(div);
+
+                (function () {
+                    var item = div;
+                    var formCode = arrFormCode[i];
+
+                    item.onclick = function () {
+                        insertFormCode(formCode);
+                    };
+
+                })();
+            }
+        }
+
+        function insertFormCode(formCode) {
+            console.log(formCode);
+            var code = formCode[0];
+            dzeEnvConfig.fnAddHTMLContent(code, null, 0, 0, true);
+        }
+
+        //에디터 html set
+        function setHtml() {
+            var textarea = document.getElementById("content");
+            var html = textarea.value;
+
+            dzeEnvConfig.fnSetEditorHTMLCode(html, false, 0);
+        }
+
+        //에디터 html get
+        function getHtml() {
+            var html = dzeEnvConfig.fnGetEditorHTMLCode(false, 0);
+
+            var contents = document.getElementById("content");
+            contents.value = html;
+        }
+    </script>
+</head>
+
+
+<body>
+
+    <h1 style="text-align:center;">BizBox Alpha Data Binding Sample DZEditor</h1>
+
+    <div style="text-align:center;">
+        <div style="display: block; padding-bottom: 5px;">
+            <input type="button" value="Set 에디터 HTML" onclick="setHtml()" style="width: 180px; height: 30px;">
+            <div style="display: inline-block; width: 50px;"></div>
+            <input type="button" value="Get 에디터 HTML" onclick="getHtml()" style="width: 180px; height: 30px;">
+            <div style="display: inline-block; width: 50px;"></div>
+            <input type="button" value="Set 데이터 바인딩" onclick="setFormCode()" style="width: 180px; height: 30px;">
+        </div>
+        <div id="example_container" style="display: block; padding-bottom: 10px;"></div>
+    </div>
+
+    <div style="display: flex;justify-content: center; height: 700px;">
+        <div style="display:flex; flex-direction: column; width:300px;">
+            <div id="menu_title">항목명</div>
+            <div id="menu"></div>
+        </div>
+
+        <!-- 에디터 영역 -->
+        <div dzeditor="true">DuzonEditor</div>
+
+        <div class="vertical_bar"></div>
+
+        <!-- html / form_code text area -->
+        <div style="display:flex; flex-direction: column;">
+            <p>* HTML ---------------------------------------------</p>
+            <textarea id="content" cols="0" rows="0" style="width:800px; height:300px;"></textarea>
+
+            <p>* 양식 코드 ----------------------------------------</p>
+            <textarea id="form_code" cols="0" rows="0" style="width:800px; height:300px;"></textarea>
+        </div>
+    </div>
+    <br />
+
+    <!-- 양식 HTML 0 -->
+    <textarea id="content_0" style="display: none;">
+        <title></title>
+        <h1 style="font-family:굴림;text-align:center;">주문등록 테스트</h1>
+        <table class="area_sign" width="100%" height="100%" border="0" cellspacing="0" cellpadding="0">
+            <tbody>
+                <tr>
+                    <td>
+                        <table width="100%" height="100%" border="0" cellspacing="0" cellpadding="0">
+                            <colgroup>
+                            <col width="87" />
+                            <col width="*" />
+                            <col width="368" />
+                            </colgroup>
+                            <tbody>
+                                <tr>
+                                    <td style="font-family:굴림;text-align:center;" class="bd_color">
+                                        <p>품 의 번 호</p>
+                                    </td>
+                                    <td style="font-family:굴림;text-align:center;" class="bd_color">_DF02DAY_</td>
+                                    <td style="font-family:굴림;height:196px;" class="df05" rowspan="7">_DF05_</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-family:굴림;text-align:center;" class="bd_color">
+                                        <p style="font-family:굴림;">종결일자</p>
+                                    </td>
+                                    <td style="font-family:굴림;text-align:center;" class="bd_color pl5">_DF12_</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-family:굴림;text-align:center;" class="bd_color">
+                                        <p style="font-family:굴림;">결재완료희망일자</p>
+                                    </td>
+                                    <td style="font-family:굴림;text-align:center;" class="bd_color pl5">_DF13_</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-family:굴림;text-align:center;" class="bd_color">
+                                        <p style="font-family:굴림;">문서번호</p>
+                                    </td>
+                                    <td style="font-family:굴림;text-align:center;" class="bd_color pl5">_DF01_</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-family:굴림;text-align:center;" class="bd_color">
+                                        <p><br /></p>
+                                    </td>
+                                    <td style="font-family:굴림;text-align:center;" class="bd_color pl5">_DF02_</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-family:굴림;text-align:center;" class="bd_color">
+                                        <p>기 안 부 서</p>
+                                    </td>
+                                    <td style="font-family:굴림;text-align:center;" class="bd_color pl5">_DF03_</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-family:굴림;" class="bd_color">
+                                        <p>기&nbsp;&nbsp;&nbsp;안&nbsp;&nbsp;&nbsp;자</p>
+                                    </td>
+                                    <td style="font-family:굴림;text-align:center;" class="bd_color pl5">_DF04_</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-family:굴림;" class="bd_color">
+                                        <p style="font-family:굴림;">email</p>
+                                    </td>
+                                    <td style="font-family:굴림;text-align:center;" class="bd_color pl5">_DFEMAIL_</td>
+                                    <td style="font-family:굴림;height:37px;" class="df05">
+                                        <p style="font-family:굴림;"><br /></p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <table width="100%" height="100%" border="0" cellspacing="0" cellpadding="0">
+                            <colgroup>
+                            <col width="87" />
+                            <col width="*" />
+                            </colgroup>
+                            <tbody>
+                                <tr>
+                                    <td style="font-family:굴림;" class="bd_color">
+                                        <p><br /></p>
+                                    </td>
+                                    <td style="font-family:굴림;" class="bd_color01 pl5 textL">_DF07_</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-family:굴림;" class="bd_color">
+                                        <p>시&nbsp;&nbsp;&nbsp;행&nbsp;&nbsp;&nbsp;자</p>
+                                    </td>
+                                    <td style="font-family:굴림;" class="bd_color01 pl5 textL">_DF08_</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-family:굴림;" class="bd_color">
+                                        <p>시 행 일 자</p>
+                                    </td>
+                                    <td style="font-family:굴림;" class="bd_color01 pl5 textL">_DF09_</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-family:굴림;" class="bd_color">
+                                        <p>제&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;목</p>
+                                    </td>
+                                    <td style="font-family:굴림;" class="bd_color01 pl5 textL">_DF10_</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-family:굴림;" id="divFormContents">_DF11_</td>
+                </tr>
+                <tr>
+                    <td>
+                        <table width="100%" height="100%" border="0" cellspacing="0" cellpadding="0">
+                            <colgroup>
+                            <col width="87" />
+                            <col width="*" />
+                            </colgroup>
+                            <tbody>
+                                <tr>
+                                    <td style="font-family:굴림;" class="bd_color02 textC">
+                                        <p><br /></p>
+                                    </td>
+                                    <td style="font-family:굴림;" class="bd_color02 textL" valign="middle">_DFREF_</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </textarea>
+
+    <!-- 양식 코드 0 -->
+    <textarea id="form_code_0" style="display: none;">
+        [
+            ["_DF01_", "red", 1, [0, "회사명-부서명-YY-000", 0], "textL pl5", [0, 0, 0], "", "", true, "문서번호"],
+            ["_DF02DAY_", "", 1, [0, "기안일자", 0], "", [0, 0, 0], "", "", true, "기안일자"],
+            ["_DF02_", "red", 1, [0, "YYYY-MM-DD hh:mm", 0], "textL pl5", [0, 0, 0], "", "", true, "기안일"],
+            ["_DF03_", "", 1, [0, "기안자 부서이름", 0], "textL pl5", [0, 0, 0], "", "", true, "기안자 부서"],
+            ["_DF04_", "red", 1, [0, "홍길동", 0], "textL pl5", [0, 0, 0], "", "", true, "기안자"],
+            ["_DF05_", "red", 1, [1, "/modules/eap/images/example-line.gif", 1], "", [0, 0, 0], "", "", true, "결재라인"],
+            ["_DF07_", "red", 1, [0, "부서/사용자 명", 0], "textL pl5", [0, 0, 0], "", "", true, "수신및참조"],
+            ["_DF08_", "red", 1, [0, "홍길동", 0], "textL pl5", [0, 0, 0], "", "", true, "시행"],
+            ["_DF09_", "", 1, [0, "YYYY-MM-DD", 0], "textL pl5", [0, 0, 0], "", "", true, "시행일자"],
+            ["_DF10_", "red", 1, [0, "제목을 입력해 주세요", 0], "textL pl5", [0, 0, 0], "", "", true, "제목"],
+            ["_DF11_", "red", 1, [0, "내용을 입력해 주세요", 0], "", [0, 0, 0], "", "divFormContents", true, "내용"],
+            ["_DF12_", "", 1, [0, "YYYY-MM-DD", 0], "textL pl5", [0, 0, 0], "", "", true, "종결일자"],
+            ["_DF13_", "", 1, [0, "YYYY-MM-DD", 0], "textL pl5", [0, 0, 0], "", "", true, "결재완료희망일자"],
+            ["_DFBIZ_", "", 0, [0, "사업자명", 0], "textL pl5", [0, 0, 0], "", "", true, "사업자명"],
+            ["_DFCEO_", "", 0, [0, "홍길동", 0], "textL pl5", [0, 0, 0], "", "", true, "대표이사명"],
+            ["_DFCOMPANYSEAL_", "", 0, [0, "회사 직인", 0], "", [0, 0, 0], "", "", true, "회사직인"],
+            ["_DFCONO_", "", 0, [0, "회사 사업자번호", 0], "", [0, 0, 0], "", "", true, "회사사업자번호"],
+            ["_DFCOSEAL_", "", 0, [1, "/modules/eap/images/example-companyseal.png", 0], "", [0, 0, 0], "", "", true, "회사인감"],
+            ["_DFCO_", "", 0, [0, "㈜회사명", 0], "textL pl5", [0, 0, 0], "", "", true, "회사명"],
+            ["_DFDUTY_", "", 0, [0, "기안자 직책정보", 0], "textL pl5", [0, 0, 0], "", "", true, "기안자 직책"],
+            ["_DFEMPPHONE_", "", 0, [0, "개인 휴대번호", 0], "", [0, 0, 0], "", "", true, "개인휴대번호"],
+            ["_DFGRADE_", "", 0, [0, "기안자 직급정보", 0], "textL pl5", [0, 0, 0], "", "", true, "기안자 직급"],
+            ["_DFGROUPJOINDAY_", "", 0, [0, "기안자의 최초입사일", 0], "", [0, 0, 0], "", "", true, "최초입사일"],
+            ["_DFINSERVICE_", "", 0, [0, "영구보존", 0], "", [0, 0, 0], "", "", true, "보존년월"],
+            ["_DFINTER_", "", 0, [0, "연동된 데이터가 표시됩니다", 0], "", [0, 0, 0], "", "", true, "연동HTML"],
+            ["_DFLEVEL_", "", 0, [0, "1등급", 0], "", [0, 0, 0], "", "", true, "보안등급"],
+            ["_DFLOGO_", "", 0, [1, "/modules/eap/images/example-logo.gif", 0], "", [0, 0, 0], "", "", true, "양식로고"],
+            ["_DFLONGADDRESS_", "", 0, [null, "oo시 oo동 oo번지", 0], "", [0, 0, 0], "", "", true, "주소(큰사이즈)"],
+            ["_DFOPERATION_", "", 0, [null, "시행자 명", 0], "", [0, 0, 0], "", "", true, "시행"],
+            ["_DFORGANSEAL_", "", 0, [0, "회사 법인인감", 0], "", [0, 0, 0], "", "", true, "회사법인인감"],
+            ["_DFPUBLIC_", "", 0, [null, "공개/비공개", 0], "", [0, 0, 0], "", "", true, "공개여부"],
+            ["_DFRECEIPIENTTEXT_", "", 0, [null, "수신자(경유) 수정불가", 0], "", [0, 0, 0], "", "", true, "수신자(경유) 수정불가"],
+            ["_DFRECEIPTTEXT_", "", 0, [null, "수신자 수정불가", 0], "", [0, 0, 0], "", "", true, "수신자 수정불가"],
+            ["_DFRECEPTION_", "", 0, [null, "접수", 0], "", [0, 0, 0], "", "", true, "접수"],
+            ["_DFREF_", "", 1, [0, "회사명-부서명-YY-000 참조문서입니다", 0], "bd_color02 textL", [0, 0, 0], "", "", true, "참조문서"],
+            ["_DFSENDNM_", "", 0, [null, "발신명의", 0], "", [0, 0, 0], "", "", true, "발신명의"],
+            ["_DFWORKADDR_", "", 0, [2, "사업장 전체주소", 0], "", [0, 0, 0], "", "", true, "사업장 전체주소"],
+            ["_DFWORKCEO_", "", 0, [2, "사업장 대표자명", 0], "", [0, 0, 0], "", "", true, "사업장 대표자명"],
+            ["_DFWORKDTLADDR_", "", 0, [2, "사업장 상세주소", 0], "", [0, 0, 0], "", "", true, "사업장 상세주소"],
+            ["_DFWORKFAX_", "", 0, [2, "000-000-0000", 0], "textL pl5", [0, 0, 0], "", "", true, "사업장팩스"],
+            ["_DFWORKNOSUB_", "", 0, [2, "사업장 법인번호", 0], "", [0, 0, 0], "", "", true, "사업장 법인번호"],
+            ["_DFWORKNO_", "", 0, [2, "사업장 사업자번호", 0], "", [0, 0, 0], "", "", true, "사업장 사업자번호"],
+            ["_DFWORKZIPADDR_", "", 0, [2, "사업장 우편주소", 0], "", [0, 0, 0], "", "", true, "사업장 우편주소"],
+            ["_DFWORKZIPCD_", "", 0, [2, "사업장 우편번호", 0], "", [0, 0, 0], "", "", true, "사업장 우편번호"]
+        ]
+    </textarea>
+
+</body>
+
+</html>

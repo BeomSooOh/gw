@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ExCodeCommon">
+	<select id="getExCompList" parameterType="hashmap" resultType="hashmap">
+	/* getExCompList - ERPIcube oracle */
+		SELECT *FROM ZA_COMPANY_DAIKIN
+		WHERE CO_CD LIKE '%${txtSearch}%' OR CO_NM LIKE '%${txtSearch}%'
+	</select>
+
+	
+	
+	<select id="getExEmpList" parameterType="hashmap" resultType="hashmap">
+<!-- 		 SELECT A.CO_CD AS erpCompSeq 회사코드 -->
+<!-- 		     , D.CO_NM AS erpCompNm 회사명 -->
+<!-- 		     , B.DIV_CD AS erpBizSeq 사업장코드 -->
+<!-- 		     , C.DIV_NM AS erpBizNm 사업장명 -->
+<!-- 		     , A.DEPT_CD AS erpDeptSeq 부서코드 -->
+<!-- 		     , B.DEPT_NM AS erpDeptNm 부서명 -->
+<!-- 		     , A.EMP_CD AS erpEmpSeq 서번 -->
+<!-- 		     , A.KOR_NM AS erpEmpNm  사원명 -->
+<!-- 		     , '' AS ccCd -->
+<!-- 		     , '' AS pcCd -->
+<!-- 		     , A.CO_CD + '▥' +  B.DIV_CD + '▥' + A.DEPT_CD + '▥' + A.EMP_CD + '▥' + ''  + '▥' + '' AS keyCd -->
+<!-- 		     , D.CO_NM + '▥' + C.DIV_NM + '▥' + B.DEPT_NM + '▥' + A.KOR_NM AS keyNm -->
+<!-- 		FROM   SEMP A -->
+<!-- 		INNER  JOIN SDEPT B ON (A.CO_CD = B.CO_CD AND A.DEPT_CD = B.DEPT_CD) -->
+<!-- 		INNER  JOIN SDIV C ON B.CO_CD = C.CO_CD AND B.DIV_CD = C.DIV_CD -->
+<!-- 		INNER  JOIN SCO D ON (C.CO_CD = D.CO_CD ) -->
+<!-- 		WHERE  A.CO_CD = #{erpCompSeq} -->
+<!-- 		AND    ISNULL(A.EMPL_FG,'0') <![CDATA[ <> ]]> '002' -->
+<!-- 		AND    ISNULL(A.ENRL_FG, 'J01') <![CDATA[ <> ]]> 'J05' -->
+<!-- 		AND    A.KOR_NM LIKE '%' + #{searchStr} + '%' -->
+
+		select 
+			a.CO_CD AS erpCompSeq  
+	     , b.CO_NM AS erpCompNm 
+	     , d.DIV_CD AS erpBizSeq 
+	     , d.DIV_NM AS erpBizNm 
+	     , c.DEPT_CD AS erpDeptSeq 
+	     , c.DEPT_NM AS erpDeptNm 
+	     , a.EMP_CD AS erpEmpSeq 
+	     , a.KOR_NM AS erpEmpNm  
+	     , '' AS ccCd
+	     , '' AS pcCd
+	     , A.CO_CD + '▥' +  d.DIV_CD + '▥' + c.DEPT_CD + '▥' + A.EMP_CD + '▥' + ''  + '▥' + '' AS keyCd
+	     , b.CO_NM + '▥' + d.DIV_NM + '▥' + c.DEPT_NM + '▥' + A.KOR_NM AS keyNm
+		
+		 From ZA_EMP_DAIKIN a
+		 inner join ZA_COMPANY_DAIKIN b on a.CO_CD = b.CO_CD
+		 inner join ZA_DEPT_DAIKIN c on c.CO_CD = b.CO_CD and c.DEPT_CD = a.DEPT_CD
+		 inner join ZA_DIV_DAIKIN d on d.CO_CD = a.CO_CD and d.DIV_CD = c.DIV_CD
+		
+		where A.CO_CD = #{erpCompSeq}
+		AND    A.KOR_NM LIKE '%${searchStr}$%'
+	</select>
+	
+	
+</mapper>

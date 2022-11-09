@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMapConfig PUBLIC "-//iBATIS.com//DTD SQL Map Config 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-config-2.dtd">
+
+<sqlMapConfig>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/OrgChart_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/GroupManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/CmmCodeManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/CompManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/DeptManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/EmpManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/AttachFileUpload_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/EmpDeptManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/MainManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/ProjectManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/PartnerManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/AlarmMasterAdmin_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/TimelineManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/DutyPositionManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/PortalManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/HolidayManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/Satistics_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/CertManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/ItemManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/LicenseManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/AccessManage_SQL.xml"/>    
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/OrgAdapterManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/LdapManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/SecondCertManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/WehagoManage_SQL.xml"/>
+    <sqlMap resource="egovframework/sqlmap/mariadb/neos/cmm/systemx/SecGrade_SQL.xml"/>
+    
+</sqlMapConfig>

@@ -1,0 +1,632 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="CommentDAO">
+
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+	
+	<!-- 댓글 등록 -->
+	<insert id="CommentDAO.insertComment" parameterClass="hashmap">
+	
+		INSERT INTO $DB_NEOS$t_co_comment
+		(
+			  comment_seq
+			, module_gbn_code
+			, module_seq
+			, top_level_comment_seq
+			, parent_comment_seq
+			, sort_comment_seq
+			, depth
+			, contents
+			, comment_type
+			, comp_seq
+			, dept_seq
+			, file_id
+			, high_gbn_code
+			, middle_gbn_code
+			, emp_name
+			, comment_password
+			, comp_name
+			, dept_name
+			, duty_code
+			, duty_name
+			, position_code
+			, position_name
+			, create_ip
+			, create_seq
+			, create_date
+		)
+		VALUES
+		(
+			  #commentSeq#
+			, #moduleGbnCode#
+			, #moduleSeq#
+			, #topLevelCommentSeq#
+			, #parentCommentSeq#
+			, #sortCommentSeq#
+			, #depth#
+			, #contents#
+			, #commentType#
+			, #compSeq#
+			, #deptSeq#
+			, #fileId#
+			, #highGbnCode#
+			, #middleGbnCode#
+			, #empName#
+			, #commentPassword#
+			, #compName#
+			, #deptName#
+			, #dutyCode#
+			, #dutyName#
+			, #positionCode#
+			, #positionName#
+			, #createIp#
+			, #empSeq#
+			, NOW()
+		)
+	</insert>
+	
+	<!-- 댓글 수정 -->
+	
+	<update id="CommentDAO.updateComment" parameterClass="hashmap">
+	
+		update $DB_NEOS$t_co_comment
+		set 
+			contents = #contents#
+			, comment_type = #commentType#
+			, high_gbn_code = #highGbnCode#
+			, middle_gbn_code = #middleGbnCode#
+			, file_id = #fileId#
+			, create_ip = #createIp#
+			<isEmpty property="empSeq">
+			, modify_seq = create_seq
+			</isEmpty>
+			<isNotEmpty property="empSeq">
+			, modify_seq = #empSeq#
+			</isNotEmpty>
+			, modify_date = NOW()
+		where comment_seq = #commentSeq#
+		<isNotEqual property="adminYn" compareValue="Y">
+			and create_seq = #empSeq#
+		</isNotEqual>
+	
+	</update>
+	
+	<!--  대댓글 삭제 -->
+	<update id="CommentDAO.deleteReComment" parameterClass="hashmap">
+	
+		update $DB_NEOS$t_co_comment
+		set
+			use_yn = 'N' 
+			, view_yn = 'N'
+			, modify_seq = #empSeq#
+			, modify_date = NOW()
+		where comment_seq = #commentSeq#
+		<isNotEqual property="adminYn" compareValue="Y">
+			and create_seq = #empSeq#
+		</isNotEqual>		
+		
+	</update>
+	
+	<!--  댓글 삭제 -->
+	<update id="CommentDAO.deleteComment" parameterClass="hashmap">
+	
+		update $DB_NEOS$t_co_comment
+		set
+			
+			use_yn = 'N' 
+			, modify_seq = #empSeq#
+			, modify_date = NOW()
+		where comment_seq = #commentSeq#
+		<isNotEqual property="adminYn" compareValue="Y">
+			and create_seq = #empSeq#
+		</isNotEqual>	
+				
+	</update>
+	
+	<!--  댓글 삭제 -->
+	<update id="CommentDAO.updateCommentViwe" parameterClass="hashmap">
+	
+		update $DB_NEOS$t_co_comment
+		set
+			view_yn = 'N'
+		where comment_seq = #commentSeq#
+	</update>
+	
+	<!-- 상위 댓글 조회 여부 확인 -->
+	<select id="CommmentDAO.selectCommentViewYn" resultClass="String" parameterClass="hashmap">
+		SELECT 
+		(
+			CASE
+				(
+					SELECT use_yn 
+					FROM $DB_NEOS$t_co_comment 
+					WHERE comment_seq = #commentSeq#
+				)
+				WHEN 
+				 'Y'
+				THEN 'Y'
+				ELSE
+				(
+					CASE
+						(
+							SELECT COUNT(*)
+							FROM $DB_NEOS$t_co_comment
+							WHERE top_level_comment_seq = #commentSeq#
+							AND comment_seq != #commentSeq#
+							AND use_yn = 'Y'
+						) 
+						WHEN '0' THEN 'N'
+						ELSE 'Y'
+					END
+				)
+			END 
+		) AS view_yn
+		FROM DUAL
+	</select>
+	
+	
+	
+	<!-- 댓글 시퀀스 조회 -->
+	<select id="CommmentDAO.selectCommentSeq" resultClass="String" parameterClass="hashmap">
+	<!-- 	SELECT LPAD(CONVERT(IFNULL(MAX(comment_seq),0),UNSIGNED) +1000,16,0) AS commentSeq      20220720-->
+        SELECT LPAD(CONVERT(IFNULL(floor(MAX(comment_seq)/1000)*1000,0),UNSIGNED) +1000+floor(RAND()*50)*10,16,0) AS commentSeq
+		FROM $DB_NEOS$t_co_comment
+		where (parent_comment_seq is null || parent_comment_seq = '')
+	</select>
+	
+	<!-- 대댓글 시퀀스 조회 -->
+	<select id="CommmentDAO.selectReCommentSeq"  resultClass="String" parameterClass="hashmap">
+		SELECT LPAD(CONVERT(IFNULL(MAX(comment_seq),#topLevelCommentSeq#),UNSIGNED) +1,16,0) AS commentSeq
+		FROM $DB_NEOS$t_co_comment
+		WHERE top_level_comment_seq = #topLevelCommentSeq#
+	</select>
+	
+	<!-- 대댓글 정렬 역순 시퀀스 조회 -->
+	<select id="CommmentDAO.selectSortReCommentSeq"  resultClass="String" parameterClass="hashmap">
+		SELECT LPAD(CONVERT(IFNULL(MIN(sort_comment_seq),#topLevelCommentSeq#),UNSIGNED) -1,16,0) AS commentSeq
+		FROM $DB_NEOS$t_co_comment 
+		WHERE top_level_comment_seq = #topLevelCommentSeq#
+	</select>
+	
+	<!--  댓글 카운트 갱신  -->
+	<update id="CommentDAO.addCommentCnt" parameterClass="hashmap">
+	
+		INSERT INTO $DB_NEOS$t_co_comment_count 
+		(
+			module_gbn_code
+			, module_seq
+			, COUNT
+			, use_yn
+			, create_seq
+			, create_date
+		)
+		VALUES
+		(
+			#moduleGbnCode#
+			, #moduleSeq#
+			, 1
+			, 'Y'
+			, #empSeq#
+			, NOW()
+		)ON DUPLICATE KEY UPDATE
+		 COUNT = (SELECT COUNT(*) FROM $DB_NEOS$t_co_comment WHERE use_yn='Y' and view_yn = 'Y' AND module_gbn_code = #moduleGbnCode# AND module_seq = #moduleSeq#)
+		 , modify_seq = #empSeq#
+		 , modify_date = NOW()
+		 
+	</update>
+	
+	<!-- 사용자명 조회 -->
+	<select id="CommentDAO.selectEmpName"  resultClass="egovMap" parameterClass="hashmap">
+		SELECT 
+			lang_code
+			, emp_name 
+		FROM $DB_NEOS$t_co_emp_multi 
+		WHERE group_seq = #groupSeq# AND emp_seq = #empSeq#
+	</select>
+	
+	<!-- 부서명 조회 -->
+	<select id="CommentDAO.selectDeptName"  resultClass="egovMap" parameterClass="hashmap">
+		SELECT 
+			lang_code
+			, dept_name 
+		FROM $DB_NEOS$t_co_dept_multi 
+		WHERE group_seq = #groupSeq# AND dept_seq = #deptSeq#
+	</select>
+	
+	<!-- 회사명 조회 -->
+	<select id="CommentDAO.selectCompName" resultClass="egovMap" parameterClass="hashmap">
+		SELECT 
+			lang_code
+			, comp_name 
+		FROM $DB_NEOS$t_co_comp_multi 
+		WHERE group_seq = #groupSeq# AND comp_seq = #compSeq#
+	</select>
+	
+	<!-- 직책 조회 -->
+	<select id="CommentDAO.selectDutyName"  resultClass="egovMap" parameterClass="hashmap">
+		
+		SELECT lang_code
+				, dp_name AS duty_name 
+		FROM $DB_NEOS$t_co_comp_duty_position_multi 
+		WHERE dp_seq = #dutyCode#
+		AND group_seq = #groupSeq# AND dp_type ='DUTY' 
+	</select>
+	
+	<!-- 직급 조회 -->
+	<select id="CommentDAO.selectPositionName" resultClass="egovMap" parameterClass="hashmap">
+		SELECT lang_code
+				, dp_name AS position_name 
+		FROM $DB_NEOS$t_co_comp_duty_position_multi 
+		WHERE dp_seq = #positionCode# 
+		AND group_seq = #groupSeq# AND dp_type ='POSITION' 
+	</select>
+	
+	<!-- 댓글 정렬 시퀀스 조회 -->
+	<select id="CommmentDAO.selectSortCommentSeq" resultClass="String" parameterClass="hashmap">
+		SELECT sort_comment_seq 
+		FROM $DB_NEOS$t_co_comment
+		WHERE comment_seq = #commentSeq#
+	</select>
+	
+	<!-- 모뷸 정보 조회 -->
+	<select id="CommentDAO.selectModuleInfo"  resultClass="egovMap" parameterClass="hashmap">
+		select 
+			module_gbn_code, 
+			module_seq 
+		from $DB_NEOS$t_co_comment 
+		where comment_seq = #commentSeq#
+	</select>
+	
+	<!-- 댓글리스트 조회 -->
+	<select id="CommentDAO.selectCommentList"  resultClass="egovMap" parameterClass="hashmap">
+		
+		SELECT
+			comment_seq
+			, module_gbn_code
+			, module_seq
+			, top_level_comment_seq
+			, parent_comment_seq
+			, depth
+			, contents
+			, comment_type
+			, comp_seq
+			, dept_seq
+			, file_id
+			, high_gbn_code
+			, middle_gbn_code
+			, emp_name
+			, comment_password
+			, comp_name
+			, dept_name
+			, duty_code
+			, duty_name
+			, position_code
+			, position_name
+			, notified_cnt
+			, recomm_cnt
+			, declare_cnt
+			, create_ip
+			, use_yn
+			, IFNULL(create_seq, '') as create_seq
+			, DATE_FORMAT(IFNULL(modify_date, create_date),'%Y-%m-%d %k:%i:%s') AS create_date
+		FROM $DB_NEOS$t_co_comment
+		WHERE
+			module_gbn_code = #moduleGbnCode#
+			AND module_seq = #moduleSeq#
+			<isNotEmpty property="parentCommentSeq">
+			AND parent_comment_seq = #parentCommentSeq#
+			</isNotEmpty>
+			<isNotEmpty property="commentType">
+			AND comment_type = #commentType#
+			</isNotEmpty>
+			AND view_yn = 'Y'
+		<isNotEmpty property="commentSeq">
+			<isEqual property="searchWay" compareValue="D">
+			 	<isEqual property="reqSubType" compareValue="Y">
+					AND comment_seq <![CDATA[>=]]> $commentSeq$
+				</isEqual>
+				<isNotEqual property="reqSubType" compareValue="Y">
+					AND comment_seq <![CDATA[>]]> $commentSeq$
+				</isNotEqual>
+			</isEqual>
+			<isEqual property="searchWay" compareValue="U">
+				<isEqual property="reqSubType" compareValue="Y">
+					AND comment_seq <![CDATA[<=]]> $commentSeq$
+				</isEqual>
+				<isNotEqual property="reqSubType" compareValue="Y">
+					AND comment_seq <![CDATA[<]]> $commentSeq$
+				</isNotEqual>
+			</isEqual>
+		</isNotEmpty>						
+		ORDER BY comment_seq		
+		<isNotEmpty property="pageSize">
+			LIMIT $pageSize$
+		</isNotEmpty>
+	</select>
+	
+	<!-- 댓글리스트 조회(최신순) -->
+	<select id="CommentDAO.selectSortCommentList"  resultClass="egovMap" parameterClass="hashmap">
+		
+		SELECT
+			comment_seq
+			, module_gbn_code
+			, module_seq
+			, top_level_comment_seq
+			, parent_comment_seq
+			, depth
+			, contents
+			, comment_type
+			, comp_seq
+			, dept_seq
+			, file_id
+			, high_gbn_code
+			, middle_gbn_code
+			, emp_name
+			, comment_password
+			, comp_name
+			, dept_name
+			, duty_code
+			, duty_name
+			, position_code
+			, position_name
+			, notified_cnt
+			, recomm_cnt
+			, declare_cnt
+			, create_ip
+			, use_yn
+			, IFNULL(create_seq, '') as create_seq
+			, DATE_FORMAT(IFNULL(modify_date, create_date),'%Y-%m-%d %k:%i:%s') AS create_date
+		FROM $DB_NEOS$t_co_comment
+		WHERE
+			module_gbn_code = #moduleGbnCode#
+			AND module_seq = #moduleSeq#
+			<isNotEmpty property="parentCommentSeq">
+			AND parent_comment_seq = #parentCommentSeq#
+			</isNotEmpty>
+			<isNotEmpty property="commentType">
+			AND comment_type = #commentType#
+			</isNotEmpty>
+			AND view_yn = 'Y'
+		<isNotEmpty property="sortCommentSeq">
+			<isEqual property="searchWay" compareValue="D">
+				<isEqual property="reqSubType" compareValue="Y">
+					AND sort_comment_seq <![CDATA[<=]]> $sortCommentSeq$
+				</isEqual>
+				<isNotEqual property="reqSubType" compareValue="Y">
+					AND sort_comment_seq <![CDATA[<]]> $sortCommentSeq$
+				</isNotEqual>
+			</isEqual>
+			<isEqual property="searchWay" compareValue="U">
+				<isEqual property="reqSubType" compareValue="Y">
+					AND sort_comment_seq <![CDATA[>=]]> $sortCommentSeq$
+				</isEqual>
+				<isNotEqual property="reqSubType" compareValue="Y">
+					AND sort_comment_seq <![CDATA[>]]> $sortCommentSeq$
+				</isNotEqual>
+			</isEqual>
+		</isNotEmpty>						
+		ORDER BY sort_comment_seq DESC		
+		<isNotEmpty property="pageSize">
+			LIMIT $pageSize$
+		</isNotEmpty>
+	</select>
+	
+	<!-- 댓글 카운트 조회 -->
+	<select id="CommentDAO.selectCommentCount"  resultClass="egovMap" parameterClass="hashmap">
+	
+		<isNotEmpty property="commentType">
+			SELECT COUNT(*) AS COUNT FROM $DB_NEOS$t_co_comment WHERE module_gbn_code = #moduleGbnCode# AND module_seq = #moduleSeq# AND comment_type = #commentType# AND use_yn = 'Y'
+		</isNotEmpty>
+		
+		<isEmpty property="commentType">
+			SELECT IFNULL(
+				(
+					SELECT 
+						COUNT
+					FROM $DB_NEOS$t_co_comment_count
+					WHERE module_gbn_code = #moduleGbnCode#
+					AND module_seq = #moduleSeq#
+				)
+			,0) AS COUNT FROM DUAL			
+		</isEmpty>		
+
+	</select>
+	
+	<!-- 부서내 사용자 조회 -->
+	<select id="CommentDAO.selectDeptEmpList"  resultClass="egovMap" parameterClass="hashmap">
+		
+		 select distinct emp_seq
+		 from $DB_NEOS$t_co_dept dep
+		 JOIN $DB_NEOS$t_co_emp_dept edp
+		 ON dep.dept_seq = edp.dept_seq and edp.use_yn = 'Y'
+		 where
+		 CONCAT('|',path,'|') like ('%|$deptSeq$|%')
+		 and dep.use_yn = 'Y'
+	</select>
+	
+	
+	<!-- 댓글 조직도 조회 -->
+	<select id="CommentDAO.selectOrgchartList"  resultClass="egovMap" parameterClass="hashmap">
+		 SELECT
+		 	   M.EMP_SEQ AS empSeq
+		 	  , (SELECT $DB_NEOS$FN_GetMultiLang(#langCode#,A.EMP_NAME_MULTI)
+				   FROM $DB_NEOS$v_t_co_emp_multi A
+				  WHERE M.emp_seq=A.EMP_SEQ LIMIT 1) AS empName
+			  
+			  , (SELECT $DB_NEOS$FN_GetMultiLang(#langCode#,F.COMP_NAME_MULTI)
+				   FROM $DB_NEOS$v_t_co_comp_multi F
+				  WHERE N.COMP_SEQ=F.COMP_SEQ LIMIT 1) AS compName
+			   
+			  , N.BIZ_SEQ AS bizSeq
+			  , (SELECT $DB_NEOS$FN_GetMultiLang(#langCode#,G.BIZ_NAME_MULTI)
+				   FROM $DB_NEOS$v_t_co_biz_multi G
+				  WHERE N.BIZ_SEQ=G.BIZ_SEQ LIMIT 1) AS bizName
+			  , N.DEPT_SEQ AS deptSeq
+			  , (SELECT $DB_NEOS$FN_GetMultiLang(#langCode#,A.DEPT_NAME_MULTI)
+				   FROM $DB_NEOS$v_t_co_dept_multi A
+				  WHERE A.DEPT_SEQ = N.DEPT_SEQ LIMIT 1) deptName				  
+			
+			  , N.COMP_SEQ AS compSeq
+				
+			  , (SELECT IFNULL
+				(
+				 (	SELECT path_name FROM $DB_NEOS$t_co_dept_multi A WHERE A.dept_seq = N.dept_seq AND A.use_yn = 'Y' AND A.lang_code = #langCode#) ,
+				 (	SELECT path_name FROM $DB_NEOS$t_co_dept_multi A WHERE A.dept_seq = N.dept_seq AND A.use_yn = 'Y' AND A.lang_code = 'kr') 
+				 ) 
+				 FROM DUAL
+			     ) as orgnztPath
+			
+		 FROM $DB_NEOS$T_CO_EMP M, $DB_NEOS$T_CO_EMP_DEPT N, $DB_NEOS$T_CO_EMP_COMP E, $DB_NEOS$T_CO_EMP_MULTI O
+		 WHERE M.EMP_SEQ = N.EMP_SEQ
+		 AND M.EMP_SEQ = O.EMP_SEQ
+		 AND M.EMP_SEQ = E.EMP_SEQ
+		 AND N.COMP_SEQ = E.COMP_SEQ
+		 AND E.WORK_STATUS IN ('999','004')
+		 AND N.MAIN_DEPT_YN = 'Y'
+		 AND M.GROUP_SEQ = #groupSeq#
+		 AND M.USE_YN = 'Y'
+		 AND N.USE_YN = 'Y'
+		 AND O.USE_YN = 'Y'
+		 and O.lang_code = #langCode#
+		 and O.emp_name LIKE '$empName$%'
+		<isNotEmpty property="searchEmpSeq">
+			AND O.emp_seq IN ($searchEmpSeq$)
+		</isNotEmpty>
+		LIMIT $pageNum$,$pageSize$
+	</select>
+	
+	
+	<!-- 댓글리스트 조회 -->
+	<select id="CommentDAO.selectOneCommentList"  resultClass="egovMap" parameterClass="hashmap">
+		
+		SELECT
+			comment_seq
+			, module_gbn_code
+			, module_seq
+			, top_level_comment_seq
+			, parent_comment_seq
+			, depth
+			, contents
+			, comment_type
+			, comp_seq
+			, dept_seq
+			, file_id
+			, high_gbn_code
+			, middle_gbn_code
+			, emp_name
+			, comment_password
+			, comp_name
+			, dept_name
+			, duty_code
+			, duty_name
+			, position_code
+			, position_name
+			, notified_cnt
+			, recomm_cnt
+			, declare_cnt
+			, use_yn
+			, create_ip
+			, IFNULL(modify_seq, create_seq) AS create_seq
+			, DATE_FORMAT(IFNULL(modify_date, create_date),'%Y-%m-%d %k:%i:%s') AS create_date
+		FROM $DB_NEOS$t_co_comment
+		WHERE
+			module_gbn_code = #moduleGbnCode#
+			AND module_seq = #moduleSeq#
+			AND top_level_comment_seq = #commentSeq#
+			<isNotEmpty property="commentType">
+			AND comment_type = #commentType#
+			</isNotEmpty>
+			AND view_yn = 'Y'
+		ORDER BY comment_seq		
+	</select>
+	
+	<!-- 댓글리스트 조회(최신순) -->
+	<select id="CommentDAO.selectOneSortCommentList"  resultClass="egovMap" parameterClass="hashmap">
+		
+		SELECT
+			comment_seq
+			, module_gbn_code
+			, module_seq
+			, top_level_comment_seq
+			, parent_comment_seq
+			, depth
+			, contents
+			, comment_type
+			, comp_seq
+			, dept_seq
+			, file_id
+			, high_gbn_code
+			, middle_gbn_code
+			, emp_name
+			, comment_password
+			, comp_name
+			, dept_name
+			, duty_code
+			, duty_name
+			, position_code
+			, position_name
+			, notified_cnt
+			, recomm_cnt
+			, declare_cnt
+			, use_yn 
+			, create_ip
+			, IFNULL(modify_seq, create_seq) AS create_seq
+			, DATE_FORMAT(IFNULL(modify_date, create_date),'%Y-%m-%d %k:%i:%s') AS create_date
+		FROM $DB_NEOS$t_co_comment
+		WHERE
+			module_gbn_code = #moduleGbnCode#
+			AND module_seq = #moduleSeq#
+			AND top_level_comment_seq = #commentSeq#
+			<isNotEmpty property="commentType">
+			AND comment_type = #commentType#
+			</isNotEmpty>
+			AND view_yn = 'Y'		
+		ORDER BY sort_comment_seq DESC		
+	</select>
+	
+	<!-- 첨부파일리스트 -->
+
+	<select id="CommentDAO.getFileList" resultClass="egovMap" parameterClass="hashmap">
+		SELECT  tcafd.file_id as file_id
+      		  , CAST(tcafd.file_sn as CHAR) as file_sn
+		      , tcafd.orignl_file_name as original_file_name
+		      , tcafd.file_extsn as file_extsn
+		      , CAST(tcafd.file_size as CHAR) as file_size
+	          , CASE tcafd.file_extsn 
+	          WHEN 'bmp' THEN 'ico_bmp'
+	          WHEN 'csv' THEN 'ico_csv'
+	          WHEN 'gif' THEN 'ico_gif'
+	          WHEN 'hwp' THEN 'ico_hwp'
+	          WHEN 'pdf' THEN 'ico_pdf'
+	          WHEN 'png' THEN 'ico_png'
+	          WHEN 'tif' THEN 'ico_tif'
+	          WHEN 'doc' THEN 'ico_word'
+	          WHEN 'docx' THEN 'ico_word'
+	          WHEN 'zip' THEN 'ico_zip'
+	          WHEN 'jpg' THEN 'ico_jpg'
+	          WHEN 'jpeg' THEN 'ico_jpg'
+	          WHEN 'xls' THEN 'ico_xls'
+	          WHEN 'xlsx' THEN 'ico_xls'
+	          ELSE 'ico_etc' END as icon_name
+	          , IFNULL(CASE WHEN tcafd.file_size > 1073741824 THEN CONCAT(ROUND(tcafd.file_size/1073741824, 2), ' GB')
+	          WHEN tcafd.file_size > 1048576 THEN CONCAT(ROUND(tcafd.file_size/1048576, 2), ' MB')
+	          WHEN tcafd.file_size > 1024 THEN CONCAT(ROUND(tcafd.file_size/1024, 2), ' KB')
+	          ELSE CONCAT(tcafd.file_size, ' Byte') END,'0 Byte') as file_size_name		      
+		FROM $DB_NEOS$t_co_atch_file tcaf
+	    JOIN $DB_NEOS$t_co_atch_file_detail tcafd
+	    ON tcaf.file_id = tcafd.file_id 
+	    AND tcafd.use_yn = 'Y'
+		WHERE tcaf.file_id = #fileId#
+	    AND tcaf.use_yn = 'Y'
+	</select>
+	
+	
+	<select id="CommentDAO.checkAdminMasterAuth" resultClass="string" parameterClass="hashmap">
+		SELECT 
+			(SELECT COUNT(*) FROM $DB_NEOS$t_co_auth_relate WHERE author_type = '005' AND emp_seq = #empSeq# AND comp_seq = #compSeq#)
+			+
+			(SELECT count(*) from $DB_NEOS$t_Co_emp_option where emp_seq = #empSeq# and master_use_yn = 'Y')
+		AS CNT
+	</select>
+</sqlMap>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="LogoManageDAO">
+	<typeAlias alias="LogoManageVo" type="neos.cmm.systemx.etc.LogoManageVo"/>
+
+	<select id="LogoManageDAO.selectLogoInfo" parameterClass="java.lang.String" resultClass="LogoManageVo">
+		<![CDATA[
+			SELECT   LAYOUT_LOGO_PATH as layoutLogoPath
+				   , LOGIN_LOGO_PATH as loginLogoPath
+				   , ORD as ord
+			  FROM $DB_NEOS$COMTNLOGOINFO
+			WHERE ORGAN_ID = #organId#  	
+		]]>
+	</select>
+	
+	<select id="LogoManageDAO.getDomainCompInfo" parameterClass="hashmap" resultClass="egovMap">
+	        /* LogoManageDAO.getDomainCompInfo - oracle */
+            SELECT *
+            FROM $DB_NEOS$t_co_comp cc
+            WHERE COMP_DOMAIN = #domain#
+            AND ROWNUM = 1
+    </select>    
+     
+	<select id="LogoManageDAO.selectLoginLogoInfo" resultClass="LogoManageVo">
+		<![CDATA[
+			SELECT A.*
+			  FROM (
+					SELECT LAYOUT_LOGO_PATH as layoutLogoPath
+						      , LOGIN_LOGO_PATH as loginLogoPath
+						      , ORD as ord
+					  FROM $DB_NEOS$COMTNLOGOINFO
+					WHERE ORD <> '9'
+					ORDER BY ORD
+					) A
+			 WHERE ROWNUM = 1
+		]]>
+	</select> 
+	
+	<select id="LogoManageDAO.selectLoginNotice" resultClass="java.lang.String">
+        <![CDATA[
+            SELECT NTT_CN FROM 
+            (
+              SELECT a.NTT_ID, a.NTT_CN
+              FROM $DB_NEOS$PORTAL_BBS a 
+              LEFT OUTER JOIN $DB_NEOS$COMVNUSERMASTER b
+              ON a.FRST_REGISTER_ID = b.ESNTL_ID 
+              LEFT OUTER JOIN $DB_NEOS$COMTNBBSMASTER c
+              ON a.BBS_ID = c.BBS_ID         
+              WHERE BBS_ATTRB_CODE = 'BBST04'
+              AND A.USE_AT = 'Y'
+              ORDER BY  a.NTT_ID DESC
+            ) 
+            WHERE ROWNUM = 1
+        ]]>
+    </select>
+	
+    <select id="LogoManageDAO.getCompInfo" parameterClass="hashmap" resultClass="egovMap">
+        <![CDATA[
+            select *
+            from $DB_NEOS$t_co_comp c join $DB_NEOS$v_user_info v on c.comp_seq = v.comp_seq
+            where v.emp_seq = #empSeq#
+			and c.group_seq = #groupSeq#
+            and c.comp_seq = #compSeq#
+            AND v.e_use_yn = 'Y'
+			AND v.ed_use_yn = 'Y'
+			AND v.emd_use_yn = 'Y'
+			AND v.cm_use_yn = 'Y'
+			AND v.dm_use_yn = 'Y'
+        ]]>
+    </select>	 
+</sqlMap>

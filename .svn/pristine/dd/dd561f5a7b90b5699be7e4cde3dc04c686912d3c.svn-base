@@ -1,0 +1,216 @@
+package api.menuAccess.controller;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import api.common.model.APIResponse;
+import api.menuAccess.service.MenuAccessService;
+import api.menuAccess.vo.MenuAccessVO;
+import bizbox.orgchart.service.vo.LoginVO;
+import egovframework.com.cmm.util.EgovUserDetailsHelper;
+import egovframework.com.utl.fcc.service.EgovStringUtil;
+import egovframework.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
+import main.constants.CommonConstants;
+import neos.cmm.systemx.secGrade.constant.Constant;
+import net.sf.json.JSONObject;
+
+@Controller
+@RequestMapping("/menuAccess")
+public class MenuAccessController {
+
+    @Resource(name = "MenuAccessService")
+    MenuAccessService menuAccessService;
+
+    /* 변수정의 로그 */
+    private Logger logger = Logger.getLogger(MenuAccessController.class);
+
+
+    /*
+     * 메뉴사용내역 조회(menu_access) 
+     */
+    @RequestMapping("/searchMenuAccessList.do")
+    public ModelAndView searchMenuAccessList(@RequestParam Map<String,Object> params) throws Exception {
+        ModelAndView mv = new ModelAndView();
+
+        LoginVO loginVO = (LoginVO)EgovUserDetailsHelper.getAuthenticatedUser();
+        
+        if(!loginVO.getUserSe().equals("USER")){
+            params.put("groupSeq", loginVO.getGroupSeq());
+            params.put("langCode", loginVO.getLangCode());
+            
+            PaginationInfo paginationInfo = new PaginationInfo();
+            paginationInfo.setCurrentPageNo(EgovStringUtil.zeroConvert(params.get("page")));
+            paginationInfo.setPageSize(EgovStringUtil.zeroConvert(params.get("pageSize")));
+            
+            List<MenuAccessVO> menuSatisticsList = menuAccessService.getMenuAccessList(params);
+            
+            mv.addObject(menuSatisticsList);
+        }
+        
+        mv.setViewName("jsonView");
+        
+        return mv;
+    }
+
+    /*
+     * 메뉴사용내역 total Count
+     */
+    @RequestMapping("/totalCntMenuAccessList.do")
+    public ModelAndView totalCntMenuAccessList(@RequestParam Map<String,Object> params) throws Exception {
+        ModelAndView mv = new ModelAndView();
+
+        LoginVO loginVO = (LoginVO)EgovUserDetailsHelper.getAuthenticatedUser();
+        
+        if(!loginVO.getUserSe().equals("USER")){
+            params.put("groupSeq", loginVO.getGroupSeq());
+            params.put("langCode", loginVO.getLangCode());
+            
+            Map<String, Object> menuSatisticsList = menuAccessService.getMenuAccessListTotalCnt(params);
+            
+            mv.addObject(menuSatisticsList);
+        }
+        
+        mv.setViewName("jsonView");
+        
+        return mv;
+    }
+
+    /*
+     * 메뉴사용내역 멕셀다운(menu_access)
+     */
+    @RequestMapping("/downMenuAccessExcel.do")
+    public ModelAndView downMenuAccessExcel(@RequestParam Map<String,Object> params, HttpServletResponse servletResponse, HttpServletRequest servletRequest) throws Exception {
+        ModelAndView mv = new ModelAndView();
+        
+        LoginVO loginVO = (LoginVO)EgovUserDetailsHelper.getAuthenticatedUser();
+        
+        if(!loginVO.getUserSe().equals("USER")){
+            params.put("groupSeq", loginVO.getGroupSeq());
+            params.put("langCode", loginVO.getLangCode());
+            
+            String multiDown = (String) params.get("multiDown");
+            
+            List<MenuAccessVO> menuSatisticsList = (List<MenuAccessVO>) new ArrayList();
+            
+            if (multiDown.equals("Y")) {
+                menuSatisticsList = menuAccessService.getMenuAccessListMultiExcel(params);
+            }
+            else {
+                menuSatisticsList = menuAccessService.getMenuAccessListExcel(params);
+            }
+
+            mv.addObject(menuSatisticsList);
+        }
+
+        mv.setViewName("jsonView");
+        
+        return mv;
+    }
+    
+    /*
+     * 메뉴사용내역 index 저장(menu_access) 
+     */
+    @RequestMapping(value="/saveMenuAccessList.do", method={RequestMethod.GET, RequestMethod.POST})
+    @ResponseBody
+    public APIResponse saveMenuAccessList(@RequestBody Map<String, Object> reqParams, HttpServletRequest servletRequest) throws Exception {
+        APIResponse response = new APIResponse();
+
+        logger.debug("/saveMenuAccessList.do Request Params: " + JSONObject.fromObject(reqParams).toString());
+
+        try{
+
+            if(!validateForSaveMenuAccessList(reqParams, response)) {
+                logger.debug("/saveMenuAccessList.do Response: " + JSONObject.fromObject(response).toString());
+                return response;
+            }
+
+            response = menuAccessService.saveMenuAccessList(reqParams);
+
+        }catch(Exception e){
+            response.setResultCode(CommonConstants.API_RESPONSE_FAIL);
+            response.setResultMessage(e.getMessage());	
+            logger.error("/saveMenuAccessList.do ERROR : " + JSONObject.fromObject(response).toString());
+        }
+
+        logger.debug("/saveMenuAccessList.do Response: " + JSONObject.fromObject(response).toString());
+
+        return response;
+    }
+    
+    private boolean validateForSaveMenuAccessList(Map<String, Object> reqParams, APIResponse response) {
+        if(!reqParams.containsKey("typeCode")) {
+            response.setResultCode(Constant.API_RESPONSE_FAIL);
+            response.setResultMessage("NOT CONTAINS KEY [typeCode] in body");
+            return false;
+        }
+        if(!reqParams.containsKey("groupSeq")) {
+            response.setResultCode(Constant.API_RESPONSE_FAIL);
+            response.setResultMessage("NOT CONTAINS KEY [groupSeq] in body");
+            return false;
+        }
+        return true;
+    }
+
+    /*
+     * 메뉴사용내역 삭제
+     */
+    @RequestMapping(value="/deleteMenuAccessList.do", method={RequestMethod.GET, RequestMethod.POST})
+    @ResponseBody
+    public APIResponse deleteMenuAccessList(Map<String, Object> reqParams
+            , HttpServletRequest servletRequest) throws Exception {
+        
+        APIResponse response = new APIResponse();
+        
+        logger.debug("deleteMenuAccessList start");
+        
+        try {
+             response = menuAccessService.deleteMenuAccessList(reqParams);
+         } catch (Exception e) {
+             response.setResultCode(CommonConstants.API_RESPONSE_FAIL);
+             response.setResultMessage(e.getMessage());  
+             logger.error("/deleteMenuAccessList.do ERROR : " + JSONObject.fromObject(response).toString());
+         }
+        
+        logger.debug("/deleteMenuAccessList End Response: " + JSONObject.fromObject(response).toString());
+
+        return response;
+    }
+    
+    /*
+     * 메뉴사용내역 테스트데이터 삽입
+     */
+    @RequestMapping(value="/createTestMenuAccessList.do", method={RequestMethod.GET, RequestMethod.POST})
+    @ResponseBody
+    public APIResponse createTestMenuAccessList(Map<String, Object> reqParams, HttpServletRequest servletRequest) throws Exception {
+        APIResponse response = new APIResponse();
+        
+        reqParams.put("typeCode", servletRequest.getParameter("typeCode"));
+        reqParams.put("count", servletRequest.getParameter("count"));
+        
+        try{
+            response = menuAccessService.createTestMenuAccessList(reqParams);
+        }catch(Exception e){
+            response.setResultCode(CommonConstants.API_RESPONSE_FAIL);
+            response.setResultMessage(e.getMessage());  
+            logger.error("/createTestMenuAccessList.do ERROR : " + JSONObject.fromObject(response).toString());
+        }
+
+        logger.debug("/createTestMenuAccessList.do Response: " + JSONObject.fromObject(response).toString());
+
+        return response;
+    }
+}

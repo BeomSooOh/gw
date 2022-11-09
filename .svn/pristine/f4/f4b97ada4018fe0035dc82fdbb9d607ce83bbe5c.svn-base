@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd">
+	
+    <!--  DB 프로퍼티 설정 분리  -->
+	<!-- <util:properties id="db" location="file:#{'${Globals.OsType}' == 'WINDOWS' ? '${Globals.DbPropertise.WINDOWS}' : '${Globals.DbPropertise.UNIX}'}" /> -->
+<!-- 	<util:properties id="bizboxa" location="file:${Globals.BizboxA.path}" /> -->
+    
+    <!-- 실행환경에서 빈이름 참조(EgovAbstractDAO) -->
+	<bean id="egov.lobHandler" class="org.springframework.jdbc.support.lob.DefaultLobHandler" lazy-init="true" />
+
+	<!-- SqlMap setup for iBATIS Database Layer -->
+	<bean id="egov.sqlMapClient" class="org.springframework.orm.ibatis.SqlMapClientFactoryBean">
+		<property name="configLocations">
+			<list>
+				<value>classpath:/egovframework/sqlmap/config/#{bizboxa['BizboxA.DbType']}/*.xml</value>
+				<value>classpath:/egovframework/sqlmap/config/#{bizboxa['BizboxA.DbType']}/neos/*.xml</value>
+				<value>classpath:/egovframework/sqlmap/config/#{bizboxa['BizboxA.DbType']}/rest/*.xml</value>
+				<value>classpath:/egovframework/sqlmap/config/#{bizboxa['BizboxA.DbType']}/api/*.xml</value>
+				<value>classpath:/egovframework/sqlmap/config/#{bizboxa['BizboxA.DbType']}/acc/*.xml</value>
+				<value>classpath:/egovframework/sqlmap/config/#{bizboxa['BizboxA.DbType']}/ebp/*.xml</value>
+				<value>classpath:/egovframework/sqlmap/config/#{bizboxa['BizboxA.DbType']}/migration/*.xml</value>
+			</list>
+		</property>
+		<property name="dataSource" ref="egov.dataSource"/>
+		<property name="lobHandler" ref="egov.lobHandler"/>
+	</bean>
+    
+	<!-- erp-icube -->
+	<!-- <bean id="erpICube.sqlMapClient" class="org.springframework.orm.ibatis.SqlMapClientFactoryBean">
+        <property name="dataSource" ref="dataSource-erp-icube"/>
+        <property name="configLocations">
+            <list>
+                <value>classpath:/egovframework/sqlmap/config/#{bizboxa['BizboxA.ErpICube.DbType']}/erp/icube/sql-map-config-#{bizboxa['BizboxA.ErpICube.DbType']}-erp-icube.xml</value>
+            </list>
+        </property>
+    </bean> -->
+    
+	<!-- erp-iu -->
+	<!-- <bean id="erpIu.sqlMapClient" class="org.springframework.orm.ibatis.SqlMapClientFactoryBean">
+        <property name="dataSource" ref="dataSource-erp-iu"/>
+        <property name="configLocations">
+            <list>
+                <value>classpath:/egovframework/sqlmap/config/#{bizboxa['BizboxA.ErpIu.DbType']}/erp/iu/sql-map-config-#{bizboxa['BizboxA.ErpIu.DbType']}-erp-iu.xml</value>
+            </list>
+        </property>
+    </bean> -->
+
+</beans>	

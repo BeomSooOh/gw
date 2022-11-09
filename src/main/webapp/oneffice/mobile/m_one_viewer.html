@@ -1,0 +1,188 @@
+<header id="viewer_header" class="head" data-height="56" data-group="1" data-role="header">
+	<div class="left_div">
+		<a class="btn_back" ng-click="cancelViewing()"></a>
+		<a ng-if="viewerMode=='editorMode'" class="btn_save" ng-click="saveProc()"></a>
+	</div>
+	
+	<h1 class="homeTitle" >{{currentFileName}}</h1>
+	
+	<div class="right_div">
+		<a ng-if="viewerMode=='editorMode'" class="btn_undo" ng-click="undoProc()"></a>
+		<a ng-if="viewerMode=='editorMode'" class="btn_redo" ng-click="redoProc()"></a> 
+		<a ng-if="viewerMode=='editorMode'" class="btn_insert" ng-click="insertProc()"></a> 
+		<a class="btn_more" ng-click="sideRightMenu()"></a>
+	</div>
+</header>
+
+<article class="side_right">
+	<div class="side_top" data-height="56" data-role="header" data-group="5" style="height:55px; border-bottom: 1px solid lightgray;" >
+		<div class="prof_ta" style="margin-top: 20px;">
+			<div style="width: calc(100% - 25px); display: inline-block;">
+				<p class="na" style="margin-top: 0; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">{{currentFileName}}</p>
+			</div>
+			<div class="rename" ng-click="menuFunc_Rename()">
+		</div>
+	</div>
+	<div class="side_con " id="idx_viewer_menu_iscroll"  data-group="2" data-height="*" style="position: absolute; top:56px; left: 0; right:0; z-index: 3; background: #fff;">
+		<ul id="side_menu_list" style="width: 100%;">
+			<li>
+				<div class="r1 on" ng-click="menuFunc_Connect()">
+					<div class="ico"></div>
+					<div class="text">원피스 커넥트</div>
+					<dd><span class="arr"></span></dd>
+				</div>
+			</li>
+			<li>
+				<div class="r2 on" ng-click="menuFunc_Report()">
+					<div class="ico"></div>
+					<div class="text">업무보고</div>
+					<dd><span class="arr"></span></dd>
+				</div>
+			</li>
+			<li>
+				<div class="r3 on" ng-click="menuFunc_Copy()">
+					<div class="ico"></div>
+					<div class="text">사본 만들기</div>
+				</div>
+			</li>
+			<li>
+				<div class="r4 on" ng-click="menuFunc_Security()">
+					<div class="ico"></div>
+					<div class="text">문서보안 설정</div>
+				</div>
+			</li>
+			<li>
+				<div class="r5 on" ng-click="menuFunc_SlideShow()">
+					<div class="ico"></div>
+					<div class="text">슬라이드 쇼</div>
+				</div>
+			</li>
+			<li>
+				<div class="r6 off" ng-click="menuFunc_Back()">
+					<div class="ico"></div>
+					<div class="text">뒤로가기</div>
+				</div>
+			</li>
+			<li>
+				<div class="r7 toggleBtn off" ng-click="menuFunc_LinkShare()">
+					<div class="ico"></div>
+					<div class="text">링크 공유</div>
+					<dd id="viewer_share_btn" class="">
+						<div class="toggleBG" style="background:#fff; border:1px solid #e5e5e5;">
+							<input type="button" class="toggleFG" style="left:0px;" />
+						</div>
+					</dd>
+				</div>
+			</li>
+			<li>
+				<div class="r8 off" ng-click="menuFunc_LinkShareView()" style="display: none;">
+					<div class="ico"></div>
+					<div class="text">보기 가능</div>
+					<chk><span ></span></chk>
+				</div>
+			</li>
+			<li>
+				<div class="r9 off" ng-click="menuFunc_LinkShareEdit()" style="display: none;  border-bottom: 1px solid #ddd;">
+					<div class="ico"></div>
+					<div class="text">편집 가능</div>
+					<chk><span ></span></chk>
+				</div>
+			</li>
+			<li>
+				<div class="r10 off" ng-click="menuFunc_UserShare()">
+					<div class="ico"></div>
+					<div class="text">사용자 공유</div>
+					<dd id="viewer_usershare_status">꺼짐<span class="arr"></span></dd>
+				</div>
+			</li>
+			<li>
+				<div class="r11 off" ng-click="menuFunc_LinkCopy()">
+					<div class="ico"></div>
+					<div class="text">링크 복사</div>
+				</div>
+			</li>
+			<li>
+				<div class="r12 off" ng-click="menuFunc_sendReport()">
+					<div class="ico"></div>
+					<div class="text">업무보고 보내기</div>
+				</div>
+			</li>
+			<li>
+				<div class="r13 off" ng-click="menuFunc_getReport()">
+					<div class="ico"></div>
+					<div class="text">업무보고 가져오기</div>
+				</div>
+			</li>
+		</ul>
+	</div>
+</article>
+
+<section id="viewer_section" class="con">
+	<div id="viewerFrameContainer" style="position:fixed; left:0; width:100%; height:calc(100% - 56px); overflow: auto; -webkit-overflow-scrolling:touch;">
+		<div id="viewerFrame" class="vieweditContainer" style="width:100%; height: 100%; overflow: auto; background:#F6F7F9; "  ng-controller="ctrl_viewerFrame" ng-init="initViewerFrame()" ng-if="bEditMode==false"></div>
+		<iframe id="dzeditor_0" class="editorContainer vieweditContainer" style="width:100%; height: 100%; overflow: auto; background:#F6F7F9; border: none;"  ng-controller="ctrl_editorFrame" ng-init="initEditorFrame()" ng-if="bEditMode==true"></iframe>
+	</div>
+</section>
+
+<div class="view_modal"></div>
+
+<div id="id_insertsheet_container" class="action_div border_line"> <!--  btn_insert 클릭시 슬라이드  -->
+	<div class="insert_title_container">
+		<div style="height: 44px; text-align: center">
+			<ld><span class="arr_left" style="display: none;"></span></ld>
+			<dl>
+				<dt id="id_insertsheet_title">삽입</dt>
+			</dl>
+		</div>
+	</div>
+	<div id="id_insertsheet_scroll" data-height="*" style="position: relative;">
+		<div class="menu_container">
+			<div class="ac i_image">
+				<dl>
+					<dt>이미지</dt>
+				</dl>
+			</div>
+			<div class="ac i_table">
+				<dl>
+					<dt>표</dt>
+				</dl>
+			</div>
+			<div class="ac i_layout">
+				<dl>
+					<dt>레이아웃 템플릿</dt>
+				</dl>
+			</div>
+			<div class="ac i_emoticon">
+				<dl>
+					<dt>이모티콘</dt>
+				</dl>
+			</div>
+			<div class="ac i_hr_line">
+				<dl>
+					<dt>가로줄</dt>
+				</dl>
+			</div>
+			<div class="ac i_page_break">
+				<dl>
+					<dt>페이지 나누기</dt>
+				</dl>
+			</div>
+			<div class="ac i_qrcode">
+				<dl>
+					<dt>QR코드</dt>
+				</dl>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="viewer_quick" class="quick_menu">
+	<div class="quick_in">
+		<qDiv class="main_menu">
+			<div class="ico_write" ng-click="startEditorMode()"></div>
+		</qDiv>
+	</div>
+</div>
+<div id="dzeditor_Parent_9999" class="dze_hiddenframe_container" style="display: none;">
+	<iframe id="dzeditor_9999"></iframe>
+</div>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="alarmModule">
+     <typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+     <typeAlias  alias="alarmVO" type="api.alarm.vo.AlarmVO"/>
+     
+	<select id="alarmModule.getAlarmModuleList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT  #compSeq# as comp_seq,
+		#groupSeq# as group_seq,
+		a.alert_type,
+		ifnull(aa.alert_yn,a.alert_yn) AS admin_alert,
+		ifnull(aa.push_yn,a.push_yn) AS admin_push, 
+		ifnull(aa.talk_yn,a.talk_yn) AS admin_talk,
+		ifnull(aa.mail_yn,a.mail_yn) AS admin_mail, 
+		ifnull(aa.sms_yn,a.sms_yn) AS admin_sms,
+		ifnull(aa.portal_yn,a.portal_yn) AS admin_portal,
+		ifnull(aa.timeline_yn,a.timeline_yn) AS admin_timeline,
+		ifnull(am.alert_yn,'B') AS master_alert,
+		ifnull(am.push_yn,'B') AS master_push,
+		ifnull(am.talk_yn,'B') AS master_talk,
+		ifnull(am.mail_yn,'B') AS master_mail,
+		ifnull(am.sms_yn,'N') AS master_sms,
+		ifnull(am.portal_yn,'B') AS master_portal, 
+		ifnull(am.timeline_yn,'B') AS master_timeline, 
+		ccd.flag_1,
+		ccd.flag_2,
+		$DB_NEOS$FN_GetMultiLang(#langCode#, ccdm.detail_name_multi)  AS detail_name
+		FROM 	$DB_NEOS$t_alert_setting a
+		LEFT JOIN $DB_NEOS$t_alert_admin aa on a.alert_type = aa.alert_type and aa.comp_seq = #compSeq#
+		LEFT JOIN $DB_NEOS$t_alert_master am ON aa.comp_seq = am.comp_seq
+		JOIN $DB_NEOS$t_co_code_detail ccd ON a.alert_type = ccd.detail_code
+		JOIN $DB_NEOS$v_t_co_code_detail_multi ccdm ON a.alert_type = ccdm.detail_code
+		WHERE ccd.use_yn = 'Y'
+		<isNotEmpty property="codeValue">
+		AND ccd.flag_1 = #codeValue#
+		</isNotEmpty>		
+	</select>
+	
+	<update id="alamrModule.updateAlarmModule" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_alert_admin SET
+		  alert_yn = #alert_yn#
+		  , push_yn = #push_yn#
+		  , talk_yn = #talk_yn#
+		  , mail_yn = #mail_yn#
+		  , sms_yn = #sms_yn#
+		  , portal_yn = #portal_yn#
+		  , timeline_yn = #timeline_yn#
+		  , modify_seq = #empSeq#
+		  , modify_date = NOW()
+		WHERE comp_seq = #compSeq# 
+		    AND group_seq = #groupSeq# 
+		    AND alert_type=#alarmType#
+	</update>
+</sqlMap>

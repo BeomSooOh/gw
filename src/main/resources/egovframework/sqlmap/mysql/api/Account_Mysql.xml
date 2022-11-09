@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="accountDAO">
+	<select id="accountDAO.selectAccountList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT  taa.account_seq as "accountSeq"
+		      , taa.sv_type as "svType"
+		      , taa.sc_type as "scType"
+		      , taa.cb_code as "cbCode"
+		      , tacc.cb_name as "cbName"
+		      , IFNULL(taa.cb_no, '') as "cbNo"
+		      , IFNULL(taa.cb_pw, '') as "cbPw"
+		      , IFNULL(taa.cb_login_id, '') as "cbLoginId"
+		      , IFNULL(taa.cb_login_pw, '') as "cbLoginPw"
+		      , IFNULL(taa.idn_no, '') as "idnNo"
+		      , taa.use_yn as "useYn"
+		<isNotNull  property="accountSeq">
+			<isNotEmpty property="accountSeq">
+			  , taa.last_err_msg as "lastErrMsg"
+			  , taa.last_acc_flag as "lastAccFlag"
+			</isNotEmpty>
+		</isNotNull>
+		FROM t_ac_account taa
+		JOIN t_ac_cb_code tacc
+		ON taa.cb_code = tacc.cb_code
+		WHERE taa.group_seq = #groupSeq# 
+		AND taa.emp_seq = #empSeq#
+		<isNotNull  property="cbName">
+			<isNotEmpty property="cbName">
+			AND tacc.cb_name LIKE '%$cbName$%'
+			</isNotEmpty>
+		</isNotNull >
+		<isNotNull  property="cbNo">
+			<isNotEmpty property="cbNo">
+			AND taa.cb_no LIKE '%$cbNo$%'
+			</isNotEmpty>
+		</isNotNull >
+		<isNotNull  property="useYn">
+			<isNotEmpty property="useYn">
+			AND taa.use_yn = #useYn#
+			</isNotEmpty>
+		</isNotNull >
+		<isNotNull  property="accountSeq">
+			<isNotEmpty property="accountSeq">
+			AND taa.account_seq = #accountSeq#
+			</isNotEmpty>
+		</isNotNull>
+	</select>
+	
+	<select id="accountDAO.selectAccount" parameterClass="hashmap" resultClass="hashmap">
+		SELECT  taa.account_seq as "accountSeq"
+		      , taa.sv_type as "svType"
+		      , taa.sc_type as "scType"
+		      , taa.cb_code as "cbCode"
+		      , tacc.cb_name as "cbName"
+		      , IFNULL(taa.cb_no, '') as "cbNo"
+		      , IFNULL(taa.cb_pw, '') as "cbPw"
+		      , IFNULL(taa.cb_login_id, '') as "cbLoginId"
+		      , IFNULL(taa.cb_login_pw, '') as "cbLoginPw"
+		      , IFNULL(taa.idn_no, '') as "idnNo"
+		      , taa.use_yn as "useYn"
+			  , taa.last_err_msg as "lastErrMsg"
+			  , taa.last_acc_flag as "lastAccFlag"
+		FROM t_ac_account taa
+		JOIN t_ac_cb_code tacc
+		ON taa.cb_code = tacc.cb_code
+		WHERE taa.group_seq = #groupSeq# 
+		AND taa.emp_seq = #empSeq#
+		AND taa.account_seq = #accountSeq#
+	</select>
+	
+	<insert id="accountDAO.insertAccount" parameterClass="hashmap">
+		INSERT INTO t_ac_account (
+		      account_seq
+		    , group_seq
+		    , emp_seq
+		    , sv_type
+		    , cb_code
+		    , sc_type
+		    , cb_login_id
+		    , cb_login_pw
+		    , cb_no
+		    , cb_pw
+		    , idn_no
+		    , use_yn
+		    , last_err_msg
+		    , last_acc_flag
+		    , create_date
+		) VALUES (
+		      #accountSeq#
+		    , #groupSeq#
+		    , #empSeq#
+		    , #svType#
+		    , #cbCode#
+		    , #scType#
+		    , #cbLoginId#
+		    , #cbLoginPw#
+		    , #cbNo#
+		    , #cbPw#
+		    , #idnNo#
+		    , #useYn#
+		    , ''
+		    , 'C'
+		    , SYSDATE()
+		)
+	</insert>
+	
+	<update id="accountDAO.updateAccount" parameterClass="hashmap">
+		UPDATE t_ac_account 
+		SET sv_type = #svType#
+		  , cb_code = #cbCode#
+		  , sc_type = #scType#
+		  , cb_login_id = #cbLoginId#
+		  , cb_login_pw = #cbLoginPw#
+		  , cb_no = #cbNo#
+		  , cb_pw = #cbPw#
+		  , idn_no = #idnNo#
+		  , use_yn = #useYn#
+		  , last_err_msg = ''
+		  , last_acc_flag = 'C'
+		  , modify_date = SYSDATE()
+		WHERE account_seq = #accountSeq#
+		AND   group_seq = #groupSeq#
+		AND	  emp_seq = #empSeq#
+	</update>
+	
+	<update id="accountDAO.updateAccountLastErr" parameterClass="hashmap">
+		UPDATE t_ac_account 
+		SET last_err_msg = #errMsg#
+		  , last_acc_flag = #accFlag#
+		  , modify_date = SYSDATE()
+		WHERE account_seq = #accountSeq#
+		AND   emp_seq = #empSeq#
+	</update>
+	
+	<delete id="accountDAO.deleteAccount" parameterClass="hashmap">
+		DELETE FROM t_ac_account 
+		WHERE account_seq = #accountSeq# 
+		AND   group_seq = #groupSeq# 
+		AND   emp_seq = #empSeq#
+	</delete>
+	
+	<insert id="accountDAO.insertStatus" parameterClass="hashmap">
+		INSERT INTO t_ac_status (
+		        user_guid
+		      , account_seq
+		      , group_seq
+		      , emp_seq
+		      , tr_type
+		      , cb_code
+		      , cb_no
+		      , acc_flag
+		      , err_code
+		      , err_msg
+		      , create_date
+		) VALUES (
+		        #userGuid#
+		      , #accountSeq#
+		      , #groupSeq#
+		      , #empSeq#
+		      , #trType#
+		      , #cbCode#
+		      , #cbNo#
+		      , #accFlag#
+		      , #errCode#
+		      , #errMsg#
+		      , SYSDATE()
+		)
+	</insert>
+	
+	<delete id="accountDAO.deleteStatusTwoHoursLater" parameterClass="hashmap">
+		DELETE FROM t_ac_status
+		WHERE account_seq = #accountSeq#
+		AND emp_seq = #empSeq#
+		AND create_date <![CDATA[<]]> SUBTIME(SYSDATE(), '02:00:00.000000')
+	</delete>
+	
+	<update id="accountDAO.updateStatus" parameterClass="hashmap">
+		UPDATE  t_ac_status 
+		SET acc_type = #accType#
+		  , acc_name = #accName#
+		  , avail_money = #availMoney#
+		  , balance = #balance#
+		  , acc_flag = #accFlag#
+		  , err_code = #errCode#
+		  , err_msg = #errMsg# 
+		WHERE emp_seq = #empSeq# 
+		AND user_guid = #userGuid#
+	</update>
+	
+	<select id="accountDAO.selectAccountSeqFromStatus" parameterClass="hashmap" resultClass="String">
+		SELECT account_seq as "accountSeq"
+		FROM t_ac_status
+		WHERE emp_seq = #empSeq# AND user_guid = #userGuid#
+	</select>
+	
+	<select id="accountDAO.selectStatus" parameterClass="String" resultClass="hashmap">
+		SELECT  cb_name as "cbName"
+		      , cb_no as "cbNo"
+		      , acc_name as "accName"
+		      , acc_type as "accType"
+		      , avail_money as "availMoney"
+		      , balance as "balance"
+		      , err_code as "errCode"
+		      , err_msg  as "errMsg"
+		FROM t_ac_status tas
+		JOIN t_ac_cb_code tacc
+		ON tas.cb_code = tacc.cb_code
+		WHERE user_guid = #userGuid#
+		AND acc_flag != 'R'
+	</select>
+	
+	<insert id="accountDAO.insertTransaction" parameterClass="hashmap">
+		INSERT INTO t_ac_transaction (
+		        user_guid
+		      , account_seq
+		      , t_date
+		      , t_time
+		      , output
+		      , input
+		      , balance
+		      , summary
+		      , receiver
+		      , etc
+		      , note
+		      , division
+		) VALUES (
+		        #userGuid#
+		      , #accountSeq#
+		      , #tDate#
+		      , #tTime#
+		      , #output#
+		      , #input#
+		      , #balance#
+		      , #summary#
+		      , #receiver#
+		      , #etc#
+		      , #note#
+		      , #division#
+		)
+	</insert>
+	
+	<select id="accountDAO.selectTransaction" parameterClass="hashmap" resultClass="hashmap">
+		SELECT  t_date as "date"
+		      , t_time as "time"
+		      , output as "output"
+		      , input as "input"
+		      , balance as "balance"
+		      , summary as "summary"
+		      , receiver as "receiver"
+		      , etc as "etc"
+		      , note as "note"
+		      , division as "division"
+		FROM t_ac_transaction
+		WHERE user_guid = #userGuid#
+		<isEqual property="searchType" compareValue="1">
+		AND input != '' AND input != '0'
+		</isEqual>
+		<isEqual property="searchType" compareValue="2">
+		AND output != '' AND output != '0'
+		</isEqual>
+		<isEqual property="order" compareValue="A">
+		ORDER BY t_date, t_time
+		</isEqual>
+		<isEqual property="order" compareValue="B">
+		ORDER BY t_date DESC, t_time DESC
+		</isEqual>
+		LIMIT $startIdx$, $pageSize$
+	</select>
+	
+	
+	<select id="accountDAO.selectCBCodeList" resultClass="hashmap">
+		SELECT  cb_code as "cbCode"
+		      , cb_name as "cbName"
+		FROM t_ac_cb_code
+		ORDER BY view_order
+	</select>
+	
+	<select id="accountDAO.selectCBSettingList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT  cb_code as "cbCode"
+		      , sv_type as "svType"
+		      , sc_type as "scType"
+		      , cb_login_id as "cbLoginId"
+		      , cb_login_pw as "cbLoginPw"
+		      , idn_no as "idnNo"
+		      , idn_no_nm as "idnNoNm"
+		      , cb_no as "cbNo"
+		      , cb_pw as "cbPw"
+		      , use_yn as "useYn"
+		FROM t_ac_cb_setting
+		<isNotNull  property="cbCode">
+			<isNotEmpty property="cbCode">
+			WHERE cb_code = #cbCode#
+			</isNotEmpty>
+		</isNotNull>
+		ORDER BY cb_code, sv_type, sc_type
+	</select>
+</sqlMap>

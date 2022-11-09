@@ -1,0 +1,151 @@
+<p style="font-size:9pt;font-family:'[더존] 제목체';color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><b><span style="color:rgb(68, 114, 196);">* 숫자 (number) json</span></b></p>
+<p style="font-size:9pt;font-family:'[더존] 제목체';color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><br /></p>
+<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">"item_name": {
+</p>
+<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><span class="tabSpan">	</span>"type": "number",
+	</p>
+<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><span class="tabSpan" style="color:rgb(4, 81, 165);">	</span>"value": "10000000"</p>
+<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><span class="tabSpan" style="color:rgb(163, 21, 21);">	</span>"precision": ""<span class="tabSpan">	</span>//2 (소수점 자릿수)<span style="color:#a31515;"><br /></span></p>
+<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><span class="tabSpan">	</span>"separator": ""<span class="tabSpan">	</span>//, (구분 기호)<br /></p>
+<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">              }</p>
+<p style="font-size:9pt;font-family:'[더존] 제목체';color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><span style="font-size:9pt;"><br /></span></p>
+<p style="font-size:9pt;font-family:'[더존] 제목체';color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><span style="font-size:9pt;color:rgb(68, 114, 196);"><b>*&nbsp;화폐 (currency) json</b></span></p>
+<p style="font-size:9pt;font-family:'[더존] 제목체';color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><br /></p>
+<p style="font-size:9pt;font-family:'[더존] 제목체';color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">"item_name": {
+</p>
+<p style="font-size:9pt;font-family:'[더존] 제목체';color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><span class="tabSpan">	</span>"type": "currency",
+	</p>
+<p style="font-size:9pt;font-family:'[더존] 제목체';color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><span class="tabSpan" style="color:rgb(4, 81, 165);">	</span>"value": "10000000"</p>
+<p style="font-size:9pt;font-family:'[더존] 제목체';color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><span class="tabSpan" style="color:rgb(163, 21, 21);">	</span>"precision": ""<span class="tabSpan">	</span>//2 (소수점 자릿수)<br /></p>
+<p style="font-size:9pt;font-family:'[더존] 제목체';color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><span class="tabSpan" style="color:rgb(163, 21, 21);">	</span>"symbol": ""<span class="tabSpan">	</span>//dollar ,&nbsp;won,&nbsp;yen/yuan (통화 기호)<span style="color:#a31515;"><br /></span></p>
+<p style="font-size:9pt;font-family:'[더존] 제목체';color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">              }</p>
+<p style="font-size:9pt;font-family:'[더존] 제목체';color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><br /></p>
+<p style="font-size:9pt;font-family:'[더존] 제목체';color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><a href="http://jira.duzon.com:8080/browse/UCDOC-5331" title="http://jira.duzon.com:8080/browse/UCDOC-5331" target="_blank">http://jira.duzon.com:8080/browse/UCDOC-5331</a>&nbsp;<br /></p>
+<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><br /></p>
+<table border="1" cellpadding="2" cellspacing="0" bordercolor="#003366" style="border-collapse:collapse;width:674px;margin:0px;table-layout:fixed;overflow-wrap:break-word;word-break:normal;" id="test_table" mapping_key="test_table">
+	<colgroup>
+	<col style="width:23px;" />
+	<col style="width:63px;" />
+	<col style="width:64px;" />
+	<col style="width:74px;" />
+	<col style="width:74px;" />
+	<col style="width:78px;" />
+	<col style="width:109px;" />
+	<col style="width:79px;" />
+	<col style="width:109px;" />
+	</colgroup>
+	<tbody>
+		<tr style="height:20px;">
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:668px;height:15px;background-color:rgb(237, 237, 237);" colspan="9">
+				<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;text-align:center;">품의내역()</p>
+			</td>
+		</tr>
+		<tr style="height:20px;">
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:18px;height:55px;text-align:center;background-color:rgb(237, 237, 237);" rowspan="3">
+				<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;text-align:center;">No</p>
+			</td>
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:58px;height:15px;background-color:rgb(237, 237, 237);">
+				<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;text-align:center;">계정 과목</p>
+			</td>
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:59px;height:15px;background-color:rgb(237, 237, 237);">
+				<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;text-align:center;">거래처명</p>
+			</td>
+			<td rowspan="3" style="text-align:center;border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:69px;height:55px;background-color:rgb(237, 237, 237);">
+				<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;text-align:center;">차변</p>
+			</td>
+			<td rowspan="3" style="text-align:center;border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:69px;height:55px;background-color:rgb(237, 237, 237);">
+				<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;text-align:center;">대변</p>
+			</td>
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:370px;height:55px;background-color:rgb(237, 237, 237);" rowspan="3" colspan="4">
+				<p style="text-align:center;color:rgb(0, 0, 0);font-family:'[더존] 제목체';font-size:9pt;">관리항목</p>
+			</td>
+		</tr>
+		<tr style="height:20px;">
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:58px;height:15px;background-color:rgb(237, 237, 237);">
+				<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;text-align:center;">계정 구분</p>
+			</td>
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:59px;height:15px;background-color:rgb(237, 237, 237);">
+				<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;text-align:center;">거래처정보</p>
+			</td>
+		</tr>
+		<tr style="height:20px;">
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:122px;height:15px;background-color:rgb(237, 237, 237);" colspan="2">
+				<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;text-align:center;">적요</p>
+			</td>
+		</tr>
+		<tr bgcolor="#ffffff" style="height:25px;">
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:18px;height:95px;text-align:center;" rowspan="4">
+				<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><input type="text" class="dze_external_data_area" readonly="" style="font-size:9pt;width:18px;" value="no" mapping_key="no" /><br /></p>
+			</td>
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:58px;height:70px;" rowspan="3">
+				<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><input type="text" class="dze_external_data_area" readonly="" style="font-size:9pt;width:50px;" value="desc1" mapping_key="desc1" /><br /></p>
+			</td>
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:59px;height:70px;" rowspan="3">
+				<p style="color:rgb(0, 0, 0);font-family:'[더존] 제목체';font-size:9pt;"><input type="text" class="dze_external_data_area" readonly="" style="font-size:9pt;width:50px;" value="desc2" mapping_key="desc2" /><br /></p>
+			</td>
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:69px;height:95px;" rowspan="4">
+				<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><input type="text" class="dze_external_data_area" readonly="" style="font-size:9pt;width:69px;min-width:69px;" value="debit" mapping_key="debit" dze_auto_resize="" /><br /></p>
+			</td>
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:69px;height:95px;" rowspan="4">
+				<p style="font-family:'[더존] 제목체';font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><span style="font-size:9pt;"><input type="text" class="dze_external_data_area" readonly="" style="font-size:9pt;width:69px;" value="credit" mapping_key="credit" /></span></p>
+			</td>
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:73px;height:20px;background-color:rgb(222, 235, 247);">
+				<p style="font-size:9pt;font-family:'[더존] 제목체';color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;text-align:right;"><input type="text" class="dze_external_data_area" readonly="" style="font-size:9pt;width:69px;" value="A1" mapping_key="A1" /><br /></p>
+			</td>
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:104px;height:20px;">
+				<p style="font-size:9pt;font-family:'[더존] 제목체';color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><input type="text" class="dze_external_data_area" readonly="" style="font-size:9pt;width:69px;" value="B1" mapping_key="B1" /><br /></p>
+			</td>
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:74px;height:20px;background-color:rgb(222, 235, 247);">
+				<p style="font-size:9pt;font-family:'[더존] 제목체';color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;text-align:right;"><input type="text" class="dze_external_data_area" readonly="" style="font-size:9pt;width:69px;" value="C1" mapping_key="C1" /><br /></p>
+			</td>
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:104px;height:20px;">
+				<p style="color:rgb(0, 0, 0);font-family:'[더존] 제목체';font-size:9pt;"><input type="text" class="dze_external_data_area" readonly="" style="font-size:9pt;width:69px;" value="D1" mapping_key="D1" /><br /></p>
+			</td>
+		</tr>
+		<tr bgcolor="#ffffff" style="height:25px;">
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:73px;height:20px;background-color:rgb(222, 235, 247);">
+				<p style="color:rgb(0, 0, 0);font-family:'[더존] 제목체';font-size:9pt;text-align:right;"><input type="text" class="dze_external_data_area" readonly="" style="font-size:9pt;width:69px;" value="A2" mapping_key="A2" /><br /></p>
+			</td>
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:104px;height:20px;">
+				<p style="color:rgb(0, 0, 0);font-family:'[더존] 제목체';font-size:9pt;"><span style="font-size:9pt;"><input type="text" class="dze_external_data_area" readonly="" style="font-size:9pt;width:69px;" value="B2" mapping_key="B2" /><br /></span></p>
+			</td>
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:74px;height:20px;background-color:rgb(222, 235, 247);">
+				<p style="color:rgb(0, 0, 0);font-family:'[더존] 제목체';font-size:9pt;text-align:right;"><input type="text" class="dze_external_data_area" readonly="" style="font-size:9pt;width:69px;" value="C2" mapping_key="C2" /><br /></p>
+			</td>
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:104px;height:20px;">
+				<p style="color:rgb(0, 0, 0);font-family:'[더존] 제목체';font-size:9pt;"><input type="text" class="dze_external_data_area" readonly="" style="font-size:9pt;width:69px;" value="D2" mapping_key="D2" /><br /></p>
+			</td>
+		</tr>
+		<tr bgcolor="#ffffff" style="height:25px;">
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:73px;height:20px;background-color:rgb(222, 235, 247);">
+				<p style="color:rgb(0, 0, 0);font-family:'[더존] 제목체';font-size:9pt;text-align:right;"><input type="text" class="dze_external_data_area" readonly="" style="font-size:9pt;width:69px;" value="A3" mapping_key="A3" /><br /></p>
+			</td>
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:104px;height:20px;">
+				<p style="color:rgb(0, 0, 0);font-family:'[더존] 제목체';font-size:9pt;"><span style="font-size:9pt;"><input type="text" class="dze_external_data_area" readonly="" style="font-size:9pt;width:69px;" value="B3" mapping_key="B3" /><br /></span></p>
+			</td>
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:74px;height:20px;background-color:rgb(222, 235, 247);">
+				<p style="color:rgb(0, 0, 0);font-family:'[더존] 제목체';font-size:9pt;text-align:right;"><input type="text" class="dze_external_data_area" readonly="" style="font-size:9pt;width:69px;" value="C3" mapping_key="C3" /><br /></p>
+			</td>
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:104px;height:20px;">
+				<p style="color:rgb(0, 0, 0);font-family:'[더존] 제목체';font-size:9pt;"><input type="text" class="dze_external_data_area" readonly="" style="font-size:9pt;width:69px;" value="D3" mapping_key="D3" /><br /></p>
+			</td>
+		</tr>
+		<tr bgcolor="#ffffff" style="height:25px;">
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:122px;height:20px;" colspan="2">
+				<p style="color:rgb(0, 0, 0);font-family:'[더존] 제목체';font-size:9pt;"><br /></p>
+			</td>
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:73px;height:20px;background-color:rgb(222, 235, 247);">
+				<p style="font-size:9pt;font-family:'[더존] 제목체';color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;text-align:right;">&nbsp;</p>
+			</td>
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:104px;height:20px;">
+				<p style="font-size:9pt;font-family:'[더존] 제목체';color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">&nbsp;</p>
+			</td>
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:74px;height:20px;background-color:rgb(222, 235, 247);">
+				<p style="font-size:9pt;font-family:'[더존] 제목체';color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;text-align:right;"><br /></p>
+			</td>
+			<td style="border-width:1px;border-style:solid;border-color:rgb(0, 0, 0);width:104px;height:20px;">
+				<p style="color:rgb(0, 0, 0);font-family:'[더존] 제목체';font-size:9pt;"><br /></p>
+			</td>
+		</tr>
+	</tbody>
+</table>

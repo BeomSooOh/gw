@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="ItemDAO">
+
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+	<!-- 항목관리 리스트 -->
+	<select id="ItemDAO.getItemList" resultClass="hashmap" parameterClass="hashmap">
+		/* ItemDAO.getItemList - mariaDB */
+		SELECT 	  A.item_id 		as 'itemCode'
+				, A.item_nm			as 'itemCodeName'
+				, B.detail_name		as 'itemCodeRange'
+				, A.item_tp			as 'itemType'
+				, C.detail_name 	as 'itemTypeName'
+				, $DB_NEOS$get_code_detail_info('0', 'cm0004',  IFNULL(A.use_yn, '0'), #langCode#) AS 'itemUseYN'
+				, A.item_desc		as 'itemDesc'
+		FROM   $DB_NEOS$titg_item A
+		INNER JOIN (
+			SELECT ccd.code, ccd.detail_code,
+			$DB_NEOS$FN_GetMultiLang(#langCode#, ccdm.detail_name_multi) as detail_name
+			, ccd.use_yn
+			FROM   $DB_NEOS$t_co_code_detail ccd
+			INNER JOIN $DB_NEOS$v_t_co_code_detail_multi ccdm
+			ON	ccd.code = ccdm.code AND ccd.code = 'It0001' and ccd.detail_code = ccdm.detail_code
+		) B
+		ON	A.item_range = B.detail_code
+		INNER JOIN (
+		  SELECT ccd.code, ccd.detail_code,
+		  $DB_NEOS$FN_GetMultiLang(#langCode#, ccdm.detail_name_multi) as detail_name
+		  , ccd.use_yn
+			FROM   $DB_NEOS$t_co_code_detail ccd
+			INNER JOIN $DB_NEOS$v_t_co_code_detail_multi ccdm
+			ON	ccd.code = ccdm.code AND ccd.code = 'It0002' and ccd.detail_code = ccdm.detail_code
+		) C
+		ON  A.item_tp = C.detail_code
+		WHERE A.use_yn = '1' 
+		  AND A.item_range = #itemType#
+	</select>
+
+
+</sqlMap>

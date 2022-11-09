@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
+    					http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+    					http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd">
+    
+    <util:properties id="bizboxa" location="file:../bizboxaconf/bizboxa.properties" />
+    
+    <!-- Jasypt 설정 시작-->
+	<bean id="encryptorConfig" class="org.jasypt.encryption.pbe.config.EnvironmentPBEConfig">
+	    <property name="algorithm" value="PBEWithMD5AndDES" />
+	    <property name="passwordEnvName" value="JASYPT_PASSWORD" />
+	</bean>
+	 
+	<bean id="encryptor" class="org.jasypt.encryption.pbe.StandardPBEStringEncryptor">
+	    <property name="config" ref="encryptorConfig" />
+	</bean>
+	 
+	<bean class="org.jasypt.spring31.properties.EncryptablePropertyPlaceholderConfigurer">
+	    <constructor-arg ref="encryptor" />
+	     <property name="locations">
+            <list>
+                <value>file:../bizboxaconf/bizboxa.properties</value>
+            </list>
+        </property>
+	</bean>
+	<!-- Jasypt 설정 끝-->
+	
+    
+    <bean id="egov.dataSource" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
+		<property name="driverClassName" value="#{bizboxa['BizboxA.DriverClassName']}" />
+		<property name="url" value="#{bizboxa['BizboxA.Url']}" />
+		<property name="username" value="#{bizboxa['BizboxA.UserName']}" />
+		<property name="password" value="${BizboxA.Password}" />
+		
+		<property name="minIdle" value="#{bizboxa['BizboxA.gw.egov.minIdle'] != null ? bizboxa['BizboxA.gw.egov.minIdle'] : 16}" />
+		<property name="maxIdle" value="#{bizboxa['BizboxA.gw.egov.maxIdle'] != null ? bizboxa['BizboxA.gw.egov.maxIdle'] : 100}" />
+		<property name="maxTotal" value="#{bizboxa['BizboxA.gw.egov.maxtotal'] != null ? bizboxa['BizboxA.gw.egov.maxtotal'] : 100}" />
+		<property name="testWhileIdle" value="false" />
+		<property name="timeBetweenEvictionRunsMillis" value="3600000" />
+	</bean>
+	
+   <bean id="dataSource-orgchart" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
+   		<property name="driverClassName" value="#{bizboxa['BizboxA.DriverClassName']}" />
+        <property name="url" value="#{bizboxa['BizboxA.Url']}" />
+        <property name="username" value="#{bizboxa['BizboxA.UserName']}" />
+        <property name="password" value="${BizboxA.Password}" />
+    	
+		<property name="minIdle" value="#{bizboxa['BizboxA.gw.egov.minIdle'] != null ? bizboxa['BizboxA.gw.egov.minIdle'] : 16}" />
+		<property name="maxIdle" value="#{bizboxa['BizboxA.gw.egov.maxIdle'] != null ? bizboxa['BizboxA.gw.egov.maxIdle'] : 100}" />
+		<property name="maxTotal" value="#{bizboxa['BizboxA.gw.egov.maxtotal'] != null ? bizboxa['BizboxA.gw.egov.maxtotal'] : 100}" />
+    	<property name="testWhileIdle" value="false" />
+		<property name="timeBetweenEvictionRunsMillis" value="3600000" />
+	</bean>
+    
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+  		<property name="dataSource" ref="dataSource-orgchart" />
+	</bean>
+	
+   	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg ref="sqlSessionFactory"/>
+	</bean>
+	
+</beans>

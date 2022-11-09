@@ -1,0 +1,1670 @@
+{
+    "ITEMS": {
+      "nowGisu": "2021년 08월 20일",
+      "divCdStr": "회계단위 : [2000] 솔루션사업부문본사"
+    },
+    "TABLE": {
+      "db_table_1": {
+        "group": [
+          {
+            "items": {
+              "drAmJan": "27,381,097,415",
+              "drAm": "29,322,934,158",
+              "drMonthAm": "12,638,170",
+              "groupNm": "<< 자          산 >>",
+              "crMonthAm": "2,072,548,947",
+              "crAm": "2,228,278,124",
+              "crAmJan": "286,441,381"
+            },
+            "style": "background-color:#FFEFD2;"
+          },
+          {
+            "items": {
+              "drAmJan": "18,763,076,555",
+              "drAm": "20,702,913,298",
+              "drMonthAm": "12,638,170",
+              "groupNm": "[ 유  동    자  산 ]",
+              "crMonthAm": "2,072,548,947",
+              "crAm": "1,959,077,559",
+              "crAmJan": "19,240,816"
+            },
+            "style": "background-color:#FFF6DD;"
+          },
+          {
+            "items": {
+              "drAmJan": "8,297,213,663",
+              "drAm": "8,222,988,106",
+              "drMonthAm": "10,638,170",
+              "groupNm": "<   당   좌   자  산  >",
+              "crMonthAm": "66,548,947",
+              "crAm": "-55,184,741",
+              "crAmJan": "19,040,816"
+            },
+            "style": "background-color:#FFFBE9;"
+          },
+          {
+            "items": {
+              "drAmJan": "304,006,844",
+              "drAm": "748,301,786",
+              "drMonthAm": "6,153,968",
+              "groupNm": "현ㅤㅤㅤㅤㅤㅤㅤ금",
+              "crMonthAm": "6,425,824",
+              "crAm": "444,294,942",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "1,879,977,611",
+              "drAm": "-13,892,389",
+              "drMonthAm": "0",
+              "groupNm": "당ㅤㅤ좌ㅤㅤ예ㅤ금",
+              "crMonthAm": "0",
+              "crAm": "-1,893,870,000",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "3,468,873,116",
+              "drAm": "3,632,112,838",
+              "drMonthAm": "5,000",
+              "groupNm": "보ㅤㅤ통ㅤㅤ예ㅤ금",
+              "crMonthAm": "60,000,000",
+              "crAm": "163,239,722",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "-10,000",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "기ㅤ타ㅤ제ㅤ예ㅤ금",
+              "crMonthAm": "0",
+              "crAm": "10,000",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "1,060,000",
+              "drAm": "1,061,000",
+              "drMonthAm": "0",
+              "groupNm": "정ㅤ기ㅤ예ㅤ적ㅤ금",
+              "crMonthAm": "0",
+              "crAm": "1,000",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "31,556,700",
+              "drAm": "33,565,700",
+              "drMonthAm": "0",
+              "groupNm": "외ㅤ화ㅤ보ㅤ통예금",
+              "crMonthAm": "0",
+              "crAm": "2,009,000",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "-5,002,611",
+              "drAm": "300",
+              "drMonthAm": "0",
+              "groupNm": "단ㅤ기ㅤ금ㅤ융상품",
+              "crMonthAm": "0",
+              "crAm": "5,002,911",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "대ㅤ손ㅤ충ㅤ당ㅤ금",
+              "crMonthAm": "0",
+              "crAm": "19,040,816",
+              "crAmJan": "19,040,816"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "1,627,766,221",
+              "drAm": "2,810,804,866",
+              "drMonthAm": "1,066,398",
+              "groupNm": "외ㅤ상ㅤ매ㅤ출ㅤ금",
+              "crMonthAm": "0",
+              "crAm": "1,183,038,645",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "43,010,681",
+              "drAm": "58,708,804",
+              "drMonthAm": "3,100,804",
+              "groupNm": "받ㅤㅤ을ㅤㅤ어ㅤ음",
+              "crMonthAm": "123,123",
+              "crAm": "15,698,123",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "72,614,683",
+              "drAm": "72,914,683",
+              "drMonthAm": "0",
+              "groupNm": "단ㅤ기ㅤ대ㅤ여ㅤ금",
+              "crMonthAm": "0",
+              "crAm": "300,000",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "47,041",
+              "drAm": "97,041",
+              "drMonthAm": "0",
+              "groupNm": "미ㅤㅤ수ㅤㅤ수ㅤ익",
+              "crMonthAm": "0",
+              "crAm": "50,000",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "52,906,551",
+              "drAm": "52,906,651",
+              "drMonthAm": "0",
+              "groupNm": "미ㅤㅤㅤ수ㅤㅤㅤ금",
+              "crMonthAm": "0",
+              "crAm": "100",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "30,000",
+              "drAm": "30,000",
+              "drMonthAm": "0",
+              "groupNm": "미ㅤ수법인세환급액",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "256,821,432",
+              "drAm": "256,821,432",
+              "drMonthAm": "0",
+              "groupNm": "선ㅤㅤㅤ급ㅤㅤㅤ금",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "110,598,330",
+              "drAm": "116,598,330",
+              "drMonthAm": "12,000",
+              "groupNm": "선ㅤㅤ급ㅤㅤ비ㅤ용",
+              "crMonthAm": "0",
+              "crAm": "6,000,000",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "36,045,000",
+              "drAm": "36,045,000",
+              "drMonthAm": "0",
+              "groupNm": "가ㅤㅤ지ㅤㅤ급ㅤ금",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "410,414,028",
+              "drAm": "410,414,028",
+              "drMonthAm": "300,000",
+              "groupNm": "부ㅤ가ㅤ세ㅤ대급금",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "342,960",
+              "drAm": "342,960",
+              "drMonthAm": "0",
+              "groupNm": "선ㅤㅤ납ㅤㅤ세ㅤ금",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "6,145,076",
+              "drAm": "6,145,076",
+              "drMonthAm": "0",
+              "groupNm": "주.임.종단기채권",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "10,000",
+              "drAm": "10,000",
+              "drMonthAm": "0",
+              "groupNm": "매ㅤ각ㅤ예ㅤ정자산",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "10,465,862,892",
+              "drAm": "12,479,925,192",
+              "drMonthAm": "2,000,000",
+              "groupNm": "<   재   고   자  산  >",
+              "crMonthAm": "2,006,000,000",
+              "crAm": "2,014,262,300",
+              "crAmJan": "200,000"
+            },
+            "style": "background-color:#FFFBE9;"
+          },
+          {
+            "items": {
+              "drAmJan": "-189,899,262",
+              "drAm": "1,819,153,038",
+              "drMonthAm": "2,000,000",
+              "groupNm": "상품",
+              "crMonthAm": "2,006,000,000",
+              "crAm": "2,009,052,300",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "상품매입할인",
+              "crMonthAm": "0",
+              "crAm": "200,000",
+              "crAmJan": "200,000"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "1,447,274,748",
+              "drAm": "1,452,284,748",
+              "drMonthAm": "0",
+              "groupNm": "제ㅤㅤㅤㅤㅤㅤㅤ품",
+              "crMonthAm": "0",
+              "crAm": "5,010,000",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "7,703,745,940",
+              "drAm": "7,703,745,940",
+              "drMonthAm": "0",
+              "groupNm": "원ㅤㅤㅤ재ㅤㅤㅤ료",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "1,000",
+              "drAm": "1,000",
+              "drMonthAm": "0",
+              "groupNm": "부ㅤㅤㅤ재ㅤㅤㅤ료",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "1,504,737,466",
+              "drAm": "1,504,737,466",
+              "drMonthAm": "0",
+              "groupNm": "미ㅤㅤㅤ착ㅤㅤㅤ품",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "3,000",
+              "drAm": "3,000",
+              "drMonthAm": "0",
+              "groupNm": "재ㅤㅤㅤ공ㅤㅤㅤ품",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "8,618,020,860",
+              "drAm": "8,620,020,860",
+              "drMonthAm": "0",
+              "groupNm": "[ 비  유 동  자 산 ]",
+              "crMonthAm": "0",
+              "crAm": "269,200,565",
+              "crAmJan": "267,200,565"
+            },
+            "style": "background-color:#FFF6DD;"
+          },
+          {
+            "items": {
+              "drAmJan": "4,736,871",
+              "drAm": "4,736,871",
+              "drMonthAm": "0",
+              "groupNm": "< 투  자    자  산 >",
+              "crMonthAm": "0",
+              "crAm": "-279,120,044",
+              "crAmJan": "-279,120,044"
+            },
+            "style": "background-color:#FFFBE9;"
+          },
+          {
+            "items": {
+              "drAmJan": "3,000,000",
+              "drAm": "3,000,000",
+              "drMonthAm": "0",
+              "groupNm": "매ㅤ도가능유가증권",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "3,010,000",
+              "drAm": "3,010,000",
+              "drMonthAm": "0",
+              "groupNm": "장ㅤ기ㅤ대ㅤ여ㅤ금",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "감가상각누계액(투자부동산)",
+              "crMonthAm": "0",
+              "crAm": "-279,120,044",
+              "crAmJan": "-279,120,044"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "1,000,000",
+              "drAm": "1,000,000",
+              "drMonthAm": "0",
+              "groupNm": "당기손익-공정가치측정금융자산(비유동)",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "-6,273,129",
+              "drAm": "-6,273,129",
+              "drMonthAm": "0",
+              "groupNm": "퇴ㅤ직ㅤ보험예치금",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "4,000,000",
+              "drAm": "4,000,000",
+              "drMonthAm": "0",
+              "groupNm": "국ㅤ민ㅤ연금전환금",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "8,062,617,545",
+              "drAm": "8,064,617,545",
+              "drMonthAm": "0",
+              "groupNm": "< 유  형    자  산 >",
+              "crMonthAm": "0",
+              "crAm": "548,320,609",
+              "crAmJan": "546,320,609"
+            },
+            "style": "background-color:#FFFBE9;"
+          },
+          {
+            "items": {
+              "drAmJan": "6,232,213,087",
+              "drAm": "6,232,213,087",
+              "drMonthAm": "0",
+              "groupNm": "토ㅤㅤㅤㅤㅤㅤㅤ지",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "781,226,812",
+              "drAm": "781,226,812",
+              "drMonthAm": "0",
+              "groupNm": "건ㅤㅤㅤㅤㅤㅤㅤ물",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "감가상각누계액(건물)",
+              "crMonthAm": "0",
+              "crAm": "48,826,675",
+              "crAmJan": "48,826,675"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "23,647,110",
+              "drAm": "23,647,110",
+              "drMonthAm": "0",
+              "groupNm": "구ㅤㅤㅤ축ㅤㅤㅤ물",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "감가상각누계액(구축물)",
+              "crMonthAm": "0",
+              "crAm": "14,053,924",
+              "crAmJan": "14,053,924"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "193,145,013",
+              "drAm": "195,145,013",
+              "drMonthAm": "0",
+              "groupNm": "기ㅤㅤ계ㅤㅤ장ㅤ치",
+              "crMonthAm": "0",
+              "crAm": "2,000,000",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "감가상각누계액(기계장치)",
+              "crMonthAm": "0",
+              "crAm": "104,851,212",
+              "crAmJan": "104,851,212"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "707,326,625",
+              "drAm": "707,326,625",
+              "drMonthAm": "0",
+              "groupNm": "차ㅤ량ㅤ운ㅤ반ㅤ구",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "감가상각누계액(차량)",
+              "crMonthAm": "0",
+              "crAm": "324,570,174",
+              "crAmJan": "324,570,174"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "11,260,000",
+              "drAm": "11,260,000",
+              "drMonthAm": "0",
+              "groupNm": "임ㅤ대ㅤ중ㅤ인자산",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "감가상각누계액(임대중인자산)",
+              "crMonthAm": "0",
+              "crAm": "8,397,632",
+              "crAmJan": "8,397,632"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "103,035,634",
+              "drAm": "103,035,634",
+              "drMonthAm": "0",
+              "groupNm": "비ㅤㅤㅤㅤㅤㅤㅤ품",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "감가상각누계액(비품)",
+              "crMonthAm": "0",
+              "crAm": "45,852,391",
+              "crAmJan": "45,852,391"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "3,533,000",
+              "drAm": "3,533,000",
+              "drMonthAm": "0",
+              "groupNm": "건ㅤ설ㅤ중ㅤ인자산",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "-50,000",
+              "drAm": "-50,000",
+              "drMonthAm": "0",
+              "groupNm": "시ㅤㅤ설ㅤㅤ장ㅤ치",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "4,000,000",
+              "drAm": "4,000,000",
+              "drMonthAm": "0",
+              "groupNm": "사ㅤ용ㅤ권ㅤ자ㅤ산",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "4,039,264",
+              "drAm": "4,039,264",
+              "drMonthAm": "0",
+              "groupNm": "기타유형자산(입목)",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "국고보조금(토지차감)",
+              "crMonthAm": "0",
+              "crAm": "528,601",
+              "crAmJan": "528,601"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "국고보조금(건설중인자산차감)",
+              "crMonthAm": "0",
+              "crAm": "-760,000",
+              "crAmJan": "-760,000"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "-759,000",
+              "drAm": "-759,000",
+              "drMonthAm": "0",
+              "groupNm": "대     손     충     당     금",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "400,725,680",
+              "drAm": "400,725,680",
+              "drMonthAm": "0",
+              "groupNm": "< 무  형    자  산 >",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": "background-color:#FFFBE9;"
+          },
+          {
+            "items": {
+              "drAmJan": "283,657,950",
+              "drAm": "283,657,950",
+              "drMonthAm": "0",
+              "groupNm": "영ㅤㅤㅤ업ㅤㅤㅤ권",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "24,114,770",
+              "drAm": "24,114,770",
+              "drMonthAm": "0",
+              "groupNm": "특ㅤㅤㅤ허ㅤㅤㅤ권",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "92,952,960",
+              "drAm": "92,952,960",
+              "drMonthAm": "0",
+              "groupNm": "개ㅤㅤㅤ발ㅤㅤㅤ비",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "149,940,764",
+              "drAm": "149,940,764",
+              "drMonthAm": "0",
+              "groupNm": "< 기타 비 유동자산 >",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": "background-color:#FFFBE9;"
+          },
+          {
+            "items": {
+              "drAmJan": "21,749,417",
+              "drAm": "21,749,417",
+              "drMonthAm": "0",
+              "groupNm": "임ㅤ차ㅤ보ㅤ증ㅤ금",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "126,941,347",
+              "drAm": "126,941,347",
+              "drMonthAm": "0",
+              "groupNm": "기ㅤ타ㅤ보ㅤ증ㅤ금",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "1,250,000",
+              "drAm": "1,250,000",
+              "drMonthAm": "0",
+              "groupNm": "전ㅤ신ㅤ전화가입권",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "-611,795,922",
+              "drAm": "-609,745,822",
+              "drMonthAm": "5,000",
+              "groupNm": "<< 부          채 >>",
+              "crMonthAm": "3,224,739",
+              "crAm": "24,501,689,844",
+              "crAmJan": "24,499,639,744"
+            },
+            "style": "background-color:#FFEFD2;"
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "2,050,100",
+              "drMonthAm": "5,000",
+              "groupNm": "< 유  동    부  채 >",
+              "crMonthAm": "3,224,739",
+              "crAm": "21,893,227,347",
+              "crAmJan": "21,891,177,247"
+            },
+            "style": "background-color:#FFF6DD;"
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "25,100",
+              "drMonthAm": "0",
+              "groupNm": "외상매입금",
+              "crMonthAm": "1,100,000",
+              "crAm": "3,626,308,325",
+              "crAmJan": "3,626,283,225"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "706,000",
+              "drMonthAm": "0",
+              "groupNm": "지ㅤㅤ급ㅤㅤ어ㅤ음",
+              "crMonthAm": "1,006,805",
+              "crAm": "5,621,805",
+              "crAmJan": "4,915,805"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "1,015,000",
+              "drMonthAm": "5,000",
+              "groupNm": "미ㅤㅤ지ㅤㅤ급ㅤ금",
+              "crMonthAm": "990,000",
+              "crAm": "313,895,627",
+              "crAmJan": "312,880,627"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "예ㅤㅤㅤ수ㅤㅤㅤ금",
+              "crMonthAm": "0",
+              "crAm": "3,805,820",
+              "crAmJan": "3,805,820"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "3,000",
+              "drMonthAm": "0",
+              "groupNm": "부ㅤ가ㅤ세ㅤ예수금",
+              "crMonthAm": "127,934",
+              "crAm": "1,212,412,812",
+              "crAmJan": "1,212,409,812"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "선ㅤㅤㅤ수ㅤㅤㅤ금",
+              "crMonthAm": "0",
+              "crAm": "460,670,716",
+              "crAmJan": "460,670,716"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "301,000",
+              "drMonthAm": "0",
+              "groupNm": "단ㅤ기ㅤ차ㅤ입ㅤ금",
+              "crMonthAm": "0",
+              "crAm": "12,801,120,907",
+              "crAmJan": "12,800,819,907"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "미ㅤ지ㅤ급ㅤ비ㅤ용",
+              "crMonthAm": "0",
+              "crAm": "202,527,795",
+              "crAmJan": "202,527,795"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "유ㅤ동ㅤ성장기부채",
+              "crMonthAm": "0",
+              "crAm": "2,332,527,962",
+              "crAmJan": "2,332,527,962"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "미ㅤ지ㅤ급ㅤ배당금",
+              "crMonthAm": "0",
+              "crAm": "3,000,000",
+              "crAmJan": "3,000,000"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "분ㅤ양ㅤ선ㅤ수ㅤ금",
+              "crMonthAm": "0",
+              "crAm": "6,000,000",
+              "crAmJan": "6,000,000"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "미지급비용(연월차)",
+              "crMonthAm": "0",
+              "crAm": "395,835,578",
+              "crAmJan": "395,835,578"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "금ㅤ융지급보증부채",
+              "crMonthAm": "0",
+              "crAm": "529,500,000",
+              "crAmJan": "529,500,000"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "-611,795,922",
+              "drAm": "-611,795,922",
+              "drMonthAm": "0",
+              "groupNm": "< 비  유 동  부 채 >",
+              "crMonthAm": "0",
+              "crAm": "2,608,462,497",
+              "crAmJan": "2,608,462,497"
+            },
+            "style": "background-color:#FFF6DD;"
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "장ㅤ기ㅤ차ㅤ입ㅤ금",
+              "crMonthAm": "0",
+              "crAm": "2,519,680,664",
+              "crAmJan": "2,519,680,664"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "퇴ㅤ직ㅤ급여충당금",
+              "crMonthAm": "0",
+              "crAm": "88,780,833",
+              "crAmJan": "88,780,833"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "-611,795,922",
+              "drAm": "-611,795,922",
+              "drMonthAm": "0",
+              "groupNm": "퇴ㅤ직연금운용자산",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "금ㅤ융ㅤ리ㅤ스부채",
+              "crMonthAm": "0",
+              "crAm": "1,000",
+              "crAmJan": "1,000"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "1,512,152,328",
+              "drAm": "1,617,152,328",
+              "drMonthAm": "0",
+              "groupNm": "<< 자          본 >>",
+              "crMonthAm": "0",
+              "crAm": "662,112,111",
+              "crAmJan": "557,112,111"
+            },
+            "style": "background-color:#FFEFD2;"
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "100,000,000",
+              "drMonthAm": "0",
+              "groupNm": "< 자     본     금 >",
+              "crMonthAm": "0",
+              "crAm": "662,103,000",
+              "crAmJan": "562,103,000"
+            },
+            "style": "background-color:#FFF6DD;"
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "100,000,000",
+              "drMonthAm": "0",
+              "groupNm": "자ㅤㅤㅤ본ㅤㅤㅤ금",
+              "crMonthAm": "0",
+              "crAm": "662,100,000",
+              "crAmJan": "562,100,000"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "우ㅤ선ㅤ주ㅤ자본금",
+              "crMonthAm": "0",
+              "crAm": "3,000",
+              "crAmJan": "3,000"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "2,000,000",
+              "drMonthAm": "0",
+              "groupNm": "<기타포괄손익누계액>",
+              "crMonthAm": "0",
+              "crAm": "3,111",
+              "crAmJan": "-1,996,889"
+            },
+            "style": "background-color:#FFF6DD;"
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "2,000,000",
+              "drMonthAm": "0",
+              "groupNm": "매도가능증권평가이익",
+              "crMonthAm": "0",
+              "crAm": "3,111",
+              "crAmJan": "-1,996,889"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "1,512,152,328",
+              "drAm": "1,515,152,328",
+              "drMonthAm": "0",
+              "groupNm": "< 이  익  잉 여 금 >",
+              "crMonthAm": "0",
+              "crAm": "6,000",
+              "crAmJan": "-2,994,000"
+            },
+            "style": "background-color:#FFF6DD;"
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "임ㅤ의ㅤ적ㅤ립ㅤ금",
+              "crMonthAm": "0",
+              "crAm": "6,000",
+              "crAmJan": "6,000"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "3,000,000",
+              "drMonthAm": "0",
+              "groupNm": "기ㅤ타ㅤ이익잉여금",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "-3,000,000"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "1,512,152,328",
+              "drAm": "1,512,152,328",
+              "drMonthAm": "0",
+              "groupNm": "이ㅤ월ㅤ결ㅤ손ㅤ금",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "<< 손 익 집 합>>",
+              "crMonthAm": "0",
+              "crAm": "2,500,000",
+              "crAmJan": "2,500,000"
+            },
+            "style": "background-color:#FFEFD2;"
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "손ㅤㅤㅤㅤㅤㅤㅤ익",
+              "crMonthAm": "0",
+              "crAm": "2,500,000",
+              "crAmJan": "2,500,000"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "2,424,090,344",
+              "drAm": "2,430,596,899",
+              "drMonthAm": "2,064,081,000",
+              "groupNm": "<< 손          익 >>",
+              "crMonthAm": "950,484",
+              "crAm": "5,433,314,566",
+              "crAmJan": "5,426,808,011"
+            },
+            "style": "background-color:#FFEFD2;"
+          },
+          {
+            "items": {
+              "drAmJan": "100,000,000",
+              "drAm": "106,505,555",
+              "drMonthAm": "0",
+              "groupNm": "< 매     출     액 >",
+              "crMonthAm": "950,484",
+              "crAm": "433,313,566",
+              "crAmJan": "426,808,011"
+            },
+            "style": "background-color:#FFF6DD;"
+          },
+          {
+            "items": {
+              "drAmJan": "100,000,000",
+              "drAm": "100,000,000",
+              "drMonthAm": "0",
+              "groupNm": "상품매출할인",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "1,005,555",
+              "drMonthAm": "0",
+              "groupNm": "상ㅤㅤ품ㅤㅤ매ㅤ출",
+              "crMonthAm": "950,464",
+              "crAm": "201,473,546",
+              "crAmJan": "200,467,991"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "5,500,000",
+              "drMonthAm": "0",
+              "groupNm": "제ㅤㅤ품ㅤㅤ매ㅤ출",
+              "crMonthAm": "20",
+              "crAm": "231,840,020",
+              "crAmJan": "226,340,020"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "62,100,000",
+              "drAm": "62,100,000",
+              "drMonthAm": "0",
+              "groupNm": "< 매  출    원  가 >",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": "background-color:#FFF6DD;"
+          },
+          {
+            "items": {
+              "drAmJan": "24,100,000",
+              "drAm": "24,100,000",
+              "drMonthAm": "0",
+              "groupNm": "상ㅤ품ㅤ매ㅤ출원가",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "8,000,000",
+              "drAm": "8,000,000",
+              "drMonthAm": "0",
+              "groupNm": "서ㅤ비ㅤ스매출원가",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "30,000,000",
+              "drAm": "30,000,000",
+              "drMonthAm": "0",
+              "groupNm": "제ㅤ품ㅤ매ㅤ출원가",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "38,831,910",
+              "drAm": "38,831,910",
+              "drMonthAm": "980,000",
+              "groupNm": "< 제  조    원  가 >",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": "background-color:#FFF6DD;"
+          },
+          {
+            "items": {
+              "drAmJan": "2,501,000",
+              "drAm": "2,501,000",
+              "drMonthAm": "0",
+              "groupNm": "원ㅤㅤ재ㅤㅤ료ㅤ비",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "9,090,910",
+              "drAm": "9,090,910",
+              "drMonthAm": "0",
+              "groupNm": "직ㅤㅤ원ㅤㅤ급ㅤ여",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "4,082,000",
+              "drAm": "4,082,000",
+              "drMonthAm": "980,000",
+              "groupNm": "복ㅤ리ㅤ후ㅤ생ㅤ비",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "8,110,000",
+              "drAm": "8,110,000",
+              "drMonthAm": "0",
+              "groupNm": "여ㅤ비ㅤ교ㅤ통ㅤ비",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "540,000",
+              "drAm": "540,000",
+              "drMonthAm": "0",
+              "groupNm": "접ㅤㅤㅤ대ㅤㅤㅤ비",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "4,002,000",
+              "drAm": "4,002,000",
+              "drMonthAm": "0",
+              "groupNm": "통ㅤㅤㅤ신ㅤㅤㅤ비",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "10,500,000",
+              "drAm": "10,500,000",
+              "drMonthAm": "0",
+              "groupNm": "수ㅤ도ㅤ광ㅤ열ㅤ비",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "6,000",
+              "drAm": "6,000",
+              "drMonthAm": "0",
+              "groupNm": "보ㅤㅤㅤ험ㅤㅤㅤ료",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "300,000",
+              "drAm": "300,000",
+              "drMonthAm": "0",
+              "groupNm": "< 도  급    원  가 >",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": "background-color:#FFF6DD;"
+          },
+          {
+            "items": {
+              "drAmJan": "300,000",
+              "drAm": "300,000",
+              "drMonthAm": "0",
+              "groupNm": "접ㅤㅤㅤ대ㅤㅤㅤ비",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "1,040,000",
+              "drAm": "1,040,000",
+              "drMonthAm": "0",
+              "groupNm": "< 분  양    원  가 >",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": "background-color:#FFF6DD;"
+          },
+          {
+            "items": {
+              "drAmJan": "1,000,000",
+              "drAm": "1,000,000",
+              "drMonthAm": "0",
+              "groupNm": "복ㅤ리ㅤ후ㅤ생ㅤ비",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "40,000",
+              "drAm": "40,000",
+              "drMonthAm": "0",
+              "groupNm": "소ㅤㅤ모ㅤㅤ품ㅤ비",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "2,221,767,434",
+              "drAm": "2,221,768,434",
+              "drMonthAm": "2,063,101,000",
+              "groupNm": "< 판 매   관 리 비 >",
+              "crMonthAm": "0",
+              "crAm": "1,000",
+              "crAmJan": "0"
+            },
+            "style": "background-color:#FFF6DD;"
+          },
+          {
+            "items": {
+              "drAmJan": "65,030,000",
+              "drAm": "65,030,000",
+              "drMonthAm": "60,000,000",
+              "groupNm": "상ㅤㅤㅤ여ㅤㅤㅤ금",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "2,146,952,434",
+              "drAm": "2,146,953,434",
+              "drMonthAm": "2,001,101,000",
+              "groupNm": "복ㅤ리ㅤ후ㅤ생ㅤ비",
+              "crMonthAm": "0",
+              "crAm": "1,000",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "2,552,000",
+              "drAm": "2,552,000",
+              "drMonthAm": "2,000,000",
+              "groupNm": "여ㅤ비ㅤ교ㅤ통ㅤ비",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "1,000",
+              "drAm": "1,000",
+              "drMonthAm": "0",
+              "groupNm": "접ㅤㅤㅤ대ㅤㅤㅤ비",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "1,006,000",
+              "drAm": "1,006,000",
+              "drMonthAm": "0",
+              "groupNm": "보ㅤㅤㅤ험ㅤㅤㅤ료",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "4,216,000",
+              "drAm": "4,216,000",
+              "drMonthAm": "0",
+              "groupNm": "차ㅤ량ㅤ유ㅤ지ㅤ비",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "10,000",
+              "drAm": "10,000",
+              "drMonthAm": "0",
+              "groupNm": "소ㅤㅤ모ㅤㅤ품ㅤ비",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "2,000,000",
+              "drAm": "2,000,000",
+              "drMonthAm": "0",
+              "groupNm": "지ㅤ급ㅤ수ㅤ수ㅤ료",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "< 영 업  외  수 익 >",
+              "crMonthAm": "0",
+              "crAm": "5,000,000,000",
+              "crAmJan": "5,000,000,000"
+            },
+            "style": "background-color:#FFF6DD;"
+          },
+          {
+            "items": {
+              "drAmJan": "0",
+              "drAm": "0",
+              "drMonthAm": "0",
+              "groupNm": "잡ㅤㅤㅤ이ㅤㅤㅤ익",
+              "crMonthAm": "0",
+              "crAm": "5,000,000,000",
+              "crAmJan": "5,000,000,000"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "51,000",
+              "drAm": "51,000",
+              "drMonthAm": "0",
+              "groupNm": "< 영 업  외  비 용 >",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": "background-color:#FFF6DD;"
+          },
+          {
+            "items": {
+              "drAmJan": "51,000",
+              "drAm": "51,000",
+              "drMonthAm": "0",
+              "groupNm": "이ㅤㅤ자ㅤㅤ비ㅤ용",
+              "crMonthAm": "0",
+              "crAm": "0",
+              "crAmJan": "0"
+            },
+            "style": null
+          },
+          {
+            "items": {
+              "drAmJan": "30,705,544,165",
+              "drAm": "32,760,937,563",
+              "drMonthAm": "2,076,724,170",
+              "groupNm": "<< 합          계 >>",
+              "crMonthAm": "2,076,724,170",
+              "crAm": "32,827,894,645",
+              "crAmJan": "30,772,501,247"
+            },
+            "style": "background-color:#FFEFD2;"
+          }
+        ]
+      },
+      "db_table_2": null,
+      "db_table_3": null
+    }
+  }

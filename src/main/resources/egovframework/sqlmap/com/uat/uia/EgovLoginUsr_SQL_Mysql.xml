@@ -1,0 +1,836 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<!-- 
+	수정일                 수정자                          수정내용
+  =========     =======    =================================================
+  2011.8.26   	서준식     	 	SSO 로그인을 위한 쿼리 추가
+  2011.09.27    서준식              컬럼 변경 SUB_DN 을  CRTFC_DN_VALUE 로 변경
+  2011.09.28    서준식              컬럼 변경 entrprsmber_id 을  ENTRPRS_MBER_ID 로 변경
+-->
+<sqlMap namespace="LoginUsr">
+
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	<typeAlias  alias="loginVO" type="bizbox.orgchart.service.vo.LoginVO"/>
+	<typeAlias  alias="loginPolicyNpVO" type="egovframework.com.cmm.LoginPolicyNpVO"/>
+	<typeAlias  alias="loginFailInfoVO" type="egovframework.com.cmm.LoginFailInfoVO"/>			
+
+	<!-- 로그인 처리를 위한 resultMap -->
+	<resultMap id="login" class="bizbox.orgchart.service.vo.LoginVO">
+		<result property="id" 		column="id" 		columnIndex="1" nullValue="" />
+		<result property="name" 	column="name" 		columnIndex="2" nullValue="" />
+		<result property="password" column="password" 	columnIndex="3" nullValue="" />
+		<result property="ihidNum" 	column="ihidNum" 	columnIndex="4" nullValue="" />
+		<result property="email" 	column="email" 		columnIndex="5" nullValue="" />
+		<result property="userSe" 	column="userSe" 	columnIndex="6" nullValue="" />
+		<result property="orgnztId" column="orgnztId" 	columnIndex="7" nullValue="" />
+		<result property="uniqId" 	column="uniqId" 	columnIndex="8" nullValue="" />
+		<result property="organId" 	column="organId" 	columnIndex="11" nullValue="" />
+		<result property="groupSeq" 	column="groupSeq" 	columnIndex="12" nullValue="" />
+		<!-- result property="orgnztNm" column="orgnztNm" columnIndex="9"/>
+		<result property="classCode" column="classCode" columnIndex="10"/>
+		<result property="classNm" column="classNm" columnIndex="11"/>
+		<result property="positionCode" column="positionCode" columnIndex="12"/>
+		<result property="organNm" column="organNm" columnIndex="14"/-->
+				
+	</resultMap>
+
+	<!-- 아이디 찾기를 위한 resultMap -->
+	<resultMap id="id" class="bizbox.orgchart.service.vo.LoginVO">
+		<result property="id" column="id" columnIndex="1"/>
+	</resultMap>
+	
+	<!-- 비밀번호 처리를 위한 resultMap -->
+	<resultMap id="password" class="bizbox.orgchart.service.vo.LoginVO">
+		<result property="password" column="password" columnIndex="1"/>
+	</resultMap>
+	
+	<select id="loginDAO.selectLoginVO" resultClass="loginVO">
+	<![CDATA[
+	   SELECT EMPLYR_ID AS id, ESNTL_ID AS uniqId, 1 ENABLED, USER_NM  as name
+              , EMAIL_ADRES AS email, ORGNZT_ID as orgnztId
+              , (SELECT A.ORGNZT_NM 
+                   FROM COMTNORGNZTINFO A 
+                  WHERE A.ORGNZT_ID = M.ORGNZT_ID) orgnztNm
+              , M.CLASS_CODE as classCode
+              , (SELECT CODE_NM
+                   FROM COMTCCMMNDETAILCODE 
+                  WHERE CODE = M.CLASS_CODE
+                       AND CODE_ID = 'COM152') AS classNm
+              , M.POSITION_CODE as positionCode
+              , (SELECT CODE_NM
+                   FROM COMTCCMMNDETAILCODE
+                  WHERE CODE = M.POSITION_CODE
+                    AND CODE_ID = 'COM077') AS positionNm 
+              , (SELECT ORGAN_ID
+                   FROM COMTNORGNZTINFO 
+                  WHERE ORGNZT_ID= M.ORGNZT_ID) AS organId
+              , (SELECT F.ORGAN_NM
+                   FROM COMTNORGNZTINFO E, COMTNORGANINFO F 
+                  WHERE E.ORGNZT_ID= M.ORGNZT_ID
+                    AND E.ORGAN_ID=F.ORGAN_ID) AS organNm  
+              
+         FROM V_USERINFO M
+        WHERE emplyr_sttus_code IN ('999','004')
+          AND M.EMPLYR_ID = #id#
+	]]>
+	</select>
+	
+	<select id="loginDAO.selectOption" parameterClass="hashmap" resultClass="egovMap">
+	<![CDATA[
+		select s.option_id,v.option_value,s.option_d_value
+		from tcmg_optionset s
+		left join tcmg_optionvalue v on s.option_id = v.option_id and (v.co_id = #compSeq# or v.co_id = 0)
+		where s.module_gb = 'cm'
+	]]>
+	</select>	
+	
+	<select id="loginDAO.selectLoginInfo" resultClass="loginVO">
+	<![CDATA[
+		SELECT A.EMPLYR_ID AS id
+		       , A.USER_NM AS name
+		       , A.PASSWORD AS password
+		       , A.ORGNZT_ID AS orgnztId
+		       , B.ORGNZT_NM AS orgnztNm
+		       , A.ESNTL_ID AS uniqId
+		       , A.CLASS_CODE as classCode
+		       , A.POSITION_CODE as positionCode           
+		  FROM V_USERINFO A, COMTNORGNZTINFO B
+		WHERE A.ORGNZT_ID = B.ORGNZT_ID 
+		    AND A.EMPLYR_ID = #id#
+		    AND A.PASSWORD = #password#           
+		    AND A.EMPLYR_STTUS_CODE IN ('999','004')	
+	]]>
+	</select> 
+	
+	<!-- SSO용 ESNTL_ID를 이용한 로그인(2011.8.26) -->
+	
+	<select id="loginDAO.ssoLoginByEsntlId" resultMap="login">
+		<!-- 일반회원 -->
+		<isEqual property="userSe" compareValue="GNR">
+			<![CDATA[
+			SELECT mber_id AS id
+			     , mber_nm AS name
+			     , ihidNum AS ihidNum
+			     , password AS password
+			     , mber_email_adres AS email
+			     , 'GNR' AS userSe
+			     , '-' AS orgnztId
+			     , ESNTL_ID AS uniqId
+			  FROM COMTNGNRLMBER
+			 WHERE ESNTL_ID = #uniqId#
+			   AND mber_sttus = 'P'
+			]]>
+		</isEqual>
+		<!-- 기업회원 -->
+		<isEqual property="userSe" compareValue="ENT">
+			<![CDATA[
+			SELECT ENTRPRS_MBER_ID AS id
+			     , cmpny_nm AS name
+			     , entrprs_mber_password AS password
+			     , bizrno AS ihidNum
+			     , applcnt_email_adres AS email
+			     , 'ENT' AS userSe
+			     , '-' AS orgnztId
+			     , esntl_id AS uniqId
+			  FROM COMTNENTRPRSMBER
+			 WHERE ESNTL_ID = #uniqId#
+			   AND entrprs_mber_sttus = 'P'
+			]]>
+		</isEqual>
+		<!-- 업무사용자 -->
+		<isEqual property="userSe" compareValue="USER">
+			<![CDATA[
+			SELECT emplyr_id AS id
+			     , user_nm AS name
+			     , password AS password
+			     , ihidnum AS ihidNum
+			     , email_adres AS email
+			     , 'USER' AS userSe
+			     , orgnzt_id AS orgnztId
+			     , esntl_id AS uniqId
+			  FROM COMTNEMPLYRINFO
+			 WHERE ESNTL_ID = #uniqId#
+			   AND emplyr_sttus_code = 'P'
+			]]>
+		</isEqual>
+	</select>
+	
+	
+	<select id="loginDAO.actionLoginToSSO" resultMap="login">
+			SELECT emplyr_id AS id
+			     , user_nm AS name
+			     , password AS password
+			     , ihidnum AS ihidNum
+			     , email_adres AS email
+			     , 'USER' AS userSe
+			     , orgnzt_id AS orgnztId			     
+			     , esntl_id AS uniqId
+			     , class_code as classCode
+			     , position_code as positionCode
+			     
+			  FROM COMTNEMPLYRINFO
+			 WHERE emplyr_id = #id#   
+			   AND emplyr_sttus_code IN ('999','004')
+	</select>
+	
+	<select id="loginDAO.actionLoginToSSONoToken" resultClass="loginVO">
+            SELECT emplyr_id AS id
+                 , user_nm AS name
+                 , password AS password
+                 , ihidnum AS ihidNum
+                 , email_adres AS email
+                 , 'USER' AS userSe
+                 , orgnzt_id AS orgnztId                 
+                 , esntl_id AS uniqId
+                 , class_code as classCode
+                 , position_code as positionCode                 
+              FROM COMTNEMPLYRINFO
+             WHERE EMPL_NO = #empl_no#          
+             and rownum = 1       
+    </select>
+	
+	<!-- 일반 사용자 패스워드 체크 (기본 비밀번호) -->
+	<select id="loginDAO.passwordCheckDef" resultMap="login">
+		<![CDATA[
+			SELECT a.login_id AS id
+			     , b.emp_name AS NAME
+			     , a.login_passwd AS PASSWORD
+			     , '' AS ihidNum
+			     , a.email_addr AS email
+			     , 'USER' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			  FROM t_co_group g, t_co_emp a, t_co_emp_multi b, t_co_emp_dept c
+			 WHERE a.login_id = #id#
+			   AND g.group_seq = a.group_seq
+			   AND (a.login_passwd = #password# OR g.master_passwd = #password#)
+			   AND a.emp_seq = b.emp_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND work_status IN ('999','004')
+			   AND c.main_dept_yn = 'Y'		
+			   AND c.group_seq = '53'	   
+			]]>			
+	</select>
+	
+	<!-- 일반 사용자 패스워드 체크 (결재 비밀번호) -->
+	<select id="loginDAO.passwordCheckApp" resultMap="login">
+		<![CDATA[
+			SELECT a.login_id AS id
+			     , b.emp_name AS NAME
+			     , IF(a.appr_passwd IS NULL, a.login_passwd, a.appr_passwd) AS PASSWORD
+			     , '' AS ihidNum
+			     , a.email_addr AS email
+			     , 'USER' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			  FROM t_co_group g, t_co_emp a, t_co_emp_multi b, t_co_emp_dept c
+			 WHERE a.login_id = #id#		
+			   AND (
+			   			(ifnull(a.appr_passwd,'') = '' AND a.login_passwd = #password#)
+			        	 OR (a.appr_passwd IS NOT NULL AND a.appr_passwd = #password#)
+			        	 OR g.master_passwd = #password#
+			        )
+			   AND g.group_seq = a.group_seq     
+			   AND a.emp_seq = b.emp_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND work_status IN ('999','004')
+			   AND c.main_dept_yn = 'Y'		
+			   AND c.group_seq = '53'	   
+			]]>			
+	</select>
+	
+	<!-- 일반 사용자 패스워드 체크 (급여 비밀번호) -->
+	<select id="loginDAO.passwordCheckPay" resultMap="login">
+		<![CDATA[
+			SELECT a.login_id AS id
+			     , b.emp_name AS NAME
+			     , IF(a.pay_passwd IS NULL, a.login_passwd, a.pay_passwd) AS PASSWORD
+			     , '' AS ihidNum
+			     , a.email_addr AS email
+			     , 'USER' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			  FROM t_co_group g, t_co_emp a, t_co_emp_multi b, t_co_emp_dept c
+			 WHERE a.login_id = #id#
+			   AND g.group_seq = a.group_seq		
+			   AND (
+			   		(ifnull(a.appr_passwd,'') = '' AND a.login_passwd = #password#)
+			        OR (a.pay_passwd IS NOT NULL AND a.pay_passwd = #password#)
+			        OR g.master_passwd = #password#
+			        )
+			   AND a.emp_seq = b.emp_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND work_status = '999'
+			   AND c.main_dept_yn = 'Y'		
+			   AND c.group_seq = '53'	   
+			]]>			
+	</select>
+	
+	<!-- 일반 로그인 -->
+	<select id="loginDAO.actionLogin" resultMap="login">
+		<!-- 일반회원 -->
+		<!-- AND password = #password# -->
+		<isEqual property="userSe" compareValue="GNR">
+			<![CDATA[
+			SELECT mber_id AS id
+			     , mber_nm AS name
+			     , ihidNum AS ihidNum
+			     , password AS password
+			     , mber_email_adres AS email
+			     , 'GNR' AS userSe
+			     , '-' AS orgnztId
+			     , esntl_id AS uniqId
+			  FROM COMTNGNRLMBER
+			 WHERE mber_id = #id#			   
+			   AND mber_sttus = 'P'
+			]]>
+		</isEqual>
+		<!-- 기업회원 -->
+		<!-- AND entrprs_mber_password = #password# -->
+		<isEqual property="userSe" compareValue="ENT">
+			<![CDATA[
+			SELECT ENTRPRS_MBER_ID AS id
+			     , cmpny_nm AS name
+			     , entrprs_mber_password AS password
+			     , bizrno AS ihidNum
+			     , applcnt_email_adres AS email
+			     , 'ENT' AS userSe
+			     , '-' AS orgnztId
+			     , esntl_id AS uniqId
+			  FROM COMTNENTRPRSMBER
+			 WHERE ENTRPRS_MBER_ID = #id#			   
+			   AND entrprs_mber_sttus = 'P'
+			]]>
+		</isEqual>
+		<!-- 업무사용자 -->
+		<!-- AND password = #password# -->
+		<isEqual property="userSe" compareValue="USER">
+			<![CDATA[
+			SELECT a.login_id AS id
+			     , b.emp_name AS NAME
+			     , IF( #password# = g.master_passwd, 'MASTER', a.login_passwd ) AS PASSWORD
+			     , '' AS ihidNum
+			     , a.email_addr AS email
+			     , 'USER' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			     , a.group_seq as groupSeq
+			  FROM t_co_group g, t_co_emp a, t_co_emp_multi b, t_co_emp_dept c
+			 WHERE a.login_id = #id#	
+			   AND a.group_seq = #groupSeq#	
+			   AND a.login_passwd = IF( #password# = g.master_passwd, a.login_passwd, #password# )
+			   AND g.group_seq = a.group_seq
+			   AND a.emp_seq = b.emp_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND work_status IN ('999','004')
+			   AND c.main_dept_yn = 'Y'		
+			]]>			
+		<!--
+			SELECT emplyr_id AS id
+			     , user_nm AS name
+			     , password AS password
+			     , ihidnum AS ihidNum
+			     , email_adres AS email
+			     , 'USER' AS userSe
+			     , orgnzt_id AS orgnztId
+			     , esntl_id AS uniqId
+			  FROM COMTNEMPLYRINFO
+			 WHERE emplyr_id = #id#
+			   AND password = #password#
+			   AND emplyr_sttus_code = 'P'
+		-->
+		</isEqual>
+		<isEqual property="userSe" compareValue="ADMIN">
+			<![CDATA[
+			SELECT a.login_id AS id
+			     , b.emp_name AS NAME
+			     , IF( #password# = g.master_passwd, 'MASTER', a.login_passwd ) AS PASSWORD
+			     , '' AS ihidNum
+			     , a.email_addr AS email
+			     , 'ADMIN' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			     , a.group_seq as groupSeq
+			  FROM t_co_group g, t_co_emp a, t_co_emp_multi b, t_co_emp_dept c
+			 WHERE a.login_id = #id#
+			   AND a.group_seq = #groupSeq#			
+			   AND a.login_passwd = IF( #password# = g.master_passwd, a.login_passwd, #password# )
+			   AND g.group_seq = a.group_seq
+			   AND a.emp_seq = b.emp_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND work_status IN ('999','004')
+			 LIMIT 1
+			]]>
+		</isEqual>
+		
+		<isEqual property="userSe" compareValue="MASTER">
+			<![CDATA[
+			SELECT a.login_id AS id
+			     , b.emp_name AS NAME
+			     , IF( #password# = g.master_passwd, 'MASTER', a.login_passwd ) AS PASSWORD
+			     , '' AS ihidNum
+			     , a.email_addr AS email
+			     , 'MASTER' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			     , a.group_seq as groupSeq
+			  FROM t_co_group g, t_co_emp a, t_co_emp_multi b, t_co_emp_dept c
+			 WHERE a.login_id = #id#	
+			   AND a.group_seq = #groupSeq#	
+			   AND a.login_passwd = IF( #password# = g.master_passwd, a.login_passwd, #password# )
+			   AND g.group_seq = a.group_seq
+			   AND a.emp_seq = b.emp_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND work_status IN ('999','004')
+			 LIMIT 1
+			]]>			
+		</isEqual>
+	</select>
+	
+	
+	<!-- 일반 로그인 -->
+	<select id="loginDAO.actionLoginSSO" resultMap="login">
+		<!-- 일반회원 -->
+		<!-- AND password = #password# -->
+		<isEqual property="userSe" compareValue="GNR">
+			<![CDATA[
+			SELECT mber_id AS id
+			     , mber_nm AS name
+			     , ihidNum AS ihidNum
+			     , password AS password
+			     , mber_email_adres AS email
+			     , 'GNR' AS userSe
+			     , '-' AS orgnztId
+			     , esntl_id AS uniqId
+			  FROM COMTNGNRLMBER
+			 WHERE mber_id = #id#			   
+			   AND mber_sttus = 'P'
+			]]>
+		</isEqual>
+		<!-- 기업회원 -->
+		<!-- AND entrprs_mber_password = #password# -->
+		<isEqual property="userSe" compareValue="ENT">
+			<![CDATA[
+			SELECT ENTRPRS_MBER_ID AS id
+			     , cmpny_nm AS name
+			     , entrprs_mber_password AS password
+			     , bizrno AS ihidNum
+			     , applcnt_email_adres AS email
+			     , 'ENT' AS userSe
+			     , '-' AS orgnztId
+			     , esntl_id AS uniqId
+			  FROM COMTNENTRPRSMBER
+			 WHERE ENTRPRS_MBER_ID = #id#			   
+			   AND entrprs_mber_sttus = 'P'
+			]]>
+		</isEqual>
+		<!-- 업무사용자 -->
+		<!-- AND password = #password# -->
+		<isEqual property="userSe" compareValue="USER">
+			<![CDATA[
+			SELECT a.login_id AS id
+			     , b.emp_name AS NAME
+			     , a.login_passwd AS PASSWORD
+			     , '' AS ihidNum
+			     , a.email_addr AS email
+			     , 'USER' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			     , a.group_seq as groupSeq
+			  FROM t_co_emp a, t_co_emp_multi b, t_co_emp_dept c
+			 WHERE a.group_seq = #groupSeq#
+			   AND a.emp_seq = #uniqId#
+			   AND a.emp_seq = b.emp_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND work_status IN ('999','004')
+			   AND c.main_dept_yn = 'Y'		
+			]]>			
+		</isEqual>
+		<isEqual property="userSe" compareValue="ADMIN">
+			<![CDATA[
+			SELECT a.login_id AS id
+			     , b.emp_name AS NAME
+			     , a.login_passwd AS PASSWORD
+			     , '' AS ihidNum
+			     , a.email_addr AS email
+			     , 'ADMIN' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			     , a.group_seq as groupSeq
+			  FROM t_co_emp a, t_co_emp_multi b, t_co_emp_dept c
+			 WHERE a.group_seq = #groupSeq#
+			   AND a.emp_seq = #uniqId#
+			   AND a.emp_seq = b.emp_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND work_status IN ('999','004')
+			 LIMIT 1
+			]]>
+		</isEqual>
+		
+		<isEqual property="userSe" compareValue="MASTER">
+			<![CDATA[
+			SELECT a.login_id AS id
+			     , b.emp_name AS NAME
+			     , a.login_passwd AS PASSWORD
+			     , '' AS ihidNum
+			     , a.email_addr AS email
+			     , 'MASTER' AS userSe
+			     , c.dept_seq AS orgnztId			     
+			     , a.emp_seq AS uniqId
+			     , a.job_code AS classCode
+			     , a.position_code AS positionCode
+			     , c.comp_seq AS organId
+			     , a.group_seq as groupSeq
+			  FROM t_co_emp a, t_co_emp_multi b, t_co_emp_dept c
+			 WHERE a.group_seq = #groupSeq#
+			   AND a.emp_seq = #uniqId#
+			   AND a.emp_seq = b.emp_seq
+			   AND a.emp_seq = c.emp_seq
+			   AND work_status IN ('999','004')
+			 LIMIT 1
+			]]>			
+		</isEqual>
+	</select>
+	
+	
+	<!-- 인증서 로그인 -->
+	<select id="loginDAO.actionCrtfctLogin" resultMap="login">
+		<![CDATA[
+		SELECT emplyr_id AS id
+		     , user_nm AS name
+		     , password AS password
+		     , ihidnum AS ihidNum
+		     , email_adres AS email
+		     , 'USER' AS userSe
+		     , orgnzt_id AS orgnztId
+		     , esntl_id AS uniqId
+		  FROM COMTNEMPLYRINFO
+		 WHERE CRTFC_DN_VALUE = #dn#
+		]]>
+	</select>
+	
+	<!-- 아이디 찾기 -->
+	<select id="loginDAO.searchId" resultMap="id">
+		<!-- 일반회원 -->
+		<isEqual property="userSe" compareValue="GNR">
+			<![CDATA[
+			SELECT mber_id AS id
+			  FROM COMTNGNRLMBER
+			 WHERE mber_nm = #name#
+			   AND mber_email_adres = #email#
+			   AND mber_sttus = 'P'
+			]]>
+		</isEqual>
+		<!-- 기업회원 -->
+		<isEqual property="userSe" compareValue="ENT">
+			<![CDATA[
+			SELECT ENTRPRS_MBER_ID AS id
+			  FROM COMTNENTRPRSMBER
+			 WHERE cmpny_nm = #name#
+			   AND applcnt_email_adres = #email#
+			   AND entrprs_mber_sttus = 'P'
+			]]>
+		</isEqual>
+		<!-- 업무사용자 -->
+		<isEqual property="userSe" compareValue="USER">
+			<![CDATA[
+			SELECT emplyr_id AS id
+			  FROM COMTNEMPLYRINFO
+			 WHERE user_nm = #name#
+			   AND email_adres = #email#
+			   AND emplyr_sttus_code = 'P'
+			]]>
+		</isEqual>
+	</select>
+	
+	<!-- 비밀번호 찾기 -->
+	<select id="loginDAO.searchPassword" resultMap="password">
+		<!-- 일반회원 -->
+		<isEqual property="userSe" compareValue="GNR">
+			<![CDATA[
+			SELECT password AS password
+			  FROM COMTNGNRLMBER
+			 WHERE mber_id = #id#
+			   AND mber_nm = #name#
+			   AND mber_email_adres = #email#
+			   AND password_hint = #passwordHint#
+			   AND password_cnsr = #passwordCnsr#
+			   AND mber_sttus = 'P'
+			]]>
+		</isEqual>
+		<!-- 기업회원 -->
+		<isEqual property="userSe" compareValue="ENT">
+			<![CDATA[
+			SELECT entrprs_mber_password AS password
+			  FROM COMTNENTRPRSMBER
+			 WHERE ENTRPRS_MBER_ID = #id#
+			   AND cmpny_nm = #name#
+			   AND applcnt_email_adres = #email#
+			   AND entrprs_mber_password_hint = #passwordHint#
+			   AND entrprs_mber_password_cnsr = #passwordCnsr#
+			   AND entrprs_mber_sttus = 'P'
+			]]>
+		</isEqual>
+		<!-- 업무사용자 -->
+		<isEqual property="userSe" compareValue="USER">
+			<![CDATA[
+			SELECT password AS password
+			  FROM COMTNEMPLYRINFO
+			 WHERE emplyr_id = #id#
+			   AND user_nm = #name#
+			   AND email_adres = #email#
+			   AND password_hint = #passwordHint#
+			   AND password_cnsr = #passwordCnsr#
+			   AND emplyr_sttus_code = 'P'
+			]]>
+		</isEqual>
+	</select>
+	
+	<!-- 변경된 비밀번호를 저장 -->
+	<update id="loginDAO.updatePassword">
+		<!-- 일반회원 -->
+		<isEqual property="userSe" compareValue="GNR">
+			<![CDATA[
+			UPDATE COMTNGNRLMBER
+			   SET password = #password#
+			 WHERE mber_id = #id#
+			]]>
+		</isEqual>
+		<!-- 기업회원 -->
+		<isEqual property="userSe" compareValue="ENT">
+			<![CDATA[
+			UPDATE COMTNENTRPRSMBER
+			   SET entrprs_mber_password = #password#
+			 WHERE ENTRPRS_MBER_ID = #id#
+			]]>
+		</isEqual>
+		<!-- 업무사용자 -->
+		<isEqual property="userSe" compareValue="USER">
+			<![CDATA[
+			UPDATE t_co_emp
+			   SET login_passwd = #password#
+			 WHERE login_id = #id#
+			]]>
+		</isEqual>
+	</update>
+	
+	<!-- 변경된 비밀번호 저장(기존비밀번호) -->
+	<update id="loginDAO.updatePasswordDef">
+		<![CDATA[
+			UPDATE t_co_emp
+			SET login_passwd = #password#,
+			      passwd_date = NOW()			    
+			WHERE login_id = #id#
+		]]>
+	</update>
+	<!-- 변경된 비밀번호 저장(결재비밀번호) -->
+	<update id="loginDAO.updatePasswordApp">
+		<![CDATA[
+			UPDATE t_co_emp
+			SET appr_passwd = #password#
+			WHERE login_id = #id#
+		]]>
+	</update>
+	<!-- 변경된 비밀번호 저장(급여비밀번호) -->
+	<update id="loginDAO.updatePasswordPay">
+		<![CDATA[
+			UPDATE t_co_emp
+			SET pay_passwd = #password#
+			WHERE login_id = #id#
+		]]>
+	</update>
+	
+	<!-- 변경된 사무실 전화 번호 팩스 번호를 저장한다.  -->
+    <update id="loginDAO.updateOfficeNm">
+            <![CDATA[
+		     UPDATE  COMTNSUBPOSITIONINFO 
+		          set  OFFM_TELNO  = #offmTelNo#,
+		               FXNUM = #fxnum# 
+		      WHERE ORGNZT_ID = #orgnztID#
+		          AND ESNTL_ID = #esntlID#
+		          AND EMPLYR_STTUS_CODE IN ('999','004')
+            ]]>
+   </update> 
+   
+   <!-- 사용자프로필사진 -->
+    <update id="loginDAO.updateUserImg" parameterClass="hashmap">
+            <![CDATA[
+		     UPDATE t_co_emp
+			   SET pic_file_id = #picFileId#
+			 WHERE emp_seq = #empSeq#
+            ]]>
+   </update>    
+   
+   <!-- 사용자싸인이미지 -->
+    <update id="loginDAO.updateSignImg" parameterClass="hashmap">
+            <![CDATA[
+		     UPDATE t_co_emp
+			   SET sign_file_id = #picFileId#
+			 WHERE emp_seq = #empSeq#
+            ]]>
+   </update>          
+   
+   <update id="loginDAO.updateMainCompany" parameterClass="hashmap">
+            <![CDATA[
+		     UPDATE t_co_emp
+			   SET main_comp_seq = #compSeq#
+			 WHERE emp_seq = #empSeq#
+            ]]>
+   </update>             
+
+
+	<!-- 로그인 로그 등록 -->
+    <insert id="loginDAO.loginSessionInfo" parameterClass="loginVO">
+            INSERT INTO COMTNSESSIONINFO 
+				SET
+					SESSION_ID  = #session_id#,
+                  	CONECT_ID   = #id#,
+                  	CONECT_IP   = #ip#,
+                  	CREAT_DT    = NOW(),
+                  	USER_SE     = #userSe#,
+                  	COMP_SEQ    = #compSeq#
+				ON DUPLICATE KEY UPDATE
+					CONECT_ID   = #id#
+					<isNotEmpty property="userSe">
+                  	,USER_SE     = #userSe#
+                  	</isNotEmpty>
+                  	<isNotEmpty property="compSeq">
+                  	,COMP_SEQ    = #compSeq#    
+                  	</isNotEmpty>
+    </insert>
+    
+    <select id="loginDAO.selectLoginSessionInfo" parameterClass="loginVO" resultClass="loginVO">
+        <![CDATA[
+           SELECT
+			SESSION_ID as sessionId ,
+			USER_SE as userSe,
+			COMP_SEQ as compSeq  
+           FROM   COMTNSESSIONINFO
+           WHERE
+           	CONECT_ID   = #id#
+        ]]>
+    </select>
+    
+
+    <select id="loginDAO.searchLoginSessionId"  resultClass="java.lang.String" parameterClass="string">
+        <![CDATA[
+            SELECT SESSION_ID
+            FROM
+                COMTNSESSIONINFO
+            WHERE
+                CONECT_ID = #emplyrId# AND DEL_YN = 'N'
+            ]]>
+	</select>
+
+    <update id="loginDAO.deleteLoginSessionId" parameterClass="loginVO"  >
+        UPDATE comtnsessioninfo
+        	SET DEL_YN = 'Y' 
+         WHERE CONECT_ID = #id# AND DEL_YN = 'N'
+    </update>
+
+    <delete id="loginDAO.cmpltDeleteLoginSessionId" parameterClass="loginVO"  >
+        DELETE FROM comtnsessioninfo
+         WHERE CONECT_ID = #id# 
+    </delete>
+
+	<!-- 로그인 오류 회수 등록 -->
+    <insert id="loginDAO.LoginFailInfo" parameterClass="string" >
+        <![CDATA[
+            INSERT INTO A_LOGINFAILINFO
+                ( EMPLYR_ID
+                  , CREAT_DT
+                  , FAIL_CNT )
+            VALUES ( #emplyrId#
+                  , sysdate()
+                  , 0 )
+        ]]>
+    </insert>
+
+    <update id="loginDAO.updateLoginFailInfo" parameterClass="string"   >
+        UPDATE A_LOGINFAILINFO
+        	SET FAIL_CNT = FAIL_CNT + 1 
+         WHERE EMPLYR_ID = #emplyrId# 
+    </update>
+
+    <update id="loginDAO.updateLoginFailInfoInit" parameterClass="string"   >
+        UPDATE A_LOGINFAILINFO
+        	SET FAIL_CNT = 0, CREAT_DT = sysdate(), LOGIN_LOCK = 'N', LOCK_DT = ''
+         WHERE EMPLYR_ID = #emplyrId# 
+    </update>
+
+    <update id="loginDAO.updateLoginLock" parameterClass="string"   >
+        UPDATE A_LOGINFAILINFO
+        	SET LOGIN_LOCK = 'Y', LOCK_DT = sysdate() 
+         WHERE EMPLYR_ID = #emplyrId# 
+    </update>
+
+    <update id="loginDAO.updateLoginSuccess" parameterClass="loginVO"  >
+        UPDATE A_LOGINFAILINFO
+        	SET FAIL_CNT = 0, CREAT_DT = sysdate()
+         WHERE EMPLYR_ID = #id# 
+    </update>
+
+    <delete id="loginDAO.deleteLoginFailInfo" parameterClass="loginVO"  >
+        DELETE FROM A_LOGINFAILINFO
+         WHERE EMPLYR_ID = #id# 
+    </delete>
+
+    <select id="loginDAO.selectLoginFailInfo"  resultClass="loginFailInfoVO" parameterClass="string" >
+        <![CDATA[
+            SELECT EMPLYR_ID as id
+            	   , FAIL_CNT as failCnt
+            	   , LOGIN_LOCK as loginLock
+            	   , CREAT_DT as createDt
+            	   , round( (sysdate()  - CREAT_DT)*60*24) as timeGap
+            FROM
+                A_LOGINFAILINFO
+            WHERE
+                EMPLYR_ID = #emplyrId# 
+            ]]>
+	</select>
+	
+	<select id="loginDAO.searchLoginPolicy" resultClass="loginPolicyNpVO" parameterClass="string">
+	<![CDATA[
+	   SELECT LP_SEQ as seq
+	          , LP_FAILCNT as failCnt
+	          , LP_FAILMINUTE as failMinute
+	          , LP_DUPLEYN as dupleYn
+	          , LP_DUPLEMD as dupleMd
+         FROM A_LOGINPOLICY
+        WHERE LP_SEQ = #strSeq#
+	]]>
+	</select>
+	
+   <update id="loginDAO.updateSpringSecuKey" parameterClass="hashmap">
+            <![CDATA[
+		     UPDATE t_co_emp
+			   SET spring_secu = #springSecurityKey#, spring_date = sysdate()
+			 WHERE emp_seq = #empSeq#
+            ]]>
+   </update>		
+	
+</sqlMap>

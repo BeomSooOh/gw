@@ -1,0 +1,10 @@
+@charset "utf-8";
+/**************************************************
+   ONEFFICE MOBILE CSS
+**************************************************/
+
+.oneffice_mobile_separate_folder {
+    float: left;
+    width: 100%;
+}
+

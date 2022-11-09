@@ -1,0 +1,10 @@
+var custom = {};
+
+$(function(){
+
+});
+
+custom.checkWorkTimeData = function(param)
+{	
+
+};

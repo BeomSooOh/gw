@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="accessManage">
+	
+	<update id="AcessManage.accessIpSaveProc" parameterClass="hashmap">
+		/* AcessManage.accessIpSaveProc - oracle */
+	  	MERGE INTO $DB_NEOS$t_co_access
+	  		USING DUAL
+	  			ON(access_id = #accessId#)
+		WHEN MATCHED THEN
+			UPDATE SET
+				comp_seq = #compSeq# , 
+				start_ip = #startIp# , 
+				end_ip = #endIp# ,
+				order_num = #orderNum# , 
+				use_yn = #useYn# , 
+				modify_seq = #empSeq# ,  
+				modify_date = SYSDATE
+	  	WHEN NOT MATCHED THEN
+	  		INSERT(access_id, group_seq, comp_seq, start_ip, end_ip, order_num, use_yn, create_seq, create_date)
+	  		VALUES(#accessId#, #groupSeq#, #compSeq#, #startIp#, #endIp#, #orderNum#, #useYn#, #empSeq#, SYSDATE)
+	</update>
+	
+	<select id="AcessManage.getNewAccessId" resultClass="int" parameterClass="hashmap">
+		/* AcessManage.getNewAccessId - oracle */
+		SELECT
+			NVL(MAX(access_id) + 1, 1)
+		FROM
+		 	$DB_NEOS$t_co_access
+	</select>
+	
+	<select id="AcessManage.getAccessIpList" parameterClass="hashmap" resultClass="egovMap">
+		/* AcessManage.getAccessIpList - oracle */
+		SELECT 
+			access_id, 
+			a.group_seq, 
+			a.comp_seq, 
+			start_ip, 
+			end_ip, 
+			order_num, 
+			a.use_yn,
+			$DB_NEOS$FN_GetMultiLang('kr', b.comp_name_multi) comp_name
+		FROM 
+			$DB_NEOS$t_co_access a
+		LEFT JOIN 
+			$DB_NEOS$v_t_co_comp_multi b 
+		ON
+			a.comp_seq = b.comp_seq And b.lang_code='kr'
+		WHERE
+			1=1
+		<isNotEmpty property="compSeq">
+			AND a.comp_seq = #compSeq#
+		</isNotEmpty>
+		<isNotEmpty property="useYn">
+			AND a.use_yn = #useYn#
+		</isNotEmpty>			
+		AND (start_ip like ('%$searchTxt$%') or end_ip like ('%$searchTxt$%'))
+		order by order_num,  start_ip desc, end_ip desc
+	</select>
+	
+	<select id="AcessManage.getAccessIpInfo" parameterClass="hashmap" resultClass="egovMap">
+		/* AcessManage.getAccessIpInfo - oracle */
+		SELECT
+			access_id,
+			group_seq,
+			comp_seq,
+			start_ip,
+			end_ip,
+			order_num,
+			use_yn
+		FROM
+			$DB_NEOS$t_co_access
+		WHERE
+			access_id = #accessId#
+	</select>
+	
+	
+	<delete id="AcessManage.deleteAccessIp" parameterClass="hashmap">
+		/* AcessManage.deleteAccessIp - oracle */
+		DELETE	FROM
+			$DB_NEOS$t_co_access
+		WHERE
+			access_id in($delAccessIds$)
+	</delete>
+	
+	
+	<update id="AcessManage.accessRelateSaveProc" parameterClass="hashmap">
+		/* AcessManage.accessRelateSaveProc - oracle */
+		MERGE INTO $DB_NEOS$t_co_access_relate
+		USING DUAL
+		   ON (access_id = #accessId#
+		  AND  idx       = #idx#)
+         WHEN MATCHED THEN
+              UPDATE SET create_seq  = #createSeq# 
+				      , create_date = SYSDATE	
+         WHEN NOT MATCHED THEN
+              INSERT (
+                      access_id
+				   , idx 
+				   , gbn_org 
+				   , group_seq 
+				   , comp_seq 
+				   , dept_seq
+				   , emp_seq 
+				   , create_seq 
+				   , create_date		
+				     )
+				    
+		      VALUES (
+		              #accessId#
+				    , #idx# 
+				    , #gbnOrg# 
+				    , #groupSeq# 
+				    , #compSeq# 
+				    , #deptSeq#
+				    , #empSeq# 
+				    , #createSeq# 
+				    , SYSDATE
+		             ) 
+		
+	</update>
+	
+	<delete id="AcessManage.accessRelateDelProc" parameterClass="hashmap">
+		/* AcessManage.accessRelateDelProc - oracle */
+		DELETE FROM $DB_NEOS$t_co_access_relate
+		WHERE
+			access_id = #accessId#
+	</delete>
+	
+	
+	<select id="AcessManage.getAccessRelateList" parameterClass="hashmap" resultClass="egovMap">
+		/* AcessManage.getAccessRelateList - oracle */
+		select 
+			a.access_id,
+			a.idx,
+			a.gbn_org,
+			a.group_seq,
+			a.comp_seq,
+			a.dept_seq,
+			a.emp_seq,
+			NVL($DB_NEOS$FN_GetMultiLang(#langCode#,b.dept_name_multi),'') dept_name,
+			NVL($DB_NEOS$FN_GetMultiLang(#langCode#,c.comp_name_multi),'') comp_name,
+			NVL($DB_NEOS$FN_GetMultiLang(#langCode#,d.emp_name_multi),'') emp_name,
+			NVL($DB_NEOS$FN_GetMultiLang(#langCode#,g.dp_name_multi),'') position_name,
+			NVL($DB_NEOS$FN_GetMultiLang(#langCode#,f.dp_name_multi),'') duty_name,
+			h.login_id
+		From 
+		$DB_NEOS$t_co_access_relate a
+			left join $DB_NEOS$v_t_co_dept_multi b on a.group_seq = b.group_seq and a.comp_seq = b.comp_seq and a.dept_seq = b.dept_seq
+			left join $DB_NEOS$v_t_co_comp_multi c on a.group_seq = c.group_seq and a.comp_seq = c.comp_seq
+			left join $DB_NEOS$v_t_co_emp_multi d on a.group_seq = d.group_seq and a.emp_seq = d.emp_seq
+			left join $DB_NEOS$t_co_emp_dept e on a.group_seq = e.group_seq and a.comp_seq = e.comp_seq and a.dept_seq = e.dept_seq and a.emp_seq = e.emp_seq
+			left join $DB_NEOS$v_co_comp_duty_position_multi f on e.duty_code = f.dp_seq and f.dp_type = 'DUTY'
+			left join $DB_NEOS$v_co_comp_duty_position_multi g on e.position_code = g.dp_seq and g.dp_type = 'POSITION'
+			left join $DB_NEOS$t_co_emp h on a.emp_seq = h.emp_seq
+		WHERE
+			a.access_id = #accessId#
+			AND (NVL($DB_NEOS$FN_GetMultiLang(#langCode#,b.dept_name_multi),'') like '%' || #searchTxt# || '%' or 
+			     NVL($DB_NEOS$FN_GetMultiLang(#langCode#,d.emp_name_multi),'') like '%' || #searchTxt# || '%' or 
+			     h.login_id like '%' || #searchTxt# || '%')			
+	</select>
+	
+	<delete id="AcessManage.deleteAccessRelate" parameterClass="hashmap">
+		/* AcessManage.deleteAccessRelate - oracle */
+		DELETE FROM 
+			$DB_NEOS$t_co_access_relate
+		WHERE
+			access_id = #accessId# and idx in($delRelateIds$)
+	
+	</delete>
+	
+	<delete id="AcessManage.deleteAccessRelateInfo" parameterClass="hashmap">
+		/* AcessManage.deleteAccessRelateInfo - oracle */
+		DELETE FROM 
+			$DB_NEOS$t_co_access_relate
+		WHERE
+			access_id in($delAccessIds$)
+	</delete>
+	
+	<select id="AcessManage.compAccessIpList" parameterClass="hashmap" resultClass="egovMap">
+		/* AcessManage.compAccessIpList - oracle */
+		SELECT
+			a.access_id,
+			a.idx,
+			a.gbn_org,
+			a.group_seq,
+			a.comp_seq,
+			a.dept_seq,
+			a.emp_seq,
+			b.start_ip,
+			b.end_ip,
+			case when a.gbn_org = 'd' then c.path
+			else '' end path			
+		FROM
+			$DB_NEOS$t_co_access_relate a
+		inner join $DB_NEOS$t_co_access b on a.access_id = b.access_id
+		left join $DB_NEOS$t_co_dept c on a.dept_seq = c.dept_seq
+		WHERE
+			b.comp_seq in ($compSeqList$) AND b.use_yn = 'Y' AND b.group_seq = #groupSeq#	
+	</select>
+	
+	<select id="AcessManage.compAccessList" parameterClass="hashmap" resultClass="egovMap">
+		/* AcessManage.compAccessList - oracle */
+		SELECT	DISTINCT
+			a.comp_seq				
+		FROM
+			$DB_NEOS$t_co_access_relate a
+		inner join $DB_NEOS$t_co_access b on a.access_id = b.access_id
+		WHERE
+			b.comp_seq in ($compSeqList$) AND b.use_yn = 'Y' AND b.group_seq = #groupSeq#	
+	</select>
+	
+	
+	<select id="AcessManage.selectAccesIpByCompSeq" parameterClass="hashmap" resultClass="egovMap">
+		SELECT *FROM $DB_NEOS$t_co_access_relate where comp_seq = $compSeq$
+	</select>
+</sqlMap>

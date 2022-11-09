@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="DeptManage">
+	
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+		<select id="DeptManage.selectDept" parameterClass="hashmap" resultClass="egovMap">
+			SELECT *, (SELECT dept_name FROM t_co_dept_multi WHERE dept_seq = a.parent_dept_seq AND lang_code = #langCode#) AS parentDeptName
+			FROM t_co_dept a, t_co_dept_multi b 
+			WHERE a.dept_seq = b.dept_seq 
+			AND a.dept_seq = #deptSeq#
+			AND b.lang_code = #langCode#
+			<isNotEmpty property="compSeq">
+			AND a.comp_seq = #compSeq#
+			</isNotEmpty>
+		</select>
+
+		<insert id="DeptManage.insertDept" parameterClass="hashmap">
+			INSERT INTO `t_co_dept` 
+			SET
+				`dept_seq` = #deptSeq# , 
+				`group_seq` = #groupSeq# , 
+				`comp_seq` = #compSeq# , 
+				`biz_seq` = #bizSeq# , 
+				`parent_dept_seq` = #parentDeptSeq# , 
+				`tel_num` = #telNum# , 
+				`fax_num` = #faxNum# , 
+				`homepg_addr` = #homepgAddr# , 
+				`zip_code` = #zipCode# , 
+				`susin_yn` = #susinYn# , 
+				`vir_dept_yn` = #virDeptYn# , 
+				`team_yn` = #teamYn# , 
+				`native_lang_code` = #nativeLangCode# , 
+				`path` = get_dept_path(#|#,#deptSeq#, #groupSeq#) , 
+				`dept_level` = get_dept_level(#deptSeq#, #groupSeq#), 
+				`order_num` = #orderNum# , 
+				`use_yn` = #useYn# , 
+				`create_seq` = #createSeq# , 
+				`create_date` = NOW(), 
+				`modify_seq` = #modifySeq# , 
+				`modify_date` = NOW()
+			ON DUPLICATE KEY UPDATE
+				`group_seq` = #groupSeq# , 
+				`comp_seq` = #compSeq# , 
+				`biz_seq` = #bizSeq# , 
+				`parent_dept_seq` = #parentDeptSeq# , 
+				`tel_num` = #telNum# , 
+				`fax_num` = #faxNum# , 
+				`homepg_addr` = #homepgAddr# , 
+				`zip_code` = #zipCode# , 
+				`susin_yn` = #susinYn# , 
+				`vir_dept_yn` = #virDeptYn# , 
+				`team_yn` = #teamYn# , 
+				`native_lang_code` = #nativeLangCode# , 
+				`path` = get_dept_path(#|#,#deptSeq#, #groupSeq#) , 
+				`dept_level` = get_dept_level(#deptSeq#, #groupSeq#),  
+				`order_num` = #orderNum# , 
+				`use_yn` = #useYn# , 
+				`modify_seq` = #modifySeq# , 
+				`modify_date` = NOW()
+		</insert>
+		
+		
+		<insert id="DeptManage.insertDeptMulti" parameterClass="hashmap">
+			INSERT INTO `t_co_dept_multi` 
+			SET
+				`dept_seq` = #deptSeq# , 
+				`lang_code` = #langCode# , 
+				`group_seq` = #groupSeq# , 
+				`comp_seq` = #compSeq# , 
+				`biz_seq` = #bizSeq# , 
+				`dept_name` = #deptName# , 
+				`dept_display_name` = #deptDisplayName# , 
+				`sender_name` = #senderName# , 
+				`addr` = #addr# , 
+				`detail_addr` = #detailAddr# , 
+				`path_name` = #pathName# , 
+				`use_yn` = #useYn# , 
+				`create_seq` = #createSeq# , 
+				`create_date` = NOW() , 
+				`modify_seq` = #modifySeq# , 
+				`modify_date` = NOW()
+			ON DUPLICATE KEY UPDATE
+				`group_seq` = #groupSeq# , 
+				`comp_seq` = #compSeq# , 
+				`biz_seq` = #bizSeq# , 
+				`dept_name` = #deptName# , 
+				`dept_display_name` = #deptDisplayName# , 
+				`sender_name` = #senderName# , 
+				`addr` = #addr# , 
+				`detail_addr` = #detailAddr# , 
+				`path_name` = #pathName# , 
+				`use_yn` = #useYn# , 
+				`modify_seq` = #modifySeq# , 
+				`modify_date` = NOW()
+		</insert>
+		
+		
+		<select id="DeptManage.selectCompSortList" parameterClass="hashmap" resultClass="egovMap">
+	   		SELECT c.detail_name, b.detail_code, d.order_num, d.sort_type, d.comp_seq 
+			FROM 
+				t_co_code a, 
+				t_co_code_detail b LEFT OUTER JOIN (SELECT * FROM t_co_comp_emp_sort WHERE comp_seq = #compSeq# AND use_yn = 'Y') d ON d.sort_field = b.detail_code, 
+				t_co_code_detail_multi c
+			WHERE a.code = b.code 
+			AND a.code = #code#
+			AND b.detail_code = c.detail_code 
+			AND c.lang_code = #langCode# 
+			AND a.use_yn = 'Y' 
+			AND b.use_yn = 'Y' 
+			AND c.use_yn = 'Y'
+			ORDER BY d.order_num, b.order_num
+   		</select>
+   		
+   		
+   		<select id="DeptManage.selectCompDeptList" parameterClass="hashmap" resultClass="egovMap">
+   			select
+   				*
+   			from t_co_dept
+   			where comp_seq = #compSeq#
+   		</select>
+   
+   
+	   <insert id="DeptManage.insertCompEmpSort" parameterClass="hashmap">
+				INSERT INTO `t_co_comp_emp_sort` 
+				SET
+					`comp_seq` = #compSeq# , 
+					`sort_field` = #sortField# , 
+					`sort_type` = #sortType# , 
+					`order_num` = #orderNum# , 
+					`use_yn` = #useYn# ,
+					`create_seq` = #createSeq# , 
+					`create_date` = NOW() , 
+					`modify_seq` = #modifySeq# , 
+					`modify_date` = NOW()
+				ON DUPLICATE KEY UPDATE
+					`sort_field` = #sortField# , 
+					`sort_type` = #sortType# ,
+					`order_num` = #orderNum# ,  
+					`use_yn` = #useYn# ,
+					`create_seq` = #createSeq# , 
+					`create_date` = NOW() , 
+					`modify_seq` = #modifySeq# , 
+					`modify_date` = NOW()
+					
+		</insert>
+		
+		<update id="DeptManage.updateDeptOrderNum" parameterClass="list">
+			insert into t_co_dept
+			(group_seq, comp_seq, biz_seq, dept_seq, order_num, modify_seq, modify_date)
+			values
+			<dynamic>
+		       <iterate conjunction=",">
+	    	      (#[].groupSeq# ,#[].compSeq# ,#[].bizSeq# ,#[].deptSeq# , #[].orderNum#, #[].modifySeq#, now())
+		       </iterate>
+		   </dynamic>
+			ON DUPLICATE KEY UPDATE
+			order_num = values(order_num),
+			modify_seq = values(modify_seq),
+			modify_date = now()
+			
+		</update>
+</sqlMap>

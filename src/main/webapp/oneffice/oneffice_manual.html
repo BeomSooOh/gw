@@ -1,0 +1,20 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+	</head>
+	<body>
+            <div style="width:1300px;height:900px;" oncontextmenu="return false" ondragstart="return false" onselectstart="return false">
+            </div>
+            <script>
+                window.onload = function() {
+                    redirectForManual("/gw/manual.do?type=lnb&name=oneffice");
+                };
+                function redirectForManual(targetUrl) {
+                    var link = document.createElement('a');
+                    link.href = targetUrl;
+                    document.body.appendChild(link);
+                    link.click();
+                }
+            </script>
+	</body>
+</html>

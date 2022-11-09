@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="DutyPositionManage">
+	
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	
+	     <select id="DutyPositionManage.selectCompDutyPositionList" parameterClass="hashmap" resultClass="egovMap">
+	        /* DutyPositionManage.selectCompDutyPositionList - mysql */
+	     	(SELECT *, 'file' as spriteCssClass
+	     	FROM `t_co_comp_duty_position` a left outer join `t_co_comp_duty_position_multi` b on a.dp_seq = b.dp_seq
+			WHERE 
+				 b.lang_code = #langCode#
+				 AND a.use_yn = 'Y'
+				<isNotEmpty property="dpSeq">
+				AND	a.dp_seq = #dpSeq#
+				</isNotEmpty>
+				<isNotEmpty property="dpName">
+				AND	b.dp_name like ('%$dpName$%')
+				</isNotEmpty>
+				<isEmpty property="dpSeq">
+				<isNotEmpty property="compSeq">
+			    AND a.comp_seq in (#compSeq#, 0)
+				AND b.comp_seq in (#compSeq#, 0)
+				</isNotEmpty>
+				AND a.dp_type = #dpType#
+				AND b.dp_type = #dpType#
+				AND a.group_seq = #groupSeq#
+				</isEmpty>
+				<isNotEmpty property="notInDpSeqList">
+				AND a.dp_seq NOT IN ($notInDpSeqList$)
+				</isNotEmpty>
+				group by a.dp_seq, a.group_seq, a.dp_type
+	     	ORDER BY a.order_num)
+	     		     	
+	     </select> 	     
+	     
+	     <select id="DutyPositionManage.getDutyPositionList" parameterClass="hashmap" resultClass="egovMap">
+	        /* DutyPositionManage.getDutyPositionList - mysql */
+	     	SELECT a.dp_seq, a.group_seq, a.comp_seq, a.dp_type, a.use_yn, a.order_num
+	     	      , b.lang_code, b.dp_name, b.desc_text, b.comment_text
+	     	      , get_code_detail_info('0', 'COM521', a.use_yn, #langCode#) AS use_yn_nm
+	     	      , get_code_detail_info('0', 'COM501', a.dp_type, #langCode#) AS dp_type_nm
+	     	      , CASE WHEN IFNULL(a.comp_seq, '0' ) = '0' THEN CONCAT(GROUP_NAME, '(',get_code_detail_info('0', 'option0005', '1', #langCode#),')') ELSE CM.COMP_NAME END AS COMP_NAME
+	     	FROM  `t_co_comp_duty_position` a 
+	     	left outer join 
+	     	      `t_co_comp_duty_position_multi` b 
+	     	on    a.dp_seq = b.dp_seq
+	     	and   a.comp_seq = b.comp_seq
+	     	and   a.dp_type = b.dp_type
+	     	and   b.lang_code = #langCode#
+	     	LEFT JOIN 
+	     	      T_CO_COMP_MULTI CM
+	     	ON    a.comp_seq   = CM.COMP_SEQ
+	     	AND   CM.USE_YN    = 'Y' 
+	     	AND   CM.LANG_CODE = #langCode#
+	     	LEFT JOIN 
+                  T_CO_GROUP G
+	     	ON    a.group_seq   = G.GROUP_SEQ
+	     	AND   G.USE_YN    = 'Y'  
+	     	WHERE a.group_seq = #groupSeq# 
+			<isNotEmpty property="dpSeq">
+	     	AND	  a.dp_seq = #dpSeq#
+			</isNotEmpty>
+			<isNotEmpty property="dpName">
+	     	AND	  (b.dp_name like ('%$dpName$%') or a.dp_seq like ('%$dpName$%'))
+			</isNotEmpty>
+			<isNotEmpty property="useYn">
+	     	AND	  a.use_yn = #useYn#			
+	     	</isNotEmpty>
+	     	<isNotEmpty property="compSeq"> <!-- 회사선택할경우 -->
+	     	AND a.comp_seq  = #compSeq#
+	     	</isNotEmpty> 
+	     	<isEmpty property="compSeq" >  <!-- 전체선택할경우  -->
+             <isNotEqual property="userSe" compareValue="MASTER"> 
+	     	AND a.comp_seq in( #loginCompSeq# , '0')  <!-- 로그인 관리자 회사코드 -->
+	     	</isNotEqual>
+	     	</isEmpty>
+			<isNotEmpty property="dpType">
+	     	AND   a.dp_type = #dpType#
+			</isNotEmpty>		     	
+	     	group by a.group_seq, a.comp_seq, a.dp_seq,  a.dp_type
+	     	ORDER BY a.order_num, a.dp_seq
+	     </select> 
+	     
+	     <select id="DutyPositionManage.getDutyPositionSeqCheck" parameterClass="hashmap" resultClass="Integer">
+	        /* DutyPositionManage.getDutyPositionSeqCheck - mysql */
+	     	SELECT count(*)
+	     	FROM  `t_co_comp_duty_position` a
+	     	WHERE a.dp_seq = #dpSeq#
+	     	AND   a.dp_type = #dpType#	     	
+	     </select> 
+	     	     
+	     <select id="DutyPositionManage.getDutyPositionInfo" parameterClass="hashmap" resultClass="egovMap">
+	        /* DutyPositionManage.getDutyPositionInfo - mysql */
+	     	SELECT a.dp_seq, a.group_seq, a.comp_seq, a.dp_type, a.use_yn, a.order_num
+	     	      , b.lang_code, b.dp_name, b.desc_text, b.comment_text
+	     	FROM  `t_co_comp_duty_position` a 
+	     	left outer join 
+	     	      `t_co_comp_duty_position_multi` b 
+	     	on    a.dp_seq = b.dp_seq
+	     	and   a.dp_type = b.dp_type
+	     	and   b.lang_code = #langCode#
+	     	WHERE a.dp_seq = #dpSeq#
+	     	AND   a.dp_type = #dpType#	   
+	     	LIMIT 1  	
+	     </select> 	     
+	     
+	     <select id="DutyPositionManage.getDutyPositionUserCnt" parameterClass="hashmap" resultClass="Integer">
+	        /* DutyPositionManage.getDutyPositionUserCnt - mysql */
+	        SELECT count(*) 
+	        FROM  t_co_emp e
+	        INNER JOIN t_co_emp_dept ed
+	        ON    e.emp_seq = ed.emp_seq
+	        INNER JOIN t_co_comp c  <!-- 회사사용여부 -->
+	        ON    ed.comp_seq = c.comp_seq
+	        AND   c.use_yn = 'Y'
+	        WHERE e.work_status = '999'
+	        <isEqual property="dpType" compareValue="DUTY">
+	        AND ed.duty_code = #dpSeq#
+	        </isEqual>
+	        <isEqual property="dpType" compareValue="POSITION">
+	        AND ed.position_code = #dpSeq#
+	        </isEqual>
+	     </select>
+	    
+	    <insert id="DutyPositionManage.insertDutyPosition" parameterClass="hashmap">
+	        /* DutyPositionManage.insertDutyPosition - mysql */
+	    	INSERT INTO `t_co_comp_duty_position` 
+			SET
+				`group_seq`   = #groupSeq#,
+				`dp_seq`      = #dpSeq# , 
+				`comp_seq`    = #compSeq# , 
+				`dp_type`     = #dpType# , 
+				`use_yn`      = #useYn# , 
+				`order_num`   = #orderNum# , 
+				`create_seq`  = #empSeq# , 
+				`create_date` = NOW()
+			ON DUPLICATE KEY UPDATE
+				`use_yn`      = #useYn# , 
+				`order_num`   = #orderNum# , 
+				`modify_seq`  = #empSeq# , 
+				`modify_date` = NOW()
+	    </insert>
+	     
+	    <insert id="DutyPositionManage.insertDutyPositionMulti" parameterClass="hashmap">
+	        /* DutyPositionManage.insertDutyPositionMulti - mysql */
+		    INSERT INTO `t_co_comp_duty_position_multi` 
+			SET
+				`group_seq`    = #groupSeq# , 
+				`dp_seq`       = #dpSeq# , 
+				`lang_code`    = #langCode# , 
+				`comp_seq`     = #compSeq# , 
+				`dp_type`      = #dpType# , 
+				`dp_name`      = #dpName# , 
+				`desc_text`    = #descText# , 
+				`comment_text` = #commentText# , 
+				`use_yn`       = #useYn# , 
+				`create_seq`   = #empSeq# , 
+				`create_date`  = NOW()
+			ON DUPLICATE KEY UPDATE
+				`dp_name`      = #dpName# , 
+				`desc_text`    = #descText# , 
+				`comment_text` = #commentText# , 
+				`use_yn`       = #useYn# , 
+				`modify_seq`   = #empSeq# , 
+				`modify_date`  = NOW()
+	    </insert>
+	    	    
+	    <delete id="DutyPositionManage.deleteDutyPosition" parameterClass="hashmap">
+	        /* DutyPositionManage.deleteDutyPosition - mysql */
+	    	DELETE 
+	    	FROM  `t_co_comp_duty_position` 
+	    	WHERE `dp_seq`    = #dpSeq#
+	    	AND   `group_seq` = #groupSeq#
+	    	AND   `dp_type`   = #dpType#
+	    </delete>
+	    
+	    <delete id="DutyPositionManage.deleteDutyPositionMulti" parameterClass="hashmap">
+	        /* DutyPositionManage.deleteDutyPositionMulti - mysql */
+	    	DELETE 
+	    	FROM  `t_co_comp_duty_position_multi` 
+	    	WHERE `dp_seq`    = #dpSeq#	  
+	    	AND   `group_seq` = #groupSeq#
+	    	AND   `dp_type`   = #dpType#  	
+	    </delete>
+ 
+
+</sqlMap>

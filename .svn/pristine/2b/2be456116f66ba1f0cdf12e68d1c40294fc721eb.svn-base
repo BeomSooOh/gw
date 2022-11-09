@@ -1,0 +1,157 @@
+﻿@charset "utf-8";
+.PUDD div,div.PUDD ,.PUDD dl,.PUDD dt,.PUDD dd,.PUDD ul,.PUDD ol,.PUDD li,.PUDD h1,.PUDD h2,.PUDD h3,.PUDD h4,.PUDD h5,.PUDD h6,.PUDD p,.PUDD button,.PUDD input,.PUDD select,.PUDD td,.PUDD th,.PUDD table,.PUDD pre,.PUDD strong,.PUDD b,.PUDD textarea{font-family:inherit; margin:0;padding:0;font-size:12px;}
+.PUDD h1,.PUDD h2,.PUDD h3,.PUDD h4,.PUDD h5,.PUDD h6,.PUDD input,.PUDD button,.PUDD pre,.PUDD textarea,.PUDD select{font-size:12px;}
+.PUDD img,.PUDD iframe{border:0 none}
+.PUDD li{list-style:none}
+.PUDD input,.PUDD select,.PUDD button{vertical-align:middle}
+.PUDD input::-ms-clear {display:none;}
+.PUDD img{vertical-align:top}
+.PUDD label,.PUDD button{cursor:pointer}
+.PUDD a {text-decoration:none;}
+.PUDD button{margin:0;padding:0}
+.PUDD button *{position:relative}
+.PUDD button img{left:-3px;*left:auto}
+.PUDD option{padding-right:6px}
+.PUDD table{border-collapse:collapse;border-spacing:0;width:100%;table-layout:fixed;}
+
+*{-webkit-overflow-scrolling:touch;} /* 모바일에서 터치 부드러운 효과 적용 */
+
+/*Text color*/
+.PUDD .text_red{color:#ff0000;}
+.PUDD .text_blue{color:#000fff;}
+	
+/*Padding, Margin*/ 
+.PUDD .mr3 {margin-right:3px !important;}
+
+
+/**************************************************
+   sample code
+**************************************************/
+.devBox{padding:30px;}
+.devBox h1{font-size:30px;margin:0 0 20px 0;}
+.devBox .componentBox{padding:10px;border:1px solid #eaeaea;}
+.devBox .componentBox p{font-size:12px;margin:0 0 10px 0;padding:5px;background:#f1f1f1;line-height:20px;}
+.devBox .componentBox pre{font-size:12px;margin:0 0 10px 0;padding:5px;background:#f1f1f1;line-height:20px; white-space: pre-wrap;}
+
+
+/*체크,라디오공통 색*/
+.PUDD.PUDD-COLOR-blue.PUDD-UI-ChkRadi svg path{fill:#B5B4B4;}
+.PUDD.PUDD-COLOR-blue.PUDD-UI-ChkRadi svg polygon {fill:#2A93F7;}
+.PUDD.PUDD-COLOR-blue.PUDD-UI-ChkRadi svg rect {fill:#2A93F7;}
+.PUDD.PUDD-COLOR-blue.PUDD-UI-ChkRadi svg circle {fill:#2A93F7;}
+.PUDD.PUDD-COLOR-blue.PUDD-UI-ChkRadi.UI-Disa svg path{fill:#B5B4B4;}
+.PUDD.PUDD-COLOR-blue.PUDD-UI-ChkRadi.UI-Disa svg g path {fill:#EEEEEC;}
+.PUDD.PUDD-COLOR-blue.PUDD-UI-ChkRadi.UI-Disa svg polygon {fill:#C4C3C3;}
+.PUDD.PUDD-COLOR-blue.PUDD-UI-ChkRadi.UI-Disa svg rect {fill:#C4C3C3;}
+.PUDD.PUDD-COLOR-blue.PUDD-UI-ChkRadi.UI-Disa svg circle {fill:#C4C3C3;}
+.PUDD.PUDD-COLOR-blue.PUDD-UI-ChkRadi.UI-Dash.UI-Disa svg g > path{fill:#B5B4B4}
+.PUDD.PUDD-COLOR-blue.PUDD-UI-ChkRadi.UI-Dash.UI-Disa svg g > g > path{fill:#EEEEEC}
+
+.PUDD.PUDD-COLOR-yellow.PUDD-UI-ChkRadi svg {background-color:#FEBC2C;}
+.PUDD.PUDD-COLOR-yellow.PUDD-UI-ChkRadi svg path{fill:#FEBC2C;}
+.PUDD.PUDD-COLOR-yellow.PUDD-UI-ChkRadi svg polygon {fill:#fff;}
+.PUDD.PUDD-COLOR-yellow.PUDD-UI-ChkRadi svg rect {fill:#fff;}
+.PUDD.PUDD-COLOR-yellow.PUDD-UI-ChkRadi svg circle {fill:#FD9656;}
+
+.PUDD.PUDD-COLOR-green.PUDD-UI-ChkRadi svg {background-color:#1FC47C;}
+.PUDD.PUDD-COLOR-green.PUDD-UI-ChkRadi svg path{fill:#1FC47C;}
+.PUDD.PUDD-COLOR-green.PUDD-UI-ChkRadi svg polygon {fill:#fff;}
+.PUDD.PUDD-COLOR-green.PUDD-UI-ChkRadi svg rect {fill:#fff;}
+.PUDD.PUDD-COLOR-green.PUDD-UI-ChkRadi svg circle{fill:#1FC47C;}
+
+.PUDD.PUDD-COLOR-strongblue.PUDD-UI-ChkRadi svg {background-color:#2A93F7;}
+.PUDD.PUDD-COLOR-strongblue.PUDD-UI-ChkRadi svg path{fill:#2A93F7;}
+.PUDD.PUDD-COLOR-strongblue.PUDD-UI-ChkRadi svg polygon {fill:#fff;}
+.PUDD.PUDD-COLOR-strongblue.PUDD-UI-ChkRadi svg rect {fill:#fff;}
+.PUDD.PUDD-COLOR-strongblue.PUDD-UI-ChkRadi svg circle{fill:#2A93F7;}
+
+/**************************************************
+   PUDD_Button
+**************************************************/
+/*icon 호출*/
+.PUDD .ico.ico_search{background: url('../Images/ico/ico_file.png') no-repeat; background-position:center; background-size:12px 13px;}
+.PUDD input[disabled].ico.ico_search{background:#f2f2f2 url('../Images/ico/ico_file.png') no-repeat; background-size:12px 13px;}
+
+/*default Button*/
+.PUDD input[type="button"]{cursor:pointer;}
+.PUDD input[type="button"]:hover{border:1px solid #8c8c8c;}
+
+.PUDD.PUDD-UI-Button{position:relative; display:inline-block;  height: 24px;}
+.PUDD.PUDD-UI-Button input{background:#fff; padding: 1px 10px; /*line-height:24px;*/ border: 1px solid #d3d3d3; border-image: none; width: 100%; height:100%; color:#4a4a4a; font-size: 12px; text-decoration: none; vertical-align: top; display: inline-block; position: relative; cursor: pointer; box-sizing: border-box;}
+.PUDD.PUDD-UI-Button input[disabled]{background:#f2f2f2; border: 1px solid #e0e0e0; color:#8d8d8d;}
+
+/*iconSvg Button*/
+.PUDD.PUDD-UI-iconSvgButton{position:relative; display:inline-block;  width:24px; height:24px;}
+.PUDD.PUDD-UI-iconSvgButton input{width:100%; height:100%; padding:10px; border:1px solid #d3d3d3;font-size:12px;background:#ffffff;outline:none;box-sizing:border-box; cursor: pointer;}
+.PUDD.PUDD-UI-iconSvgButton input:hover{border:1px solid #d3d3d3;}
+.PUDD.PUDD-UI-iconSvgButton svg{display:inline-block;fill:#000000;position:absolute;top:0px;right:0px; width:80%; height:80%; left:50%; top:50%; margin-top:-40%; margin-left:-40%; pointer-events:none;}
+
+/*iconImg Button*/
+.PUDD.PUDD-UI-iconImgButton{position:relative; display:inline-block;  width:24px; height:24px;}
+.PUDD.PUDD-UI-iconImgButton input{width:100%; height:100%; line-height:24px; border:1px solid #d3d3d3;background:#ffffff;box-sizing:border-box; cursor: pointer;}
+.PUDD.PUDD-UI-iconImgButton input:hover{border:1px solid #d3d3d3;}
+
+/*iconSvg+text Button*/
+.PUDD.PUDD-UI-iconSvgtextButton {position:relative; display:inline-block;  height:24px;}
+.PUDD.PUDD-UI-iconSvgtextButton input{width:100%; height: 100%; line-height:24px; border: 1px solid #d3d3d3; background:#fff; border-image: none; color:#4a4a4a; letter-spacing: -0.5px; font-size: 12px; text-decoration: none; vertical-align: top; display: inline-block; position: relative; cursor: pointer; box-sizing: border-box;}
+.PUDD.PUDD-UI-iconSvgtextButton input[disabled]{background:#f2f2f2; border: 1px solid #e0e0e0; color:#8d8d8d;}	
+.PUDD.PUDD-UI-iconSvgtextButton svg{display:inline-block;fill:#000000;position:absolute;top:0px;right:0px;vertical-align:top; z-index:10;}
+.PUDD.PUDD-UI-iconSvgtextButton .svgR_box{margin: -10px 5px 0px 0px; top: 50%; width: 18px; height: 18px; right: 0px; vertical-align: middle; float: right; position: absolute;}
+.PUDD.PUDD-UI-iconSvgtextButton .svgL_box{margin: -10px 0px 0px 5px; top: 50%; width: 18px; height: 18px; left: 0px; vertical-align: middle; float: left; position: absolute;}
+.PUDD.PUDD-UI-iconSvgtextButton .ico_al{padding: 0px 10px 0px 25px;}	
+.PUDD.PUDD-UI-iconSvgtextButton .ico_ar{padding: 0px 25px 0px 10px;}	
+
+/*iconImg+text Button*/
+.PUDD.PUDD-UI-iconImgtextButton {position:relative; display:inline-block;  height:24px;}
+.PUDD.PUDD-UI-iconImgtextButton input{width:100%; height: 100%; line-height:24px; border: 1px solid #d3d3d3; background:#fff; border-image: none; color:#4a4a4a; letter-spacing: -0.5px; font-size: 12px; text-decoration: none; vertical-align: top; display: inline-block; position: relative; cursor: pointer; box-sizing: border-box;}
+.PUDD.PUDD-UI-iconImgtextButton input[disabled]{background:#f2f2f2; border: 1px solid #e0e0e0; color:#8d8d8d;}
+.PUDD.PUDD-UI-iconImgtextButton .ico_ar{background-position:right 5px center !important; padding: 0px 22px 0px 10px;}
+.PUDD.PUDD-UI-iconImgtextButton .ico_al{background-position:left 5px center; padding: 0px 10px 0px 22px;}
+
+/*gridTable Button*/
+.PUDD.PUDD-UI-GridTable .PUDD-UI-Button{height:19px}
+.PUDD.PUDD-UI-GridTable .PUDD-UI-Button input[type="button"]{font-size:11px; line-height:14px; padding:3px 5px; letter-spacing:-1px;}
+.PUDD.PUDD-UI-GridTable .PUDD-UI-Button input[type="button"].gray_btn{border:1px solid #8e8e8e; background:#8e8e8e; color:#fff;}
+
+/*theme Button*/
+.PUDD.PUDD-UI-Button.PUDD-COLOR-blue input.submit{background:#1c90fb; border: 1px solid #1c90fb; color:#fff;}
+.PUDD.PUDD-UI-Button.PUDD-COLOR-blue input.submit:hover{background:#006dd2;}
+/* .PUDD.PUDD-UI-Button.PUDD-COLOR-blue .PUDD.PUDD-UI-iconSvgButton:hover svg{fill:#1c90fb;} */
+
+
+/**************************************************
+   PUDD_Select
+**************************************************/
+/*select*/
+.PUDD.PUDD-UI-selectBox{position:relative;display:inline-block;height:24px;vertical-align:middle;}
+.PUDD.PUDD-UI-selectBox .hiddenSelect{overflow:hidden;position:absolute;top:-10000px;left:-10000px;width:1px;height:1px}
+
+.PUDD.PUDD-UI-selectBox .selectField{width:100%;height:inherit;padding: 2px 33px 2px 6px;border:1px solid #cccccc;font-size:12px;background:#ffffff;outline:none;box-sizing:border-box;cursor: pointer;}
+.PUDD.PUDD-UI-selectBox .selectField .selectText{display:block;height:100%;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;pointer-events: none;}
+.PUDD.PUDD-UI-selectBox .selectField.disabled{color:#8d8d8d;background:#f3f3f3;cursor:not-allowed;}
+.PUDD.PUDD-UI-selectBox .selectField.disabled:focus{color:#8d8d8d;background:#f3f3f3;cursor:not-allowed;}
+
+.PUDD.PUDD-UI-selectBox .selectFieldBtn{position:absolute;width:24px;height:24px;top:0;right:0;padding: 0px;border:solid transparent;border-width:0 0 0 1px;text-align: center;vertical-align: top;background: transparent;box-sizing: border-box;outline: none;pointer-events: none;}
+.PUDD.PUDD-UI-selectBox .selectFieldBtn .arr{display: inline-block;overflow: hidden;background: url('../../Images/ico/sp_lux.png') -50px -50px no-repeat;line-height: 100em;vertical-align: middle;width: 8px;height: 5px;text-align: center;animation: spinDown 0.3s both cubic-bezier(0, 0, 0.2, 1);}
+
+.PUDD.PUDD-UI-selectBox .selectField:hover .selectFieldBtn{border:solid #cccccc;border-width:0 0 0 1px;}
+.PUDD.PUDD-UI-selectBox .selectField:focus .arr{animation: spinUp 0.3s both cubic-bezier(0, 0, 0.2, 1);}
+.PUDD.PUDD-UI-selectBox .selectField.on .arr{animation: spinUp 0.3s both cubic-bezier(0, 0, 0.2, 1);}
+
+.PUDD.PUDD-UI-selectBox.PUDD-COLOR-blue .selectField.disabled:focus{border:1px solid #cccccc;}
+.PUDD.PUDD-UI-selectBox.PUDD-COLOR-blue .selectField.disabled:focus .selectFieldBtn .arr{border:solid transparent;border-width:0 0 0 1px;animation:unset;}
+.PUDD.PUDD-UI-selectBox.PUDD-COLOR-blue .selectField.disabled:hover .selectFieldBtn{border:solid transparent;border-width:0 0 0 1px;}
+.PUDD.PUDD-UI-selectBox.PUDD-COLOR-blue .selectField.disabled .selectFieldBtn .arr{border:solid transparent;border-width:0 0 0 1px;animation:unset;}
+
+.PUDD.PUDD-UI-selectBox .cloneList{display:none;position:fixed;border:1px solid #cccccc;background:#ffffff;z-index:1;width:100%;max-height:150px;overflow-x:hidden;overflow-y:auto;}
+.PUDD.PUDD-UI-selectBox .cloneList li{height:22px;line-height:22px;padding:0 6px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;text-align:left;}
+.PUDD.PUDD-UI-selectBox .cloneList li:hover{cursor:pointer;background:#f5f5f5;}
+.PUDD.PUDD-UI-selectBox .cloneList li.on{background:#f5f5f5;}
+
+/*theme class*/
+.PUDD.PUDD-UI-selectBox.PUDD-COLOR-blue .selectField:focus{border:1px solid #2196f3;}
+.PUDD.PUDD-UI-selectBox.PUDD-COLOR-blue .selectField:focus .selectFieldBtn{border:solid #2196f3;border-width:0 0 0 1px;}
+
+
+
+

@@ -1,0 +1,605 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ItemManageDAO">
+
+	<typeAlias alias="egovMap"
+		type="egovframework.rte.psl.dataaccess.util.EgovMap" />
+
+	<!-- 조회 -->
+	<!-- 조회 - 항목관리 조회 -->
+	<select id="ItemManageDAO.ItemListSelect" parameterClass="hashmap" resultClass="egovMap">
+		/* ItemManageDAO.ItemListSelect - mariadb */
+		SELECT 	  A.item_id 		as 'itemCode'
+				, A.item_nm			as 'itemCodeName'
+				, B.detail_name		as 'itemCodeRange'
+				, A.item_tp			as 'itemType'
+				, C.detail_name 	as 'itemTypeName'
+				, $DB_NEOS$get_code_detail_info('0', 'cm0004',  IFNULL(A.use_yn, '0'), #langCode#) AS 'itemUseYN'
+		FROM   $DB_NEOS$titg_item A
+		INNER JOIN (
+			SELECT ccd.code, ccd.detail_code,$DB_NEOS$FN_GetMultiLang(#langCode#,ccdm.detail_name_multi) detail_name, ccd.use_yn
+			FROM   $DB_NEOS$t_co_code_detail ccd
+			INNER JOIN $DB_NEOS$v_t_co_code_detail_multi ccdm
+			ON	ccd.code = ccdm.code AND ccd.code = 'It0001' and ccd.detail_code = ccdm.detail_code
+		) B
+		ON	A.item_range = B.detail_code
+		INNER JOIN (
+		  SELECT ccd.code, ccd.detail_code,$DB_NEOS$FN_GetMultiLang(#langCode#,ccdm.detail_name_multi) detail_name, ccd.use_yn
+			FROM   $DB_NEOS$t_co_code_detail ccd
+			INNER JOIN $DB_NEOS$v_t_co_code_detail_multi ccdm
+			ON	ccd.code = ccdm.code AND ccd.code = 'It0002' and ccd.detail_code = ccdm.detail_code
+		) C
+		ON  A.item_tp = C.detail_code
+		WHERE A.item_nm like CONCAT('%', ifnull(#search#,''), '%')
+			  AND A.use_yn = '1'
+		<isEqual property="isShowNotUse" compareValue="Y">
+			  OR  A.use_yn = '0'
+		</isEqual>
+	</select>
+
+	<!-- 조회 - 항목 코드 세부사항 -->
+	<select id="ItemManageDAO.ItemCodeDetailSelect" parameterClass="hashmap" resultClass="egovMap">
+		/* ItemManageDAO.ItemCodeDetailSelect - mariadb */
+		SELECT 		A.item_id							AS 'itemCode'
+					, item_nm						AS 'itemName'
+					, item_desc						AS 'itemDesc'
+					, item_range					AS 'itemRange'
+					, item_tp						AS 'itemType'
+					, A.use_yn						AS 'itemUseYN'
+					, system_gb						AS 'systemGubun'
+					, system_default_val			AS 'systemDefault'	
+					, system_multi_yn				AS 'systemMulti'
+					, system_display				AS 'systemDisplay'
+					, text_line						AS 'textLineCount'
+					, number_min_val				AS 'numberMinVal'
+					, number_max_val				AS 'numberMaxVal'
+					, number_point					AS 'numberDecimalPoint'
+					, code_tp						AS 'userDefineCodeType'
+					, A.code_grp_id					AS 'userDefineCodeKind'
+					, A.code_default_val			AS 'userDefineCodeDefault'	
+					, datetime_tp					AS 'datetimeType'
+					, datetime_format				AS 'datetimeDateType'
+					, datetime_default_val1			AS 'datetimeDefault1'
+					, datetime_default_val2			AS 'datetimeDefault2'
+					, IFNULL(C.custom_cd, '')		AS 'externalCode'
+					, IFNULL(C.custom_nm, '')		AS 'externalCodeNm'
+					, IFNULL(B.code_grp_nm, 
+								(select grp.code_grp_nm
+                                 from   $DB_NEOS$titg_code_grp grp
+                                 where  grp.code_grp_id = A.code_grp_id)
+                                  			)   	AS 'userDefineGroupCodeNm'
+          			, IFNULL(B.code_val_nm, '')  	AS 'userDefineGroupCodeDefaultNm' 
+          			, IFNULL(C.url, '')				AS 'url'
+
+		FROM		$DB_NEOS$titg_item A
+		LEFT OUTER JOIN (
+	    	SELECT	tc.custom_cd
+	    			, ti.item_id
+	    			, tc.custom_nm
+	    			, tc.url
+   			FROM	$DB_NEOS$titg_customset tc
+   			INNER JOIN	$DB_NEOS$titg_item ti
+   			ON		tc.custom_cd = ti.custom_cd
+	    ) C
+	    ON A.custom_cd = C.custom_cd
+		LEFT OUTER JOIN (
+	        SELECT 	tcg.code_grp_id
+	        		, tcg.code_grp_nm
+	        		, tc.code_val_cd
+	        		, tc.code_val_nm
+	        FROM   $DB_NEOS$titg_code_grp tcg
+	        INNER JOIN $DB_NEOS$titg_code tc
+	        ON  tcg.code_grp_id = tc.code_grp_id
+	    ) B
+	    ON A.code_grp_id = B.code_grp_id
+	    AND B.code_grp_id = A.code_grp_id
+	    AND A.code_default_val = B.code_val_cd
+		WHERE		A.item_id = #itemCode#
+	</select>	
+	
+	<!-- 조회 - 그룹 코드 목록 조회 -->
+	<select id="ItemManageDAO.ItemUserDefineCodeListSelect" parameterClass="hashmap" resultClass="egovMap">
+		/* ItemManageDAO.ItemUserDefineCodeListSelect - mariadb */
+		SELECT		  code_grp_id		AS	'groupCode'
+					, code_grp_nm		AS	'groupName'
+					, code_grp_desc		AS	'authGubun'
+					, $DB_NEOS$get_code_detail_info('0', 'cm0004',  IFNULL(use_yn, '0'), #langCode#) AS 'useYN'
+		FROM		$DB_NEOS$titg_code_grp	
+		WHERE       code_grp_nm like CONCAT('%', ifnull(#search#,''), '%')	
+		  AND		use_yn = '1'
+		<isEqual property="isShowNotUse" compareValue="Y">
+			  OR  use_yn = '0'
+		</isEqual>  	
+	</select>	
+	
+	<!-- 조회 - 외부 코드 목록 조회 -->
+	<select id="ItemManageDAO.ItemExternalCodeListSelect" parameterClass="hashmap" resultClass="egovMap">
+		/* ItemManageDAO.ItemExternalCodeListSelect - mariadb */
+		SELECT		  custom_cd		AS	'code'
+					, dbms_type		AS	'dbType'
+					, servername		AS	'dbAddress'
+					, databasename 	AS 'dbName'
+					, userid		AS 'dbID'
+					, password		AS 'dbPW'
+					, code			AS 'dbCode'
+					, name			AS 'dbCodeName'
+					, display_type	AS 'outputForm'
+					, search		AS 'searchCode'
+					, query			AS 'queryArea'
+					, custom_nm		AS 'codeName'
+					, $DB_NEOS$get_code_detail_info('0', 'COM521',  IFNULL(use_yn, 'N'), #langCode#) AS 'useYN'
+		FROM		$DB_NEOS$titg_customset	
+		WHERE       custom_nm like CONCAT('%', ifnull(#search#,''), '%') or custom_cd like CONCAT('%', ifnull(#search#,''), '%')	
+		  AND		use_yn = 'Y'
+		<isEqual property="isShowNotUse" compareValue="Y">
+			  OR  use_yn = 'N'
+		</isEqual>  	
+	</select>	
+	
+	<!-- 조회 - 그룹코드 상세코드 목록 조회 -->
+ 	<select id="ItemManageDAO.ItemCodeGroupDetailCodeSelect" parameterClass="hashmap" resultClass="egovMap">
+ 		/* ItemManageDAO.ItemCodeGroupDetailCodeSelect - mariadb */
+ 		SELECT		  code_grp_id		      AS 'groupCode'
+ 					, code_val_cd		      AS 'detailCode'
+ 					, code_val_nm		      AS 'detailCodeName'
+ 					, IFNULL(code_val_en,'')   AS 'detailCodeNameEn'
+ 					, IFNULL(code_val_cn,'')   AS 'detailCodeNameCn'
+ 					, IFNULL(code_val_jp,'')   AS 'detailCodeNameJp'
+ 					, view_order		      AS 'detailCodeOrder'
+ 					, use_yn
+ 		FROM		$DB_NEOS$titg_code
+ 		WHERE		code_grp_id = #groupCode#
+ 		ORDER BY	view_order	
+ 	</select>
+
+	
+	<select id="ItemManageDAO.ItemDetailCodeSelect" parameterClass="hashmap" resultClass="egovMap">
+ 		/* ItemManageDAO.ItemDetailCodeSelect - mariadb */
+ 		SELECT		  code_grp_id		      AS 'groupCode'
+ 					, code_val_cd		      AS 'detailCode'
+ 					, code_val_nm		      AS 'detailCodeName'
+ 					, IFNULL(code_val_en,'')   AS 'detailCodeNameEn'
+ 					, IFNULL(code_val_jp,'')   AS 'detailCodeNameJp'
+ 					, IFNULL(code_val_cn,'')   AS 'detailCodeNameCn'
+ 					, view_order		      AS 'detailCodeOrder'
+ 					, use_yn
+ 		FROM		$DB_NEOS$titg_code
+ 		WHERE		code_grp_id = #groupCode# 
+ 			AND		code_val_cd = #detailCode# 
+ 		ORDER BY	view_order	
+ 	</select>
+
+	<select id="ItemManageDAO.ItemExternalCodeDetailSelect" parameterClass="hashmap" resultClass="egovMap">
+ 		/* ItemManageDAO.ItemExternalCodeDetailSelect - mariadb */
+ 		SELECT		  custom_cd		            AS	'code'
+ 					, dbms_type		            AS	'dbType'
+ 					, servername  	             AS	'dbAddress'
+ 					, databasename 	             AS 'dbName'
+ 					, userid		            AS 'dbID'
+ 					, password		            AS 'dbPW'
+ 					, code			            AS 'dbCode'
+ 					, name			            AS 'dbCodeName'
+ 					, display_type	            AS 'outputForm'
+ 					, IFNULL(display_type_en,'') AS 'outputFormEn'
+ 					, IFNULL(display_type_jp,'') AS 'outputFormJp'
+ 					, IFNULL(display_type_cn,'') AS 'outputFormCn'
+ 					, search		            AS 'searchCode'
+ 					, query			            AS 'queryArea'
+ 					, custom_nm		            AS 'codeName'
+ 					, custom_desc                AS 'codeExplanation'
+ 					, use_yn 		             AS 'useYN'
+ 					, select_mode                AS 'selectMode'
+ 					, return_code                AS 'returnCode'
+ 					, IFNULL(return_code_en, '') AS 'returnCodeEn'
+ 					, IFNULL(return_code_jp, '') AS 'returnCodeJp'
+ 					, IFNULL(return_code_cn, '') AS 'returnCodeCn'
+ 					, return_code_display_type   AS 'returnCodeOutputForm'
+ 					, IFNULL(return_code_display_type_en, '') AS 'returnCodeOutputFormEn'
+ 					, IFNULL(return_code_display_type_jp, '') AS 'returnCodeOutputFormJp'
+ 					, IFNULL(return_code_display_type_cn, '') AS 'returnCodeOutputFormCn'
+ 					, IFNULL(popup_width, '')    AS 'popupWidth'
+ 					, IFNULL(popup_height, '')   AS 'popupHeight'
+ 					, IFNULL(callback_function, '') AS 'callbackFunction'
+ 					, IFNULL(url, '')            AS 'url'
+ 		FROM 		$DB_NEOS$titg_customset
+ 		WHERE 		custom_cd = #externalCode#	
+ 	</select>
+	
+	<!-- 조회 - 코드 중복 확인 -->
+	<select id="ItemManageDAO.checkItemCodeSeq" parameterClass="hashmap" resultClass="egovMap">
+		/* ItemManageDAO.checkItemCodeSeq - mariadb */
+		SELECT		item_id
+		FROM		$DB_NEOS$titg_item
+		WHERE		item_id = #itemCodeSeq# 
+		LIMIT 1
+	</select>
+	
+	<!-- 조회 - 상세 코드 중복 확인 -->
+	<select id="ItemManageDAO.checkDetailCodeSeq" parameterClass="hashmap" resultClass="egovMap">
+		/* ItemManageDAO.checkDetailCodeSeq - mariadb */
+		SELECT		code_val_cd
+		FROM		$DB_NEOS$titg_code
+		WHERE		code_grp_id = #groupCodeSeq# 
+		  AND		code_val_cd = #detailCodeSeq# 
+		LIMIT 1
+	</select>
+	
+	<!-- 조회 - 상세 코드 중복 확인 -->
+	<select id="ItemManageDAO.checkExternalCodeSeq" parameterClass="hashmap" resultClass="egovMap">
+		/* ItemManageDAO.checkExternalCodeSeq - mariadb */
+		SELECT		custom_cd
+		FROM		$DB_NEOS$titg_customset
+		WHERE		custom_cd = #externalCodeSeq# 
+		LIMIT 1
+	</select>
+	
+	<!-- 조회 - 그룹 코드 중복 확인 -->
+	<select id="ItemManageDAO.checkGroupCodeSeq" parameterClass="hashmap" resultClass="egovMap">
+		/* ItemManageDAO.checkGroupCodeSeq - mariadb */
+		SELECT		code_grp_id
+		FROM		$DB_NEOS$titg_code_grp
+		WHERE		code_grp_id = #groupCodeSeq# 
+		LIMIT 1
+	</select>
+	
+	<!-- 수정 -->
+	<!-- 수정 - 항목수정 -->
+	<update id="ItemManageDAO.ItemCodeUpdate" parameterClass="hashMap">
+		/* ItemManageDAO.ItemCodeUpdate - mariadb */
+		UPDATE $DB_NEOS$titg_item SET
+			item_nm = #itemName#
+			, item_desc = #itemDesc#
+			, item_range = #itemRange#
+			, item_tp = #itemType#
+			, use_yn = #itemUseYN#
+			, system_gb = #systemGubun#
+			, system_default_val = #systemDefault#
+			, system_multi_yn = #systemMulti#
+			, system_display = #systemDisplay#
+			, text_line = #textLineCount#
+			, number_min_val = #numberMinVal#
+			, number_max_val = #numberMaxVal#
+			, number_point = #numberDecimalPoint#
+			, code_tp = #userDefineCodeType#
+			, code_grp_id = #userDefineCodeKind#
+			, code_default_val = #userDefineCodeDefault#
+			, datetime_tp = #datetimeType#
+			, datetime_format = #datetimeDateType#
+			, datetime_default_val1 = #datetimeDefault1#
+			, datetime_default_val2 = #datetimeDefault2#
+			, modify_by = #empSeq#
+			, modify_dt = NOW()
+			, custom_cd = #externalCodeKind#
+		WHERE	item_id = #itemCode#
+	</update>
+	
+	<!-- 수정 - 상세코드수정 -->
+	<update id="ItemManageDAO.ItemCodeGroupDetailCodeEdit" parameterClass="hashMap">
+		/* ItemManageDAO.ItemCodeGroupDetailCodeEdit - mariadb */
+		UPDATE $DB_NEOS$titg_code SET
+			  code_val_nm	= #detailCodeName#
+			, code_val_en   = #detailCodeNameEn#
+			, code_val_jp   = #detailCodeNameJp#
+			, code_val_cn   = #detailCodeNameCn#
+			, view_order	= #detailCodeOrder#
+			, use_yn		= '1'
+			, modify_by		= #empSeq#
+			, modify_dt		= NOW()
+		WHERE	code_grp_id = #groupCode#
+			AND	code_val_cd = #detailCode#
+	</update>
+	
+	<!-- 수정 - 외부코드 상세 수정 -->
+	<update id="ItemManageDAO.ItemExternalCodeEdit" parameterClass="hashMap">
+		/* ItemManageDAO.ItemExternalCodeEdit - mariadb */
+		UPDATE $DB_NEOS$titg_customset SET
+			 custom_cd		= #code#
+			 , dbms_type	= #dbType#
+			 , servername	= #dbAddress#
+			 , databasename = #dbName#
+			 , userid		= #dbID#
+			 , password		= #dbPW#
+			 , code			= #dbCode#
+			 , name			= #dbCodeName#
+			 , display_type	= #outputForm#
+			 , display_type_en = #outputFormEn#
+			 , display_type_jp = #outputFormJp#
+			 , display_type_cn = #outputFormCn#
+			 , search		= #searchCode#
+			 , query		= #queryArea#
+			 , select_mode  = #selectMode#
+			 , return_code  = #returnCode#
+			 , return_code_en = #returnCodeEn#
+			 , return_code_jp = #returnCodeJp#
+			 , return_code_cn = #returnCodeCn#
+			 , return_code_display_type = #returnCodeOutputForm#
+			 , return_code_display_type_en = #returnCodeOutputFormEn#
+			 , return_code_display_type_jp = #returnCodeOutputFormJp#
+			 , return_code_display_type_cn = #returnCodeOutputFormCn#
+			 , custom_nm	= #codeName#
+			 , custom_desc  = #codeExplanation#
+			 , use_yn 		= #useYN#
+			 , popup_width  = #popupWidthSize#
+			 , popup_height = #popupHeightSize#
+			 , callback_function = #callbackFuncName#  
+			 , url = #url#
+		WHERE	custom_cd = #code#
+	</update>
+	
+	<!-- 수정 - 그룹코드수정 -->
+	<update id="ItemManageDAO.ItemCodeGroupUpdate" parameterClass="hashMap">
+		/* ItemManageDAO.ItemCodeGroupUpdate - mariadb */
+		UPDATE $DB_NEOS$titg_code_grp SET
+			  code_grp_nm	= #groupName#
+			, code_grp_desc	= #authGubun#
+			, use_yn		= #useYN#
+			, modify_by		= #empSeq#
+			, modify_dt		= NOW()
+		WHERE	code_grp_id = #groupCode#
+
+	</update>
+	
+	<!-- 생성 -->
+	<!-- 생성 - 항목생성 -->
+	<insert id="ItemManageDAO.ItemCodeInsert" parameterClass="hashmap">
+		/* ItemManageDAO.ItemCodeInsert - mariadb */
+		INSERT INTO $DB_NEOS$titg_item
+		(
+			  item_id
+			, item_nm
+			, item_desc
+			, item_range
+			, item_tp
+			, use_yn
+			, system_gb
+			, system_default_val
+			, system_multi_yn
+			, system_display
+			, text_line
+			, number_min_val
+			, number_max_val
+			, number_point
+			, code_tp
+			, code_grp_id
+			, code_default_val
+			, datetime_tp
+			, datetime_format
+			, datetime_default_val1
+			, datetime_default_val2
+			, created_by
+			, created_dt
+			, custom_cd
+		)
+		VALUES
+		(
+			  #itemCode#
+			, #itemName#
+			, #itemDesc#
+			, #itemRange#
+			, #itemType#
+			, #itemUseYN#
+			, #systemGubun#
+			, #systemDefault#
+			, #systemMulti#
+			, #systemDisplay#			
+			, #textLineCount#
+			, #numberMinVal#
+			, #numberMaxVal#
+			, #numberDecimalPoint#
+			, #userDefineCodeType#
+			, #userDefineCodeKind#
+			, #userDefineCodeDefault#
+			, #datetimeType#
+			, #datetimeDateType#
+			, #datetimeDefault1#
+			, #datetimeDefault2#
+			, #empSeq#
+			, NOW()
+			, #externalCodeKind#
+		)
+		ON DUPLICATE KEY UPDATE item_id = #itemCode#
+	</insert>
+	
+	<!-- 생성 - 크드 그룹 생성 -->
+	<insert id="ItemManageDAO.ItemCodeGroupInsert" parameterClass="hashmap">
+		/* ItemManageDAO.ItemCodeGroupInsert - mariadb */
+		INSERT INTO $DB_NEOS$titg_code_grp
+		(
+			  code_grp_id
+			, code_grp_nm
+			, code_grp_desc
+			, use_yn
+			, created_by
+			, created_dt
+		)
+		VALUES
+		(
+			  #groupCode#
+			, #groupName#
+			, #authGubun#
+			, #useYN#
+			, #empSeq#
+			, NOW()
+		)
+		ON DUPLICATE KEY UPDATE code_grp_id = #groupCode#
+	</insert>
+	
+	<!-- 생성 - 크드 그룹 상세코드 생성 -->
+ 	<insert id="ItemManageDAO.ItemCodeGroupDetailCodeInsert" parameterClass="hashmap">
+ 		/* ItemManageDAO.ItemCodeGroupDetailCodeInsert - mariadb */
+ 		INSERT INTO $DB_NEOS$titg_code
+ 		(
+ 			  code_grp_id
+ 			, code_val_cd
+ 			, code_val_nm
+ 			, code_val_en
+ 			, code_val_cn
+ 			, code_val_jp
+ 			, view_order
+ 			, use_yn
+ 			, created_by
+ 			, created_dt
+ 		)
+ 		VALUES
+ 		(
+ 			  #groupCode#
+ 			, #detailCode#
+ 			, #detailCodeName#
+ 			, #detailCodeNameEn#
+ 			, #detailCodeNameCn#
+ 			, #detailCodeNameJp#
+ 			, #detailCodeOrder#
+ 			, 'Y'
+ 			, #empSeq#
+ 			, NOW()
+ 		)
+ 	</insert>
+	
+	<!-- 생성 - 크드 그룹 상세코드 생성 -->
+ 	<insert id="ItemManageDAO.ItemExternalCodeInsert" parameterClass="hashmap">
+ 		/* ItemManageDAO.ItemExternalCodeInsert - mariadb */
+ 		INSERT INTO $DB_NEOS$titg_customset
+ 		(
+ 			  custom_cd
+ 			, dbms_type
+ 			, servername
+ 			, databasename
+ 			, userid
+ 			, password
+ 			, code
+ 			, name
+ 			, display_type
+ 			, display_type_en
+ 			, display_type_jp
+ 			, display_type_cn
+ 			, search
+ 			, query
+ 			, select_mode
+ 			, return_code
+ 			, return_code_en
+ 			, return_code_jp
+ 			, return_code_cn
+ 			, return_code_display_type
+ 			, return_code_display_type_en
+ 			, return_code_display_type_jp
+ 			, return_code_display_type_cn
+ 			, custom_nm
+ 			, custom_desc
+ 			, use_yn
+ 			, popup_width
+ 			, popup_height
+ 			, callback_function
+ 			, url
+ 		)
+ 		VALUES
+ 		(
+ 			  #code#
+ 			, #dbType#
+ 			, #dbAddress#
+ 			, #dbName#
+ 			, #dbID#
+ 			, #dbPW#
+ 			, #dbCode#
+ 			, #dbCodeName#
+ 			, #outputForm#
+ 			, #outputFormEn#
+ 			, #outputFormJp#
+ 			, #outputFormCn#
+ 			, #searchCode#
+ 			, #queryArea#
+ 			, #selectMode#
+ 			, #returnCode#
+ 			, #returnCodeEn#
+ 			, #returnCodeJp#
+ 			, #returnCodeCn#
+ 			, #returnCodeOutputForm#
+ 			, #returnCodeOutputFormEn#
+ 			, #returnCodeOutputFormJp#
+ 			, #returnCodeOutputFormCn#
+ 			, #codeName#
+ 			, #codeExplanation#
+ 			, #useYN#
+ 			, #popupWidthSize#
+ 			, #popupHeightSize#
+ 			, #callbackFuncName#
+ 			, #url# 
+ 		)
+ 	</insert>
+
+	
+	<!-- 삭제 -->
+	<!-- 삭제 - 항목 삭제 -->
+	<delete id="ItemManageDAO.ItemCodeDelete" parameterClass="hashMap">
+		/* ItemManageDAO.ItemCodeDelete - mariadb */
+		DELETE FROM $DB_NEOS$titg_item
+		WHERE		item_id = #itemCode#
+	</delete>
+	
+	<!-- 삭제 - 그룹코드 삭제 -->
+	<delete id="ItemManageDAO.ItemGroupCodeDelete" parameterClass="hashMap">
+		/* ItemManageDAO.ItemGroupCodeDelete - mariadb */
+		DELETE FROM	$DB_NEOS$titg_code_grp
+		WHERE		code_grp_id = #groupCode#
+	</delete>	
+	
+	<!-- 삭제 - 외부코드 삭제 -->
+	<delete id="ItemManageDAO.ItemExternalCodeDelete" parameterClass="hashMap">
+		/* ItemManageDAO.ItemExternalCodeDelete - mariadb */
+		DELETE FROM	$DB_NEOS$titg_customset
+		WHERE		custom_cd = #externalCode#
+	</delete>	
+	
+	<!-- 삭제 - 그룹코드 상세코드 모두 삭제 -->
+	<delete id="ItemManageDAO.ItemGroupCodeDetailDelete" parameterClass="hashMap">
+		/* ItemManageDAO.ItemGroupCodeDetailDelete - mariadb */
+		DELETE FROM	$DB_NEOS$titg_code
+		WHERE		code_grp_id = #groupCode#
+	</delete>
+	
+	<!-- 삭제 - 상세코드 삭제 -->
+	<delete id="ItemManageDAO.ItemDetailCodeDelete" parameterClass="hashMap">
+		/* ItemManageDAO.ItemDetailCodeDelete - mariadb */
+		DELETE FROM	$DB_NEOS$titg_code
+		WHERE		code_grp_id = #groupCode#
+			AND		code_val_cd = #detailCode#
+	</delete>
+	
+	
+	<!-- 기타 -->
+	<!-- 외부코드 정보 가져오기 -->
+	<select id="ItemManageDAO.getExternalCodeInfo" parameterClass="hashmap" resultClass="egovMap">
+		/* ItemManageDAO.getExternalCodeInfo */
+		SELECT 	  IFNULL(custom_nm, '')			AS 'customNm'
+		 		, IFNULL(dbms_type, '')			AS 'dbmsType'
+	 			, IFNULL(servername, '')		AS 'servername'
+                , IFNULL(databasename, '')		AS 'databasename'
+                , IFNULL(userid, '')			AS 'userid'
+                , IFNULL(password, '')			AS 'password'
+                , IFNULL(code, '')				AS 'code'
+                , IFNULL(name, '')				AS 'name'
+                , IFNULL(search, '')			AS 'search'
+                , IFNULL(display_type, '')		AS 'displayType'
+                , IFNULL(query, '')				AS 'query'
+                , IFNULL(select_mode, '')		AS 'selectMode'
+                , IFNULL(return_code, '')		AS 'returnCode'
+                , IFNULL(return_code_display_type, '') AS 'returnCodeOutputForm'
+         FROM   $DB_NEOS$titg_customset
+         WHERE	custom_cd = #customCd#
+	</select>
+	
+	
+	<select id="ItemManageDAO.getCodeGrpInfo" parameterClass="hashmap" resultClass="egovMap">
+		/* ItemManageDAO.getCodeGrpInfo */
+		SELECT
+			code_grp_id
+			,code_grp_nm
+			,code_grp_desc
+			,use_yn
+		FROM
+			$DB_NEOS$titg_code_grp
+		WHERE
+			code_grp_id = #groupCode#
+	</select>
+</sqlMap>

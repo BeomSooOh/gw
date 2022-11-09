@@ -1,0 +1,34 @@
+﻿            <table cellpadding="0" cellspacing="0" style="width:100%;">
+                <tr>
+                    <td colspan="2" style="font-size:20px; color:gray; text-align:left;font-family:'굴림체';font-weight: bold;">방문일시</td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="font-size:20px;color:#20b1ff;font-weight: bold;font-family:'굴림체';font-weight: bold;">
+                        $date$
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width:75px;font-size:15px; padding-top:20px; color:gray;text-align:left;font-family:'굴림체';font-weight: bold;">방문자</td>
+                    <td style="font-size:15px; padding-top:20px; font-family:'굴림체';line-height: 1.4;font-weight: bold;">$name$</td>
+                </tr>
+                <tr>
+                    <td style="font-size:15px; padding-top:10px; color:gray;text-align:left;font-family:'굴림체';font-weight: bold;">회사</td>
+                    <td style="font-size:15px; padding-top:10px; font-family:'굴림체';line-height: 1.4;font-weight: bold;">$comp$</td>
+                </tr>
+                <tr>
+                    <td style="font-size:15px; padding-top:10px; color:gray;text-align:left;font-family:'굴림체';font-weight: bold;">방문장소</td>
+                    <td style="font-size:15px; padding-top:10px; font-family:'굴림체';line-height: 1.4;font-weight: bold;">$place$</td>
+                </tr>
+                <tr style="$carStyle$">
+                    <td style="font-size:15px; padding-top:10px; color:gray;text-align:left;font-family:'굴림체';font-weight: bold;">차량번호</td>
+                    <td style="font-size:15px; padding-top:10px; font-family:'굴림체';line-height: 1.4;font-weight: bold;">$car$</td>
+                </tr>
+                <tr>
+                    <td style="font-size:15px; padding-top:10px; color:gray;text-align:left;font-family:'굴림체';font-weight: bold;">담당자</td>
+                    <td style="font-size:15px; padding-top:10px; font-family:'굴림체';line-height: 1.4;font-weight: bold;">$manager$</td>
+                </tr>
+                <tr style="$telStyle$">
+                    <td style="font-size:15px; padding-top:10px; color:gray;text-align:left;font-family:'굴림체';font-weight: bold;">전화번호</td>
+                    <td style="font-size:15px; padding-top:10px; font-family:'굴림체';line-height: 1.4;font-weight: bold;">$tel$</td>
+                </tr>
+            </table>

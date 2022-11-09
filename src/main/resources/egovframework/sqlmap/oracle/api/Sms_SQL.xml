@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="smsDAO">
+	
+	<select id="smsDAO.getSmsRegInfo" parameterClass="hashmap" resultClass="hashmap">
+		/* smsDAO.getSmsRegInfo - oracleDB */
+		SELECT 	  NVL(A.comp_seq, '') 		AS "compSeq"
+				, NVL(B.agent_id, '') 		AS "agentId"
+				, NVL(B.agent_key, '')		AS "agentKey"
+        		, NVL(G.bill36524_url, '')	AS "bill35624Url"
+        		, NVL(B.bill36524_id, '')	AS "bill36524Id"
+		FROM   $DB_NEOS$t_co_comp A
+		INNER JOIN $DB_NEOS$t_fx_fax B
+		ON	A.sms_id = B.bill36524_id
+		INNER JOIN $DB_NEOS$t_co_group G
+		ON	G.group_seq = A.group_seq    
+		WHERE  A.group_seq = B.group_seq
+		AND	A.comp_seq = #compSeq# 
+	</select>
+</sqlMap>

@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Dext5Upload>
+  <license>
+    <product_key>15SI-20TH-8RY8-0Z0Z</product_key>
+    <license_key>k7u589hnso8961-AuijVchqSsh3sTJ1WRZU5VoawZwWJkWDeKfACTdHzdPBy498D0</license_key>
+  </license>
+  <setting>
+
+    <mode views="thumbs" desc="views : list - 리스트형태로 보기, thumbs - 썸네일형태로 보기">upload</mode>
+    <width>100%</width>
+    <height>400px</height>
+    <skin_name desc="blue,red,green,orange,purple,silver,brown,darkgray,gold,gray,pink,yellow">blue</skin_name>
+    
+    <show_status_bar>1</show_status_bar>
+    <show_header_bar>1</show_header_bar>
+    <show_button_bar_edit>add,remove,remove_all</show_button_bar_edit>
+    <show_button_bar_view>open,saveandopen,download,download_all,print</show_button_bar_view>
+    <max_one_file_size unit="MB" desc="0: 제한없음" unit_desc="B: byte, KB: kilobyte, MB: megabyte, GB: gigabyte">0</max_one_file_size>
+    <max_total_file_size unit="MB" desc="0: 제한없음" unit_desc="B: byte, KB: kilobyte, MB: megabyte, GB: gigabyte">0</max_total_file_size>
+    <max_total_file_count desc="최대 20개">100</max_total_file_count>
+    <use_logo_image desc="0: logo 숨김, 1: logo 보여줌" logo_path="" logo_ver="1">1</use_logo_image>
+    <hide_list_info dexc="0: 업로드영역 이미지 보여줌, 1: 업로드영역 이미지 숨김">0</hide_list_info>
+    <extension allow_or_limit="0" desc="허용으로 설정:1, 제한으로 설정:0, 확장자는 ','로 구분"></extension>
+    <multi_file_select>1</multi_file_select>
+    <img_preview width="520px" height="480px">1</img_preview>
+    <list_view_dbclick>0</list_view_dbclick>
+    <list_view_drag_and_drop>1</list_view_drag_and_drop>
+    <use_delete_event desc="0 : 리스트 컨트롤에서 파일삭제시 event 발생, 1: event 발생안함">0</use_delete_event>
+    <timeout desc="unit:millisecond">30000</timeout>
+    <automatic_connection desc="기본값 0, 1인 경우 묻지 않고 계속 다운로드/업로드 시도함">0</automatic_connection>
+    <show_folder_view>1</show_folder_view>
+    <default_download_path>#</default_download_path>
+
+    <file_sort sort_field="0" sort_ascdesc="0" auto_sort="1">1</file_sort>
+    
+    <upload>1</upload>
+    <resume_mode>1</resume_mode>
+    <download>1</download>
+
+
+    <hybrid>
+      <window_mode desc="0: Modalless, 1: Modal">1</window_mode>
+      <use_install_guide>1</use_install_guide>
+    </hybrid>
+
+  </setting>
+  <uploader_setting>
+    <develop_langage>JSP</develop_langage>
+    <!--  NET, JSP, PHP  -->
+    <handler_url></handler_url>
+    <async_upload desc="0: 동기, 1: 비동기">1</async_upload>
+    <chunk_size unit="MB" unit_desc="B: byte, KB: kilobyte, MB: megabyte, GB: gigabyte">1</chunk_size>
+    <folder_name_rule desc="년월일폴더는 yyyy 또는 yyyy/mm 등으로 입력, 그 외에는 일반 폴더"></folder_name_rule>
+    <file_name_rule desc="GUID: guid, REALFILENAME: 실제파일명">REALFILENAME</file_name_rule>
+    <upload_method desc="0: raonupload(분할), 1: standard(onProgress)" html4="script or swf" html5="http or ws">1</upload_method>
+    <file_name_rule_ex desc="_ 또는 # 중 택1"></file_name_rule_ex>
+    <size_for_chunk_upload desc="설정한 사이즈 이상의 파일은 분할 전송함">52428800</size_for_chunk_upload>
+
+  </uploader_setting>
+  <add_ext_icon></add_ext_icon>
+</Dext5Upload>

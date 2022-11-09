@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="HolidayManage">
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+    <select id="HolidayManage.selectHolidayList" parameterClass="hashmap" resultClass="egovMap">
+        /* HolidayManage.selectHolidayList - oracle */
+        SELECT TO_CHAR(TO_DATE(A.h_day, 'YYYYMMDD'),'YYYY-MM-DD') AS "hDay"
+             , A.comp_seq
+             , A.title
+             , CASE
+                 WHEN A.comp_seq = '0' THEN GET_CODE_DETAIL_INFO('0', 'option0027', '10', #langCode#)
+                 ELSE FN_GETMULTILANG(#langCode#, B.comp_name_multi)
+               END use_area
+             , GET_CODE_DETAIL_INFO('0', 'COM521', NVL(A.use_yn, 'N'), #langCode#) AS use_yn
+             , A.remark
+             , A.title_en
+             , A.title_jp
+             , A.title_cn
+          FROM $DB_NEOS$t_co_holiday A
+     LEFT JOIN $DB_NEOS$v_t_co_comp_multi B
+            ON A.comp_seq = B.comp_seq
+         WHERE 1=1
+            <isEqual property="userSe" compareValue="ADMIN">
+                <isNotEmpty property="adminCompSeq">
+                    <isEqual property="compSeq" compareValue="0">
+                        AND (A.comp_seq = #adminCompSeq# OR A.comp_seq = #compSeq#)
+                    </isEqual>
+                    <isNotEqual property="compSeq" compareValue="0">
+                        AND A.comp_seq = #compSeq#
+                    </isNotEqual>
+                </isNotEmpty>
+            </isEqual>
+            <isEqual property="userSe" compareValue="MASTER">
+                <isNotEqual property="compSeq" compareValue="0">
+                    AND A.comp_seq = #compSeq#
+                </isNotEqual>
+            </isEqual>
+            <isNotEmpty property="useYn">
+            AND A.use_yn = #useYn#
+            </isNotEmpty>   
+            <isNotEmpty property="txtHiliday">
+            AND title LIKE ('%$txtHiliday$%')
+            </isNotEmpty>
+            <isNotEmpty property="hYear">
+            AND (h_day <![CDATA[>=]]>  #hYear#||'0000' AND h_day <![CDATA[<=]]>  #hYear#||'1231')
+            </isNotEmpty>
+            <isNotEmpty property="flag">
+                <isEqual property="flag" compareValue="1">
+                    AND A.comp_seq = '0'
+                </isEqual>              
+            </isNotEmpty>
+    </select>
+    
+    <select id="HolidayManage.getHolidayInfo" parameterClass="hashmap" resultClass="egovMap">
+        /* HolidayManage.getHolidayInfo - oracle */
+        SELECT TO_CHAR(TO_DATE(h_day, 'YYYYMMDD'),'YYYY-MM-DD') AS "hDay"
+             , comp_seq
+             , title
+             , use_yn
+             , remark
+             , title_en
+             , title_jp
+             , title_cn
+          FROM $DB_NEOS$t_co_holiday
+         WHERE h_day    = #hDay#
+           AND comp_seq = #compSeq#
+    </select>
+    
+    <insert id="HolidayManage.saveHolidayInfo" parameterClass="hashmap">
+        /* HolidayManage.saveHolidayInfo - oracle */
+        MERGE INTO $DB_NEOS$t_co_holiday
+        USING DUAL
+           ON ( h_day  = #hDay#
+          AND comp_seq = #compSeq# )
+         WHEN MATCHED THEN
+              UPDATE
+                 SET title       = #title#
+                   , use_yn      = #useYn#
+                   , remark      = #title#
+                   , modify_seq  = #empSeq#
+                   , modify_date = SYSDATE
+         WHEN NOT MATCHED THEN
+              INSERT
+              ( h_day
+              , comp_seq
+              , title
+              , use_yn
+              , remark
+              , modify_seq
+              , modify_date
+              )
+              VALUES
+              ( #hDay#
+              , #compSeq#
+              , #title#
+              , #useYn#
+              , #title#
+              , #empSeq#
+              , SYSDATE
+              )
+    </insert>
+    
+    <update id="HolidayManage.updateHolidayInfo" parameterClass="hashmap">
+        /* HolidayManage.updateHolidayInfo - oracle */
+        UPDATE $DB_NEOS$t_co_holiday
+           SET h_day       = #hDay#
+             , comp_seq    = #compSeq#
+             , title       = #title#
+             , use_yn      = #useYn#
+             , remark      = #title#
+             , modify_seq  = #empSeq#
+             , modify_date = SYSDATE
+         WHERE h_day       = #hDayOld#
+           AND comp_seq    = #compSeqOld#
+    </update>
+    
+    <delete id="HolidayManage.delHolidayInfo" parameterClass="hashmap">
+        /* HolidayManage.delHolidayInfo - oracle */
+        DELETE
+          FROM $DB_NEOS$t_co_holiday
+         WHERE
+            <isEmpty property="legalFlag">
+                h_day = #hDay#
+                AND comp_seq = #compSeq#
+            </isEmpty>
+            <isNotEmpty property="legalFlag">
+                h_day IN ($hDayInfo$)
+                <isNotEqual property="compSeq" compareValue="0">
+					AND comp_seq = #compSeq#
+				</isNotEqual>	
+            </isNotEmpty>
+    </delete>
+    
+    
+    <select id="HolidayManage.selectLegalHolidayList" parameterClass="hashmap" resultClass="egovMap">
+        /* HolidayManage.selectLegalHolidayList - oracle */
+        SELECT h_month
+             , h_day
+             , lunar_yn
+             , holiday_name
+             , create_seq
+             , create_date
+             , modify_seq
+             , modify_date
+          FROM $DB_NEOS$t_co_calendar
+    </select>
+    
+    
+    <select id="HolidayManage.getHolidayCnt" parameterClass="hashmap" resultClass="int">
+        /* HolidayManage.getHolidayCnt - oracle */
+        SELECT COUNT(*)
+          FROM $DB_NEOS$t_co_holiday
+         WHERE h_day IN ($hDayInfo$)
+        <isEqual property="compSeq" compareValue="0">
+            <isNotEmpty property="compSeqOld">
+                AND comp_seq != #compSeqOld#
+            </isNotEmpty>
+        </isEqual>
+        <isNotEqual property="compSeq" compareValue="0">
+            <isNotEmpty property="compSeqOld">
+                AND comp_seq != #compSeqOld#
+                AND (comp_seq = '0' OR comp_seq = #compSeq#)
+            </isNotEmpty>
+            <isNotEmpty property="compSeq">
+				AND (comp_seq = #compSeq# OR comp_seq = '0')
+			</isNotEmpty>
+        </isNotEqual>
+    </select>
+    
+    
+    <select id="HolidayManage.getHolidayInfoCnt" parameterClass="hashmap" resultClass="int">
+        /* HolidayManage.getHolidayInfoCnt - oracle */
+        SELECT COUNT(*)
+          FROM $DB_NEOS$t_co_holiday
+         WHERE h_day = #hDay#
+            <isNotEqual property="compSeq" compareValue="0">
+                AND (comp_seq = 0 OR comp_seq = #compSeq#)
+            </isNotEqual>  
+    </select>
+    
+    <select id="HolidayManage.getLegalHolidayCnt" parameterClass="hashmap" resultClass="int">
+        /* HolidayManage.getLegalHolidayCnt - oracle */
+        SELECT COUNT(*)
+          FROM $DB_NEOS$t_co_calendar
+         WHERE h_month  = #hMonth#
+           AND h_day    = #hDay#
+           AND lunar_yn = 'Y'
+    </select>
+    
+    <select id="HolidayManage.getHolidayList" parameterClass="hashmap" resultClass="egovMap">
+        /* HolidayManage.getHolidayList - oracle */
+        SELECT h_day
+             , comp_seq
+             , $DB_NEOS$FN_GETLANGUAGENAME(#langCode#, title, title_en, title_jp, title_cn) AS title
+          FROM $DB_NEOS$t_co_holiday
+         WHERE (comp_seq = #compSeq# OR comp_seq = 0)
+           AND use_yn = 'Y'           
+            <isNotEmpty property="startDate">               
+                <isNotEmpty property="endDate">
+                AND (h_day <![CDATA[>=]]>  #startDate#)
+                AND (h_day <![CDATA[<=]]>  #endDate#)
+                </isNotEmpty>
+                <isEmpty property="endDate">
+                AND (h_day <![CDATA[>=]]>  #startDate#)
+                </isEmpty>              
+            </isNotEmpty>
+            <isNotEmpty property="endDate">     
+                <isEmpty property="startDate">
+                AND (h_day <![CDATA[<=]]>  #endDate#)
+                </isEmpty>              
+            </isNotEmpty>
+        ORDER BY h_day
+    </select>
+    
+    <select id="HolidayManage.checkLegalDayYn" parameterClass="hashmap" resultClass="string">
+        /* HolidayManage.checkLegalDayYn - oracle */
+        SELECT CASE
+                 WHEN COUNT(*) > 0 THEN 'Y'
+                 ELSE 'N'
+               END
+          FROM $DB_NEOS$t_co_calendar
+         WHERE h_month      = #hMonth#
+           AND h_day        = #hDay#
+           AND holiday_name = #title#
+    </select>
+    
+    <select id="HolidayManage.getAnniversaryList" parameterClass="hashmap" resultClass="egovMap">
+        /* HolidayManage.getAnniversaryList - oracle */
+        SELECT emp_seq
+             , emp_name
+             , 'b' AS gubun
+             , SUBSTR(bday, 6, 9) AS anniversary 
+          FROM v_user_info
+         WHERE private_yn   = 'Y'
+           AND comp_seq     = #compSeq#
+           AND use_yn       = 'Y'
+           AND SUBSTR(REPLACE(bday, '-', ''), 5, 9) BETWEEN #sDate# AND #eDate#
+           AND work_status  = '999'
+           AND lunar_yn    != 'N'
+           AND main_dept_yn = 'Y'
+        UNION 
+        SELECT a.emp_seq
+             , a.emp_name
+             , 'b' AS gubun
+             , SUBSTR(b.solar_day, 5, 2)||'-'||SUBSTR(b.solar_day, 7, 9) AS anniversary 
+          FROM v_user_info a
+    INNER JOIN t_sc_lunarday b
+            ON #YYYY#||REPLACE(SUBSTR(a.bday,6,9),'-','') = b.lunar_day
+         WHERE a.private_yn   = 'Y'
+           AND a.comp_seq     = #compSeq#
+           AND a.use_yn       = 'Y'
+           AND REPLACE(b.solar_day, '-', '') BETWEEN #YYYY#||#sDate# AND #YYYY#||#eDate#
+           AND a.work_status  = '999'
+           AND a.lunar_yn     = 'N'
+           AND a.main_dept_yn = 'Y'
+        UNION
+        SELECT emp_Seq
+             , emp_name
+             , 'w' AS gubun
+             , SUBSTR(wedding_day, 6, 9) AS anniversary
+          FROM v_user_info
+         WHERE private_yn  = 'Y'
+           AND comp_seq    = #compSeq#
+           AND use_yn      = 'Y'
+           AND wedding_yn  = 'Y'
+           AND SUBSTR(REPLACE(wedding_day, '-', ''), 5, 9) BETWEEN #sDate# AND #eDate#   
+           AND work_status = '999'
+         GROUP BY emp_Seq, emp_name, wedding_day
+    </select>
+    
+</sqlMap>

@@ -1,0 +1,87 @@
+@charset "utf-8";
+/**************************************************
+   ONEFFICE MOBILE HYBRID CSS
+**************************************************/
+
+@media only screen and (min-width: 430px) {
+	.folder_div {width: 33.33%;}
+	.my_doc .doc_div {width: calc(33.33% - 8px);}
+	.con.list_view .my_doc .doc_div {height: 64px !important;}
+	
+	#one_scty, #one_share, #one_template, #one_custom_page, #one_comment {width:100% !important;}
+}
+
+@media only screen and (min-width: 712px) {
+	.template_doc .template_list {max-width: calc(100% - 60px);}
+	.template_doc .tit {max-width: calc(100% - 60px); height: 18px; margin: 18px auto 10px;}
+	.template_doc li {margin: 0px 5px;}
+	.template_doc li .thumb {width: 100%; height: auto;}
+	
+	.folder_div {width: 25%; float: left;}
+	.folder_div_in {margin: 5px 5px;}
+	.my_doc {max-width: calc(100% - 60px);}
+	.my_doc .doc_div {width: calc(25% - 10px); margin: 5px 5px;}
+	.action_div {width: 300px; top: 56px; left: 100%; display: table; opacity: 0;}
+    .action_div.on {left: calc(100% - 310px); opacity: 1;}
+    .homeTitle {margin:0 auto; width: calc(100% - 300px); text-align: center; margin-left: 100px;}
+	
+	#id_insertsheet_scroll {height: auto !important; max-height: 437px;}
+	
+	#one_scty, #one_template {width:424px !important; height: 502px !important; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 8px; min-height: 400px !important; max-height: 650px !important;}
+	#one_comment {width:612px !important; height: 80% !important; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 8px; min-height: 400px !important; max-height: 650px !important;}
+	#one_docinfo {width:632px !important; height: 80% !important; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 8px; min-height: 400px !important; max-height: 650px !important;}
+	#one_docinfo .docinfoContainer .docTxtInfo .docTxtRow{display: table; width: 50%; height:auto; margin-top:15px; margin-bottom:15px; float:left;}
+	#one_docinfo .docinfoContainer .docTxtInfo .docTxtRow.doctitle{display: table; width: 100%; height:auto; margin-top:15px; margin-bottom:15px; float:left;}
+	#one_docinfo .docinfoContainer .docTxtInfo{background-color: #eee;height:150px;padding: 40px;}
+	#one_docinfo .docinfoContainer .docThumb{height:calc(100% - 220px);	position: relative;}
+	#one_docinfo .docinfoContainer .docTxtInfo .docTxtRow .docTxtContents{	width:calc(100% - 80px); float:left; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; font-weight: bold; font-size:15px;}
+    #one_share {width: 560px !important; height: 540px !important; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 8px; min-height: 400px !important; max-height: 650px !important;}
+	#one_share .authority .set {display: inline-block; padding-right: 20px;}
+	#one_share .authority .message {display: inline-block;}
+	
+	#one_custom_page {width: 424px !important; height: 480px !important; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 8px; min-height: 480px !important; max-height: 650px !important;}
+	
+	#id_insertsheet_container { overflow: hidden;}
+	#idx_menu_iscroll{height:450px !important;}
+	
+	
+	.topInfoContainer .topInfoTxt {
+		padding-top:5px;
+		padding-bottom:5px;
+		line-height: 35px;
+		font-size:15px;
+	}
+	.topInfoContainer img{
+		position:absolute;
+		top:10px;
+		right:5px;
+		float:right;
+		width:20px;
+	}
+}
+
+@media only screen and (min-width: 1024px) {
+	.template_doc .template_list {max-width: calc(100% - 100px);}
+	.template_doc .tit {max-width: calc(100% - 100px);}
+	
+	.folder_div {width: 20%;}
+	.my_doc .doc_div {width: calc(20% - 10px);}
+	.my_doc {max-width: calc(100% - 100px);}
+	
+	#id_insertsheet_container {overflow: hidden;}
+	#idx_menu_iscroll {height:450px !important;}
+	
+	.topInfoContainer .topInfoTxt {
+		padding-top:5px;
+		padding-bottom:5px;
+		line-height: 35px;
+		font-size:15px;
+	}
+	.topInfoContainer img{
+		position:absolute;
+		top:10px;
+		right:5px;
+		float:right;
+		width:20px;
+	}
+}

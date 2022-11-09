@@ -1,0 +1,22 @@
+{
+    "ITEMS": {
+        "general_text": "일반 input",
+        "number": 12345,
+        "currency": 67890,
+
+        "k1": "과세매입",
+        "h1": 0,
+        "i1": 30000003,
+        "m1": "총무부",
+
+        "debit1": 3000000,
+        "debit2": 30000003,
+        "debit3": 3000000,
+        "debit_sum": 33000003,
+
+        "credit1": "",
+        "credit2": "",
+        "credit3": "33000003",
+        "credit_sum": "33000003"
+    }
+}

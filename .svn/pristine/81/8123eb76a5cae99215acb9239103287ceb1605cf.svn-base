@@ -1,0 +1,23 @@
+{
+    "ITEMS": {
+        "hyperlink_test1": {
+            "type": "hyperlink",
+            "href": "https://www.naver.com",
+            "title": "네이버"
+        },
+        "hyperlink_test2": {
+            "type": "hyperlink",
+            "href": "https://www.google.com/",
+            "title": "구글",
+            "data-dze-jstype": "win_open"
+        },
+        "hyperlink_test3": {
+            "type": "hyperlink_image",
+            "href": "https://www.naver.com/",
+            "title": "네이버",
+            "style": "height:20px;",
+            "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Naver_Logotype.svg/1024px-Naver_Logotype.svg.png",
+            "data-dze-jstype": "win_open"
+        }
+    }
+}

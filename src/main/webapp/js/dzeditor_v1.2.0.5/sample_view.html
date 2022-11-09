@@ -1,0 +1,60 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+<title>더존웹에디터 - 글 보기 샘플</title>
+
+<!-- Start : 더존웹에디터에서 글 작성시와 동일한 style 설정 처리부분 -->
+<!-- 
+	더존웹에디터 기본글꼴을 돋움, 기본 글크기를 12px(9pt) 로 설정하였다면
+	View 페이지에서도 작성된 곳의 보여주는 부분을 동일하게 설정
+-->
+<style type="text/css">
+/*<![CDATA[*/
+#divView			{font-family:돋움;font-size:12px;color:#000000;line-height:normal;text-align:left;overflow-x:auto;word-wrap:break-word;}
+#divView TD			{font-family:돋움;font-size:12px;color:#000000;line-height:normal;}
+
+#divView P			{margin-top:0px;margin-bottom:0px;}/* IE 에서 줄바꿈(엔터친 경우) style 설정 */
+#divView BLOCKQUOTE	{margin-top:0px;margin-bottom:0px;}/* IE 에서 들여쓰기 style 설정 */
+/*]]>*/
+</style>
+<!-- End : 더존웹에디터에서 글 작성시와 동일한 style 설정 처리부분 -->
+
+
+<script type="text/javascript">
+function fnLoadContent() {
+	// 더존웹에디터에서 작성된 내용을 전달
+	var strContent = document.frmView["txtaContent"].value;
+
+	var objView = document.getElementById("divView");
+	objView.innerHTML = strContent;
+}
+</script>
+
+<script type="text/javascript">
+if(window.attachEvent) {
+	window.attachEvent("onload", fnLoadContent);
+} else if(window.addEventListener) {
+	window.addEventListener("load", fnLoadContent, false);
+}
+</script>
+</head>
+
+<body>
+
+<!-- 더존웹에디터에서 작성된 내용을 읽어온 후 내용을 가지고 있는 Form Start -->
+<form name="frmView" method="post" action="설정안함" onsubmit="return false;">
+	<textarea name="txtaContent" rows="0" cols="0" style="display:none">DB에서 읽어온 글 내용</textarea>
+</form>
+<!-- 더존웹에디터에서 작성된 내용을 읽어온 후 내용을 가지고 있는 Form End -->
+
+<br />
+
+<!-- 더존웹에디터에서 작성된 내용을 보여주는 div Start -->
+<div id="divView" style="width:670px;border:1px solid #c4cad1;padding:10px;margin:auto;"></div>
+<!-- 더존웹에디터에서 작성된 내용을 보여주는 div End -->
+
+</body>
+</html>

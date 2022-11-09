@@ -1,0 +1,369 @@
+@charset "utf-8";
+
+@font-face {
+    font-family: "[더존] 제목체 30";
+    font-display: fallback;
+    src:
+        local("DOUZONETitle30"),
+        local("DOUZONE Title 30"),
+        local("[더존] 제목체 30"),
+        url(../font/DOUZONETitle30.woff) format('woff');
+}
+@font-face {
+    font-family: "[더존] 제목체 50";
+    font-display: fallback;
+    src:
+        local("DOUZONETitle50"),
+        local("DOUZONE Title 50"),
+        local("[더존] 제목체 50"),
+        url(../font/DOUZONETitle50.woff) format('woff');
+}
+@font-face {
+    font-family: "[더존] 본문체 10";
+    font-display: fallback;
+    src:
+        local("DOUZONEText10"),
+        local("DOUZONE Text 10"),
+        local("[더존] 본문체 10"),
+        url(../font/DOUZONEText10.woff) format('woff');
+}
+@font-face {
+    font-family: "[더존] 본문체 30";
+    font-display: fallback;
+    src:
+        local("DOUZONEText30"),
+        local("DOUZONE Text 30"),
+        local("[더존] 본문체 30"),
+        url(../font/DOUZONEText30.woff) format('woff');
+}
+@font-face {
+    font-family: "[더존] 본문체 50";
+    font-display: fallback;
+    src:
+        local("DOUZONEText50"),
+        local("DOUZONE Text 50"),
+        local("[더존] 본문체 50"),
+        url(../font/DOUZONEText50.woff) format('woff');
+}
+
+@font-face {    /* wehago */
+    font-family: 'douzone';
+    src:
+        local("DOUZONEText10"),
+        local("DOUZONE Text 10"),
+        local("[더존] 본문체 10"),
+        url(../font/DOUZONEText10.woff) format('woff');
+    font-weight: normal;
+    font-display: fallback;
+}
+
+@font-face {	/* wehago */
+    font-family: 'douzone';
+    src:
+        local("DOUZONEText30"),
+        local("DOUZONE Text 30"),
+        local("[더존] 본문체 30"),
+        url(../font/DOUZONEText30.woff) format('woff');
+    font-weight: bold;
+    font-display: fallback;
+}
+
+.MAIN_EDIT_AREA_CONTAINER_BOX_CUSTOM_STYLE {
+    -ms-overflow-style: none;
+}
+
+.MAIN_EDIT_AREA_CONTAINER_BOX_CUSTOM_STYLE::-webkit-scrollbar
+{
+    display: none;
+}
+
+#MAIN_EDIT_AREA_CONTAINER_CUSTOM_SCROLL {
+    position: absolute;
+    width: 10px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+#MAIN_EDIT_AREA_CONTAINER_CUSTOM_HORIZONTAL_SCROLL {
+    position: absolute;
+    height: 15px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.editorContainer {
+	width: 100%;
+	height: 100%;
+	border: 0px;
+	opacity: 0;
+}
+.editor_frame_nothing {
+	width: 100%;
+	height: 100%;
+
+	border: #c4cad1 1px solid;
+}
+.editor_source_frame_padding {
+	width: 10px;
+	height: 100%;
+
+	border-left: #c4cad1 0px solid;
+	border-top: #c4cad1 0px solid;
+	border-right: #c4cad1 0px solid;
+	border-bottom: #c4cad1 0px solid;
+
+	background-color: #FFFFFF;
+}
+.editor_source_frame_main {
+	border-left: #869099 1px solid;
+	border-top: #869099 0px solid;
+	border-right: #869099 1px solid;
+	border-bottom: #869099 0px solid;
+}
+.editor_source_frame_padding_nothing {
+	width: 10px;
+	height: 100%;
+
+	border-left: #869099 1px solid;
+	border-top: #869099 1px solid;
+	border-right: #869099 0px solid;
+	border-bottom: #869099 0px solid;
+
+	background-color: #FFFFFF;
+}
+.editor_source_frame_main_nothing {
+	border-left: #869099 0px solid;
+	border-top: #869099 1px solid;
+	border-right: #869099 1px solid;
+	border-bottom: #869099 0px solid;
+}
+
+.editor_source_frame {
+	width: 100%;
+	height: 100%;
+
+	padding-left: 0px;
+	padding-top: 10px;
+	padding-right: 0px;
+	padding-bottom: 10px;
+
+	border: 0px;
+
+	word-break:break-all;
+	font-family:굴림;
+	font-size:9pt;
+	color:#000000;
+	background-color: #FFFFFF;
+
+	/* 크롬에서 TEXTAREA 에 리사이즈 핸들 생기는거 제거*/
+	resize: none; 
+}
+/* 크롬에서 TEXTAREA 에 테두리 생기는거 제거*/
+.editor_source_frame:focus {
+    outline: none;
+}
+
+.editor_source_frame_nothing {
+	width: 100%;
+	height: 100%;
+
+	padding-left: 0px;
+	padding-top: 10px;
+	padding-right: 0px;
+	padding-bottom: 10px;
+
+	border: 0px;
+
+	word-break:break-all;
+	font-family:굴림;
+	font-size:9pt;
+	color:#000000;
+	background-color: #F7F8FD;
+}
+
+.tbToolbarSet
+{
+	width: 100%;
+	background-color: #F7F8FD;
+	border-left: 1px solid buttonshadow; 
+	border-top: 1px solid buttonshadow;
+	border-right: 1px solid buttonshadow;
+	border-bottom: 1px solid buttonshadow;
+}
+
+.tbButton_Image
+{
+	overflow: hidden;
+	width: 16px;
+	height: 16px;
+	margin: 2px;
+	background-repeat: no-repeat;
+}
+.tbButton_Image img
+{
+	width: 16px;
+	height: 16px;
+	border: 0;
+}
+
+.tbComboBox_Caption
+{
+	font-size: 9pt;
+	color: #555555;
+	font-family: 돋움;
+
+	cursor: default;
+	overflow: visible;
+	padding-top: 3px;
+	padding-right: 5px;
+	padding-left: 5px;
+	opacity: 0.75;
+	filter: alpha(opacity=90);
+	height: 16px;
+}
+.tbComboBox_AreaLabel_1
+{
+	font-size: 9pt;
+	color: #555555;
+	font-family: Arial;
+	white-space: nowrap;
+	padding-top: 1px;
+	width: 100%;
+	cursor: default;
+	background-color: #ffffff;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+.tbComboBox_AreaLabel_2
+{
+	font-size: 9pt;
+	color: #555555;
+	font-family: Arial;
+
+	white-space: nowrap;
+	padding-top: 2px;
+	padding-left: 2px;
+	width: 100%;
+	cursor: default;
+	background-color: #ffffff;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+.tbComboBox_AreaArrow
+{
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_buttonarrow.gif);
+	border-left: 0;
+	height: 16px;
+	background-repeat: no-repeat;
+}
+.tbComboBox_Item_Select
+{
+	background-position: center center;
+	background-image: url(../image/toolbar/toolbar_arrow_right.gif);
+	width: 14px;
+	background-repeat: no-repeat;
+}
+
+.tbTabSeparator
+{
+	background-color: #316AC5;
+	margin: 2px;
+	width: 1px;
+	height: 16px;
+}
+.tbTabButton_Image
+{
+	width: 13px;
+	height: 13px;
+}
+.tbTabButton_Image img
+{
+	width: 13px;
+	height: 13px;
+	border: 0;
+}
+
+.tbSizeBoxBG
+{
+	position: absolute;
+	top: 5px;
+	left: 5px;
+	background-color: #5591c3;
+}
+.tbSizeBoxWindow
+{
+	z-index: 20302;
+	position: absolute;
+	background-color: transparent;
+}
+.tbSizeBoxStatusText
+{
+	font-size: 9pt;
+	color: #00000F;
+	font-family: 굴림;
+}
+
+.tbResizeLineContainer
+{
+	z-index:20061;
+	position:absolute;
+	top:-100;
+	left:-100;
+	width:1;
+	height:1;
+}
+.tbResizeLine
+{
+	width:100%;
+	height:100%;
+	padding: 1px;
+	border: #336699 1px dashed;
+}
+
+.tbResizeControl
+{
+	width: 7px;
+	height: 7px;
+	position: absolute;
+	z-index: 20008;
+	border: 1px solid #7F7F7F;
+	background-color: #FFFFFF;
+	cursor: nw-resize;
+}
+
+.tbRowgroupBtn
+{
+	width: 20px;
+	height: 20px;
+	margin-left: 3px;
+	margin-top: 3px;
+	cursor: pointer;
+}
+
+.tbResizeHGuideline
+{
+	left: 0px;
+	top: 0px;
+	width: 100%;
+	height: 1px;
+	position: fixed;
+	border-bottom: #336699 1px dashed;
+}
+
+.tbResizeVGuideline
+{
+	left: 0px;
+	top: 0px;
+	width: 1px;
+	height: 100%;
+	position: fixed;
+	border-right: #336699 1px dashed;
+}
+
+.editor_print_cover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: rgb(242, 242, 242);
+}

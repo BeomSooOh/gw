@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ProjectManageDAO">
+
+    <typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+    
+    <select id="PartnerManageDAO.selectPartnerList_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+		SELECT 
+			count(a.cd_partner) as TOTAL_COUNT
+		FROM 
+			t_pr_partner_main a left outer join t_pr_partner_detail b on a.cd_partner = b.cd_partner
+		WHERE
+			a.comp_seq = #compSeq#
+			
+			<isNotEmpty property="sKeyword">
+				AND (a.cd_partner LIKE '%$sKeyword$%' OR a.ln_partner LIKE '%$sKeyword$%')
+			</isNotEmpty>
+			
+			<isNotEmpty property="clsPartner">
+				AND a.cls_partner = #clsPartner#
+			</isNotEmpty>
+			<isNotEmpty property="useYn">
+				AND b.use_yn = #useYn#
+			</isNotEmpty>
+			
+	</select>
+	
+	<select id="PartnerManageDAO.selectPartnerList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT 
+			a.cd_partner, 
+			a.ln_partner,
+			a.no_company,
+			get_code_detail_info('0', 'COM516', a.cls_partner, #langCode#) AS cls_partner_nm,
+			get_code_detail_info('0', 'COM514', a.use_yn, #langCode#) AS use_yn_nm,
+			get_code_detail_info('0', 'COM515', a.sv_type, #langCode#) AS sv_type_nm,
+			a.flag_delete
+		FROM 
+			t_pr_partner_main a
+		WHERE 
+			a.comp_seq = #compSeq#
+			
+			<isNotEmpty property="sKeyword">
+				AND (a.cd_partner LIKE '%$sKeyword$%' OR a.ln_partner LIKE '%$sKeyword$%')
+			</isNotEmpty>
+			
+			<isNotEmpty property="clsPartner">
+				AND a.cls_partner = #clsPartner#
+			</isNotEmpty>
+			<isNotEmpty property="useYn">
+				AND a.use_yn = #useYn#
+			</isNotEmpty>
+			
+			ORDER BY a.create_date desc
+			
+			LIMIT $startNum$, $endNum$
+	</select>
+	
+	<select id="PartnerManageDAO.selectPartnerInfo" parameterClass="hashmap" resultClass="egovMap">
+		SELECT 
+			a.cd_partner ,
+			a.cd_company ,
+			a.ln_partner ,
+			a.no_company ,
+			a.cls_partner,
+			a.nm_ceo     ,
+			a.tp_job     ,
+			a.cls_job    ,
+			a.comp_seq   ,
+			a.sv_type    ,
+			a.use_yn     ,
+			a.no_tel1    ,
+			a.no_fax1    ,
+			a.no_post1   ,
+			a.dc_ads1_h  ,
+			a.dc_ads1_d  ,
+			a.flag_delete
+		FROM  
+			t_pr_partner_main a
+		WHERE
+			a.cd_partner = #cdPartner#
+	</select>
+	
+	
+	<select id="PartnerManageDAO.selectPartnerDetailList_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+		SELECT 
+			count(a.cd_partner) as TOTAL_COUNT
+		FROM 
+			t_pr_partner_detail a
+		WHERE
+			a.cd_partner = #cdPartner#
+			<isNotEmpty property="noSeq">
+			AND
+				a.no_seq = #noSEq#
+			</isNotEmpty>
+			
+	</select>
+	
+	<select id="PartnerManageDAO.selectPartnerDetailList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT 
+			a.cd_partner ,
+			a.no_seq     ,
+			a.cd_company ,
+			a.nm_ptr     ,
+			a.no_fax     ,
+			a.e_mail     ,
+			a.no_tel     ,
+			a.no_hp      ,
+			a.create_seq ,
+			a.create_date,
+			a.modify_seq ,
+			a.modify_date
+		FROM  
+			t_pr_partner_detail a
+		WHERE
+			a.cd_partner = #cdPartner#
+			<isNotEmpty property="noSeq">
+			AND
+				a.no_seq = #noSEq#
+			</isNotEmpty>
+		
+		ORDER BY a.no_seq
+		<isNotEmpty property="startNum">	
+		LIMIT $startNum$, $endNum$
+		</isNotEmpty>	
+	</select>
+	
+	<insert id="PartnerManageDAO.insertPartnerMain" parameterClass="hashmap">
+		insert into t_pr_partner_main 
+		SET
+			cd_partner    = #cdPartner#,
+			cd_company    = #cdCompany#,
+			ln_partner    = #lnPartner#,
+			no_company    = #noCompany#,
+			cls_partner   = #clsPartner#,
+			nm_ceo        = #nmCeo#,
+			tp_job        = #tpJob#,
+			cls_job       = #clsJob#,
+			comp_seq      = #compSeq#,
+			sv_type       = #svType#,
+			no_tel1       = #noTel1#,
+			no_fax1       = #noFax1#,
+			no_post1      = #noPost1#,
+			dc_ads1_h     = #dcAds1H#,
+			dc_ads1_d     = #dcAds1D#,
+			use_yn        = #useYn#,
+			create_seq =   #editSeq#,  
+			create_date = now(),                        
+			modify_seq =  #editSeq#,                    
+			modify_date = now()                     
+		ON DUPLICATE KEY UPDATE
+			ln_partner    = #lnPartner#,
+			cls_partner   = #clsPartner#,
+			nm_ceo        = #nmCeo#,
+			tp_job        = #tpJob#,
+			cls_job       = #clsJob#,
+			comp_seq      = #compSeq#,
+			sv_type       = #svType#,
+			no_tel1       = #noTel1#,
+			no_fax1       = #noFax1#,
+			no_post1      = #noPost1#,
+			dc_ads1_h     = #dcAds1H#,
+			dc_ads1_d     = #dcAds1D#,
+			use_yn        = #useYn#,
+			modify_seq =  #editSeq#,                    
+			modify_date = now()      
+	</insert>
+	
+	<insert id="PartnerManageDAO.insertPartnerDetail" parameterClass="hashmap">
+		insert into t_pr_partner_detail 
+		SET
+				cd_partner   = #cdPartner#,
+				no_seq		 = #noSeq#,
+				cd_company   = #cdCompany#,
+				nm_ptr       = #nmPtr#,
+				no_fax       = #noFax#,
+				e_mail       = #eMail#,
+				no_tel       = #noTel#,
+				no_hp        = #noHp#,
+				create_seq = #editSeq#  ,  
+				create_date = now()      ,  
+				modify_seq = #editSeq#  ,  
+				modify_date = now()         
+		ON DUPLICATE KEY UPDATE
+				nm_ptr       = #nmPtr#,
+				no_fax       = #noFax#,
+				e_mail       = #eMail#,
+				no_tel       = #noTel#,
+				no_hp        = #noHp#,
+				modify_seq = #editSeq#  ,  
+				modify_date = now()        
+	</insert>
+	
+	<delete id="PartnerManageDAO.deletePartnerMain" parameterClass="hashmap">
+		delete
+		from 
+			t_pr_partner_main
+		where
+			<isNotEmpty property="cdPartnerList">
+				cd_partner IN ($cdPartnerList$)
+			</isNotEmpty>
+			<isEmpty property="cdPartnerList">
+				cd_partner = #cdPartner#
+			</isEmpty>
+	</delete>
+	
+	<delete id="PartnerManageDAO.deletePartnerDetail" parameterClass="hashmap">
+		delete
+		from 
+			t_pr_partner_detail
+		where
+			cd_partner IN (
+				select cd_partner
+				from 
+					t_pr_partner_main
+				where
+					1=1
+				<isNotEmpty property="cdPartnerList">
+					and cd_partner IN ($cdPartnerList$)
+				</isNotEmpty>
+				<isEmpty property="cdPartnerList">
+					and cd_partner = #cdPartner#
+				</isEmpty>
+			)
+	</delete>
+	
+	<select id="PartnerManageDAO.selectErpPartner" parameterClass="hashmap" resultClass="egovMap">
+		select 
+			*
+		from t_pr_partner_main 
+		where
+			erp_cd_partner = #erpCdPartner#
+	</select>
+	
+	<update id="PartnerManageDAO.updatePartnerMainStatus" parameterClass="egovMap">
+		UPDATE t_pr_partner_main 
+		SET
+			erp_cd_partner = #erpCdPartner#, 
+			flag_delete = #flagDelete# , 
+			modify_seq = #editSeq# , 
+			modify_date = now()
+		WHERE
+			cd_partner = #cdPartner#
+	</update>
+	
+	<update id="PartnerManageDAO.updatePartnerMainFromErp" parameterClass="egovMap">
+		UPDATE t_pr_partner_main 
+		SET
+			ln_partner = #lnPartner#,
+			no_company = #noCompany#,
+			comp_seq = (SELECT comp_seq FROM t_co_erp_comp WHERE erp_comp_seq = #cdCompany#),
+			cls_partner= #clsPartner#,
+			nm_ceo     = #nmCeo#,
+			tp_job     = #tpJob#,
+			cls_job    = #clsJob#,
+			no_tel1    = #noTel1#,
+			no_fax1    = #noFax1#,
+			no_post1   = #noPost1#,
+			dc_ads1_h  = #dcAds1H#,
+			dc_ads1_d  = #dcAds1D#,
+			modify_seq = #editSeq#, 
+			modify_date = now()
+		WHERE
+			erp_cd_partner = #erpCdPartner#
+			AND cd_company = #cdCompany#
+	</update>
+	
+	
+	<insert id="PartnerManageDAO.insertPartnerMainFromErp" parameterClass="egovMap">
+		insert into t_pr_partner_main 
+		(
+			cd_partner, 
+			cd_company, 
+			ln_partner, 
+			no_company, 
+			cls_partner, 
+			nm_ceo, 
+			tp_job, 
+			cls_job, 
+			sv_type, 
+			erp_cd_partner, 
+			comp_seq,
+			no_tel1, 
+			no_fax1, 
+			no_post1, 
+			dc_ads1_h, 
+			dc_ads1_d, 
+			use_yn, 
+			flag_delete, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date
+		)
+		values
+		(
+			#cdPartner#, 
+			#cdCompany#, 
+			#lnPartner#, 
+			#noCompany#, 
+			#clsPartner#, 
+			#nmCeo#, 
+			#tpJob#, 
+			#clsJob#, 
+			#svType#, 
+			#erpCdPartner#, 
+			(SELECT comp_seq FROM t_co_erp_comp WHERE erp_comp_seq = #cdCompany#),
+			#noTel1#, 
+			#noFax1#, 
+			#noPost1#, 
+			#dcAds1H#, 
+			#dcAds1D#, 
+			'Y', 
+			#flagDelete#, 
+			#editSeq#, 
+			now(), 
+			#editSeq#, 
+			now()
+		);
+	</insert>
+	
+	<insert id="PartnerManageDAO.insertPartnerDetailFromErp" parameterClass="egovMap">
+	
+		insert into t_pr_partner_detail 
+			(
+				cd_partner, 
+				no_seq, 
+				cd_company, 
+				nm_ptr, 
+				no_fax, 
+				e_mail, 
+				no_tel, 
+				no_hp, 
+				create_seq, 
+				create_date, 
+				modify_seq, 
+				modify_date
+			)
+			values
+			(
+				#cdPartner#, 
+				#noSeq#, 
+				(SELECT comp_seq FROM t_co_erp_comp WHERE erp_comp_seq = #cdCompany#), 
+				#nmPtr#, 
+				#noFax#, 
+				#eMail#, 
+				#noTel#, 
+				#noHp#, 
+				#editSeq#, 
+				now(), 
+				#editSeq#, 
+				now()
+			);
+	</insert>
+	
+	<update id="PartnerManageDAO.updatePartnerRestore" parameterClass="hashmap">
+		UPDATE t_pr_partner_main 
+		SET
+			flag_delete = #flagDelete# , 
+			sv_type = #svType# , 
+			modify_seq = #editSeq# , 
+			modify_date = now()
+		WHERE
+			cd_partner = #cdPartner#
+			AND cd_company = #cdCompany#
+	
+	</update>
+	       
+</sqlMap>

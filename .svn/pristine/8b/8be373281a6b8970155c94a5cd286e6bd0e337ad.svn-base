@@ -1,0 +1,208 @@
+<meta http-equiv="Content-Language" content="ko" />
+<center>
+	<table width="100%" bordercolor="black" style="font-size:9pt;border-collapse:collapse;" cellspacing="0" cellpadding="0">
+		<colgroup>    
+		<col width="20%" />    
+		<col width="80%" />
+		</colgroup>
+		<tbody>
+			<tr height="25">
+				<td align="left" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;" bgcolor="#eeece1" colspan="2">
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ◈ 결재 라인</p>
+				</td>
+			</tr>
+			<tr height="25">
+				<td align="center" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;" bgcolor="#eeece1">
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">결&nbsp;&nbsp; 재</p>
+				</td>
+				<td align="left" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;">
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">&nbsp;&nbsp; 신청자 - 팀장 - 부서장</p>
+				</td>
+			</tr>
+			<tr height="25">
+				<td align="center" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;" bgcolor="#eeece1">
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">합&nbsp;&nbsp; 의</p>
+				</td>
+				<td align="left" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;">
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">&nbsp;&nbsp;&nbsp;장슬기&nbsp;대리 - 황재승 부장 - 오제현 상무</p>
+				</td>
+			</tr>
+			<tr height="25">
+				<td align="center" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;" bgcolor="#eeece1">
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">수신 및 참조</p>
+				</td>
+				<td align="left" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;">
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">&nbsp;&nbsp; 정보보안팀, IDC운영팀 네트워크 파트</p>
+				</td>
+			</tr>
+			<tr height="10">
+				<td align="center" style="border:0px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;">
+					<p style="color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;margin-top:0px;margin-bottom:0px;"><br /></p>
+				</td>
+				<td align="center" style="border:0px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;">
+					<p style="color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;margin-top:0px;margin-bottom:0px;"><br /></p>
+				</td>
+			</tr>
+			<tr height="25">
+				<td align="left" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;" bgcolor="#eeece1" colspan="2">
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ◈ 신청 시 유의사항 (신속한 업무처리를 위해서 하기 내용을 꼭 확인바랍니다.)</b></p>
+				</td>
+			</tr>
+			<tr height="240">
+				<td align="left" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:150%;padding-left:3px;font-family:돋움체;font-size:10pt;" colspan="2">
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">■ 신청기안의 상세한 작성 방법은 그룹웨어 게시판 중 정보보호공지에 게시 된 샘플 파일을 참고하시기 바랍니다.</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><br /></p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">■ 유의사항</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"> 1) 방화벽 정책 작업은 신청기안의 결재와 합의가 완료 되어야 하며 그룹사 정책에 의해 <b>[18시 이후] </b>적용됩니다.</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"> 2) 신청한 정책의 합의 및 적용은 최소 3일 이상의 기간이 소요됩니다.</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"> 3) 만료된 정책을 연장신청 할 경우에는 최초 상신한 기안서를 첨부하여야 합니다. (※적용 된 신청 내용을 변경 할 경우도 동일)</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"> 4) 신청 내용은 기안문서양식에 직접 입력하여야 하며 엑셀 및 기타 파일로 작성하여 첨부 할 수 없습니다.</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"> 5) 정책 기간 만료 전 이메일로 안내 메일이 발송되오니 “<b>기간만료안내 수신 이메일</b>”을 필히 기입 하여야 합니다. (※ 최대 3개 지정 가능)</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><br /></p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">■ 정책 적용기간</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"> 1) PC에서 서버의 접근은 최대 <b>[12개월]</b>까지만 사용 가능</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"> 2) 개발 및 데모/테스트 서버 접근 신청은 최대 <b>[12개월]</b>까지만 사용 가능</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"> 3) 신규 서비스 OPEN을 위한 정책 요청 시, [<b>서비스 종료 시</b>]까지 사용 가능 (※ 서비스 종료 후에는 정보보안팀에 통보 후 정책 삭제)</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><br /></p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">■ 포트 사용 제한</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"> 1) 모든 어플리케이션의 초기 Default Port는 임의의 번호로 변경(※ 원격 데스크탑, SFTP, SSH, MSSQL, Oracle, MySQL 등)</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"> 2) FTP, NETBIOS, Telnet 등 보안상 취약한 Protocol 또는 어플리케이션은 사용 할 수 없음</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><br /></p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">■ 요청서/동의서/서약서 관련 안내(양식은 위 다운로드 항목 참조)</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"> 1) 임직원/협력/외주직원이 고객사 서버 접속 시 ＂<b>고객사서버 원격접근 동의서</b>＂를 고객에게 확인 받아 첨부</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"> 2) 고객사 요청에 의한 고객사 서버의 방화벽 정책 신청시에는 고객으로부터 ＂<b>고객사서버 방화벽정책 적용요청서</b>＂를 작성 받아 첨부</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">     &nbsp;&nbsp;
+     (※ 고객사에서 해당 고객사 서버로 직접 접속하기 위한 요청 포함)</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"> 3) 외주 및 협력업체 직원이 더존 및 고객사 서버접근 신청시에는 협력사 접속인원이 작성한＂<b>정보보호 서약서</b>＂를 첨부</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><br /></p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">■ SSL VPN 접속 안내</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">  ※ SSL VPN은 강촌캠퍼스를 제외한 장소에서 사용자(임직원/협력업체)가 D-CLUD센터에 설치된 서버에 접속하기 위해 제공되는 원격보안수단입니다.</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"> 1) SSL VPN 사용 신청시에는 <b>접속지역/소속/성명/VPN ID(그룹웨어 계정)</b> 기재 필수(ex. 강남스마트워크센터/더존비즈온/홍길동/gdhong)</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"> 2) SSL VPN Client 설치 가이드 및 사용법은 SSL VPN 계정 생성 후 쪽지를 통해 별도 안내됩니다.</p>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	<table width="100%" bordercolor="black" style="font-size:9pt;border-collapse:collapse;" cellspacing="0" cellpadding="0">
+		<colgroup>    
+		<col width="10%" />    
+		<col width="15%" />    
+		<col width="10%" />    
+		<col width="15%" />    
+		<col width="10%" />    
+		<col width="15%" />    
+		<col width="10%" />    
+		<col width="15%" />
+		</colgroup>
+		<tbody>
+			<tr height="10">
+				<td align="center" style="border:0px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;">
+					<p style="color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;margin-top:0px;margin-bottom:0px;"><br /></p>
+				</td>
+				<td align="center" style="border:0px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;">
+					<p style="color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;margin-top:0px;margin-bottom:0px;"><br /></p>
+				</td>
+				<td align="center" style="border:0px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;">
+					<p style="color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;margin-top:0px;margin-bottom:0px;"><br /></p>
+				</td>
+				<td align="center" style="border:0px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;">
+					<p style="color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;margin-top:0px;margin-bottom:0px;"><br /></p>
+				</td>
+				<td align="center" style="border:0px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;">
+					<p style="color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;margin-top:0px;margin-bottom:0px;"><br /></p>
+				</td>
+				<td align="center" style="border:0px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;">
+					<p style="color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;margin-top:0px;margin-bottom:0px;"><br /></p>
+				</td>
+				<td align="center" style="border:0px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;">
+					<p style="color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;margin-top:0px;margin-bottom:0px;"><br /></p>
+				</td>
+				<td align="center" style="border:0px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;">
+					<p style="color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;margin-top:0px;margin-bottom:0px;"><br /></p>
+				</td>
+			</tr>
+			<tr height="25">
+				<td align="left" style="border:0px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;" colspan="8">
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><b>&nbsp;&nbsp; 1. 방화벽정책 신청</b></p>
+				</td>
+			</tr>
+			<tr height="25">
+				<td align="left" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;" bgcolor="#eeece1" colspan="8">
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ◈ 신청자 정보</p>
+				</td>
+			</tr>
+			<tr height="25">
+				<td align="center" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;" bgcolor="#eeece1">
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">성 명</p>
+				</td>
+				<td align="center" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;">
+					<p style="color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;margin-top:0px;margin-bottom:0px;"><input type="text" class="dze_external_data_area" readonly="" size="10" style="font-family:굴림;font-size:9pt;" value="성명" mapping_key="name" /><br /></p>
+				</td>
+				<td align="center" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;" bgcolor="#eeece1">
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">직 급</p>
+				</td>
+				<td align="center" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;">
+					<p style="color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;margin-top:0px;margin-bottom:0px;"><input type="text" class="dze_external_data_area" readonly="" size="10" style="font-family:굴림;font-size:9pt;" value="직급" mapping_key="position" /><br /></p>
+				</td>
+				<td align="center" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;" bgcolor="#eeece1">
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">전화번호</p>
+				</td>
+				<td align="center" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;">
+					<p style="color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;margin-top:0px;margin-bottom:0px;"><input type="text" class="dze_external_data_area" readonly="" size="10" style="font-family:굴림;font-size:9pt;" value="전화번호" mapping_key="tel" /><br /></p>
+				</td>
+				<td align="center" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;" bgcolor="#eeece1">
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">이메일</p>
+				</td>
+				<td align="center" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;">
+					<p style="color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;margin-top:0px;margin-bottom:0px;"><input type="text" class="dze_external_data_area" readonly="" size="10" style="font-family:굴림;font-size:9pt;" value="이메일" mapping_key="mail" /><br /></p>
+				</td>
+			</tr>
+			<tr height="50">
+				<td align="center" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;" bgcolor="#eeece1" colspan="3">
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">소&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 속</p>
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">(회사-부문-부서-팀)</p>
+				</td>
+				<td align="center" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;" colspan="5">
+					<p style="color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;margin-top:0px;margin-bottom:0px;"><input type="text" class="dze_external_data_area" readonly="" size="10" style="font-family:굴림;font-size:9pt;" value="소속" mapping_key="belong_to" /><br /></p>
+				</td>
+			</tr>
+			<tr height="25">
+				<td align="center" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;" bgcolor="#eeece1" colspan="3">
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><font color="#ff0000">※ 기간만료안내 수신 이메일</font></p>
+				</td>
+				<td align="center" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;" colspan="5">
+					<p style="color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;margin-top:0px;margin-bottom:0px;"><input type="text" class="dze_external_data_area" readonly="" size="10" style="font-family:굴림;font-size:9pt;" value="이메일2" mapping_key="mail2" /><br /></p>
+				</td>
+			</tr>
+			<tr height="25">
+				<td align="left" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;" bgcolor="#eeece1" colspan="8">
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ◈ 용도 및 목적</p>
+				</td>
+			</tr>
+			<tr height="25">
+				<td align="center" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;" bgcolor="#eeece1" colspan="3">
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">대상 시스템</p>
+				</td>
+				<td align="center" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;" colspan="5">
+					<p style="color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;margin-top:0px;margin-bottom:0px;"><input type="text" class="dze_external_data_area" readonly="" size="10" style="font-family:굴림;font-size:9pt;" value="대상시스템" mapping_key="target_system" /><br /></p>
+				</td>
+			</tr>
+			<tr height="25">
+				<td align="center" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;" bgcolor="#eeece1" colspan="3">
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">대상 시스템 운영담당부서</p>
+				</td>
+				<td align="center" style="border:1px solid rgb(0, 0, 0);color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;" colspan="5">
+					<p style="color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;margin-top:0px;margin-bottom:0px;"><input type="text" class="dze_external_data_area" readonly="" size="10" style="font-family:굴림;font-size:9pt;" value="시스템담당부서" mapping_key="target_system_dept" /><br /></p>
+				</td>
+			</tr>
+			<tr height="25">
+				<td align="center" style="color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;border-top-color:rgb(0, 0, 0);border-right-color:rgb(0, 0, 0);border-left-color:rgb(0, 0, 0);border-top-width:1px;border-right-width:1px;border-left-width:1px;border-top-style:solid;border-right-style:solid;border-left-style:solid;" bgcolor="#eeece1" colspan="3">
+					<p style="font-family:돋움체;font-size:10pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;">목&nbsp;&nbsp; 적</p>
+				</td>
+				<td align="center" style="color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;border-top-color:rgb(0, 0, 0);border-right-color:rgb(0, 0, 0);border-left-color:rgb(0, 0, 0);border-top-width:1px;border-right-width:1px;border-left-width:1px;border-top-style:solid;border-right-style:solid;border-left-style:solid;" colspan="5">
+					<p style="color:rgb(0, 0, 0);line-height:1.2;font-family:돋움체;font-size:10pt;margin-top:0px;margin-bottom:0px;"><input type="text" class="dze_external_data_area" readonly="" size="10" style="font-family:굴림;font-size:9pt;" value="목적" mapping_key="purpose" /><br /></p>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+</center>

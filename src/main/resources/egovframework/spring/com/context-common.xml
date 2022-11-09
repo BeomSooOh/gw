@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:p="http://www.springframework.org/schema/p" xmlns:context="http://www.springframework.org/schema/context"
+        xmlns:aop="http://www.springframework.org/schema/aop" xmlns:util="http://www.springframework.org/schema/util"
+        xmlns:task="http://www.springframework.org/schema/task"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+                http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+                http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.0.xsd
+                http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+                http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd">    
+        
+<!--  xmlns:task="http://www.springframework.org/schema/task" 
+                http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.0.xsd-->
+                                
+    <bean name="lenient" class="net.sf.json.util.CycleDetectionStrategy$LenientCycleDetectionStrategy"/>
+     
+    <bean name="jsonConfig" class="net.sf.json.JsonConfig">
+        <property name="cycleDetectionStrategy" ref="lenient" />
+     </bean>
+ <!-- 
+    <bean id="jsonView" class="org.springframework.web.servlet.view.json.MappingJacksonJsonView">
+        <property name="contentType" value="application/json;charset=UTF-8"/>
+    </bean>
+ -->    
+     
+<!--     date형식 jsonView로 파싱시 오류 발생으로  MappingJacksonJsonView형식으로 변경    (2016-10-20, 주성덕) -->
+    <bean id="jsonView" class="net.sf.json.spring.web.servlet.view.JsonView">
+        <property name="contentType" value="application/json;charset=UTF-8"/>
+        <property name="jsonConfig" ref="jsonConfig" /> 
+    </bean>      
+
+
+    
+    <bean id="beanNameResolver" class="org.springframework.web.servlet.view.BeanNameViewResolver" p:order="0"/>
+    
+    <bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+        <property name="basenames">
+            <list>
+            	<!--<value>file:C:/bizboxaconf/message-common</value>  다국어 message.properties 위치 변경 -->
+                <value>classpath:/egovframework/message/com/message-common</value>
+                <value>classpath:/egovframework/rte/fdl/idgnr/messages/idgnr</value>
+                <value>classpath:/egovframework/rte/fdl/property/messages/properties</value>
+                <value>classpath:/egovframework/egovProps/globals</value>
+                <value>classpath:/egovframework/neosProps/edoc/edoc</value>
+                <value>classpath:/egovframework/neosProps/System</value>
+                <value>classpath:/egovframework/neosProps/SystemX</value>
+                <value>classpath:/egovframework/neosProps/neos</value> 
+                <!--  <value>classpath:/kofia/props/kofia</value>  Add Kofia prop -->
+            </list>
+        </property>
+        <property name="cacheSeconds">
+            <value>60</value>
+        </property>
+    </bean>
+    
+    <!-- 다국어 메시지 프로퍼티 사용 -->
+    <bean id="messageSourceAccessor" class="org.springframework.context.support.MessageSourceAccessor">
+		<constructor-arg ref="messageSource"/>
+	</bean>
+	<bean id="message" class="main.web.BizboxAMessage">
+		<property name="messageSourceAccessor" ref="messageSourceAccessor"/>
+	</bean>
+	<bean id="localeResolver" class="org.springframework.web.servlet.i18n.SessionLocaleResolver">
+	 	<property name="defaultLocale" value="ko" />
+	 </bean>
+	<!-- 다국어 메시지 프로퍼티 사용 끝 -->
+
+    <bean id="egovMessageSource" class="egovframework.com.cmm.EgovMessageSource">
+        <property name="reloadableResourceBundleMessageSource">
+            <ref bean="messageSource" />
+        </property>
+    </bean>
+    
+    <!-- 실행환경에서 빈 이름 참조(AbstractServiceImpl) -->
+    <bean id="leaveaTrace" class="egovframework.rte.fdl.cmmn.trace.LeaveaTrace">
+        <property name="traceHandlerServices">
+            <list>
+                <ref bean="egov.traceHandlerService" />
+            </list>
+        </property>
+    </bean>
+
+    <bean id="egov.traceHandlerService" class="egovframework.rte.fdl.cmmn.trace.manager.DefaultTraceHandleManager">
+        <property name="reqExpMatcher">
+            <ref bean="egov.antPathMater" />
+        </property>
+        <property name="patterns">
+            <list>
+                <value>*</value>
+            </list>
+        </property>
+        <property name="handlers">
+            <list>
+                <ref bean="egov.defaultTraceHandler" />
+            </list>
+        </property>
+    </bean>
+    
+    <!-- 화이트 리스트 매니저를 Bean에 등록한다. -->
+	<bean id="whiteListManager" class="neos.cmm.util.WhiteListManager">
+		<constructor-arg index="0" value="../bizboxaconf/whitelist.conf"></constructor-arg>
+	</bean>
+
+    <bean id="egov.antPathMater" class="org.springframework.util.AntPathMatcher" />
+
+    <bean id="egov.defaultTraceHandler" class="egovframework.rte.fdl.cmmn.trace.handler.DefaultTraceHandler" />
+
+    <!-- MULTIPART RESOLVERS -->
+    <!-- regular spring resolver -->
+    <bean id="spring.RegularCommonsMultipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="maxUploadSize" value="5242880000" />
+        <!-- <property name="maxInMemorySize" value="10485760" /> -->
+<!--
+    업로드 용량 문제시,,
+        <property name="maxUploadSize" value="2147483648" />
+        <property name="maxInMemorySize" value="104857600" />
+-->
+    </bean>
+
+    <!-- custom multi file resolver -->
+    <bean id="local.MultiCommonsMultipartResolver" class="egovframework.com.cmm.web.EgovMultipartResolver">
+        <property name="maxUploadSize" value="5242880000" />
+        <!-- <property name="maxInMemorySize" value="10485760" /> -->
+    </bean>
+
+    <!-- choose one from above and alias it to the name Spring expects -->
+    <!-- alias name="local.MultiCommonsMultipartResolver" alias="multipartResolver" /-->
+    <alias name="spring.RegularCommonsMultipartResolver" alias="multipartResolver" />
+
+    <!--  Comment  Edward  : package 추가시. egov-com-servlet 에도 반경 필요 .. 왜 두군데에서 하지?  확인 필요. TODO-->
+    <context:component-scan base-package="egovframework, neos, restful, main, api, erp, acc, boxformtest, mullen, ebp, derp, FormTable">
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Service"/>
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Repository"/>
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>   
+    <!--  DEL Edward :  ?????   --> 
+   <!-- context:component-scan base-package="neos.cmm.system.businessmanagement.vo"/ -->
+            
+    <!-- Kofia Batch config 
+    @deprecated  기안정보 삭제처리 Job 제거. -->
+    <!-- <task:annotation-driven scheduler="scheduler"/>
+    <task:scheduler id="scheduler" /> -->
+    <!-- EDMS batch config --> 
+     <!-- <import resource="classpath:/edms/context-edmsBatch.xml" />  -->
+    
+	
+    
+</beans>

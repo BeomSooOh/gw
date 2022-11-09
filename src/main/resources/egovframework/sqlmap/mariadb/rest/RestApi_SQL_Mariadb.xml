@@ -1,0 +1,384 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="restDAO">
+	<!-- 모바일 웹서비스 로그인처리를 위한 resultMap -->
+	<resultMap id="loginWS" class="restful.mobile.vo.RestfulVO">
+        <result property="groupSeq"    		column="groupSeq" 		nullValue=" " />
+        <result property="loginId"     		column="loginId"   		nullValue=" " />
+        <result property="loginPassword"    column="loginPassword"	nullValue=" " />
+        <result property="compSeq"     		column="compSeq"   		nullValue=" " />
+        <result property="compName"    		column="compName"     	nullValue=" " />
+        <result property="bizSeq"      		column="bizSeq"       	nullValue=" " />
+        <result property="bizName"     		column="bizName"     	nullValue=" " />
+        <result property="deptSeq"     		column="deptSeq"        nullValue=" " />
+        <result property="deptName"    		column="deptName"    	nullValue=" " />
+        <result property="empSeq"      		column="empSeq"  		nullValue=" " />
+        <result property="empName"     		column="empName"     	nullValue=" " />
+        <result property="dutyCode"    		column="dutyCode"      	nullValue=" " />
+        <result property="dutyName"    		column="dutyName"       nullValue=" " />
+        <result property="positionCode"     column="positionCode"  	nullValue=" " />
+        <result property="positionName"     column="positionName"  	nullValue=" " />
+        <result property="email"        	column="email"   		nullValue=" " />
+        <result property="nativeLangCode"	column="nativeLangCode"	nullValue=" " />
+        <result property="eaType"			column="eaType"			nullValue=" " />
+        <result property="compDomain"		column="compDomain"		nullValue=" " />
+        <result property="apprPasswd"		column="apprPasswd"		nullValue=" " />
+        <result property="setupVersionSeq"		column="setupVersionSeq"		nullValue="0" />
+        <result property="orgnztPath"		column="orgnztPath"		nullValue=" " />
+        <result property="passwdStatusCode"		column="passwdStatusCode"		nullValue=" " />
+        <result property="passwdDate"		column="passwdDate"		nullValue=" " />
+	</resultMap>
+	
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+	<!-- 모바일 웹서비스 로그인 -->
+	<select id="restDAO.actionLoginMobile" resultMap="loginWS" parameterClass="hashmap">
+		 SELECT M.LOGIN_ID AS loginId
+		 	  , M.LOGIN_PASSWD AS loginPassword
+		 	  , M.EMP_SEQ AS empSeq
+		 	  , $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(M.emp_seq, null),O.EMP_NAME_MULTI) AS empName
+			  , M.EMAIL_ADDR AS email
+			  , N.DUTY_CODE as dutyCode
+			  , N.POSITION_CODE AS positionCode
+			  , $DB_NEOS$get_emp_duty_position_name(N.group_seq, N.comp_seq, N.duty_code, 'DUTY', $DB_NEOS$get_lang_code(M.emp_seq, null)) AS dutyName
+			  , $DB_NEOS$get_emp_duty_position_name(N.group_seq, N.comp_seq, N.position_code, 'POSITION', $DB_NEOS$get_lang_code(M.emp_seq, null)) AS positionName
+			  , (SELECT $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(M.emp_seq, null),F.COMP_NAME_MULTI)
+				   FROM $DB_NEOS$v_t_co_comp_multi F
+				  WHERE N.COMP_SEQ=F.COMP_SEQ LIMIT 1) AS compName
+			  , N.GROUP_SEQ AS groupSeq			  
+			  , N.BIZ_SEQ AS bizSeq
+			  , (SELECT $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(M.emp_seq, null),G.BIZ_NAME_MULTI)
+				   FROM $DB_NEOS$v_t_co_biz_multi G
+				  WHERE N.BIZ_SEQ=G.BIZ_SEQ LIMIT 1) AS bizName
+			  , N.DEPT_SEQ AS deptSeq
+			  , (SELECT $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(M.emp_seq, null),A.DEPT_NAME_MULTI)
+				   FROM $DB_NEOS$v_t_co_dept_multi A
+				  WHERE A.DEPT_SEQ = N.DEPT_SEQ LIMIT 1) deptName				  
+			  , $DB_NEOS$get_lang_code(M.emp_seq,null) as nativeLangCode
+			  , N.COMP_SEQ AS compSeq
+			  , C.ea_type as eaType
+			  , IFNULL(M.appr_passwd, '') as apprPasswd
+        	  , (SELECT C.comp_domain
+				   FROM $DB_NEOS$t_co_comp C
+				  WHERE C.GROUP_SEQ = M.GROUP_SEQ AND C.COMP_SEQ = M.MAIN_COMP_SEQ LIMIT 1) compDomain
+			  , G.setup_version_seq as setupVersionSeq
+			  , D.path as orgnztPath
+			  , IFNULL(M.passwd_status_code, 'P') as passwdStatusCode
+			  , IFNULL(M.passwd_date, '1900-01-01') as passwdDate
+		 FROM $DB_NEOS$T_CO_EMP M, $DB_NEOS$T_CO_EMP_DEPT N, $DB_NEOS$T_CO_EMP_COMP E, $DB_NEOS$V_T_CO_EMP_MULTI O, $DB_NEOS$T_CO_COMP C, $DB_NEOS$T_CO_GROUP G, $DB_NEOS$T_CO_DEPT D
+		 WHERE M.GROUP_SEQ = G.GROUP_SEQ 
+		 AND M.EMP_SEQ = N.EMP_SEQ
+		 AND M.EMP_SEQ = O.EMP_SEQ
+     	 AND M.EMP_SEQ = E.EMP_SEQ
+     	 AND N.COMP_SEQ = E.COMP_SEQ
+     	 AND N.COMP_SEQ = C.COMP_SEQ
+     	 AND N.DEPT_SEQ = D.DEPT_SEQ
+		 AND E.WORK_STATUS IN ('999','004')
+		 AND N.MAIN_DEPT_YN = 'Y'
+		 AND M.GROUP_SEQ = #groupSeq#
+		 
+		 <isNotEmpty property="loginToken">
+		 AND M.EMP_SEQ = (select emp_seq from $DB_NEOS$t_co_token_info where token_cd=#loginToken# limit 1)
+		 </isNotEmpty>
+
+		 <isEmpty property="loginToken">
+		 AND M.LOGIN_ID = #loginId#
+		 AND M.LOGIN_PASSWD = IF(#loginPassword# = '▦', M.LOGIN_PASSWD, #loginPassword#)
+		 </isEmpty>
+		 		
+		 AND M.USE_YN = 'Y'
+		 AND N.USE_YN = 'Y'
+		 AND O.USE_YN = 'Y'
+		 AND C.USE_YN = 'Y'
+		 AND D.USE_YN = 'Y'
+		 AND M.MOBILE_USE_YN = 'Y'
+		 AND M.LICENSE_CHECK_YN != '3'
+     ORDER BY CASE WHEN N.COMP_SEQ = M.main_comp_seq THEN 0 ELSE 1 END
+		 LIMIT 1
+	</select>
+
+	<select id="restDAO.selectLoginVO" resultClass="hashMap" parameterClass="hashmap">
+	   
+	   SELECT   IFNULL(c.COMP_SEQ, '') AS compSeq
+              , $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(e.emp_seq, null),(select comp_name_multi from $DB_NEOS$v_t_co_comp_multi where comp_seq = c.comp_seq)) AS compName
+              , IFNULL(ed.BIZ_SEQ, '') AS bizSeq
+              , IFNULL((SELECT $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(e.emp_seq, null),BIZ_NAME_MULTI)
+                   FROM $DB_NEOS$V_T_CO_BIZ_MULTI 
+                  WHERE BIZ_SEQ = ed.BIZ_SEQ ),'') AS bizName 
+              , IFNULL(ed.DEPT_SEQ,'') AS deptSeq
+              , $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(e.emp_seq, null),(select dept_name_multi from $DB_NEOS$v_t_co_dept_multi where dept_seq = ed.dept_seq)) as deptName
+              , IFNULL(e.EMAIL_ADDR,'') as emailAddr  
+              , IFNULL(c.EMAIL_DOMAIN,'') as emailDomain
+              , IFNULL(ed.duty_code,'') as dutyCode
+              , IFNULL(ed.position_code, '') as positionCode
+              , IFNULL(e.appr_passwd, '') as apprPasswd
+        	  , IFNULL((SELECT erp_comp_seq FROM $DB_NEOS$t_co_erp_comp WHERE comp_seq = c.comp_seq LIMIT 1), '') erpCompSeq
+        	  , IFNULL((SELECT erp_emp_seq FROM $DB_NEOS$t_co_emp_comp WHERE comp_seq = c.comp_seq and emp_seq = e.emp_seq LIMIT 1), '') erpEmpSeq
+        	  , $DB_NEOS$get_dept_path('|', ed.DEPT_SEQ, e.GROUP_SEQ) as orgnztPath
+        	  , ec.check_work_yn as checkWorkYn
+        	  , e.emp_seq as empSeq
+         FROM $DB_NEOS$t_co_emp e
+         LEFT JOIN $DB_NEOS$t_co_emp_dept ed
+				ON	e.emp_seq = ed.emp_seq AND e.group_seq = ed.group_seq
+		 LEFT JOIN $DB_NEOS$t_co_comp c
+				ON	e.group_seq = c.group_seq AND ed.comp_seq = c.comp_seq
+		 LEFT JOIN $DB_NEOS$t_co_emp_comp ec
+				ON	ec.comp_seq = c.comp_seq AND e.emp_seq = ec.emp_seq  
+		 LEFT JOIN $DB_NEOS$t_co_comp_multi cm
+				ON c.comp_seq = cm.comp_seq AND cm.lang_code = 'kr'
+		 LEFT JOIN $DB_NEOS$t_co_dept_multi dm		       
+		 		ON dm.group_seq = e.group_seq AND c.comp_seq = dm.comp_seq AND ed.dept_Seq = dm.dept_Seq AND dm.lang_code = 'kr'
+         INNER JOIN $DB_NEOS$T_CO_DEPT D ON ed.dept_seq = D.dept_seq
+        WHERE ec.WORK_STATUS IN ('999','004')
+        
+		 <isNotEmpty property="loginToken">
+			AND e.EMP_SEQ = (select emp_seq from $DB_NEOS$t_co_token_info where token_cd=#loginToken# limit 1)
+		 </isNotEmpty>
+
+		 <isEmpty property="loginToken">
+			AND e.LOGIN_ID = #loginId#
+		 </isEmpty>
+          
+          AND e.GROUP_SEQ = #groupSeq#
+          AND e.use_yn = 'Y'
+		  AND ed.use_yn = 'Y'
+		  AND cm.use_yn = 'Y'
+		  AND dm.use_yn = 'Y'
+		  AND c.use_yn = 'Y'
+		  <isNotEmpty property="eaType">
+			<isEqual property="eaType" compareValue="ea">
+				order by c.comp_seq
+			</isEqual>
+			<isEqual property="eaType" compareValue="eap">
+				order by C.order_num, C.comp_seq
+			</isEqual>
+		</isNotEmpty>
+		<isEmpty property="eaType">
+			order by C.order_num, C.comp_seq
+		</isEmpty>
+	</select>
+
+	<select id="restDAO.selectLoginPassword" resultClass="String" parameterClass="hashmap">
+		 SELECT M.LOGIN_PASSWD AS loginPassword
+		 FROM $DB_NEOS$T_CO_EMP M, $DB_NEOS$T_CO_EMP_DEPT N, $DB_NEOS$T_CO_EMP_MULTI O
+		 WHERE M.EMP_SEQ = N.EMP_SEQ
+		 AND M.EMP_SEQ = O.EMP_SEQ
+		 AND M.WORK_STATUS IN ('999','004')
+		 AND N.MAIN_DEPT_YN = 'Y'
+		 AND M.LOGIN_ID = #loginId#
+		 AND M.GROUP_SEQ = #groupSeq#
+		 AND M.USE_YN = 'Y'
+		 AND N.USE_YN = 'Y'
+		 AND O.USE_YN = 'Y'
+		 LIMIT 1
+	</select>
+	
+	<select id="restDAO.selectOrgImgList" parameterClass="hashmap" resultClass="egovMap">
+		select
+		org_seq,
+		img_type,
+		disp_mode,
+		disp_type,
+		file_id, 
+		'0' AS 'file_sn',
+		ph_type
+		from $DB_NEOS$t_co_org_img where os_type=#osType# and app_type=#appType# and org_seq=#groupSeq# and concat(img_type,ph_type) not in (select concat(img_type,ph_type) from $DB_NEOS$t_co_org_img where os_type=#osType# and app_type=#appType# and org_seq=#orgSeq#)
+		union
+		select
+		org_seq,
+		img_type,
+		disp_mode,
+		disp_type,
+		file_id, 
+		'0' AS 'file_sn',
+		ph_type
+		from $DB_NEOS$t_co_org_img where os_type=#osType# and app_type=#appType# and org_seq=#orgSeq#;	
+	</select>
+	
+	<select id="restDAO.selectOptionListMobile" parameterClass="hashmap" resultClass="egovMap">
+		/* restDAO.selectOptionListMobile - MariaDB */
+		SELECT	option_id,
+				option_value,
+				option_nm,
+				IFNULL(p_option_id, '') AS p_option_id,
+				option_level
+		FROM	(
+			SELECT A.option_id AS option_id, 
+			       IFNULL(B.option_value, A.option_d_value) AS option_value,
+			       A.option_gb AS option_gb,
+			       A.option_group AS option_group, 
+			       A.option_nm AS option_nm,
+			       A.p_option_id AS p_option_id,
+			       A.option_value_id AS option_value_id,
+			       A.p_option_must_value AS p_option_must_value,
+			       A.option_level AS option_level,
+			       A.option_desc AS option_desc,
+			       B.option_value AS option_value_real, 
+			       B.co_id AS co_id
+			FROM   $DB_NEOS$tcmg_optionset A
+			    LEFT OUTER JOIN $DB_NEOS$tcmg_optionvalue B
+			    ON A.option_id = B.option_id AND B.co_id = '0'
+			<isEqual property="optionGubun" compareValue="cm">
+			WHERE A.module_gb = 'cm'
+			</isEqual>    
+			<isEqual property="optionGubun" compareValue="app">
+			WHERE (A.module_gb = 'app' OR A.option_id IN ('cm2200','cm1000','cm1001','cm1014','rep001','com600'))
+			</isEqual>
+			)	T
+			LEFT OUTER JOIN	(
+				SELECT  detail_code, 
+				        CODE, 
+				        lang_code, 
+				        detail_name, 
+				        note, 
+				        use_yn, 
+				        create_seq, 
+				        create_date, 
+				        modify_seq, 
+				        modify_date, 
+				        $DB_NEOS$FN_GetMultiLang('kr', detail_name_multi) as detail_name_multi
+				 FROM   $DB_NEOS$v_t_co_code_detail_multi
+			)	CASE1
+			ON 	T.option_value_id = CASE1.code AND T.option_value  LIKE  CONCAT('%',CASE1.detail_code,'%')
+		WHERE T.option_gb = '1'
+		<isEqual property="optionLevel" compareValue="1">
+		AND		(option_level = '1' OR T.option_id IN ('cm1001','cm1014'))
+		</isEqual>
+		<isNotEmpty property="parentId">
+		AND		p_option_id = #parentId#
+		</isNotEmpty>
+		GROUP BY T.option_id
+		ORDER BY CAST(SUBSTR(T.option_id, 3) AS INT) ASC
+	</select>
+	
+	<select id="restDAO.selectSchOptionMobile" parameterClass="hashmap" resultClass="egovMap">
+		SELECT 
+		IFNULL(invite_yn, 'N') AS invite_yn,
+		IFNULL(accept_yn, 'Y') AS accept_yn 
+		FROM $DB_NEOS$t_sc_group_config 
+		LIMIT 1
+	</select>	
+	
+	<select id="restDAO.selectUsageOptionListMobile" parameterClass="hashmap" resultClass="egovMap">
+		SELECT   	group_seq							AS	'groupSeq'
+		       	  , IFNULL(total_capac, '2048')			AS  'totalCapac'
+		       	  , IFNULL(avail_capac, '0')			AS	'availCapac'
+		       	  , IFNULL(limit_file_count, '20') 		AS	'limitFileCount'
+		       	  , path_name
+		       	  , path_seq
+		FROM   	  $DB_NEOS$t_co_group_path
+		WHERE     group_seq = #groupSeq#
+		  AND	  os_type = #osType#  
+		  AND     path_seq != '800' 
+		  AND	  path_seq != '810' 
+	</select>
+	
+	<select id="restDAO.selectSecondCertEmpInfo" parameterClass="hashmap" resultClass="egovMap">
+		SELECT
+			emp_seq
+		FROM   	  $DB_NEOS$t_co_emp
+			where second_cert_key = #secondCertKey#
+	</select>
+	
+	<select id="restDAO.selectExtOptionList" parameterClass="hashmap" resultClass="egovMap">
+		select 
+<!-- 			(select detail_code from $DB_NEOS$t_co_code_detail where code = 'AttTime' limit 1) useReportAttendTime, -->
+			(select case when count(emp_seq) > 0 then 'Y' else 'N' end useReportAttendTime from $DB_NEOS$t_sc_work_report_attend_time_emp where emp_seq = #empSeq#) useReportAttendTime,
+			(select detail_code from $DB_NEOS$t_co_code_detail where code = 'MobileWorkCheck' limit 1) useMobileWorkCheck,
+			'Y' onefficeReportUseYn
+	</select>
+	
+	<select id="restDAO.selectPersonnelCardInfo" parameterClass="hashmap" resultClass="egovMap">
+		select
+			*
+		from
+			$DB_NEOS$t_at_personnel_card_file
+		where
+			emp_seq = #empSeq#
+		limit 1
+			
+	</select>
+	
+	
+	<select id="restDAO.selectEmpAuthList" parameterClass="hashmap" resultClass="egovMap">
+		select $DB_NEOS$get_auth_group_concat(#compSeq#, #deptSeq#, #empSeq#, '', '') emp_auth from dual
+	</select>
+    
+    <select id="restDAO.selectEmpAuthList_new" parameterClass="hashmap" resultClass="egovMap">
+        SELECT GROUP_CONCAT(A.author_code SEPARATOR  '|') AS emp_auth
+          FROM ( SELECT DISTINCT CAST(a.author_code AS CHAR) AS author_code
+                   FROM $DB_NEOS$t_co_authcode a
+                   JOIN $DB_NEOS$t_co_auth_relate r ON a.author_use_yn = 'Y' 
+                                                   AND a.author_code = r.author_code 
+                                                   AND a.comp_seq = #compSeq#
+                                                   AND ((a.author_type = '001' AND r.emp_seq = #empSeq#) OR a.author_type = '002' OR (a.author_type = '005' AND r.emp_seq = #empSeq#))
+                   JOIN $DB_NEOS$t_co_comp c ON a.comp_seq = c.comp_seq
+                   LEFT JOIN $DB_NEOS$t_co_dept d ON r.author_type = '002' AND d.dept_seq = #deptSeq# AND CONCAT('|',d.path,'|') LIKE CONCAT('%|',r.dept_seq,'|%')
+                  WHERE (a.author_type = '001' OR a.author_type = '005' OR d.dept_seq IS NOT NULL) AND CASE WHEN c.ea_type = 'ea' THEN r.dept_seq = #deptSeq# ELSE 1=1 END
+                 UNION ALL
+                 SELECT 'master' AS author_code
+                   FROM $DB_NEOS$t_co_emp_option eo
+                  WHERE eo.emp_seq = #empSeq#
+                    AND eo.master_use_yn = 'Y'
+               ) A
+    </select>
+	
+	
+	<select id="restDAO.getMenuList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT
+			convert(kr.menu_no, CHAR(50)) menu_no,
+			$DB_NEOS$FN_GetMultiLang(#langCode#, concat(`kr`.`menu_nm`,'▦',ifnull(`en`.`menu_nm`,''),'▦',ifnull(`jp`.`menu_nm`,''),'▦',ifnull(`cn`.`menu_nm`,''))) AS menu_nm
+		FROM $DB_NEOS$t_co_menu_multi kr
+		LEFT JOIN $DB_NEOS$t_co_menu_multi en ON kr.menu_no = en.menu_no AND en.lang_code = 'en'
+		LEFT JOIN $DB_NEOS$t_co_menu_multi jp ON kr.menu_no = jp.menu_no AND en.lang_code = 'jp'
+		LEFT JOIN $DB_NEOS$t_co_menu_multi cn ON kr.menu_no = cn.menu_no AND en.lang_code = 'cn'
+		WHERE kr.lang_code = 'kr'
+		<iterate open="(" close=")" conjunction="," property="menuList" prepend="and kr.menu_no in">
+			#menuList[]#
+		</iterate>
+	</select>
+	
+	<select id="restDAO.selectEmpFunctionList" parameterClass="hashmap" resultClass="egovMap">
+	
+		select 
+		fl.function_cd,
+		fl.function_tp,
+		case when fl.function_tp = 'APP' then 'Y'
+		when ul.function_cd is null then 'N'
+		else 'Y' end as enable_yn,
+		case #langCode#
+		when 'en' then ifnull(nm_en.menu_nm,nm_kr.menu_nm)
+		when 'jp' then ifnull(nm_jp.menu_nm,nm_kr.menu_nm)
+		when 'cn' then ifnull(nm_cn.menu_nm,nm_kr.menu_nm)
+		else nm_kr.menu_nm end as portal_menu_nm
+		from $DB_NEOS$t_co_function_list fl
+		join $DB_NEOS$t_co_comp c on c.comp_seq = #compSeq# and ((ifnull(c.ea_type,'eap') = 'eap' and fl.menu_no != '100000000') or (ifnull(c.ea_type,'eap') = 'ea' and fl.menu_no != '2000000000'))
+		left join $DB_NEOS$t_co_menu_multi nm_kr on fl.function_tp = 'WEB' and nm_kr.lang_code = 'kr' and fl.menu_no = nm_kr.menu_no
+		left join $DB_NEOS$t_co_menu_multi nm_en on fl.function_tp = 'WEB' and nm_en.lang_code = 'en' and fl.menu_no = nm_en.menu_no
+		left join $DB_NEOS$t_co_menu_multi nm_jp on fl.function_tp = 'WEB' and nm_jp.lang_code = 'jp' and fl.menu_no = nm_jp.menu_no
+		left join $DB_NEOS$t_co_menu_multi nm_cn on fl.function_tp = 'WEB' and nm_cn.lang_code = 'cn' and fl.menu_no = nm_cn.menu_no
+		left join 
+		(
+			select distinct f.function_cd
+			from $DB_NEOS$t_co_function_list f
+			join $DB_NEOS$t_co_menu_auth ma on f.function_tp = 'WEB' and f.menu_no = ma.menu_no
+			join $DB_NEOS$t_co_menu m on ma.menu_no = m.menu_no and m.use_yn = 'Y' and ifnull(m.delete_yn,'') != 'Y'
+			join $DB_NEOS$t_co_auth_relate ar on ma.author_code = ar.author_code and ar.emp_seq = #empSeq# and ar.comp_seq = #compSeq#
+			join $DB_NEOS$t_co_authcode a on ma.author_code = a.author_code and a.author_use_yn = 'Y' and a.author_type = '001'
+			union
+			select distinct f.function_cd
+			from $DB_NEOS$t_co_function_list f
+			join $DB_NEOS$t_co_menu_auth ma on f.function_tp = 'WEB' and f.menu_no = ma.menu_no
+			join $DB_NEOS$t_co_menu m on ma.menu_no = m.menu_no and m.use_yn = 'Y' and ifnull(m.delete_yn,'') != 'Y'
+			join $DB_NEOS$t_co_auth_relate ar on ma.author_code = ar.author_code and 
+			(
+				SELECT CONCAT('|',GROUP_CONCAT(path SEPARATOR  '|'),'|')  FROM $DB_NEOS$t_co_dept WHERE dept_seq IN (
+					SELECT dept_seq FROM $DB_NEOS$t_co_emp_Dept WHERE emp_seq = #empSeq# AND comp_seq = #compSeq#
+				)
+			) like (select concat('%|', path, '|%') from $DB_NEOS$t_co_Dept where dept_seq = ar.dept_seq)
+			join $DB_NEOS$t_co_authcode a on ma.author_code = a.author_code and a.author_use_yn = 'Y' and a.author_type = '002'
+		) ul on fl.function_cd = ul.function_cd and fl.function_tp = 'WEB'
+		
+	</select>
+		
+</sqlMap>

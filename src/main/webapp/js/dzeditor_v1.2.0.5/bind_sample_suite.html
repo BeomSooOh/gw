@@ -1,0 +1,266 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<meta http-equiv="expires" content="0" />
+<meta http-equiv="expires" content="now" />
+<meta http-equiv="Cache-Control" content="private" />
+<meta http-equiv="Cache-Control" content="No-Cache" />
+<meta http-equiv="Pragma" content="No-Cache" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+<title>[DZEditor] Data Binding</title>
+
+<script>
+	g_dzEditorBasePath = "./";
+</script>
+
+<script language="javascript" src="./js/dze_env_config_bizboxA_doc_box.js"></script>
+<script language="javascript" src="./js/dze_ui_config_bizboxA_doc_box_form_manager.js"></script>
+<script language="javascript" src="./js/loadlayer.js"></script>
+<script language="javascript" src="./js/dze_ext_uploader.js"></script>
+
+<script>
+dzeEnvConfig.iFrameLayer = false;
+dzeUiConfig.bCustomEditorHeightIFrameYN = false;
+dzeUiConfig.nEditorHeight = 600;
+dzeUiConfig.strLoadingDoneFunction = "dzeditorLoadComplete";
+
+//에디터 html get
+function getEditorHtml(dzeditor_no) {
+	var objWin = window;
+	if(null == objWin) return;
+
+	var html = objWin.dzeEnvConfig.fnGetEditorHTMLCode(false, dzeditor_no);
+
+	var contents = document.getElementById("content_" + dzeditor_no);
+	contents.value = html;
+}
+
+//에디터 html set
+function setEditorHtml(dzeditor_no) {
+	var contents = document.getElementById("content_" + dzeditor_no).value;
+
+	var objWin = window;
+	if(null == objWin) return;
+
+	objWin.dzeEnvConfig.fnSetEditorHTMLCode(contents, false, dzeditor_no);
+}
+
+//data binding set
+function setExternalData(dzeditor_no) {
+	var objWin = window;
+	if (objWin === null) return;
+
+	var strJson = document.getElementById("json_" + dzeditor_no).value;
+
+	try {
+	    var objJson = JSON.parse(strJson);
+
+		//에디터에 json 전달
+		objWin.dzeEnvConfig.fnBindExternalData(
+			dzeditor_no,
+			objJson,
+			{ timeout: 700,
+			  callback: function() {	//UCDOC-3866
+			  	console.log("bind end callback!");
+			  }
+			}
+		);
+	}
+	catch(e)
+	{
+		alert("json error:\n" + e);
+	}
+}
+
+//data binding get
+var getExternalData = (function() {
+
+	var jsonDiffWindow = null;    //json diff window open
+
+	return (function(dzeditor_no) {
+
+		var objWin = window;
+		if (objWin === null) return;
+
+		//에디터에서 json 가져오기
+		var bindData = objWin.dzeEnvConfig.fnGetBindExternalData(dzeditor_no);
+		if(!bindData) {
+			alert("No bind data");
+			return;
+		}
+
+		console.log(bindData);
+
+		//원본 json
+		var strJson = document.getElementById("json_" + dzeditor_no).value;	
+
+		try {
+			var orgBindData = JSON.parse(strJson);	
+			orgBindData = JSON.parse(JSON.stringify(orgBindData));
+		}		
+		catch(e) {
+			alert("json error:\n" + e);
+			return;
+		}
+
+		//새창 열기
+		if(!jsonDiffWindow || jsonDiffWindow.closed) {
+			jsonDiffWindow = window.open("./libs/jsondiffpatch/jsondiffpatch.html", "jsondiff", "width=800, height=700, toolbar=no, menubar=no, scrollbars=no, resizable=yes");
+		}
+
+		if(jsonDiffWindow)
+		{
+			setTimeout(function() {
+				jsonDiffWindow.postMessage([orgBindData, bindData]);	//원본 json, 에디터 bind json 비교
+				jsonDiffWindow.focus();
+			}, 500);
+		}
+
+	});
+})();
+
+window.onload = function() {
+	//샘플
+	var arrSample = [
+		"Sample0",
+		"Sample1",
+		"Sample2",
+		"Sample3",
+		"Sample4",
+		"Sample5 (이미지)",
+		"Sample6 (연차)",
+		"Sample7 (하이퍼링크)",	//UCDOC-5140
+		"Sample8 (테이블 그룹)",	//UCDOC-5168
+		"Sample9 (숫자/통화)",	//UCDOC-5164
+		"Sample10 (숫자/통화 input)",	//UCDOC-5331
+		"Sample11 (숫자/통화 json)",	//UCDOC-5331
+		"Sample12 (텍스트 정렬)",	//UCDOC-5331
+	];
+
+	var div = document.getElementById("example_container");
+
+	for (var i = 0, len = arrSample.length; i < len; i++) {
+		var input = document.createElement("input");
+		input.type = "button";
+		input.value = arrSample[i];
+
+		(function() {
+			var num = i;
+			input.onclick = function() {
+				setSample(num);
+			};
+		})();
+
+		div.appendChild(input);
+	}
+};
+
+//set 샘플
+function setSample(num) {
+    var content = document.getElementById("content_0");
+	var json = document.getElementById("json_0");
+
+	var exampleUrl = "./bind_example/example" + num + "/";	//./bind_example/example0/
+
+	var htmlUrl = exampleUrl + "html.html";
+	var jsonUrl = exampleUrl + "json.json";	
+
+	var count = 2;
+	var afterReadFile = function() {
+		count--;
+		if (count <= 0) {
+			setEditorHtml(0);
+		}
+	};
+
+	readTextFromUrl(htmlUrl, function(text) {
+		content.value = text;
+		afterReadFile();
+	});
+
+	readTextFromUrl(jsonUrl, function(text) {
+		json.value = text;
+		afterReadFile();
+	});
+};
+
+//read example html/json
+function readTextFromUrl(url, callback) {
+	// read text from URL location
+    var request = new XMLHttpRequest();
+    request.open('GET', url, true);
+    request.send(null);
+    request.onreadystatechange = function () {
+        if (request.readyState === 4 && request.status === 200) {
+            var type = request.getResponseHeader('Content-Type');
+            if (type.indexOf("text") !== 1) {
+				callback(request.responseText);
+            } else {
+				callback("");	//fail	
+			}
+        } else {
+			callback("");	//fail
+		}
+    }
+}
+</script>
+
+<script>
+// 더존웹에디터 로딩 완료 시점에 호출되는 함수
+// 함수 호출은 sample_suite_iframe.html 파일에서 선언함
+function dzeditorLoadComplete(dzeditor_no) {
+
+	setSample(0);
+
+	setEditorHtml(dzeditor_no);
+
+}
+</script>
+
+<style>
+	#example_container input {
+		height: 20px;
+		min-width: 80px;
+		margin: 0 5px;
+	}
+</style>
+</head>
+
+
+<body>
+
+<h1 style="text-align:center;">Data Binding Sample DZEditor <a style="color:blue" href="https://gwa.douzone.com/ecm/oneffice/one003A06?c2VxPTgzYzRlMjgxR2E0OUJHRmNlYzFjQkZlNDY1NEc5YTE0Jl90PUlrSUk%3D">[가이드 문서 링크]</a></h1>
+<div style="text-align:center;">
+	<div style="display: block; padding-bottom: 5px;">
+		<input type="button" value="Set 에디터 HTML" onclick="setEditorHtml(0)" style="width: 180px; height: 30px;">
+		<div style="display: inline-block; width: 50px;"></div>
+		<input type="button" value="Get 에디터 HTML" onclick="getEditorHtml(0)" style="width: 180px; height: 30px;">		
+	</div>
+	<div style="display: block; padding-bottom: 10px;">
+		<input type="button" value="Set 데이터 바인딩" onclick="setExternalData(0)" style="width: 180px; height: 30px;">
+		<div style="display: inline-block; width: 50px;"></div>
+		<input type="button" value="Get 데이터 바인딩" onclick="getExternalData(0)" style="width: 180px; height: 30px;">
+	</div>
+	<div id="example_container" style="display: block; padding-bottom: 10px;"></div>
+</div>
+<br/>
+
+<div style="height:600px;display: flex;justify-content: center;">
+    <!-- 에디터 영역 -->
+	<div dzeditor="true" style="width:700px;height:100%;margin-left:100px;margin-right:20px;">DuzonEditor</div>
+
+    <!-- html / json text area -->
+	<div style="display:flex; flex-direction: column;">
+		<p>* HTML ----------------------------------------------------------------------------------------------</p>
+		<textarea id="content_0" cols="0" rows="0" style="width:800px; height:300px;"></textarea>
+
+		<p>* Json ----------------------------------------------------------------------------------------------</p>
+		<textarea id="json_0" cols="0" rows="0" style="width:800px; height:300px;"></textarea>
+	</div>
+</div>
+<br/>
+
+</body>
+</html>

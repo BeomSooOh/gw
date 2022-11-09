@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<!--
+	수정일          수정자                          수정내용
+  ===========      ========    =================================================
+  2011.10.06		이기하     	 	보안 취약점 점검사항 반영 $->#변경
+-->
+<sqlMap namespace="CmmnCodeDetailManage">
+
+	<typeAlias  alias="egovMap"          type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	<typeAlias  alias="CmmnCodeDetail"   type="neos.cmm.cmmncode.ccm.service.CmmnCodeDetail"/>
+	<typeAlias  alias="CmmnCodeDetailVO" type="neos.cmm.cmmncode.ccd.service.CmmnCodeDetailVO"/>
+
+	   <select id="CmmnCodeDetailManageDAO.selectCmmnCodeDetailList" parameterClass="hashMap" resultClass="hashMap">
+			/* CmmnCodeDetailManageDAO.selectCmmnCodeDetailList - oracle */			   	
+
+        	<![CDATA[
+            SELECT  A.DETAIL_CODE
+                 ,  A.CODE
+                 ,  $DB_NEOS$FN_GetMultiLang(#langCode#,B.DETAIL_NAME_MULTI) AS DETAIL_NAME
+                 ,  B.NOTE
+                 ,  A.USE_YN
+              FROM  $DB_NEOS$T_CO_CODE_DETAIL A
+                 ,  $DB_NEOS$V_T_CO_CODE_DETAIL_MULTI B
+             WHERE  B.USE_YN  = 'Y'
+               AND  A.DETAIL_CODE = B.DETAIL_CODE
+	        ]]>
+            <isEqual prepend="AND" property="searchCondition" compareValue="1">
+                <![CDATA[A.CODE_ID LIKE ('%' || #searchKeyword# || '%')]]>
+            </isEqual>
+            <isEqual prepend="AND" property="searchCondition" compareValue="2">
+                <![CDATA[A.CODE    LIKE ('%' || #searchKeyword# || '%')]]>
+            </isEqual>
+            <isEqual prepend="AND" property="searchCondition" compareValue="3">
+                <![CDATA[A.CODE_NM LIKE ('%' || #searchKeyword# || '%')]]>
+            </isEqual>
+             AND ROWNUM <![CDATA[<=]]> 50
+    </select>
+	
+	<select id="CmmnCodeDetailManageDAO.selectCmmnCodeDetailList_TOTALCOUNT" parameterClass="hashMap" resultClass="int">
+		/* CmmnCodeDetailManageDAO.selectCmmnCodeDetailList_TOTALCOUNT - oracle */
+		
+        <![CDATA[
+            SELECT  COUNT(*) AS TOTALCOUNT
+              FROM  $DB_NEOS$T_CO_CODE_DETAIL   A
+                 ,  $DB_NEOS$V_T_CO_CODE_DETAIL_MULTI B
+             WHERE  A.DETAIL_CODE = B.DETAIL_CODE
+        ]]>
+            <isEqual prepend="AND" property="searchCondition" compareValue="1">
+                <![CDATA[A.DETAIL_CODE LIKE ('%' || #searchKeyword# || '%')]]>
+            </isEqual>
+            <isEqual prepend="AND" property="searchCondition" compareValue="2">
+                <![CDATA[B.DETAIL_NAME LIKE ('%' || #searchKeyword# || '%')]]>
+            </isEqual>
+    </select>
+
+	<select id="CmmnCodeDetailManageDAO.selectCmmnCodeDetailDetail" parameterClass="hashmap" resultClass="CmmnCodeDetail">
+		/* CmmnCodeDetailManageDAO.selectCmmnCodeDetailDetail - oracle */
+		
+		<![CDATA[
+            SELECT  A.CODE_ID    codeId
+                 ,  B.CODE_ID_NM codeIdNm
+                 ,  A.CODE       code
+                 ,  A.CODE_NM    codeNm
+                 ,  A.CODE_DC    codeDc
+                 ,  A.USE_AT     useAt
+              FROM  $DB_NEOS$COMTCCMMNDETAILCODE A
+                 ,  $DB_NEOS$COMTCCMMNCODE       B
+             WHERE  B.USE_AT  = 'Y'
+               AND  A.CODE_ID = B.CODE_ID
+			   AND  A.CODE_ID = #codeId#
+			   AND  A.CODE    = #code#
+		]]>
+	</select>
+
+	<insert id="CmmnCodeDetailManageDAO.insertCmmnCodeDetail" parameterClass="hashmap">
+		/* CmmnCodeDetailManageDAO.insertCmmnCodeDetail - oracle */
+		
+		<![CDATA[
+		    INSERT
+		      INTO  $DB_NEOS$COMTCCMMNDETAILCODE
+		         (  CODE_ID
+		         ,  CODE
+		         ,  CODE_NM
+		         ,  CODE_DC
+		         ,  USE_AT
+		         ,  FRST_REGIST_PNTTM
+		         ,  FRST_REGISTER_ID
+		         ,  LAST_UPDT_PNTTM
+		         ,  LAST_UPDUSR_ID
+		         )
+		    VALUES
+		         (  #codeId#
+		         ,  #code#
+		         ,  #codeNm#
+		         ,  #codeDc#
+		         ,  #useAt#
+		         ,  SYSDATE
+		         ,  #frstRegisterId#
+		         ,  SYSDATE
+		         ,  #frstRegisterId#
+		         )
+		]]>
+	</insert>
+
+	<update id="CmmnCodeDetailManageDAO.updateCmmnCodeDetail" parameterClass="hashmap">
+		/* CmmnCodeDetailManageDAO.updateCmmnCodeDetail - oracle */
+		
+		<![CDATA[
+            UPDATE  $DB_NEOS$COMTCCMMNDETAILCODE
+               SET  CODE_NM           = #codeNm#
+                 ,  CODE_DC           = #codeDc#
+                 ,  USE_AT            = #useAt#
+                 ,  LAST_UPDT_PNTTM = SYSDATE
+                 ,  LAST_UPDUSR_ID    = #lastUpdusrId#
+             WHERE  CODE_ID   = #codeId#
+               AND  CODE      = #code#
+		]]>
+	</update>
+
+	<delete id="CmmnCodeDetailManageDAO.deleteCmmnCodeDetail" parameterClass="hashmap">
+		/* CmmnCodeDetailManageDAO.deleteCmmnCodeDetail - oracle */
+		
+		<![CDATA[
+            UPDATE  $DB_NEOS$COMTCCMMNDETAILCODE
+               SET  USE_AT    = 'N'
+             WHERE  CODE_ID   = #codeId#
+               AND  CODE      = #code#
+		]]>
+	</delete>
+	
+	<select id="CmmnCodeDetailManageDAO.getOptionSetValue" parameterClass="hashmap" resultClass="string">
+		/* CmmnCodeDetailManageDAO.getOptionSetValue - oracle */
+		
+		SELECT NVL(B.option_value,A.option_d_value) AS "val"
+		FROM $DB_NEOS$tcmg_optionset A
+		LEFT JOIN $DB_NEOS$tcmg_optionvalue B ON A.option_id = B.option_id AND (B.co_id = #compSeq# OR B.co_id = '0')
+		WHERE A.option_id = #optionId#
+		AND ROWNUM = 1
+	</select>
+	
+	<select id="CmmnCodeDetailManageDAO.getOptionSetValueMap" parameterClass="hashmap" resultClass="egovMap">
+		/* CmmnCodeDetailManageDAO.getOptionSetValueMap - oracle */
+		
+		SELECT NVL(B.option_value,A.option_d_value) AS "val"
+		FROM $DB_NEOS$tcmg_optionset A
+		LEFT JOIN $DB_NEOS$tcmg_optionvalue B ON A.option_id = B.option_id AND (B.co_id = #compSeq# OR B.co_id = '0')
+		WHERE A.option_id = #optionId#
+		AND ROWNUM = 1
+	</select>
+	
+	<select id="CmmnCodeDetailManageDAO.getOptionSetValueList" parameterClass="hashmap" resultClass="egovMap">
+		/* CmmnCodeDetailManageDAO.getOptionSetValueList - oracle */
+		
+		SELECT 
+			A.option_id,
+			NVL(B.option_value,A.option_d_value) AS val
+		FROM $DB_NEOS$tcmg_optionset A
+		LEFT JOIN $DB_NEOS$tcmg_optionvalue B ON A.option_id = B.option_id
+		WHERE A.option_id in ('pathSeq300','pathSeq400','pathSeq500','pathSeq600','pathSeqEa');
+	</select>
+	
+	
+	<select id="CmmnCodeDetailManageDAO.getOptionSetValueInfo" parameterClass="hashmap" resultClass="egovMap">
+		/* CmmnCodeDetailManageDAO.getOptionSetValueInfo - oracle */
+		
+		select 
+			option_id,
+			option_nm,
+			b.detail_code,
+			b.detail_name			
+		From $DB_NEOS$tcmg_optionset a
+		inner join $DB_NEOS$t_co_code_detail_multi b on a.option_value_id = b.code 
+		where 
+			option_id = #optionId# 
+			and b.lang_code = 'kr' 
+			and b.detail_code = (
+				SELECT NVL(B.option_value,A.option_d_value) AS val
+					FROM $DB_NEOS$tcmg_optionset A
+					LEFT JOIN $DB_NEOS$tcmg_optionvalue B ON A.option_id = B.option_id AND (B.co_id = #compSeq# OR B.co_id = '0')
+					WHERE A.option_id = #optionId#
+					AND ROWNUM=1
+			)
+		AND ROWNUM=1
+	</select>
+	
+
+</sqlMap>

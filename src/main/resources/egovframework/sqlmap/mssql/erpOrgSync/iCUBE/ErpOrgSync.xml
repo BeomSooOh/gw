@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ErpOrgSync">
+	<select id="updateErpEmpInfo" parameterType="hashmap">
+		/* sqlmap/mssql/erpOrgSync/iCUBE/ErpOrgSync.xml */
+		/* ERPiCUBE 사원정보수정 / USP_SYA0080_UPDATEGW_SEMP_ETC  */
+		exec USP_SYA0080_UPDATEGW_SEMP_ETC
+				'${LANGKIND}',
+				'${CO_CD}',
+				'${EMP_CD}',
+				'${KOR_NM}',
+				'${ENLS_NM}',
+				'${CHN_NM}',
+				'${PASS}',
+				'${BRTH_DT}',
+				'${TEL}',
+				'${RSRG_ADD}',
+				'${RSRD_ADD}',
+				'${EMGC_TEL}',
+				'${WEDDING_DAY}'
+	</select>
+</mapper>

@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ExCodeCommon">
+
+
+	<select id="getExCompList" parameterType="hashmap" resultType="hashmap">
+	/* getExCompList - ERPiU ORACLE */
+		select *from NEOE.MA_COMPANY
+		WHERE CD_COMPANY LIKE '%${txtSearch}%' OR NM_COMPANY LIKE '%${txtSearch}%'
+	</select>
+	
+	
+	<select id="getExEmpList" parameterType="hashmap" resultType="hashmap">
+	 /* getExCodeEmpListInfoSelect - ERPiU ORACLE */
+		SELECT  NO_EMP AS "erpEmpSeq"
+		        , NM_KOR AS "erpEmpName"
+		        , CD_COMPANY AS "erpCompSeq"
+		        , NM_COMPANY AS "erpCompName"
+		        , CD_BIZAREA AS "erpBizSeq"
+		        , NM_BIZAREA AS "erpBizName"
+		        , CD_DEPT AS "erpDeptSeq"
+		        , NM_DEPT AS "erpDetpName"
+		        , CD_PC AS "erpPcSeq"
+		        , NM_PC AS "erpPcName"
+		        , CD_CC AS "erpCcSeq"
+		        , NM_CC AS "erpCcName"
+		FROM    (
+		            SELECT  NVL ( EMP.NO_EMP, '' ) AS NO_EMP
+		                    , NVL ( EMP.NM_KOR, '' ) AS NM_KOR
+		                    , NVL ( COMPANY.CD_COMPANY, '' ) AS CD_COMPANY
+		                    , NVL ( COMPANY.NM_COMPANY, '' ) AS NM_COMPANY
+		                    , NVL ( BIZAREA.CD_BIZAREA, '' ) AS CD_BIZAREA
+		                    , NVL ( BIZAREA.NM_BIZAREA, '' ) AS NM_BIZAREA
+		                    , NVL ( DEPT.CD_DEPT, '' ) AS CD_DEPT
+		                    , NVL ( DEPT.NM_DEPT, '' ) AS NM_DEPT
+		                    , NVL ( PC.CD_PC, '' ) AS CD_PC
+		                    , NVL ( PC.NM_PC, '' ) AS NM_PC
+		                    , NVL ( CC.CD_CC, '' ) AS CD_CC
+		                    , NVL ( CC.NM_CC, '' ) AS NM_CC
+		            FROM    (
+		                        SELECT  CD_COMPANY
+		                                , CD_BIZAREA
+		                                , CD_DEPT
+		                                , CD_CC
+		                                , NO_EMP
+		                                , NM_KOR
+		                                , CD_INCOM
+		                        FROM    NEOE.MA_EMP A
+		                        WHERE   ( CD_INCOM = '001' OR CD_INCOM = '002' )
+		                        AND     CD_COMPANY = '${erpCompSeq}'
+		                        AND     ( NO_EMP LIKE '%${searchStr}%'
+		                                OR NM_KOR LIKE '%${searchStr}%' )
+		                    ) EMP
+		                    INNER JOIN
+		                    (
+		                        SELECT  CD_COMPANY
+		                                , NM_COMPANY
+		                        FROM    NEOE.MA_COMPANY A
+		                    ) COMPANY ON EMP.CD_COMPANY = COMPANY.CD_COMPANY
+		                    INNER JOIN
+		                    (
+		                        SELECT  CD_COMPANY
+		                                , CD_BIZAREA
+		                                , NM_BIZAREA
+		                                , CD_PC
+		                        FROM    NEOE.MA_BIZAREA A
+		                    ) BIZAREA ON EMP.CD_COMPANY = BIZAREA.CD_COMPANY AND EMP.CD_BIZAREA = BIZAREA.CD_BIZAREA
+		                    INNER JOIN
+		                    (
+		                        SELECT  CD_COMPANY
+		                                , CD_BIZAREA
+		                                , CD_DEPT
+		                                , NM_DEPT
+		                        FROM    NEOE.MA_DEPT A
+		                    ) DEPT ON EMP.CD_COMPANY = DEPT.CD_COMPANY AND EMP.CD_BIZAREA = DEPT.CD_BIZAREA AND EMP.CD_DEPT = DEPT.CD_DEPT
+		                    LEFT OUTER JOIN
+		                    (
+		                        SELECT  CD_COMPANY
+		                                , CD_PC
+		                                , NM_PC
+		                        FROM    NEOE.MA_PC A
+		                    ) PC ON BIZAREA.CD_COMPANY = PC.CD_COMPANY AND BIZAREA.CD_PC = PC.CD_PC
+		                    LEFT OUTER JOIN
+		                    (
+		                        SELECT  CD_COMPANY
+		                                , CD_CC
+		                                , NM_CC
+		                                , YN_USE
+		                        FROM    NEOE.MA_CC A
+		                        WHERE   YN_USE = N'Y'
+		                    ) CC ON EMP.CD_COMPANY = CC.CD_COMPANY AND EMP.CD_CC = CC.CD_CC
+		        ) A
+	</select>
+	
+    <select id="GetFiGwDocInfo" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        /* ExCodeCommon.GetFiGwDocInfo - ORACLE */
+        SELECT CD_COMPANY || '_' || CD_PC || '_' || NO_DOCU AS "appro_key"
+             , APP_FORM_KIND AS "fcode"
+             , NM_PUMM AS "subject"
+             , NM_NOTE AS "contents"
+        FROM  FI_GWDOCU
+        WHERE CD_COMPANY = '${cdCompany}'
+        AND CD_PC = '${cdPc}' 
+        AND NO_DOCU = '${noDocu}'
+    </select>
+    
+    
+    
+    
+    
+    
+    
+    <select id="GetEdmsBoxList" parameterType="hashmap" resultType="hashmap">
+		select
+		a.MENU_NO AS "menuNo",
+		a.UPPER_MENU_NO AS "upperMenuNo",
+		a.MENU_ORDR AS "menuOrdr",
+		b.BBS_NM AS "bbsNm",
+		b.BBS_TY_CODE AS "bbsTyCode",
+		b.BBS_ATTRB_CODE AS "bbsAttrbCode",
+		b.REPLY_POSBL_AT AS "replyPosblAt",
+		b.FILE_ATCH_POSBL_AT AS "fileAtchPosblAt",
+		b.USE_AT AS "useAt",
+		b.FRST_REGISTER_ID AS "frstRegistId",
+		TO_CHAR(b.FRST_REGIST_PNTTM,'yyyy-MM-dd HH24:mm:ss') AS "frstRegistPnttm",
+		b.LAST_UPDUSR_ID AS "lastUpdusrId",
+		TO_CHAR(b.LAST_UPDT_PNTTM,'yyyy-MM-dd HH24:mm:ss') AS "lastUpdtPnttm",
+		c.ANSWER_AT AS "answerAt",
+		c.STSFDG_AT AS "stsfdgAt",
+		c.ANONYM_AT AS "anonymAt",
+		c.EXTOPEN_AT AS "extopenAt",
+		c.MAINOPEN_AT AS "mainopenAt",
+		c.LASTOPEN_AT AS "lastopenAt"
+		from COMTNMENUINFO a
+		join COMTNBBSMASTER b on a.progrm_file_nm = 'selectBoardList_' || b.bbs_id
+		join COMTNBBSMASTEROPTN c on b.bbs_id=c.bbs_id
+    </select>
+    
+    <select id="GetEdmsBoxPermList" parameterType="hashmap" resultType="hashmap">
+		select distinct
+		c.menu_no as "menuNo",
+		'D' as "permType",
+		case when b.upper_organ_id='NKRPC00001' then '${groupSeq}_' || b.organ_id else b.organ_id end as "permId"
+		from PORTAL_BBS_PUBLIC a
+		join COMTNORGANINFO b on a.public_id = b.organ_id or a.public_id = b.upper_organ_id
+    	join COMTNMENUINFO c on c.progrm_file_nm = 'selectBoardList_' || a.bbs_id
+		where b.organ_id != 'NKRPC00001'
+		union
+		select distinct
+		c.menu_no as "menuNo",
+		'M' as "permType",
+		b.esntl_id as "permId"
+		from PORTAL_BBS_PUBLIC a
+		join COMTNEMPLYRINFO b on a.public_id = b.esntl_id
+    	join COMTNMENUINFO c on c.progrm_file_nm = 'selectBoardList_' || a.bbs_id
+    </select>    
+    
+    <select id="GetEdmsReadList" parameterType="hashmap" resultType="hashmap">
+		select
+		U_ESNTL_ID AS "uEsntlId",
+		U_BBS_ID AS "uBbsId",
+		U_NTT_ID AS "uNttId",
+		TO_CHAR(U_READ_DATE,'yyyy-MM-dd HH24:mm:ss') AS "ureadDate"
+		from portal_bbsuser
+    </select>
+    
+    <select id="GetEdmsPublicList" parameterType="hashmap" resultType="hashmap">
+		select
+		ntt_id as "nttId",
+		bbs_id as "bbsId",
+		public_id as "publicId",
+		public_nm as "publicNm",
+		id_order as "idOrder"
+		from portal_bbs_public
+    </select>
+    
+    <select id="GetEdmsCommentList" parameterType="hashmap" resultType="hashmap">
+		select
+		NTT_ID as "nttId",
+		BBS_ID as "bbsId",
+		ANSWER_NO as "answerNo",
+		WRTER_ID as "writerId",
+		WRTER_NM as "writerNm",
+		ANSWER as "answer",
+		USE_AT as "useAt",
+		TO_CHAR(FRST_REGIST_PNTTM,'yyyy-MM-dd HH24:mm:ss')  as "frstRegistPnttm",
+		FRST_REGISTER_ID as "frstRegisterId",
+		TO_CHAR(LAST_UPDT_PNTTM,'yyyy-MM-dd HH24:mm:ss')  as "lastUpdtPnttm",
+		LAST_UPDUSR_ID as "lastUpdusrId",
+		PASSWORD as "password"
+		from comtncomment
+    </select>
+    
+    <select id="GetEdmsFileList" parameterType="hashmap" resultType="hashmap">
+		select
+		b.atch_file_id as "atchFileId",
+		TO_CHAR(b.CREAT_DT,'yyyy-MM-dd HH24:mm:ss') as "creatDt",
+		b.USE_AT as "useAt"
+		from portal_bbs a
+		join COMTNFILE b on a.atch_file_id = b.atch_file_id
+    </select>
+    
+    <select id="GetEdmsFileDetailList" parameterType="hashmap" resultType="hashmap">
+		select
+		b.ATCH_FILE_ID as "atchFileId",
+		b.FILE_SN as "fileSn",
+		b.STRE_FILE_NM as "streFileNm",
+		b.ORIGNL_FILE_NM as "orignlFileNm",
+		b.FILE_EXTSN as "fileExtsn",
+		'' as "fileCn",
+		b.FILE_SIZE as "fileSize"
+		from portal_bbs a
+		join comtnfiledetail b on a.atch_file_id = b.atch_file_id
+    </select>
+    
+    <select id="GetEdmsDocList" parameterType="hashmap" resultType="hashmap">
+		select
+	  	NTT_ID as "nttId",
+		BBS_ID as "bbsId",
+		NTT_NO as "nttNo",
+		NTT_SJ as "nttSj",
+		NTT_CN as "nttCn",
+		ANSWER_AT as "answerAt",
+		PARNTSCTT_NO as "parntscttNo",
+		ANSWER_LC as "answerLc",
+		SORT_ORDR as "sortOrdr",
+		USE_AT as "useAt",
+		RDCNT as "rdcnt",
+		NTCE_BGNDE as "ntceBgde",
+		NTCE_ENDDE as "ntceEndde",
+		NTCR_ID as "ntcrId",
+		NTCR_NM as "ntcrNm",
+		PASSWORD as "password",
+		ATCH_FILE_ID as "atchFileId",
+		TO_CHAR(FRST_REGIST_PNTTM,'yyyy-MM-dd HH24:mm:ss') as "frstregistPnttm",
+		FRST_REGISTER_ID as "frstRegisterId",
+		TO_CHAR(LAST_UPDT_PNTTM,'yyyy-MM-dd HH24:mm:ss') as "lastUpdtPnttm",
+		LAST_UPDUSR_ID as "lastUpdusrId",
+		BBS_NOTICE as "bbsNotice",
+		BBS_ANONYM as "bbsAnonym",
+		BBS_IMAGE as "bbsImage",
+		BBS_GROUP as "bbsGroup",
+		BBS_POS as "bbsPos",
+		BBS_SEQ as "bbsSeq",
+		BBS_REF as "bbsRef",
+		BBS_EXTOPEN as "bbsExtopen"
+		from portal_bbs
+    </select>      
+    
+</mapper>

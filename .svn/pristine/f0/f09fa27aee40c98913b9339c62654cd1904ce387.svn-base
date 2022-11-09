@@ -1,0 +1,786 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="EmpDeptManage">
+	
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+	<delete id="EmpDeptManage.deleteEmpDept" parameterClass="hashmap">
+		DELETE FROM $DB_NEOS$`t_co_emp_dept` 
+		WHERE
+		`dept_seq` = #deptSeq# AND `emp_seq` = #empSeq#
+	</delete>
+	
+	<delete id="EmpDeptManage.deleteEmpDeptMulti" parameterClass="hashmap">
+		DELETE FROM $DB_NEOS$`t_co_emp_dept_multi` 
+		WHERE
+		`dept_seq` = #deptSeq# AND `emp_seq` = #empSeq#
+	</delete>
+	
+	
+	<update id="EmpDeptManage.updateEmpAuth" parameterClass="hashmap">
+	    /* EmpDeptManage.updateEmpAuth - mariadb */
+<!-- 		UPDATE t_co_auth_user_relate -->
+<!-- 		SET author_dept = #deptSeq# -->
+<!-- 		WHERE emp_seq = #empSeq# AND author_dept = #oldDeptSeq# -->
+		UPDATE $DB_NEOS$t_co_auth_relate
+		SET dept_seq = #deptSeq#
+		WHERE emp_seq = #empSeq# 
+		AND dept_seq = #oldDeptSeq#
+	</update>
+	
+	
+	<delete id="EmpDeptManage.deleteEmpDeptAuth" parameterClass="hashmap">
+	    /* EmpDeptManage.deleteEmpDeptAuth - mariadb */	
+<!-- 		DELETE FROM `t_co_auth_user_relate`  -->
+<!-- 		WHERE -->
+<!-- 		`emp_seq` = #empSeq# AND `author_dept` = #deptSeq#	     -->
+		DELETE FROM $DB_NEOS$`t_co_auth_relate` 
+		WHERE `emp_seq` = #empSeq# AND `dept_seq` = #deptSeq# AND `author_type` = '002'
+	</delete>
+	
+	<insert id="EmpDeptManage.insertBaseAuth" parameterClass="hashmap">
+	    /* EmpDeptManage.insertBaseAuth - mariadb */	
+<!-- 		INSERT IGNORE INTO t_co_auth_user_relate -->
+<!-- 		SELECT  -->
+<!-- 			#empSeq#, author_code, #deptSeq#  -->
+<!-- 		FROM  -->
+<!-- 			t_co_authcode  -->
+<!-- 		WHERE  -->
+<!-- 			comp_seq = #compSeq# AND author_use_yn = 'Y' AND author_base_yn = 'Y'		    	 -->
+		INSERT IGNORE INTO $DB_NEOS$t_co_auth_relate
+		SELECT 
+			author_code, author_type, #compSeq#, #deptSeq#, #empSeq# 
+		FROM 
+			$DB_NEOS$t_co_authcode 
+		WHERE 
+			comp_seq = #compSeq#
+		AND author_use_yn = 'Y' 
+		AND author_base_yn = 'Y'
+		<isNotEmpty property="deptAuth">
+			AND author_type = '002'
+		</isNotEmpty>	
+	</insert>
+	
+	<update id="EmpDeptManage.setMessengerUseYn" parameterClass="hashmap">
+		UPDATE
+			$DB_NEOS$t_co_emp
+		SET
+			messenger_use_yn = 'N'
+		WHERE
+			emp_seq = #empSeq#
+	</update>
+	
+	<update id="EmpDeptManage.setMessengerUseYnMainDept" parameterClass="hashmap">
+		UPDATE
+			$DB_NEOS$t_co_emp_dept
+		SET
+			messenger_display_yn = 'Y'
+		WHERE
+			emp_seq = #empSeq#
+			AND comp_seq = #compSeq#
+			AND main_dept_yn = 'Y'
+			
+	</update>
+	
+	
+	<update id="EmpDeptManage.updateMessengerUseYn" parameterClass="hashmap">
+		UPDATE
+			$DB_NEOS$t_co_emp
+		SET
+			messenger_use_yn = 'Y'
+		WHERE
+			emp_seq = #empSeq#
+	</update>
+	
+	<update id="EmpDeptManage.setMessengerDisplayYn" parameterClass="hashmap">
+		UPDATE
+			$DB_NEOS$t_co_emp_dept
+		SET
+			messenger_display_yn = #value#
+		WHERE
+			emp_seq = #empSeq#
+			AND dept_seq = #deptSeq#
+	</update>
+	
+	
+	<select id="EmpDeptManage.checkMainDept" parameterClass="hashmap" resultClass="int">
+		SELECT
+			COUNT(*)
+		FROM
+			$DB_NEOS$t_co_emp_dept
+		WHERE
+			emp_seq = #empSeq#
+			AND comp_seq = #compSeq#
+			AND main_dept_yn = 'Y'
+	</select>
+	
+	
+	<select id="EmpDeptManage.checkMainDept2" parameterClass="hashmap" resultClass="int">
+		SELECT
+			COUNT(*)
+		FROM
+			$DB_NEOS$t_co_emp_dept
+		WHERE
+			emp_seq = #empSeq#
+			AND comp_seq = #compSeq#
+	</select>
+	
+	<select id="EmpDeptManage.empDeletCheckCnt" parameterClass="hashmap" resultClass="int">
+		SELECT
+			COUNT(*)
+		FROM
+			$DB_NEOS$t_co_emp_dept a
+		inner join $DB_NEOS$t_co_dept b on a.dept_Seq = b.dept_seq
+		WHERE
+			a.emp_seq = #empSeq#
+			AND a.comp_seq = #compSeq#
+			and a.dept_seq != #deptSeq#
+			and b.ea_yn = 'N'
+	</select>
+	
+	<update id="EmpDeptManage.setMainDept" parameterClass="hashmap">
+		UPDATE
+			$DB_NEOS$t_co_emp_dept
+		SET
+			main_dept_yn = 'N'
+		WHERE
+			emp_seq = #empSeq#
+			AND comp_seq = #compSeq#
+			AND main_dept_yn = 'Y'
+	
+	</update>
+	
+	<select id="EmpDeptManage.checkEmpDeptInfo" parameterClass="hashmap" resultClass="int">
+		SELECT
+			COUNT(*)
+		FROM
+			$DB_NEOS$t_co_emp_dept
+		WHERE
+			emp_seq = #empSeq#
+			AND dept_seq = #deptSeqNew#	
+	</select>
+	
+	
+	<select id="EmpDeptManage.selectEmpDeptCnt" parameterClass="hashmap" resultClass="int">
+		SELECT
+			COUNT(*)
+		FROM
+			$DB_NEOS$t_co_emp_dept
+		WHERE
+			emp_seq = #empSeq#
+			and comp_seq = #compSeq#
+	</select>
+	
+	<update id="EmpDeptManage.updateMainDeptYn" parameterClass="hashmap">
+		UPDATE
+			$DB_NEOS$t_co_emp_dept
+		SET
+			main_dept_yn = 'Y'
+		WHERE
+			emp_seq = #empSeq#
+			AND comp_seq = #compSeq#
+			AND dept_seq = #deptSeq#
+	</update>
+	
+	<select id="EmpDeptManage.selectEmpDeptInfo" parameterClass="hashmap" resultClass="egovMap">
+		SELECT
+			*
+		FROM
+		 	$DB_NEOS$t_co_emp_dept
+	 	WHERE
+	 		emp_seq = #empSeq#
+	 		AND comp_seq = #compSeq#
+	 		<isNotEmpty property="flagOldDeptSeq">	 		
+	 		AND dept_seq = #deptSeq#
+	 		</isNotEmpty>
+ 		LIMIT 1	
+	</select>
+	
+	<select id="EmpDeptManage.selectEmpDeptMultiInfo" parameterClass="hashmap" resultClass="egovMap">
+		SELECT
+			*
+		FROM
+		 	$DB_NEOS$t_co_emp_dept_multi
+	 	WHERE
+	 		emp_seq = #empSeq#
+	 		AND dept_seq = #deptSeq#
+	</select>
+	
+	
+	
+	<select id="EmpDeptManage.selectEmpInfo" parameterClass="hashmap" resultClass="egovMap">
+		SELECT
+			*
+		FROM
+		 	$DB_NEOS$t_co_emp a
+		INNER JOIN $DB_NEOS$t_co_emp_dept b on a.emp_seq = b.emp_seq
+	 	WHERE
+	 		a.emp_seq = #empSeq#
+	 		AND b.comp_seq = #compSeq#		
+	 		AND b.dept_seq = #deptSeq#
+ 		LIMIT 1	
+	</select>
+	
+	<update id="EmpDeptManage.updateErpEmpInfo" parameterClass="hashmap">
+		UPDATE
+			$DB_NEOS$t_co_emp_comp
+		SET
+			dept_seq = #deptSeq#
+		WHERE
+			comp_seq = #compSeq#
+			AND emp_seq = #empSeq#	
+	</update>
+	
+	
+	<update id="EmpDeptManage.setEmpMainCompSeq" parameterClass="hashmap">
+		UPDATE
+			$DB_NEOS$t_co_emp
+		SET
+			main_comp_seq = #mainCompSeq#
+		WHERE
+			emp_seq = #empSeq#
+			AND main_comp_seq = #mainCompSeqOld#
+	</update>
+
+	<select id="EmpManage.getBizSeq" parameterClass="hashmap" resultClass="string">	
+		SELECT
+			biz_seq as bizSeq
+		FROM
+			$DB_NEOS$t_co_dept
+		WHERE
+			dept_seq = #deptSeq#
+	</select>
+	
+	
+	<update id="EmpDeptManage.updateEmpAuthor" parameterClass="hashmap">
+		UPDATE
+			$DB_NEOS$t_co_auth_relate
+		set
+			dept_seq = #deptSeqNew#
+		WHERE
+			emp_seq = #empSeq# AND dept_seq = #deptSeq# AND author_type != '002' AND comp_seq = #compSeq#	
+	</update>
+	
+	
+	
+	<update id="CompManage.updateEmpAuthMainDept" parameterClass="hashmap">
+		UPDATE
+			$DB_NEOS$t_co_auth_relate
+		set
+			dept_seq = #deptSeq#
+		WHERE
+			emp_seq = #empSeq# AND author_type != '002' AND comp_seq = #compSeq#
+			<isNotEmpty property="targetOldDeptSeq">
+			and dept_seq = #targetOldDeptSeq#
+			</isNotEmpty>
+	</update>
+	
+	<delete id="EmpDeptManage.deleteEmpDeptAuthInit" parameterClass="hashmap">
+		DELETE FROM $DB_NEOS$`t_co_auth_relate` 
+		<isNotEmpty property="isAllDel">
+		WHERE `emp_seq` = #empSeq# AND `comp_seq` = #compSeq#
+		</isNotEmpty>
+		<isEmpty property="isAllDel">
+		WHERE `emp_seq` = #empSeq# AND `comp_seq` = #compSeq# AND `dept_seq` = #dept_seq# AND `author_type` = '002'
+		</isEmpty>
+		
+	</delete>
+	
+	<delete id="EmpDeptManage.deleteEmpDeptAuthNew" parameterClass="hashmap">
+		DELETE FROM $DB_NEOS$`t_co_auth_relate` 
+		<isNotEmpty property="isAllDel">
+		WHERE `emp_seq` = #empSeq# AND `comp_seq` = #compSeq#
+		</isNotEmpty>
+		<isEmpty property="isAllDel">
+		WHERE `emp_seq` = #empSeq# AND `comp_seq` = #compSeq# AND `dept_seq` = #deptSeq#
+		</isEmpty>
+	</delete>
+	
+	<insert id="EmpDeptManage.InsertBaseAuthList" parameterClass="hashmap">
+		INSERT IGNORE INTO $DB_NEOS$t_co_auth_relate
+		select author_code, author_type, #compSeq#, #deptSeq#, #empSeq# from $DB_NEOS$t_co_authcode
+		where comp_seq = #compSeq# and author_base_yn = 'Y' and author_code != '002';
+	</insert>
+	
+	
+	<update id="CompManage.updateEmpAuthDept" parameterClass="hashmap">
+		update
+			$DB_NEOS$t_co_auth_relate
+		set
+			dept_seq = #deptSeq#
+		where
+			comp_seq = #compSeq#
+			and emp_seq = #empSeq#	
+			and author_type != '002'		
+	
+	</update>
+	
+	
+	<delete id="CompManage.deleteEmpAuth" parameterClass="hashmap">
+		delete from
+			$DB_NEOS$t_co_auth_relate		
+		where
+			comp_seq = #compSeq#
+			and emp_seq = #empSeq#	
+			and dept_seq = #deptSeq#
+	</delete>
+	
+	
+	<update id="EmpDeptManage.updateEmpDeptOrderNum" parameterClass="hashMap">
+		UPDATE
+			$DB_NEOS$t_co_emp_dept
+		SET
+			order_num = #orderNum#
+		WHERE
+			emp_seq = #empSeq# AND dept_seq = #deptSeq#
+	</update>
+	
+	
+	<update id="EmpDeptManage.updateEmpDeptOrderText" parameterClass="hashMap">
+		update $DB_NEOS$t_co_emp_dept A 
+		LEFT JOIN $DB_NEOS$t_co_comp_duty_position POSI ON A.position_code = POSI.dp_seq AND POSI.dp_type='POSITION'
+		LEFT JOIN $DB_NEOS$t_co_comp_duty_position DUTY ON A.duty_code = DUTY.dp_seq AND DUTY.dp_type='DUTY'
+		LEFT JOIN $DB_NEOS$t_co_emp E ON A.emp_seq = e.emp_seq
+		LEFT JOIN $DB_NEOS$v_t_co_emp_multi vem ON A.emp_seq = vem.emp_seq and vem.lang_code = 'kr'
+		SET A.order_text = CONCAT(
+											LPAD(IF(IFNULL(POSI.order_num,'') = '','9999999999',POSI.order_num),10,'0'),'|',		-- 직급
+											LPAD(IF(IFNULL(DUTY.order_num,'') = '','9999999999',DUTY.order_num),10,'0'),'|',		-- 직책
+											LPAD(IF(IFNULL(A.order_num,'') = '','9999999999',A.order_num),10,'0'),'|',				-- 사용자정렬값
+											IFNULL(LPAD(IF(IFNULL(DATE_FORMAT(E.join_day, '%Y%m%d'),'99999999') = '00000000','99999999',DATE_FORMAT(E.join_day, '%Y%m%d')),8,'0'),'99999999'),'|',	-- 입사일
+											IFNULL(vem.emp_name,''))
+		WHERE
+		<isEmpty property="isPositionDutyPage"> 
+			A.group_seq = #groupSeq# AND A.comp_seq = #compSeq# AND A.dept_seq = #deptSeq#
+			<isNotEmpty property="empSeq">
+				AND A.emp_seq = #empSeq#
+			</isNotEmpty>
+		</isEmpty>
+		<isNotEmpty property="isPositionDutyPage">
+			<isEqual property="dpType" compareValue="POSITION">
+				A.position_code = #dpSeq#
+			</isEqual>
+			<isEqual property="dpType" compareValue="DUTY">
+				A.duty_code = #dpSeq#
+			</isEqual>
+		</isNotEmpty>
+	</update>
+	
+	<select id="EmpDeptManage.empDeptChangeCheck" parameterClass="hashmap" resultClass="egovMap">
+	
+	    select 
+	    a.group_seq,
+	    a.license_check_yn,
+	    ifnull(b.work_status,'001') as work_status
+	    from $DB_NEOS$t_co_emp a
+	    left join $DB_NEOS$t_co_emp_comp b on a.emp_seq=B.emp_seq and A.work_status IN ('999','004')
+	    where a.emp_seq = #empSeq#
+	    limit 1;	
+	
+	</select>
+	
+	<update id="EmpDeptManage.UpdateEmpCompByEmpMove" parameterClass="hashmap">
+		update 
+			$DB_NEOS$t_co_emp_comp 
+		set 
+			dept_seq = #newDeptSeq#, biz_seq = #newBizSeq#
+		where
+			emp_seq = #empSeq# and dept_seq = #oldDeptSeq#	
+	</update>
+	
+	<insert id="EmpDeptManage.InsertEmpDeptByEmpMove" parameterClass="egovMap">
+		INSERT INTO $dbNeos$`t_co_emp_dept` (`dept_seq`, `emp_seq`, `group_seq`, `comp_seq`, `biz_seq`, `main_dept_yn`, `duty_code`, `position_code`, `tel_num`, `fax_num`, `zip_code`, `orgchart_display_yn`, `messenger_display_yn`, `order_num`, `order_text`, `use_yn`, `create_seq`, `create_date`, `modify_seq`, `modify_date`) 
+		VALUES (#deptSeq#, #empSeq#, #groupSeq#, #compSeq#, #bizSeq#, #mainDeptYn#, #dutyCode#, #positionCode#, #telNum#, #faxNum#, #zipCode#, #orgchartDisplayYn#, #messengerDisplayYn#, #orderNum#, #orderText#, #useYn#, #createSeq#, now(), null, null);
+	</insert>
+	
+	<update id="EmpDeptManage.updateEmpDeptPosiDutyInfoByEmpMove" parameterClass="egovMap">
+		UPDATE
+			$dbNeos$t_co_emp_dept
+		SET
+			position_code = #positionCode#,
+			duty_code = #dutyCode#
+		WHERE
+			emp_seq = #empSeq# AND dept_seq = #oldDeptSeq#
+	</update>
+	
+	
+	<insert id="EmpDeptManage.InsertEmpDeptMultiByEmpMove" parameterClass="egovMap">
+		INSERT INTO $dbNeos$`t_co_emp_dept_multi` (`dept_seq`, `emp_seq`, `lang_code`, `group_seq`, `comp_seq`, `biz_seq`, `addr`, `detail_addr`, `use_yn`, `create_seq`, `create_date`, `modify_seq`, `modify_date`) 
+		VALUES (#deptSeq#, #empSeq#, #langCode#, #groupSeq#, #compSeq#, #bizSeq#, #addr#, #detailAddr#, #useYn#, #createSeq#, now(), null, null) 
+	</insert>
+	
+	<delete id="EmpDeptManage.DeleteEmpDeptByEmpMove" parameterClass="hashmap">
+		delete from $DB_NEOS$t_co_emp_dept
+		where emp_seq = #empSeq# and dept_seq = #oldDeptSeq#
+	</delete>
+	
+	<delete id="EmpDeptManage.DeleteEmpDeptMultiByEmpMove" parameterClass="hashmap">
+		delete from $DB_NEOS$t_co_emp_dept_multi
+		where emp_seq = #empSeq# and dept_seq = #oldDeptSeq#
+	</delete>
+	
+	<update id="EmpDeptManage.UpdateEmpAuthByEmpMove" parameterClass="hashmap">
+		update $DB_NEOS$t_co_auth_relate
+		set dept_seq = #newDeptSeq#
+		where comp_seq = #compSeq# and emp_seq = #empSeq# and dept_seq = #oldDeptSeq#
+	</update>
+	
+	
+	<select id="EmpDeptManage.SelectEmpAllInfoByEmpMove" parameterClass="hashmap" resultClass="egovMap">
+		select
+		ed.position_code as dept_position_code
+		,ed.duty_code as dept_duty_code
+		,ed.main_comp_yn
+		,ifnull(dm_lang.dept_name,dm_kr.dept_name) as dept_name
+		,ifnull(dm_lang.path_name,dm_kr.path_name) as path_name
+		,ifnull(posi_lang.dp_name,posi_kr.dp_name) as dept_position_nm
+		,ifnull(duty_lang.dp_name,duty_kr.dp_name) as dept_duty_nm
+		from $DB_NEOS$t_co_emp_dept ed
+		left join $DB_NEOS$t_co_dept_multi dm_kr on dm_kr.lang_code = 'kr' and ed.dept_seq = dm_kr.dept_seq
+		left join $DB_NEOS$t_co_dept_multi dm_lang on dm_lang.lang_code = #langCode# and ed.dept_seq = dm_lang.dept_seq
+		left join $DB_NEOS$t_co_comp_duty_position_multi posi_kr on posi_kr.lang_code = 'kr' and posi_kr.dp_type = 'POSITION' and ed.position_code = posi_kr.dp_seq
+		left join $DB_NEOS$t_co_comp_duty_position_multi posi_lang on posi_lang.lang_code = #langCode# and posi_lang.dp_type = 'POSITION' and ed.position_code = posi_lang.dp_seq
+		left join $DB_NEOS$t_co_comp_duty_position_multi duty_kr on duty_kr.lang_code = 'kr' and duty_kr.dp_type = 'DUTY' and ed.duty_code = duty_kr.dp_seq
+		left join $DB_NEOS$t_co_comp_duty_position_multi duty_lang on duty_lang.lang_code = #langCode# and duty_lang.dp_type = 'DUTY' and ed.duty_code = duty_lang.dp_seq
+		where ed.comp_seq = #compSeq# and ed.dept_seq = #deptSeq# and ed.emp_seq = #empSeq#
+	</select>
+	
+	
+	<insert id="EmpDeptManage.InsertEmpMoveHistory" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_emp_move_history
+		(comp_seq, emp_seq, new_dept_seq, new_dept_nm, new_dept_path_nm, new_position_code, new_position_nm, new_duty_code, new_duty_nm, old_dept_seq, old_dept_nm, old_dept_path_nm, old_position_code, old_position_nm, old_duty_code, old_duty_nm, create_date, create_by)
+		values
+		(#compSeq#, #empSeq#, #newDeptSeq#, #newDeptNm#, #newDeptPathNm#, #newPositionCode#, #newPositionNm#, #newDutyCode#, #newDutyNm#, #oldDeptSeq#, #oldDeptNm#, #oldDeptPathNm#, #oldPositionCode#, #oldPositionNm#, #oldDutyCode#, #oldDutyNm#, now(), #createSeq#)	
+	</insert>
+	
+	<select id="EmpDeptManage.SelectEmpMoveHistory_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+		select
+			count(a.emp_seq) 						
+		from $DB_NEOS$t_co_emp_move_history a
+		left join $DB_NEOS$t_co_emp b on a.emp_seq = b.emp_seq
+		left join $DB_NEOS$v_t_co_emp_multi c on a.emp_seq = c.emp_seq and c.lang_code = 'kr'
+		left join $DB_NEOS$t_co_emp_comp d on a.emp_seq = d.emp_seq and a.comp_seq = d.comp_seq
+		left join $DB_NEOS$v_t_co_comp_multi e on a.comp_seq = e.comp_seq and e.lang_code = 'kr'
+		where
+		 1=1
+		<isNotEmpty property="compSeq">
+			and a.comp_seq = #compSeq#
+		</isNotEmpty>		 
+		and convert(STR_TO_DATE(a.create_date,'%Y-%m-%d'), char(20)) between #startDate# and #endDate#
+		and (a.new_position_nm like ('%$searchPosi$%') or a.old_position_nm like ('%$searchPosi$%'))
+		and (a.new_duty_nm like ('%$searchDuty$%') or a.old_duty_nm like ('%$searchDuty$%'))
+		<isNotEmpty property="searchWorkStatus">
+			and d.work_status = #searchWorkStatus#
+		</isNotEmpty>
+		<isNotEmpty property="empSeq">
+			and a.emp_seq = #empSeq#
+		</isNotEmpty>
+		<isEmpty property="empSeq">
+			and $DB_NEOS$FN_GetMultiLang(#langCode#, c.emp_name_multi) like ('%$empName$%')
+		</isEmpty>
+		<isNotEmpty property="deptSeq">
+			and (a.new_dept_seq = #deptSeq# or a.old_dept_seq = #deptSeq#)
+		</isNotEmpty>
+		<isEmpty property="deptSeq">
+			and (a.new_dept_nm like('%$deptName$%') or a.old_dept_nm like('%$deptName$%'))
+		</isEmpty>
+	</select>
+	
+	
+	<select id="EmpDeptManage.SelectEmpMoveHistory" parameterClass="hashmap" resultClass="egovMap">
+		select 
+			a.*, 
+			replace(a.old_dept_path_nm,'|','>') old_dept_path_nm2,
+			replace(a.new_dept_path_nm,'|','>') new_dept_path_nm2,
+			$DB_NEOS$FN_GetMultiLang(#langCode#, e.comp_name_multi) comp_name,
+			concat($DB_NEOS$FN_GetMultiLang(#langCode#, c.emp_name_multi),'(',b.login_id,')') emp_name,
+			convert(STR_TO_DATE(a.create_date,'%Y-%m-%d'), char(20)) modify_date,			
+			CASE WHEN d.work_status = '999' THEN $DB_NEOS$get_code_detail_info('0', 'COM517', '999', #langCode#) 
+			       WHEN d.work_status = '001' THEN $DB_NEOS$get_code_detail_info('0', 'COM517', '001', #langCode#) 
+			       WHEN d.work_status = '002' THEN $DB_NEOS$get_code_detail_info('0', 'COM517', '004', #langCode#)
+			       WHEN d.work_status = '004' THEN $DB_NEOS$get_code_detail_info('0', 'COM517', '004', #langCode#)  
+			       ELSE $DB_NEOS$get_code_detail_info('0', 'COM517', '001', #langCode#) END work_status			
+		from $DB_NEOS$t_co_emp_move_history a
+		left join $DB_NEOS$t_co_emp b on a.emp_seq = b.emp_seq
+		left join $DB_NEOS$v_t_co_emp_multi c on a.emp_seq = c.emp_seq and c.lang_code = 'kr'
+		left join $DB_NEOS$t_co_emp_comp d on a.emp_seq = d.emp_seq and a.comp_seq = d.comp_seq
+		left join $DB_NEOS$v_t_co_comp_multi e on a.comp_seq = e.comp_seq and e.lang_code = 'kr'
+		where 
+		 1=1
+		<isNotEmpty property="compSeq">
+			and a.comp_seq = #compSeq#
+		</isNotEmpty>		 
+		and convert(STR_TO_DATE(a.create_date,'%Y-%m-%d'), char(20)) between #startDate# and #endDate#
+		and (a.new_position_nm like ('%$searchPosi$%') or a.old_position_nm like ('%$searchPosi$%'))
+		and (a.new_duty_nm like ('%$searchDuty$%') or a.old_duty_nm like ('%$searchDuty$%'))
+		<isNotEmpty property="searchWorkStatus">
+			and d.work_status = #searchWorkStatus#
+		</isNotEmpty>
+		<isNotEmpty property="empSeq">
+			and a.emp_seq = #empSeq#
+		</isNotEmpty>
+		<isEmpty property="empSeq">
+			and $DB_NEOS$FN_GetMultiLang(#langCode#, c.emp_name_multi) like ('%$empName$%')
+		</isEmpty>
+		<isNotEmpty property="deptSeq">
+			and (a.new_dept_seq = #deptSeq# or a.old_dept_seq = #deptSeq#)
+		</isNotEmpty>
+		<isEmpty property="deptSeq">
+			and (a.new_dept_nm like('%$deptName$%') or a.old_dept_nm like('%$deptName$%'))
+		</isEmpty>
+		
+		order by a.create_date desc
+		<isNotEmpty property="startNum">
+		 	<isNotEmpty property="endNum">
+		 		<isNotEqual property="endNum" compareValue="0">
+		 			LIMIT $startNum$, $endNum$
+		 		</isNotEqual>
+		 	</isNotEmpty>
+		</isNotEmpty>
+	</select>
+	
+	
+	
+	<select id="EmpDeptManage.SelectEmpMoveHistoryExcelList" parameterClass="hashmap" resultClass="egovMap">
+		select 
+			convert(STR_TO_DATE(a.create_date,'%Y-%m-%d'), char(20)) modify_date,
+			$DB_NEOS$FN_GetMultiLang(#langCode#, e.comp_name_multi) comp_name,
+			concat($DB_NEOS$FN_GetMultiLang(#langCode#, c.emp_name_multi),'(',b.login_id,')') emp_name,
+			CASE WHEN d.work_status = '999' THEN $DB_NEOS$get_code_detail_info('0', 'COM517', '999', #langCode#) 
+			       WHEN d.work_status = '001' THEN $DB_NEOS$get_code_detail_info('0', 'COM517', '001', #langCode#) 
+			       WHEN d.work_status = '002' THEN $DB_NEOS$get_code_detail_info('0', 'COM517', '004', #langCode#)
+			       WHEN d.work_status = '004' THEN $DB_NEOS$get_code_detail_info('0', 'COM517', '004', #langCode#)  
+			       ELSE $DB_NEOS$get_code_detail_info('0', 'COM517', '001', #langCode#) END work_status,
+			replace(a.new_dept_path_nm,'|','>') new_dept_path_nm2,
+			a.new_position_nm,
+			a.new_duty_nm,
+			replace(a.old_dept_path_nm,'|','>') old_dept_path_nm2,       
+			a.old_position_nm,
+			a.old_duty_nm			
+		from $DB_NEOS$t_co_emp_move_history a
+		left join $DB_NEOS$t_co_emp b on a.emp_seq = b.emp_seq
+		left join $DB_NEOS$v_t_co_emp_multi c on a.emp_seq = c.emp_seq and c.lang_code = 'kr'
+		left join $DB_NEOS$t_co_emp_comp d on a.emp_seq = d.emp_seq and a.comp_seq = d.comp_seq
+		left join $DB_NEOS$v_t_co_comp_multi e on a.comp_seq = e.comp_seq and e.lang_code = 'kr'
+		where 
+		 1=1
+		<isNotEmpty property="compSeq">
+			and a.comp_seq = #compSeq#
+		</isNotEmpty>		 
+		and convert(STR_TO_DATE(a.create_date,'%Y-%m-%d'), char(20)) between #startDate# and #endDate#
+		and (a.new_position_nm like ('%$searchPosi$%') or a.old_position_nm like ('%$searchPosi$%'))
+		and (a.new_duty_nm like ('%$searchDuty$%') or a.old_duty_nm like ('%$searchDuty$%'))
+		<isNotEmpty property="searchWorkStatus">
+			and d.work_status = #searchWorkStatus#
+		</isNotEmpty>
+		<isNotEmpty property="empSeq">
+			and a.emp_seq = #empSeq#
+		</isNotEmpty>
+		<isEmpty property="empSeq">
+			and $DB_NEOS$FN_GetMultiLang(#langCode#, c.emp_name_multi) like ('%$empName$%')
+		</isEmpty>
+		<isNotEmpty property="deptSeq">
+			and (a.new_dept_seq = #deptSeq# or a.old_dept_seq = #deptSeq#)
+		</isNotEmpty>
+		<isEmpty property="deptSeq">
+			and (a.new_dept_nm like('%$deptName$%') or a.old_dept_nm like('%$deptName$%'))
+		</isEmpty>		
+		order by a.create_date desc	
+	</select>
+	
+	
+	<select id="EmpDeptManage.selectEmpMoveEaInfo" parameterClass="hashmap" resultClass="egovMap">
+		select 
+			 a.dept_seq,
+			 deptKr.dept_name dept_name_kr,
+			 deptEn.dept_name dept_name_en,
+			 deptJp.dept_name dept_name_jp,
+			 deptCn.dept_name dept_name_cn,
+			 a.position_code,
+			 posiKr.dp_name position_name_kr,
+			 posiEn.dp_name position_name_en,
+			 posiJp.dp_name position_name_jp,
+			 posiCn.dp_name position_name_cn,
+			 a.duty_code,
+			 dutyKr.dp_name duty_name_kr,
+			 dutyEn.dp_name duty_name_en,
+			 dutyJp.dp_name duty_name_jp,
+			 dutyCn.dp_name duty_name_cn
+		from $DB_NEOS$t_co_emp_dept a 
+		left join $DB_NEOS$t_co_dept_multi deptKr on a.dept_seq = deptKr.dept_seq and deptKr.lang_code = 'kr'
+		left join $DB_NEOS$t_co_dept_multi deptEn on a.dept_seq = deptEn.dept_seq and deptEn.lang_code = 'en'
+		left join $DB_NEOS$t_co_dept_multi deptJp on a.dept_seq = deptJp.dept_seq and deptJp.lang_code = 'jp'
+		left join $DB_NEOS$t_co_dept_multi deptCn on a.dept_seq = deptCn.dept_seq and deptCn.lang_code = 'cn'
+		
+		left join $DB_NEOS$t_co_comp_duty_position_multi posiKr on posiKr.dp_type='POSITION' and posiKr.dp_seq = a.position_code and posiKr.lang_code = 'kr'
+		left join $DB_NEOS$t_co_comp_duty_position_multi posiEn on posiEn.dp_type='POSITION' and posiEn.dp_seq = a.position_code and posiEn.lang_code = 'en'
+		left join $DB_NEOS$t_co_comp_duty_position_multi posiJp on posiJp.dp_type='POSITION' and posiJp.dp_seq = a.position_code and posiJp.lang_code = 'jp'
+		left join $DB_NEOS$t_co_comp_duty_position_multi posiCn on posiCn.dp_type='POSITION' and posiCn.dp_seq = a.position_code and posiCn.lang_code = 'cn'
+		
+		left join $DB_NEOS$t_co_comp_duty_position_multi dutyKr on dutyKr.dp_type='DUTY' and dutyKr.dp_seq = a.duty_code and dutyKr.lang_code = 'kr'
+		left join $DB_NEOS$t_co_comp_duty_position_multi dutyEn on dutyEn.dp_type='DUTY' and dutyEn.dp_seq = a.duty_code and dutyEn.lang_code = 'en'
+		left join $DB_NEOS$t_co_comp_duty_position_multi dutyJp on dutyJp.dp_type='DUTY' and dutyJp.dp_seq = a.duty_code and dutyJp.lang_code = 'jp'
+		left join $DB_NEOS$t_co_comp_duty_position_multi dutyCn on dutyCn.dp_type='DUTY' and dutyCn.dp_seq = a.duty_code and dutyCn.lang_code = 'cn'
+		
+		where a.dept_seq = #deptSeq# and a.emp_seq = #empSeq#	
+		
+		limit 1
+	</select>
+	
+	<update id="EmpDeptManage.updateEmpAppDocInfo" parameterClass="egovMap">
+		UPDATE $dbNeos$TEAG_APPDOC
+	    SET DEPT_ID     = #deptSeq#
+	      , DEPT_NM     = #deptNameKr#
+	      , DEPT_NM_EN  = #deptNameEn#
+	      , DEPT_NM_JP  = #deptNameJp#
+	      , DEPT_NM_CN  = #deptNameCn#
+	      , GRADE_NM    = #positionNameKr#  
+	      , GRADE_NM_EN = #positionNameEn#
+	      , GRADE_NM_JP = #positionNameJp#
+	      , DUTY_NM     = #dutyNameKr#  
+	      , DUTY_NM_EN  = #dutyNameEn#
+	      , DUTY_NM_JP  = #dutyNameJp#
+	      , DUTY_NM_CN  = #dutyNameCn#
+	  WHERE DOC_STS NOT IN ('40','70','80','90','100') 
+	    AND USE_YN = 1
+	    AND USER_ID =  #empSeq# 
+	    AND DEPT_ID =  #deptSeq# 
+	</update>
+	
+	<update id="EmpDeptManage.updateEmpAppDocLineInfo" parameterClass="egovMap">
+		UPDATE $dbNeos$TEAG_APPDOC_LINE
+	    SET DEPT_ID     = #deptSeq#
+	      , DEPT_NM     = #deptNameKr#
+	      , DEPT_NM_EN  = #deptNameEn#
+	      , DEPT_NM_JP  = #deptNameJp#
+	      , DEPT_NM_CN  = #deptNameCn#
+	      , GRADE_NM    = #positionNameKr# 
+	      , GRADE_NM_EN = #positionNameEn#
+	      , GRADE_NM_JP = #positionNameJp#
+	      , GRADE_NM_CN = #positionNameCn#
+	      , DUTY_NM     = #dutyNameKr#  
+	      , DUTY_NM_EN  = #dutyNameEn#  
+	      , DUTY_NM_JP  = #dutyNameJp#
+	      , DUTY_NM_CN  = #dutyNameCn# 
+	  WHERE APP_YN = 0
+	    AND USER_ID = #empSeq#
+	    AND DEPT_ID =  #deptSeq#
+	</update>
+	
+	<update id="EmpDeptManage.updateEmpAppUserIdInfo" parameterClass="egovMap">
+		UPDATE $dbNeos$TEAG_APPDOC_LINE 
+		SET 
+	        PROXY_APP_DEPT_ID     = #deptSeq#
+	      , PROXY_APP_DEPT_NM     = #deptNameKr#
+	      , PROXY_APP_DEPT_NM_EN  = #deptNameEn#
+	      , PROXY_APP_DEPT_NM_JP  = #deptNameJp#
+	      , PROXY_APP_DEPT_NM_CN  = #deptNameCn#
+	      , PROXY_APP_GRADE_NM    = #positionNameKr#
+	      , PROXY_APP_GRADE_NM_EN = #positionNameEn#
+	      , PROXY_APP_GRADE_NM_JP = #positionNameJp#
+	      , PROXY_APP_GRADE_NM_CN = #positionNameCn#
+	      , PROXY_APP_DUTY_NM     = #dutyNameKr#
+	      , PROXY_APP_DUTY_NM_EN  = #dutyNameEn#
+	      , PROXY_APP_DUTY_NM_JP  = #dutyNameJp#
+	      , PROXY_APP_DUTY_NM_CN  = #dutyNameCn#
+	  WHERE APP_YN = 0
+	    AND PROXY_APP_USER_ID = #empSeq#
+	    AND PROXY_APP_DEPT_ID = #deptSeq#
+	</update>
+	
+	
+	<select id="EmpDeptManage.getEaDocCnt" parameterClass="hashmap" resultClass="String">
+		SELECT 
+                 COUNT(*) TOTALCOUNT
+        FROM     $DB_NEOS$A_DRAFTINFO f
+            ,    $DB_NEOS$A_KYULJAELINEINFO k
+            ,    $DB_NEOS$A_RECORDINFO ri
+            ,    $DB_NEOS$A_DOCINFO di
+            ,    $DB_NEOS$A_LUMP_DOCINFO ldi
+        WHERE    f.c_diseqnum    = '0000000001'
+        AND      f.c_ditkeycode  = '*'
+        AND      k.C_KLORGCODE   = #deptSeq#
+        AND      k.C_KLUSERKEY   = #empSeq#
+        AND      f.c_dikeycode   = k.c_dikeycode
+        AND      ri.C_DIKEYCODE  = f.c_dikeycode
+        AND      k.c_klusertype  > '001'            
+        AND      f.c_distatus    IN ('002', '003', '004')
+        AND      k.c_klstatus    IN ('1','2')
+        AND      k.c_klsignday   IS NULL
+        AND      di.c_dikeycode  = f.c_dikeycode
+        AND      ldi.C_LIKEYCODE = di.C_LIKEYCODE
+        AND      ldi.C_DIKEYCODE = di.C_DIKEYCODE
+	</select>
+	
+	
+	<update id="EmpDeptManage.UpdateWorkTeam" parameterClass="hashmap">
+		update $DB_NEOS$t_at_work_team_member
+		set
+			dept_seq = #newDeptSeq#
+		where
+			comp_seq = #compSeq# and emp_seq = #empSeq#	
+	</update>
+	
+	<update id="EmpDeptManage.UpdateWorkTeamHistory" parameterClass="hashmap">
+		update $DB_NEOS$t_at_work_team_res_history
+		set
+			dept_seq = #newDeptSeq#
+		where
+			comp_seq = #compSeq# and emp_seq = #empSeq#	
+	</update>
+	
+	
+	<update id="EmpDeptManage.UpdateAttRegulate" parameterClass="hashmap">
+		update $DB_NEOS$t_at_att_regulate_emp
+		set
+			dept_seq = #newDeptSeq#
+		where
+			comp_seq = #compSeq# and emp_seq = #empSeq#	
+	</update>
+	
+	<update id="EmpDeptManage.UpdateAccessEmpInfo" parameterClass="hashmap">
+		update $DB_NEOS$t_co_access_relate
+		set
+			dept_seq = #newDeptSeq#
+		where
+			comp_seq = #compSeq# and emp_seq = #empSeq#	and dept_seq = #oldDeptSeq#
+	</update>
+	
+	
+	<select id="EmpDeptManage.getEmpDept" parameterClass="hashmap" resultClass="egovMap">
+		SELECT 
+			*
+		FROM
+			$DB_NEOS$T_CO_EMP_DEPT
+		WHERE
+			emp_seq = #empSeq# and dept_seq = #deptSeq#
+	</select>
+
+
+	<update id="EmpDeptManage.UpdateEmpDutyPosiInfoByEmpMove" parameterClass="egovMap">
+		update $dbNeos$t_co_emp_dept
+		set duty_code = #dutyCode#, position_code = #positionCode#
+		where dept_seq = #deptSeq# and emp_seq = #empSeq# and comp_seq = #compSeq#
+	</update>
+	
+	<select id="EmpDeptManage.getEmpMainCompYn" parameterClass="hashmap" resultClass="string">
+		select 
+			case when count(main_comp_yn) > 0 then 'Y' else 'N' end as main_comp_yn
+		from
+			$DB_NEOS$t_co_emp_dept
+		where
+			emp_seq = #empSeq# and comp_seq = #compSeq# and main_comp_yn = 'Y'
+	</select>
+	
+	<select id="EmpDeptManage.getMainDeptSeq" parameterClass="hashmap" resultClass="string">
+		select 
+			dept_seq
+		from 
+			$DB_NEOS$t_co_emp_dept 
+		where 
+			comp_seq = #compSeq# and emp_seq = #empSeq# and main_dept_yn = 'Y'
+		limit 1
+	</select>
+	
+</sqlMap>

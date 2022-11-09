@@ -1,0 +1,839 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="orgchartDAO">
+	<select id="orgchartDAO.selectCurrentTime" resultClass="hashmap">
+		SELECT 
+			LEFT(DATE_FORMAT(SYSDATE(3),'%Y%m%d%H%i%s%f'),17) AS cTime,
+			LEFT(DATE_FORMAT(SYSDATE(3),'%Y-%m-%d %H:%i:%s'),19) AS rTime
+	</select>
+	
+	<select id="orgchartDAO.getOrgSyncTaskList" resultClass="hashmap">
+		SELECT
+		      group_seq as "groupSeq"
+		    , file_path as "filePath"
+		    , req_date as "reqDate"
+		    , task_status as "taskStatus"
+		    , update_status as "updateStatus"
+		    , sync_cycle_time as "syncCycleTime"
+		FROM $DB_NEOS$t_co_orgchart
+		WHERE task_status = '1' or task_status = '-' or TIMESTAMPDIFF(minute,req_Date,NOW()) > 1440
+	</select>
+	
+	<update id="orgchartDAO.updateOrgSyncTask" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_orgchart
+		SET	task_status = #taskStatus#
+			<isNotEmpty property="filePath">
+			, file_path = #filePath#
+			</isNotEmpty>
+		WHERE group_seq = #groupSeq#
+	</update>
+
+
+	<update id="orgchartDAO.updateOrgSyncTaskComplete" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_orgchart
+		SET	task_status = 	CAST(task_status AS INT) - 2
+			, file_path = #filePath#
+			, req_date = #regDate#
+			<isNotEmpty property="updateStatus">
+			, update_status = #updateStatus#
+			</isNotEmpty>
+			<isNotEmpty property="orgStatus">
+			, org_status = #orgStatus#
+			</isNotEmpty>
+			<isNotEmpty property="regIp">
+			, reg_ip = #regIp#
+			</isNotEmpty>
+		WHERE group_seq = #groupSeq#
+	</update>
+	
+	<select id="orgchartDAO.getCompList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+		A.comp_seq,
+		A.parent_comp_seq,
+		A.group_seq,
+		A.comp_regist_num,
+		A.comp_num,
+		A.standard_code,
+		A.tel_num,
+		A.fax_num,
+		A.homepg_addr,
+		A.comp_domain,
+		A.email_addr,
+		A.email_domain,
+		A.zip_code,
+		A.sms_id,
+		A.sms_passwd,
+		A.native_lang_code,
+		@rownum:=@rownum+1 AS order_num,
+		B.member,
+		B.member_messenger,
+		B.member_orgchart,
+		B.member_messenger as memeber_messenger,
+		B.member_orgchart as memeber_orgchart,
+		B.member_display,
+		B.member_messenger_display,
+		B.member_orgchart_display,
+		B.member_mail_display,
+		B.member_ea_display,
+		A.use_yn,
+		A.create_seq,
+		DATE_FORMAT(A.create_date,'%Y-%m-%d %H:%i:%s') as create_date,
+		A.modify_seq,
+		DATE_FORMAT(A.modify_date,'%Y-%m-%d %H:%i:%s') as modify_date,
+		A.comp_email_yn
+		FROM $DB_NEOS$t_co_comp A
+		JOIN
+		(
+			SELECT
+			A.comp_seq,
+			IFNULL(SUM(B.cnt), 0) AS member,
+			IFNULL(SUM(B.member_messenger), 0) AS member_messenger,
+			IFNULL(SUM(B.member_orgchart), 0) AS member_orgchart,
+			IFNULL(SUM(if(B.display_yn = 'Y', B.cnt, 0)), 0) AS member_display,
+			IFNULL(SUM(IF(B.display_yn = 'Y', B.member_messenger, 0)), 0) AS member_messenger_display,
+			IFNULL(SUM(IF(B.display_yn = 'Y', B.member_orgchart, 0)), 0) AS member_orgchart_display,
+			IFNULL(SUM(IF(B.display_yn = 'Y', B.member_mail, 0)), 0) AS member_mail_display,
+			IFNULL(SUM(IF(B.display_yn = 'Y', B.member_ea, 0)), 0) AS member_ea_display
+			FROM $DB_NEOS$t_co_comp A
+			left outer join
+			(
+				SELECT
+				b.comp_seq,
+				b.display_yn,
+				COUNT(*) cnt,
+				SUM(CASE WHEN A.messenger_display_yn ='Y' THEN 1 ELSE 0 END) member_messenger,
+				SUM(CASE WHEN A.orgchart_display_yn ='Y' THEN 1 ELSE 0 END) member_orgchart,
+				SUM(CASE WHEN M.license_check_yn IN (1,2) THEN 1 ELSE 0 END) member_mail,
+				SUM(CASE WHEN A.orgchart_display_yn ='Y' OR A.ea_display_yn ='Y' THEN 1 ELSE 0 END) member_ea
+				FROM $DB_NEOS$t_co_dept b, $DB_NEOS$t_co_emp_dept A, $DB_NEOS$t_co_emp M, $DB_NEOS$t_co_emp_comp c
+				WHERE A.group_seq = #groupSeq#
+				AND A.group_seq = b.group_seq
+				AND A.dept_seq = b.dept_seq
+				AND A.emp_seq = M.emp_seq
+				AND A.emp_seq = c.emp_seq
+				AND A.comp_seq = c.comp_seq
+				AND A.use_yn = 'Y'
+				AND b.use_yn = 'Y'
+				AND M.use_yn = 'Y'
+				AND c.use_yn = 'Y'
+				GROUP BY b.comp_seq
+			) B
+			ON B.comp_seq = A.comp_seq
+			WHERE A.group_seq = #groupSeq#
+			AND A.use_yn = 'Y'
+			GROUP BY A.comp_seq
+		) B ON A.comp_seq = B.comp_seq
+		JOIN (SELECT @rownum:=0) cntDual
+		WHERE A.group_seq = #groupSeq#
+		AND A.use_yn = 'Y'
+		ORDER BY A.order_num, A.comp_cd
+	</select>
+	
+	<select id="orgchartDAO.getCompMultiList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+				comp_seq, 
+				gl_lang_code as lang_code, 
+				group_seq, 
+				comp_name, 
+				comp_display_name, 
+				owner_name,
+				sender_name, 
+				biz_condition, 
+				item, 
+				addr, 
+				detail_addr, 
+				use_yn, 
+				create_seq, 
+				DATE_FORMAT(create_date,'%Y-%m-%d %H:%i:%s') as create_date,  
+				modify_seq, 
+				DATE_FORMAT(modify_date,'%Y-%m-%d %H:%i:%s') as modify_date
+		FROM 
+			(
+				SELECT 
+					cm.comp_seq, 
+					gl.lang_code as gl_lang_code,
+					cm.lang_code, 
+					cm.group_seq, 
+					cm.comp_name, 
+					cm.comp_display_name, 
+					cm.owner_name,
+					cm.sender_name, 
+					cm.biz_condition, 
+					cm.item, 
+					cm.addr, 
+					cm.detail_addr, 
+					cm.use_yn, 
+					cm.create_seq, 
+					cm.create_date, 
+					cm.modify_seq, 
+					cm.modify_date
+				FROM (
+						SELECT lang_code 
+						FROM $DB_NEOS$t_co_group_lang WHERE group_seq = #groupSeq# AND (main_yn = 'Y' OR sub_yn = 'Y')
+					 ) gl 
+					 join (
+					 	SELECT *  FROM $DB_NEOS$t_co_comp_multi WHERE group_seq = #groupSeq# AND use_yn = 'Y' 
+					 ) cm 
+			) a
+		WHERE gl_lang_code = lang_code OR (gl_lang_code <![CDATA[ <> ]]> lang_code AND lang_code = #langCode#)
+		GROUP BY gl_lang_code, comp_seq
+	</select>
+	
+	<select id="orgchartDAO.getBizList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT re.*, @rownum:=@rownum+1 AS order_num
+		FROM (
+			SELECT
+			A.biz_seq,
+			A.group_seq,
+			A.comp_seq,
+			A.comp_regist_num,
+			A.comp_num,
+			A.tel_num,
+			A.fax_num,
+			A.homepg_addr,
+			A.zip_code,
+			A.display_yn,
+			A.native_lang_code,
+			B.member,
+			B.member_messenger,
+			B.member_orgchart,
+			B.member_messenger as memeber_messenger,
+			B.member_orgchart as memeber_orgchart,
+			B.member_display,
+			B.member_messenger_display,
+			B.member_orgchart_display,
+			B.member_mail_display,
+			B.member_ea_display,
+			A.use_yn,
+			A.create_seq,
+			DATE_FORMAT(A.create_date,'%Y-%m-%d %H:%i:%s') as create_date,
+			A.modify_seq,
+			DATE_FORMAT(A.modify_date,'%Y-%m-%d %H:%i:%s') as modify_date
+			FROM $DB_NEOS$t_co_biz A
+			JOIN
+			(
+				SELECT
+				A.biz_seq,
+				IFNULL(SUM(B.cnt), 0) AS member,
+				IFNULL(SUM(B.member_messenger), 0) AS member_messenger,
+				IFNULL(SUM(B.member_orgchart), 0) AS member_orgchart,
+				IFNULL(SUM(if(B.display_yn = 'Y', B.cnt, 0)), 0) AS member_display,
+				IFNULL(SUM(IF(B.display_yn = 'Y', B.member_messenger, 0)), 0) AS member_messenger_display,
+				IFNULL(SUM(IF(B.display_yn = 'Y', B.member_orgchart, 0)), 0) AS member_orgchart_display,
+				IFNULL(SUM(IF(B.display_yn = 'Y', B.member_mail, 0)), 0) AS member_mail_display,
+				IFNULL(SUM(IF(B.display_yn = 'Y', B.member_ea, 0)), 0) AS member_ea_display
+				FROM $DB_NEOS$t_co_biz A
+				left outer join
+				(
+					SELECT
+					b.biz_seq,
+					b.display_yn,
+					COUNT(*) cnt,
+					SUM(CASE WHEN A.messenger_display_yn ='Y' THEN 1 ELSE 0 END) member_messenger,
+					SUM(CASE WHEN A.orgchart_display_yn ='Y' THEN 1 ELSE 0 END) member_orgchart,
+					SUM(CASE WHEN M.license_check_yn IN (1,2) THEN 1 ELSE 0 END) member_mail,
+					SUM(CASE WHEN A.orgchart_display_yn ='Y' OR A.ea_display_yn ='Y' THEN 1 ELSE 0 END) member_ea
+					FROM $DB_NEOS$t_co_dept b, $DB_NEOS$t_co_emp_dept A, $DB_NEOS$t_co_emp M, $DB_NEOS$t_co_emp_comp c
+					WHERE A.group_seq = #groupSeq#
+					AND A.group_seq = b.group_seq
+					AND A.dept_seq = b.dept_seq
+					AND A.emp_seq = M.emp_seq
+					AND A.emp_seq = c.emp_seq
+					AND A.comp_seq = c.comp_seq
+					AND A.use_yn = 'Y'
+					AND b.use_yn = 'Y'
+					AND M.use_yn = 'Y'
+					AND c.use_yn = 'Y'
+					GROUP BY b.biz_seq
+				) B
+				ON B.biz_seq = A.biz_seq
+				WHERE A.group_seq = #groupSeq#
+				AND A.use_yn = 'Y'
+				GROUP BY A.biz_seq
+			) B ON A.biz_seq = B.biz_seq
+			JOIN (SELECT @rownum:=0) cntDual
+			JOIN $DB_NEOS$t_co_comp C ON C.comp_seq = A.comp_seq
+			WHERE A.group_seq = #groupSeq#
+			AND A.use_yn = 'Y'
+			ORDER BY C.order_num, A.order_num, A.biz_cd
+		) re
+		JOIN (SELECT @rownum:=0) cntDual
+	</select>
+	
+	<select id="orgchartDAO.getBizMultiList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+			biz_seq, 
+			gl_lang_code AS lang_code, 
+			group_seq, 
+			comp_seq, 
+			biz_name, 
+			owner_name, 
+			biz_condition, 
+			item, 
+			addr, 
+			detail_addr,
+			use_yn, 
+			create_seq, 
+			DATE_FORMAT(create_date,'%Y-%m-%d %H:%i:%s') as create_date,  
+			modify_seq, 
+			DATE_FORMAT(modify_date,'%Y-%m-%d %H:%i:%s') as modify_date 
+		FROM (
+					SELECT
+						bm.biz_seq, 
+						gl.lang_code as gl_lang_code,
+						bm.lang_code, 
+						bm.group_seq, 
+						bm.comp_seq, 
+						bm.biz_name, 
+						bm.owner_name, 
+						bm.biz_condition, 
+						bm.item, 
+						bm.addr, 
+						bm.detail_addr,
+						bm.use_yn, 
+						bm.create_seq, 
+						bm.create_date, 
+						bm.modify_seq, 
+						bm.modify_date 
+					FROM (
+						SELECT lang_code 
+						FROM $DB_NEOS$t_co_group_lang WHERE group_seq = #groupSeq# AND (main_yn = 'Y' OR sub_yn = 'Y')
+					 ) gl 
+					 join (
+					 	SELECT *  FROM $DB_NEOS$t_co_biz_multi WHERE group_seq = #groupSeq# AND use_yn = 'Y' 
+					 ) bm 
+			) a
+		WHERE gl_lang_code = lang_code OR (gl_lang_code <![CDATA[ <> ]]> lang_code AND lang_code = #langCode#)
+		GROUP BY gl_lang_code, biz_seq
+	</select>
+	
+	<select id="orgchartDAO.getDeptList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT re.*, @rownum:=@rownum+1 AS order_num
+		FROM (
+			SELECT
+				A.dept_seq,
+				A.group_seq,
+				A.comp_seq,
+				A.biz_seq,
+				A.parent_dept_seq,
+				A.tel_num,
+				A.fax_num,
+				A.homepg_addr,
+				A.zip_code,
+				A.susin_yn,
+				A.vir_dept_yn,
+				A.team_yn,
+				A.native_lang_code,
+				CONCAT(CONCAT('|', A.path), '|')  as "path",
+				A.ptype,
+				A.dept_level,
+				B.member,
+				B.member_messenger,
+				B.member_orgchart,
+				B.member_messenger as memeber_messenger,
+				B.member_orgchart as memeber_orgchart,
+				B.member_display,
+				B.member_messenger_display,
+				B.member_orgchart_display,
+				B.member_mail_display, <!-- 메일 라이센스 사용자 카운터(클라이언트 미사용)  -->
+				B.member_ea_display, <!--클라이언트 미사용 이메일 관련 기획 정의이후 사용함 -->
+				A.display_yn,
+				A.ea_yn,
+				A.use_yn,
+				A.create_seq,
+				DATE_FORMAT(A.create_date,'%Y-%m-%d %H:%i:%s') as create_date,
+				A.modify_seq,
+				DATE_FORMAT(A.modify_date,'%Y-%m-%d %H:%i:%s') as modify_date
+			FROM $DB_NEOS$t_co_dept A
+			JOIN
+			(
+				SELECT
+				 	A.dept_seq,
+						IFNULL(SUM(B.cnt), 0) AS member,
+						IFNULL(SUM(B.member_messenger), 0) AS member_messenger,
+					IFNULL(SUM(B.member_orgchart), 0) AS member_orgchart,
+					IFNULL(SUM(if(B.display_yn = 'Y', B.cnt, 0)), 0) AS member_display,
+					IFNULL(SUM(IF(B.display_yn = 'Y', B.member_messenger, 0)), 0) AS member_messenger_display,
+					IFNULL(SUM(IF(B.display_yn = 'Y', B.member_orgchart, 0)), 0) AS member_orgchart_display,
+					IFNULL(SUM(IF(B.display_yn = 'Y', B.member_mail, 0)), 0) AS member_mail_display,
+					IFNULL(SUM(IF(B.display_yn = 'Y', B.member_ea, 0)), 0) AS member_ea_display
+				FROM $DB_NEOS$t_co_dept A
+				left outer join
+				(
+					SELECT
+							b.path,
+							b.display_yn,
+							COUNT(*) cnt,
+							SUM(CASE WHEN A.messenger_display_yn ='Y' THEN 1 ELSE 0 END) member_messenger,
+						SUM(CASE WHEN A.orgchart_display_yn ='Y' THEN 1 ELSE 0 END) member_orgchart,
+						SUM(CASE WHEN M.license_check_yn IN (1,2) THEN 1 ELSE 0 END) member_mail, <!--메일 라이센트 사용자 수 : 1(그룹웨어),2(메일사용자)만 체  -->
+						SUM(CASE WHEN A.orgchart_display_yn ='Y' OR A.ea_display_yn ='Y' THEN 1 ELSE 0 END) member_ea <!--결재 사용 표시 여부 체  -->
+					FROM $DB_NEOS$t_co_dept b, $DB_NEOS$t_co_emp_dept A, $DB_NEOS$t_co_emp M, $DB_NEOS$t_co_emp_comp c
+					WHERE A.group_seq = #groupSeq#
+						AND A.group_seq = b.group_seq
+						AND A.dept_seq = b.dept_seq
+						AND A.emp_seq = M.emp_seq
+						AND A.emp_seq = c.emp_seq
+						AND A.comp_seq = c.comp_seq
+						AND A.use_yn = 'Y'
+						AND b.use_yn = 'Y'
+						AND M.use_yn = 'Y'
+						AND c.use_yn = 'Y'
+					GROUP BY b.path
+				) B
+				ON CONCAT('|',B.path,'|') LIKE CONCAT('%|',A.path,'|%')
+				WHERE A.group_seq = #groupSeq#
+				AND A.use_yn = 'Y'
+				GROUP BY A.dept_seq
+			) B
+			ON A.dept_seq = B.dept_seq
+			JOIN (SELECT @rownum:=0) cntDual
+			JOIN $DB_NEOS$t_co_comp C ON C.comp_Seq = A.comp_seq
+			JOIN $DB_NEOS$t_co_biz D ON D.biz_seq = A.biz_seq
+			ORDER BY C.order_num, D.order_num, SUBSTR(A.path,1,LENGTH(A.path) - LENGTH(A.dept_Seq) - 1 ), A.order_num, A.dept_cd
+		) re
+		JOIN (SELECT @rownum:=0) cntDual
+	</select>
+	
+	<select id="orgchartDAO.getDeptMultiList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+			dept_seq, 
+			gl_lang_code AS lang_code, 
+			group_seq, 
+			comp_seq, 
+			biz_seq, 
+			dept_name, 
+			dept_display_name, 
+			sender_name, 
+			addr, 
+			detail_addr, 
+			path_name, 
+			use_yn, 
+			create_seq, 
+			DATE_FORMAT(create_date,'%Y-%m-%d %H:%i:%s') as create_date,  
+			modify_seq, 
+			DATE_FORMAT(modify_date,'%Y-%m-%d %H:%i:%s') as modify_date 
+		FROM (
+					SELECT
+						dm.dept_seq, 
+						gl.lang_code as gl_lang_code,
+						dm.lang_code, 
+						dm.group_seq, 
+						dm.comp_seq, 
+						dm.biz_seq, 
+						dm.dept_name, 
+						dm.dept_display_name, 
+						dm.sender_name, 
+						dm.addr, 
+						dm.detail_addr, 
+						dm.path_name, 
+						dm.use_yn, 
+						dm.create_seq, 
+						dm.create_date, 
+						dm.modify_seq, 
+						dm.modify_date
+					FROM (
+						SELECT lang_code 
+						FROM $DB_NEOS$t_co_group_lang WHERE group_seq = #groupSeq# AND (main_yn = 'Y' OR sub_yn = 'Y')
+					 ) gl 
+					 join (
+					 	SELECT *  FROM $DB_NEOS$t_co_dept_multi WHERE group_seq = #groupSeq# AND use_yn = 'Y' 
+					 ) dm 
+			) a
+		WHERE gl_lang_code = lang_code OR (gl_lang_code <![CDATA[ <> ]]> lang_code AND lang_code = #langCode#)
+		GROUP BY gl_lang_code, dept_seq	
+	</select>
+	
+	<select id="orgchartDAO.getEmpList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+			emp_seq, 
+			login_id, 
+			emp_num, 
+			erp_emp_num, 
+			email_addr, 
+			out_mail,
+			out_domain,
+			mobile_use_yn, 
+			messenger_use_yn, 
+			job_code, 
+			status_code, 
+			main_comp_seq,
+			duty_code, 
+			position_code, 
+			native_lang_code, 
+			license_check_yn, 
+			DATE_FORMAT(join_day,'%Y-%m-%d') as join_day, 
+			DATE_FORMAT(resign_day,'%Y-%m-%d') as resign_day, 
+			gender_code, 
+			DATE_FORMAT(bday,'%Y-%m-%d') as bday, 
+			lunar_yn, 
+			work_status, 
+			home_tel_num, 
+			mobile_tel_num, 
+			wedding_yn, 
+			DATE_FORMAT(wedding_day,'%Y-%m-%d') as wedding_day,
+			zip_code, 
+			pic_file_id, 
+			sign_file_id, 
+			use_yn, 
+			private_yn,
+			create_seq, 
+			DATE_FORMAT(create_date,'%Y-%m-%d %H:%i:%s') as create_date,  
+			modify_seq, 
+			DATE_FORMAT(modify_date,'%Y-%m-%d %H:%i:%s') as modify_date			
+		FROM $DB_NEOS$t_co_emp e
+		WHERE EXISTS (SELECT emp_seq FROM $DB_NEOS$t_co_emp_dept WHERE group_seq = #groupSeq# AND emp_seq = e.emp_seq )
+		AND use_yn = 'Y' AND e.license_check_yn != '3'
+		
+		/* 근태관리용 비라이센스 포함 */
+    	UNION
+		SELECT 
+			e.emp_seq, 
+			e.login_id, 
+			e.emp_num, 
+			e.erp_emp_num, 
+			e.email_addr, 
+			e.out_mail,
+			e.out_domain,
+			'N' AS mobile_use_yn, 
+			'N' AS messenger_use_yn, 
+			e.job_code, 
+			e.status_code, 
+			e.main_comp_seq,
+			e.duty_code, 
+			e.position_code, 
+			e.native_lang_code, 
+			e.license_check_yn, 
+			DATE_FORMAT(e.join_day,'%Y-%m-%d') as join_day, 
+			DATE_FORMAT(e.resign_day,'%Y-%m-%d') as resign_day, 
+			e.gender_code, 
+			DATE_FORMAT(e.bday,'%Y-%m-%d') as bday, 
+			e.lunar_yn, 
+			e.work_status, 
+			e.home_tel_num, 
+			e.mobile_tel_num, 
+			e.wedding_yn, 
+			DATE_FORMAT(e.wedding_day,'%Y-%m-%d') as wedding_day,
+			e.zip_code, 
+			e.pic_file_id, 
+			e.sign_file_id, 
+			'Y' AS use_yn, 
+			e.private_yn,
+			e.create_seq, 
+			DATE_FORMAT(e.create_date,'%Y-%m-%d %H:%i:%s') as create_date,  
+			e.modify_seq, 
+			DATE_FORMAT(e.modify_date,'%Y-%m-%d %H:%i:%s') as modify_date			
+		FROM $DB_NEOS$t_co_emp e
+    	JOIN $DB_NEOS$t_co_emp_comp ec ON e.emp_seq = ec.emp_seq AND ec.work_status != '001' AND ec.check_work_yn = 'Y'
+		WHERE e.license_check_yn = '3'
+		
+	</select>
+	
+	<select id="orgchartDAO.getEmpMultiList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+			emp_seq, 
+			gl_lang_code AS lang_code, 
+			emp_name, 
+			addr, 
+			detail_addr, 
+			main_work, 
+			use_yn, 
+			create_seq, 
+			DATE_FORMAT(create_date,'%Y-%m-%d %H:%i:%s') as create_date,  
+			modify_seq, 
+			DATE_FORMAT(modify_date,'%Y-%m-%d %H:%i:%s') as modify_date 
+		FROM (
+				SELECT
+					em.emp_seq, 
+					gl.lang_code as gl_lang_code,
+					em.lang_code, 
+					em.emp_name, 
+					em.addr, 
+					em.detail_addr, 
+					em.main_work, 
+					em.use_yn, 
+					em.create_seq, 
+					em.create_date, 
+					em.modify_seq, 
+					em.modify_date 
+				FROM
+					(
+						SELECT lang_code 
+						FROM $DB_NEOS$t_co_group_lang WHERE group_seq = #groupSeq# AND (main_yn = 'Y' OR sub_yn = 'Y')
+					 ) gl 
+					 join (
+					 	SELECT *  FROM $DB_NEOS$t_co_emp_multi WHERE group_seq = #groupSeq# AND use_yn = 'Y' 
+					 ) em
+					 join (
+					 
+					 	/* 근태관리용 비라이센스 포함 */
+			            select distinct e.emp_seq from $DB_NEOS$t_co_emp e
+			            join $DB_NEOS$t_co_emp_comp ec on e.emp_seq = ec.emp_seq and
+			            ( (e.license_check_yn != '3' and ec.use_yn = 'Y') OR (e.license_check_yn = '3' and ec.check_work_yn = 'Y' and ec.work_status != '001') )					 	
+					 	
+					 ) ed on em.emp_seq = ed.emp_seq
+			) a
+		WHERE (gl_lang_code = lang_code OR (gl_lang_code <![CDATA[ <> ]]> lang_code AND lang_code = #langCode#))
+		AND	 emp_name is not null
+		GROUP BY gl_lang_code, emp_seq	
+	</select>
+	
+	<select id="orgchartDAO.getEmpDeptList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+			d.dept_seq, 
+			d.emp_seq, 
+			d.group_seq, 
+			d.comp_seq, 
+			d.biz_seq, 
+			d.main_comp_yn, 
+			d.main_dept_yn, 
+			d.duty_code, 
+			d.position_code, 
+			CASE WHEN d.tel_num = '' OR d.tel_num IS NULL THEN md.tel_num ELSE d.tel_num END AS tel_num,
+			CASE WHEN d.fax_num = '' OR d.fax_num IS NULL THEN md.fax_num ELSE d.fax_num END AS fax_num,
+			md.zip_code, 
+			d.orgchart_display_yn, 
+			d.messenger_display_yn, 
+			d.ea_display_yn,
+			case when e.license_check_yn = '3' then 'Y' else d.use_yn end as use_yn, 
+			d.order_num,
+			d.create_seq, 
+			DATE_FORMAT(d.create_date,'%Y-%m-%d %H:%i:%s') as create_date,  
+			d.modify_seq, 
+			DATE_FORMAT(d.modify_date,'%Y-%m-%d %H:%i:%s') as modify_date,
+			d.order_text 
+		FROM $DB_NEOS$t_co_emp_dept d
+		JOIN $DB_NEOS$t_co_emp e on d.emp_seq = e.emp_seq
+		JOIN (SELECT *
+              FROM $DB_NEOS$t_co_emp_dept ma_em
+              WHERE ma_em.main_dept_yn = 'Y'
+              GROUP BY ma_em.comp_seq, ma_em.emp_seq) md ON d.comp_seq = md.comp_seq AND d.emp_seq = md.emp_seq
+		WHERE d.group_seq = #groupSeq#
+		AND d.use_yn = 'Y' OR e.license_check_yn = '3'
+	</select>
+	
+	<select id="orgchartDAO.getEmpDeptMultiList" parameterClass="hashmap" resultClass="hashmap">
+	    select 
+	    lang.lang_code,
+	    edm.group_seq,
+	    edm.comp_seq,
+	    edm.biz_seq,
+	    edm.dept_seq, 
+	    edm.emp_seq,
+	    edm.use_yn,
+	    medm.addr,
+	    medm.detail_addr,
+	    edm.create_seq,
+	    DATE_FORMAT(edm.create_date,'%Y-%m-%d %H:%i:%s') as create_date,  
+	    edm.modify_seq,
+	    DATE_FORMAT(edm.modify_date,'%Y-%m-%d %H:%i:%s') as modify_date
+	    from
+	    (
+		    select
+		    group_seq,
+		    comp_seq,
+		    biz_seq,
+		    dept_seq, 
+		    emp_seq,
+		    'Y' as use_yn,
+		    create_seq,
+		    create_date,
+		    modify_seq,
+		    modify_date
+		    from $DB_NEOS$t_co_emp_dept_multi where lang_code='kr'
+	    ) edm
+	    join $DB_NEOS$t_co_group_lang lang on lang.group_seq = #groupSeq# AND (lang.main_yn = 'Y' or lang.sub_yn = 'Y')
+        JOIN (SELECT *
+                FROM $DB_NEOS$t_co_emp_dept ma_em
+               WHERE ma_em.main_dept_yn = 'Y'
+               GROUP BY ma_em.comp_seq, ma_em.emp_seq) ed ON edm.comp_seq = ed.comp_seq AND edm.emp_seq = ed.emp_seq AND ed.main_dept_yn = 'Y'
+	    join $DB_NEOS$t_co_emp_dept_multi medm on medm.lang_code = 'kr' and ed.dept_seq = medm.dept_seq and ed.emp_seq = medm.emp_seq
+	</select>
+	
+	<select id="orgchartDAO.getCompDutyPositionList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+			dp_seq, 
+			comp_seq, 
+			dp_type, 
+			use_yn, 
+			order_num, 
+			create_seq, 
+			DATE_FORMAT(create_date,'%Y-%m-%d %H:%i:%s') as create_date,  
+			modify_seq, 
+			DATE_FORMAT(modify_date,'%Y-%m-%d %H:%i:%s') as modify_date 
+		FROM $DB_NEOS$t_co_comp_duty_position cdp
+		WHERE (EXISTS (SELECT 1 FROM $DB_NEOS$t_co_comp WHERE group_seq = #groupSeq# AND comp_seq = cdp.comp_seq AND use_yn = 'Y') OR comp_seq = '0') 
+		AND cdp.use_yn = 'Y'
+	</select> 
+	
+	<select id="orgchartDAO.getCompDutyPositionMultiList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+			dp_seq, 
+			gl_lang_code as lang_code, 
+			comp_seq, 
+			dp_type, 
+			dp_name, 
+			desc_text, 
+			comment_text, 
+			use_yn, 
+			create_seq, 
+			DATE_FORMAT(create_date,'%Y-%m-%d %H:%i:%s') as create_date,  
+			modify_seq, 
+			DATE_FORMAT(modify_date,'%Y-%m-%d %H:%i:%s') as modify_date
+		FROM (
+				SELECT			
+					cdpm.dp_seq, 
+					gl.lang_code as gl_lang_code, 
+					cdpm.lang_code, 
+					cdpm.comp_seq, 
+					cdpm.dp_type, 
+					cdpm.dp_name, 
+					cdpm.desc_text, 
+					cdpm.comment_text, 
+					cdpm.use_yn, 
+					cdpm.create_seq, 
+					cdpm.create_date, 
+					cdpm.modify_seq, 
+					cdpm.modify_date 
+				FROM
+					(
+						SELECT lang_code 
+						FROM $DB_NEOS$t_co_group_lang WHERE group_seq = #groupSeq# AND (main_yn = 'Y' OR sub_yn = 'Y')
+					 ) gl 
+					 join (
+					 	SELECT *  FROM $DB_NEOS$t_co_comp_duty_position_multi WHERE group_seq = #groupSeq# AND use_yn = 'Y' 
+					 ) cdpm
+				WHERE (EXISTS (SELECT 1 FROM $DB_NEOS$t_co_comp WHERE group_seq = #groupSeq# AND comp_seq = cdpm.comp_seq AND use_yn = 'Y') OR comp_seq = '0') 
+			) a
+		WHERE gl_lang_code = lang_code OR (gl_lang_code <![CDATA[ <> ]]> lang_code AND lang_code = #langCode#)
+		GROUP BY gl_lang_code, dp_seq, comp_seq, dp_type
+	
+	</select>
+	
+	<select id="orgchartDAO.getCompEmpSortList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+			comp_seq, 
+			sort_field, 
+			sort_type, 
+			order_num, 
+			use_yn, 
+			create_seq, 
+			DATE_FORMAT(create_date,'%Y-%m-%d %H:%i:%s') as create_date,  
+			modify_seq, 
+			DATE_FORMAT(modify_date,'%Y-%m-%d %H:%i:%s') as modify_date
+		FROM $DB_NEOS$t_co_comp_emp_sort ces
+		WHERE EXISTS (SELECT 1 FROM $DB_NEOS$t_co_comp WHERE group_seq = #groupSeq# AND comp_seq = ces.comp_seq AND use_yn = 'Y')
+		AND use_yn = 'Y'
+	</select>
+	
+	<select id="orgchartDAO.getGrouppingList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 	
+			group_seq, 
+			groupping_seq, 
+			groupping_name, 
+			use_yn, 
+			create_seq, 
+			DATE_FORMAT(create_date,'%Y-%m-%d %H:%i:%s') as create_date,  
+			modify_seq, 
+			DATE_FORMAT(modify_date,'%Y-%m-%d %H:%i:%s') as modify_date
+		FROM 
+			$DB_NEOS$t_co_groupping
+		WHERE
+			group_seq = #groupSeq#
+			AND use_yn = 'Y'
+	</select>
+	
+	<select id="orgchartDAO.getGrouppingCompList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 	
+			gc.groupping_seq, 
+			gc.comp_seq, 
+			gc.use_yn, 
+			gc.create_seq, 
+			DATE_FORMAT(gc.create_date,'%Y-%m-%d %H:%i:%s') as create_date,  
+			gc.modify_seq, 
+			DATE_FORMAT(gc.modify_date,'%Y-%m-%d %H:%i:%s') as modify_date
+		FROM 
+			$DB_NEOS$t_co_groupping_comp gc JOIN $DB_NEOS$t_co_groupping g ON g.groupping_seq = gc.groupping_seq
+		WHERE g.group_seq = #groupSeq#
+		AND gc.use_yn = 'Y'
+		AND g.use_yn = 'Y'
+	</select>
+	
+	<select id="orgchartDAO.getEmpCompList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT
+		  ec.emp_seq,
+		  ec.group_seq,
+		  ec.comp_seq,
+		  ec.biz_seq,
+		  ec.dept_seq,
+		  ec.erp_emp_seq,
+		  ec.erp_comp_seq,
+		  ec.erp_biz_seq,
+		  ec.erp_dept_seq,
+		  ec.check_work_yn,
+		  (SELECT card_no FROM $DB_NEOS$t_at_att_access_card_mst WHERE ec.emp_seq = emp_seq ORDER BY card_sqno desc LIMIT 1) AS att_card_no,
+		  ec.shift,
+		  ec.job_code,
+		  ec.status_code,
+		  DATE_FORMAT(ec.resign_day,'%Y-%m-%d') as resign_day,
+		  ec.work_status,
+		  CASE WHEN e.license_check_yn = '3' THEN 'Y' ELSE ec.use_yn END AS use_yn,
+		  ec.create_seq,
+		  DATE_FORMAT(ec.create_date,'%Y-%m-%d %H:%i:%s') as create_date,  
+		  ec.modify_seq, 
+		  DATE_FORMAT(ec.modify_date,'%Y-%m-%d %H:%i:%s') as modify_date
+		FROM $DB_NEOS$t_co_emp_comp ec
+		JOIN $DB_NEOS$t_co_emp e ON ec.emp_seq = e.emp_seq
+		WHERE ec.group_seq = #groupSeq#
+		AND ec.use_yn = 'Y' OR (e.license_check_yn = '3' AND ec.check_work_yn = 'Y' AND ec.work_status != '001')
+	</select>
+	
+	<update id="orgchartDAO.updateOrgSyncTaskInit" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_orgchart
+		SET	task_status = 1
+		WHERE task_status in (3, '-')
+	</update>
+	
+	<select id="orgchartDAO.getEmpResignList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+			emp_seq, 
+      		$DB_NEOS$FN_GetMultiLang(lang_code, last_emp_name) AS emp_name,
+      		last_dept_seq AS dept_seq,
+      		$DB_NEOS$FN_GetMultiLang(lang_code, last_dept_name) AS dept_name,
+      		$DB_NEOS$FN_GetMultiLang(lang_code, last_dept_path) AS path_name,
+      		DATE_FORMAT(join_day,'%Y-%m-%d') AS join_day,
+      		DATE_FORMAT(last_resign_day,'%Y-%m-%d') AS resign_day,
+      		work_status,
+      		lang_code
+		FROM (	SELECT e.emp_seq, e.last_emp_name, e.last_dept_seq, e.last_dept_name, e.last_dept_path, e.join_day, e.last_resign_day, e.work_status, gl.lang_code
+			FROM 
+				(
+					SELECT lang_code 
+					FROM $DB_NEOS$t_co_group_lang WHERE group_seq = #groupSeq# AND (main_yn = 'Y' OR sub_yn = 'Y')
+				) gl 
+				JOIN
+				(
+					SELECT e.emp_seq, e.last_emp_name, e.last_dept_seq, e.last_dept_name, e.last_dept_path, e.join_day, e.last_resign_day, e.work_status
+					FROM  $DB_NEOS$t_co_emp e 
+					WHERE e.group_seq = #groupSeq#
+					AND e.work_status = '001'
+					UNION
+					SELECT
+					e.emp_seq, em.emp_name_multi as last_emp_name,
+					ed.dept_seq as last_dept_seq,
+					ifnull(dm.dept_name_multi,'') as last_dept_name,
+					concat(ifnull(dm.path_name,''), '▦▦▦') as last_dept_path,
+					e.join_day,
+					e.last_login_date as last_resign_day,
+					e.work_status
+					FROM $DB_NEOS$t_co_emp e
+					JOIN $DB_NEOS$v_t_co_emp_multi em on e.emp_seq = em.emp_seq
+					JOIN $DB_NEOS$t_co_emp_dept ed on ed.main_comp_yn = 'Y' AND ed.main_dept_yn = 'Y' AND ed.emp_Seq = e.emp_seq
+					LEFT JOIN $DB_NEOS$v_t_co_dept_multi dm on ed.dept_seq = dm.dept_seq
+					WHERE e.use_yn = 'N' AND e.work_status != '001'					
+				) e
+			) a
+		GROUP BY lang_code, emp_seq	
+	</select>
+	
+</sqlMap>

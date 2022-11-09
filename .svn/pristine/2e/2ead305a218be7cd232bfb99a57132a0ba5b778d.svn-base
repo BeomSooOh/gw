@@ -1,0 +1,837 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="mullenDAO">
+	
+	<!-- 모바일 웹서비스 로그인처리를 위한 resultMap -->
+	<resultMap id="loginWS" class="restful.mullen.vo.MullenLoginVO">
+        <result property="groupSeq"    		column="groupSeq" 		nullValue=" " />
+        <result property="loginId"     		column="loginId"   		nullValue=" " />
+        <result property="loginPassword"    column="loginPassword"	nullValue=" " />
+        <result property="compSeq"     		column="compSeq"   		nullValue=" " />
+        <result property="compName"    		column="compName"     	nullValue=" " />
+        <result property="bizSeq"      		column="bizSeq"       	nullValue=" " />
+        <result property="bizName"     		column="bizName"     	nullValue=" " />
+        <result property="deptSeq"     		column="deptSeq"        nullValue=" " />
+        <result property="deptName"    		column="deptName"    	nullValue=" " />
+        <result property="empSeq"      		column="empSeq"  		nullValue=" " />
+        <result property="empName"     		column="empName"     	nullValue=" " />
+        <result property="dutyCode"    		column="dutyCode"      	nullValue=" " />
+        <result property="dutyName"    		column="dutyName"       nullValue=" " />
+        <result property="positionCode"     column="positionCode"  	nullValue=" " />
+        <result property="positionName"     column="positionName"  	nullValue=" " />
+        <result property="email"        	column="email"   		nullValue=" " />
+        <result property="nativeLangCode"	column="nativeLangCode"	nullValue=" " />
+        <result property="eaType"			column="eaType"			nullValue=" " />
+        <result property="compDomain"		column="compDomain"		nullValue=" " />
+        <result property="apprPasswd"		column="apprPasswd"		nullValue=" " />
+        <result property="setupVersionSeq"		column="setupVersionSeq"		nullValue="0" />
+        <result property="orgnztPath"		column="orgnztPath"		nullValue=" " />
+        <result property="passwdStatusCode"		column="passwdStatusCode"		nullValue=" " />
+        <result property="passwdDate"		column="passwdDate"		nullValue=" " />
+        <result property="loginIdEmail"		column="loginIdEmail"		nullValue=" " />
+        <result property="loginIdCode"		column="loginIdCode"		nullValue=" " />
+	</resultMap>
+	
+	<resultMap id="authStatus" class="restful.mullen.vo.MullenAuthStatus">
+		<result property="groupSeq"    		column="group_seq"/>
+        <result property="empSeq"     		column="emp_seq"/>
+        <result property="status"     		column="status"/>
+        <result property="emailYn"     		column="email_yn"/>
+	</resultMap>
+	
+	<resultMap id="mullenUser" class="restful.mullen.vo.MullenUser">
+		<result property="groupSeq"    		column="group_seq"/>
+        <result property="empSeq"     		column="emp_seq"/>
+        <result property="emailAddr"     		column="email_addr"/>
+	</resultMap>
+	
+	<resultMap id="mullenFriend" class="restful.mullen.vo.MullenFriend">
+        <result property="empSeq"     		column="emp_seq"/>
+        <result property="recvEmpSeq"     		column="recv_emp_seq"/>
+        <result property="groupSeq"    		column="group_seq"/>
+        <result property="status"    		column="status"/>
+	</resultMap>
+	
+	<select id="mullenDAO.selectEmailUser" resultMap="mullenUser" parameterClass="hashmap">
+		SELECT group_seq, emp_seq, #emailAddr# AS email_addr FROM $DB_NEOS$t_co_emp WHERE CONCAT(out_mail ,'@', out_domain) = #emailAddr# AND group_seq = #groupSeq# AND emp_seq = #loginIdCode#
+	</select>
+	
+	<select id="mullenDAO.selectEmailAuthKey" resultMap="mullenUser" parameterClass="hashmap">
+		SELECT group_seq
+		     , emp_seq
+			 , CONCAT(out_mail, '@', out_domain) AS email_addr
+		  FROM t_co_emp 
+		  WHERE (CONCAT(out_mail ,'@', out_domain) = (SELECT email_addr FROM t_co_mullen WHERE group_seq = #groupSeq# AND emp_seq = #loginIdCode# AND auth_key = #emailAddr# AND auth_datetime > DATE_ADD(NOW(),INTERVAL -300 SECOND))) 
+		    AND group_seq = #groupSeq# 
+			AND emp_seq = #loginIdCode#
+	</select>
+	
+	<select id="mullenDAO.selectEmpSeqByEmailUser" resultMap="mullenUser" parameterClass="hashmap">
+		SELECT 
+			E.group_seq, 
+			E.emp_seq, 
+			#emailAddr# AS email_addr 
+		FROM $DB_NEOS$t_co_emp E INNER JOIN $DB_NEOS$T_CO_MULLEN M 
+		  ON E.GROUP_SEQ = M.GROUP_SEQ AND E.EMP_SEQ = M.EMP_SEQ
+		  WHERE CONCAT(E.out_mail ,'@', E.out_domain) = #emailAddr# 
+		    AND E.group_seq = 'Mullen' 
+		    AND M.STATUS = '400'
+	</select>
+	
+	<select id="mullenDAO.selectAuthStatus" resultMap="authStatus" parameterClass="hashmap">
+		<isEqual property="emailYn" compareValue="Y">
+		SELECT group_seq
+		     , emp_seq
+		     , status
+		     , 'Y' AS email_yn 
+		  FROM $DB_NEOS$t_co_mullen 
+		 WHERE group_seq = #groupSeq# 
+		   AND emp_seq = (SELECT emp_seq FROM t_co_emp WHERE group_seq = #groupSeq# AND out_mail = #outMail# AND OUT_DOMAIN = #outDomain#);
+		</isEqual>
+		<isEqual property="emailYn" compareValue="N">
+		SELECT group_seq
+		     , emp_seq
+		     , status
+		     , 'N' AS email_yn 
+		  FROM $DB_NEOS$t_co_mullen 
+		  WHERE group_seq = #groupSeq# 
+		    AND (emp_seq = #empSeq# OR emp_seq = (SELECT emp_seq FROM t_co_emp WHERE login_id = #empSeq#))
+		</isEqual>
+	</select>
+
+	<!-- 모바일 웹서비스 로그인 -->
+	<select id="mullenDAO.actionLoginMobile" resultMap="loginWS" parameterClass="hashmap">
+		 SELECT M.LOGIN_ID AS loginId
+		 	  , M.LOGIN_PASSWD AS loginPassword
+		 	  , M.EMP_SEQ AS loginIdCode
+		 	  , CONCAT(M.OUT_MAIL, '@', M.OUT_DOMAIN) AS loginIdEmail
+		 	  , M.EMP_SEQ AS empSeq
+		 	  , $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(M.emp_seq, null),O.EMP_NAME_MULTI) AS empName
+			  , M.EMAIL_ADDR AS email
+			  , N.DUTY_CODE as dutyCode
+			  , N.POSITION_CODE AS positionCode
+			  , $DB_NEOS$get_emp_duty_position_name(N.group_seq, N.comp_seq, N.duty_code, 'DUTY', $DB_NEOS$get_lang_code(M.emp_seq, null)) AS dutyName
+			  , $DB_NEOS$get_emp_duty_position_name(N.group_seq, N.comp_seq, N.position_code, 'POSITION', $DB_NEOS$get_lang_code(M.emp_seq, null)) AS positionName
+			  , (SELECT $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(M.emp_seq, null),F.COMP_NAME_MULTI)
+				   FROM $DB_NEOS$v_t_co_comp_multi F
+				  WHERE N.COMP_SEQ=F.COMP_SEQ LIMIT 1) AS compName
+			  , N.GROUP_SEQ AS groupSeq			  
+			  , N.BIZ_SEQ AS bizSeq
+			  , (SELECT $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(M.emp_seq, null),G.BIZ_NAME_MULTI)
+				   FROM $DB_NEOS$v_t_co_biz_multi G
+				  WHERE N.BIZ_SEQ=G.BIZ_SEQ LIMIT 1) AS bizName
+			  , N.DEPT_SEQ AS deptSeq
+			  , (SELECT $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(M.emp_seq, null),A.DEPT_NAME_MULTI)
+				   FROM $DB_NEOS$v_t_co_dept_multi A
+				  WHERE A.DEPT_SEQ = N.DEPT_SEQ LIMIT 1) deptName				  
+			  , $DB_NEOS$get_lang_code(M.emp_seq,null) as nativeLangCode
+			  , N.COMP_SEQ AS compSeq
+			  , C.ea_type as eaType
+			  , IFNULL(M.appr_passwd, '') as apprPasswd
+        	  , (SELECT C.comp_domain
+				   FROM $DB_NEOS$t_co_comp C
+				  WHERE C.GROUP_SEQ = M.GROUP_SEQ AND C.COMP_SEQ = M.MAIN_COMP_SEQ LIMIT 1) compDomain
+			  , G.setup_version_seq as setupVersionSeq
+			  , D.path as orgnztPath
+			  , IFNULL(M.passwd_status_code, 'P') as passwdStatusCode
+			  , IFNULL(M.passwd_date, '1900-01-01') as passwdDate
+		 FROM $DB_NEOS$T_CO_EMP M, $DB_NEOS$T_CO_EMP_DEPT N, $DB_NEOS$T_CO_EMP_COMP E, $DB_NEOS$V_T_CO_EMP_MULTI O, $DB_NEOS$T_CO_COMP C, $DB_NEOS$T_CO_GROUP G, $DB_NEOS$T_CO_DEPT D
+		 WHERE M.GROUP_SEQ = G.GROUP_SEQ 
+		 AND M.EMP_SEQ = N.EMP_SEQ
+		 AND M.EMP_SEQ = O.EMP_SEQ
+     	 AND M.EMP_SEQ = E.EMP_SEQ
+     	 AND N.COMP_SEQ = E.COMP_SEQ
+     	 AND N.COMP_SEQ = C.COMP_SEQ
+     	 AND N.DEPT_SEQ = D.DEPT_SEQ
+		 AND E.WORK_STATUS IN ('999','004')
+		 AND N.MAIN_DEPT_YN = 'Y'
+		 AND M.GROUP_SEQ = #groupSeq#
+		 
+		 <isNotEmpty property="loginToken">
+		 AND M.EMP_SEQ = (select emp_seq from $DB_NEOS$t_co_token_info where token_cd=#loginToken# limit 1)
+		 </isNotEmpty>
+
+		 <isEmpty property="loginToken">
+		 AND M.LOGIN_ID = #loginId#
+		 AND M.LOGIN_PASSWD = IF(#loginPassword# = '▦', M.LOGIN_PASSWD, #loginPassword#)
+		 </isEmpty>
+		 		
+		 AND M.USE_YN = 'Y'
+		 AND N.USE_YN = 'Y'
+		 AND O.USE_YN = 'Y'
+		 AND C.USE_YN = 'Y'
+		 AND D.USE_YN = 'Y'
+		 AND M.MOBILE_USE_YN = 'Y'
+		 AND M.LICENSE_CHECK_YN != '3'
+     ORDER BY CASE WHEN N.COMP_SEQ = M.main_comp_seq THEN 0 ELSE 1 END
+		 LIMIT 1
+	</select>
+
+	<select id="mullenDAO.selectLoginPassword" resultClass="String" parameterClass="hashmap">
+		 SELECT M.LOGIN_PASSWD AS loginPassword
+		 FROM $DB_NEOS$T_CO_EMP M, $DB_NEOS$T_CO_EMP_DEPT N, $DB_NEOS$T_CO_EMP_MULTI O
+		 WHERE M.EMP_SEQ = N.EMP_SEQ
+		 AND M.EMP_SEQ = O.EMP_SEQ
+		 AND M.WORK_STATUS IN ('999','004')
+		 AND N.MAIN_DEPT_YN = 'Y'
+		 AND M.LOGIN_ID = #loginId#
+		 AND M.GROUP_SEQ = #groupSeq#
+		 AND M.USE_YN = 'Y'
+		 AND N.USE_YN = 'Y'
+		 AND O.USE_YN = 'Y'
+		 LIMIT 1
+	</select>
+	
+	<select id="mullenDAO.selectLoginVO" resultClass="hashMap" parameterClass="hashmap">
+
+		SELECT   IFNULL(c.COMP_SEQ, '') AS compSeq
+              , IFNULL((SELECT $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(e.emp_seq, NULL),comp_NAME_MULTI)
+                   FROM $DB_NEOS$V_T_CO_comp_MULTI 
+                  WHERE comp_SEQ = c.COMP_SEQ ),'') AS compName 
+              , IFNULL(ed.BIZ_SEQ, '') AS bizSeq
+              , IFNULL((SELECT $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(e.emp_seq, null),BIZ_NAME_MULTI)
+                   FROM $DB_NEOS$V_T_CO_BIZ_MULTI 
+                  WHERE BIZ_SEQ = ed.BIZ_SEQ ),'') AS bizName 
+              , IFNULL(ed.DEPT_SEQ,'') AS deptSeq
+              , IFNULL((SELECT $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(e.emp_seq, NULL),dept_NAME_MULTI)
+                   FROM $DB_NEOS$V_T_CO_dept_MULTI 
+                  WHERE dept_SEQ = ed.dept_SEQ ),'') AS deptName 
+              , IFNULL(e.EMAIL_ADDR,'') as emailAddr  
+              , IFNULL(c.EMAIL_DOMAIN,'') as emailDomain
+              , IFNULL(ed.duty_code,'') as dutyCode
+              , IFNULL(ed.position_code, '') as positionCode
+              , IFNULL(e.appr_passwd, '') as apprPasswd
+        	  , IFNULL((SELECT erp_comp_seq FROM $DB_NEOS$t_co_erp_comp WHERE comp_seq = c.comp_seq LIMIT 1), '') erpCompSeq
+        	  , IFNULL((SELECT erp_emp_seq FROM $DB_NEOS$t_co_emp_comp WHERE comp_seq = c.comp_seq and emp_seq = e.emp_seq LIMIT 1), '') erpEmpSeq
+        	  , $DB_NEOS$get_dept_path('|', ed.DEPT_SEQ, ed.GROUP_SEQ) as orgnztPath
+         FROM $DB_NEOS$t_co_emp e
+         LEFT JOIN $DB_NEOS$t_co_emp_dept ed
+				ON	e.emp_seq = ed.emp_seq AND e.group_seq = ed.group_seq
+			LEFT JOIN $DB_NEOS$t_co_comp c
+				ON	e.group_seq = c.group_seq AND ed.comp_seq = c.comp_seq
+			LEFT JOIN $DB_NEOS$t_co_emp_comp ec
+				ON	ec.comp_seq = c.comp_seq AND e.emp_seq = ec.emp_seq
+			LEFT JOIN $DB_NEOS$t_co_comp_multi cm
+				ON c.comp_seq = cm.comp_seq AND cm.lang_code = 'kr'
+			LEFT JOIN $DB_NEOS$t_co_dept_multi dm
+				ON dm.group_seq = e.group_seq AND c.comp_seq = dm.comp_seq AND ed.dept_Seq = dm.dept_Seq AND dm.lang_code = 'kr'       
+         INNER JOIN $DB_NEOS$T_CO_DEPT D ON ed.dept_seq = D.dept_seq
+        WHERE ec.WORK_STATUS IN ('999','004')
+        <isNotEmpty property="loginToken">
+			AND e.EMP_SEQ = (select emp_seq from $DB_NEOS$t_co_token_info where token_cd=#loginToken# limit 1)
+		 </isNotEmpty>
+
+		 <isEmpty property="loginToken">
+			AND e.LOGIN_ID = #loginId#
+		 </isEmpty>
+          
+          AND e.GROUP_SEQ = #groupSeq#
+          AND e.use_yn = 'Y'
+		  AND ed.use_yn = 'Y'		  
+		  AND cm.use_yn = 'Y'
+		  AND dm.use_yn = 'Y'
+	</select>
+
+	<update id="mullenDAO.updateUserName" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_emp_multi
+		   SET emp_name = #newName#
+		     , modify_seq = #empSeq#
+		     , modify_date = now()
+	       WHERE group_seq = #groupSeq# 
+	         AND emp_seq = #empSeq# 
+		     AND lang_code = #langCode# 
+	</update>
+	
+	<update id="mullenDAO.updateUserOutMail" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_emp
+		   SET out_mail = #outMail#
+		     , out_domain = #outDomain#
+		     , modify_seq = #empSeq#
+		     , modify_date = now()
+	       WHERE group_seq = #groupSeq# 
+	         AND emp_seq = #empSeq#  
+	</update>
+	
+	<update id="mullenDAO.updateUserOutMailEmpty" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_emp
+		   SET out_mail = ''
+		     , out_domain = ''
+		     , modify_seq = #empSeq#
+		     , modify_date = now()
+	       WHERE group_seq = #groupSeq# 
+	         AND out_mail = #outMail#
+	         AND out_domain = #outDomain#
+	</update>
+	
+	<update id="mullenDAO.updateMullenEmailAddrEmpty" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_mullen
+		   SET email_addr = null
+		     , status = '100'
+		     , modify_seq = #empSeq#
+		     , modify_date = now()
+	       WHERE group_seq = #groupSeq# 
+	         AND email_addr = #emailAddr#
+	         AND emp_seq != #empSeq#
+	</update>
+	
+	
+	
+	<update id="mullenDAO.updateMullenStatus" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_mullen
+		   SET status = #authStatus#
+		     , email_addr = #emailAddr#
+		     , auth_key = #authKey#
+		     , auth_datetime = now()
+		     , modify_seq = #empSeq#
+		     , modify_date = now()
+	       WHERE group_seq = #groupSeq# 
+	         AND emp_seq = #empSeq#
+	         AND status != '400'   
+	</update>
+	
+	<update id="mullenDAO.updateAuthComplete" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_mullen
+		   SET status = #authStatus#
+		     , modify_seq = #empSeq#
+		     , modify_date = now()
+	       WHERE group_seq = #groupSeq# 
+	         AND emp_seq = #loginIdCode#
+	         <isNotEmpty property="prevStatus">
+	         AND status = #prevStatus#
+	         </isNotEmpty>
+	         <isNotEmpty property="notAuthStatus">
+	         AND status != #notAuthStatus#
+	         </isNotEmpty>
+	</update>
+	
+	<select id="mullenDAO.selectEmpSeqByGroupSeq" resultMap="mullenUser" parameterClass="hashmap">
+		SELECT emp_seq
+		     , group_seq
+		     , status
+		     , '' AS email_addr 
+		  FROM $DB_NEOS$t_co_mullen
+		 WHERE group_seq = #groupSeq#
+		   AND my_group_id IS NULL
+	</select>
+	
+	<update id="mullenDAO.updateMyGroupId" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_mullen
+		   SET my_group_id = #myGroupId#
+	       WHERE group_seq = #groupSeq# 
+	         AND emp_seq = #empSeq#   
+	</update>
+	
+	<select id="mullenDAO.selectMullenFriend" resultMap="mullenFriend" parameterClass="hashmap">
+		SELECT emp_seq
+		     , recv_emp_seq
+		     , group_seq
+		     , status
+		  FROM $DB_NEOS$t_co_mullen_friend
+		  WHERE emp_seq = #empSeq#
+		    AND recv_emp_seq = #oppoEmpSeq#
+		    AND group_seq = #groupSeq#
+		    
+	</select>
+	<delete id="mullenDAO.deleteMullenFriend" parameterClass="hashmap">
+		DELETE FROM $DB_NEOS$t_co_mullen_friend
+	     WHERE emp_seq = #empSeq#
+		   AND recv_emp_seq = #oppoEmpSeq#
+		   AND group_seq = #groupSeq#
+	</delete>
+	<update id="mullenDAO.updateMullenFriend" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_mullen_friend
+		   SET status = #status#
+		     , modify_seq = #empSeq#
+		     , modify_date = now()
+	       WHERE emp_seq = #empSeq#
+		     AND recv_emp_seq = #oppoEmpSeq#
+		     AND group_seq = #groupSeq#
+	     <isEqual property="prevStatusCheck" compareValue="true">
+	     	 AND status = #prevStatus#
+	     </isEqual>   
+	</update>
+	<insert id="mullenDAO.insertMullenFriend" parameterClass="hashmap">
+		INSERT INTO $DB_NEOS$t_co_mullen_friend (
+		   	emp_seq,
+ 			recv_emp_seq,
+ 			group_seq,
+ 			status,
+ 			create_seq,
+ 			create_date
+		) VALUES (
+		    #empSeq#,
+ 			#oppoEmpSeq#,
+ 			#groupSeq#,
+ 			#status#,
+ 			#empSeq#,
+ 			now()
+		)
+	</insert>
+	
+	<select id="mullenDAO.selectRecvReq" resultClass="hashmap" parameterClass="hashmap">
+		SELECT F.emp_seq
+			 , F.group_seq
+			 , F.status
+		     , M.emp_name
+		     , E.pic_file_id
+		  FROM t_co_mullen_friend F
+		  LEFT OUTER JOIN t_co_emp E ON F.emp_seq = E.emp_seq AND F.group_seq = E.group_seq
+		  LEFT OUTER JOIN t_co_emp_multi M ON F.emp_seq = M.emp_seq AND F.group_seq = M.group_seq AND M.lang_code ='kr'
+		  WHERE F.recv_emp_seq = #empSeq#
+			AND F.group_seq = #groupSeq#
+			AND F.status = '100'   
+	</select>
+	
+	<select id="mullenDAO.selectSendReq" resultClass="hashmap" parameterClass="hashmap">
+		SELECT F.recv_emp_seq AS emp_seq
+			 , F.group_seq
+			 , F.status
+		     , M.emp_name
+		     , E.pic_file_id
+		  FROM t_co_mullen_friend F
+		  LEFT OUTER JOIN t_co_emp E ON F.recv_emp_seq = E.emp_seq AND F.group_seq = E.group_seq
+		  LEFT OUTER JOIN t_co_emp_multi M ON F.recv_emp_seq = M.emp_seq AND F.group_seq = M.group_seq AND M.lang_code ='kr'
+		  WHERE F.emp_seq = #empSeq#
+			AND F.group_seq = #groupSeq#
+			AND F.status = '100'   
+	</select>
+	<select id="mullenDAO.selectMemberInfo" resultClass="hashmap" parameterClass="hashmap">
+		SELECT M.emp_seq
+		     , M.group_seq
+		     , M.my_group_id
+		     , D.dept_seq
+		     , D.comp_seq
+		     , G.messenger_url
+		     , EM.emp_name
+		  FROM t_co_mullen M 
+		  LEFT OUTER JOIN t_co_emp_dept D ON M.emp_seq = D.emp_seq AND D.main_comp_yn = 'Y' AND D.main_dept_yn = 'Y'
+		  LEFT OUTER JOIN t_co_group G ON M.group_seq = G.group_seq
+		  LEFT OUTER JOIN t_co_emp_multi EM ON M.emp_seq = EM.emp_seq AND EM.lang_code = 'kr' 
+		 WHERE M.emp_seq = #empSeq#
+		   AND M.group_seq = #groupSeq#
+		 LIMIT 0, 1   
+	</select>
+	
+	<insert id="mullenDAO.insertAddEmpForEmp" parameterClass="hashmap">
+		INSERT INTO $DB_NEOS$t_co_emp (emp_seq, group_seq, login_id, emp_num, erp_emp_num, email_addr, out_mail, out_domain, login_passwd, appr_passwd, passwd_date, passwd_input_fail_count, pay_passwd, passwd_status_code, mobile_use_yn, messenger_use_yn, check_work_yn, shift, job_code, status_code, main_comp_seq, main_comp_login_yn, duty_code, position_code, native_lang_code, license_check_yn, join_day, resign_day, gender_code, bday, lunar_yn, work_status, home_tel_num, mobile_tel_num, wedding_yn, wedding_day, private_yn, zip_code, pic_file_id, sign_file_id, use_yn, ls_role_id, create_seq, create_date, modify_seq, modify_date, jumin_nb, spring_secu, spring_date, sign_type, block_date, last_login_date, prev_login_passwd, last_resign_day, last_emp_name, last_dept_seq, last_dept_name, last_dept_path) VALUES (#empSeq#, 'Mullen', #empSeq#, NULL, '', #empSeq#, '', '', 'vLFfghR5tNV3K9DKhmwArV+SbjWAcgZZzIDTnJ0JgCo=', 'vLFfghR5tNV3K9DKhmwArV+SbjWAcgZZzIDTnJ0JgCo=', '2018-12-17 17:59:30', 0, 'vLFfghR5tNV3K9DKhmwArV+SbjWAcgZZzIDTnJ0JgCo=', 'P', 'Y', 'Y', 'N', NULL, '1', '4', '1000', 'Y', 'A17', 'A17', 'kr', '1', '2018-12-17', NULL, 'M', NULL, '', '999', '', '', 'N', NULL, 'Y', '', '', '', 'Y', NULL, '1', '2018-12-17 17:59:30', '1', '2018-12-17 17:59:30', NULL, 'd0c49523be0541b0acaf7954ebfddc78', '2018-12-17 18:01:05', '', NULL, '2019-02-08 14:45:57', NULL, NULL, NULL, NULL, NULL, NULL)
+	</insert>
+	<insert id="mullenDAO.insertAddEmpForEmpMulti" parameterClass="hashmap">
+		INSERT INTO $DB_NEOS$t_co_emp_multi (emp_seq, lang_code, group_seq, emp_name, addr, detail_addr, main_work, use_yn, create_seq, create_date, modify_seq, modify_date) VALUES (#empSeq#, 'kr', 'Mullen', #empSeq#, '', '', '', 'Y', '1', '2018-12-17 17:59:30', '1', '2018-12-17 17:59:30')
+	</insert>
+	<insert id="mullenDAO.insertAddEmpForEmpDept" parameterClass="hashmap">
+		INSERT INTO $DB_NEOS$t_co_emp_dept (dept_seq, emp_seq, group_seq, comp_seq, biz_seq, main_comp_yn, main_dept_yn, duty_code, position_code, tel_num, fax_num, zip_code, orgchart_display_yn, messenger_display_yn, ea_display_yn, order_num, order_text, use_yn, create_seq, create_date, modify_seq, modify_date) VALUES ('1', #empSeq#, 'Mullen', '1000', '1000', 'Y', 'Y', 'A17', 'A17', '', '', '', 'Y', 'Y', 'N', 100, CONCAT('0000000900|0000000900|0000000100|20181217|',#empSeq#), 'Y', '1', '2018-12-17', '1', '2018-12-17 17:59:30')
+	</insert>
+	<insert id="mullenDAO.insertAddEmpForEmpDeptMulti" parameterClass="hashmap">
+		INSERT INTO $DB_NEOS$t_co_emp_dept_multi (dept_seq, emp_seq, lang_code, group_seq, comp_seq, biz_seq, addr, detail_addr, use_yn, create_seq, create_date, modify_seq, modify_date) VALUES ('1', #empSeq#, 'kr', 'Mullen', '1000', '1000', '', '', 'Y', '1', '2018-12-17 17:59:30', '1', '2018-12-17 17:59:30')		
+	</insert>
+	<insert id="mullenDAO.insertAddEmpForEmpComp" parameterClass="hashmap">
+		INSERT INTO $DB_NEOS$t_co_emp_comp (emp_seq, group_seq, comp_seq, biz_seq, dept_seq, erp_emp_seq, erp_comp_seq, erp_biz_seq, erp_dept_seq, gerp_no_gemp, check_work_yn, shift, job_code, status_code, resign_day, work_status, use_yn, mail_del_yn, create_seq, create_date, modify_seq, modify_date) VALUES (#empSeq#, 'Mullen', '1000', '1000', '1', '', NULL, NULL, NULL, NULL, 'N', NULL, '1', '4', NULL, '999', 'Y', 'N', '1', '2018-12-17 17:59:30', '1', '2018-12-17 17:59:30')
+	</insert>
+	<insert id="mullenDAO.insertAddEmpForAuthRelate" parameterClass="hashmap">
+		INSERT INTO $DB_NEOS$t_co_auth_relate (author_code, author_type, comp_seq, dept_seq, emp_seq) VALUES ('A2', '001', '1000', '1', #empSeq#)
+	</insert>
+	<select id="mullenDAO.selectMcalSeqCount" resultClass="java.lang.Integer">
+		 SELECT COUNT(mcal_seq) FROM $DB_NEOS$t_sc_mcalendar
+	</select>
+	<insert id="mullenDAO.insertAddEmpForMcalendar" parameterClass="hashmap">
+		INSERT INTO $DB_NEOS$t_sc_mcalendar (mcal_seq, cal_title, cal_type, contents, open_yn, window_type, cal_type_seq, group_seq, comp_seq, use_yn, create_seq, create_date, modify_seq, modify_date, month_type, cal_primary_seq, cal_title_eng, cal_title_jp, cal_title_cn) VALUES (#mcalSeq#, CONCAT('개인캘린더.',#empSeq#), 'E', '', 'Y', '1', '', 'Mullen', '1000', 'Y', #empSeq#, '2019-01-04 11:42:35', NULL, NULL, NULL, NULL, CONCAT('Private calendar.',#empSeq#), CONCAT('個人カレンダー.',#empSeq#), CONCAT('个人日历.',#empSeq#))
+	</insert>
+	<insert id="mullenDAO.insertAddEmpForMcalUser" parameterClass="hashmap">
+		INSERT INTO $DB_NEOS$t_sc_mcal_user (mcal_seq, user_type, comp_seq, org_type, org_seq, group_seq, dept_seq, use_yn, create_seq, create_date, modify_seq, modify_date) VALUES (#mcalSeq#, #userType#, '1000', 'E', #empSeq#, 'Mullen', '1', 'Y', #empSeq#, '2019-01-04 11:43:09', NULL, NULL)
+	</insert>
+	<insert id="mullenDAO.insertAddEmpForMcalEmpStyle" parameterClass="hashmap">
+		INSERT INTO $DB_NEOS$t_sc_mcal_emp_style (mcal_seq, emp_seq, cal_color, window_type, group_seq, comp_seq, use_yn, create_seq, create_date, modify_seq, modify_date, month_type, sorting_order) VALUES (#mcalSeq#, #empSeq#, '##b2e1ff', '1', 'Mullen', '1000', 'Y', #empSeq#, '2019-01-04 11:44:02', NULL, NULL, NULL, '')
+	</insert>
+	<insert id="mullenDAO.insertAddEmpForMullen" parameterClass="hashmap">
+		INSERT INTO t_co_mullen (emp_seq, group_seq, my_group_id, status, use_yn, create_seq, create_date, modify_seq, modify_date) VALUES (#empSeq#, 'Mullen', #myGroupId#, '100', 'Y', '1', '2018-12-17 19:45:13', #empSeq#, '2019-02-07 13:23:41')
+	</insert>
+	
+	
+	<delete id="mullenDAO.deleteDelEmpForEmp" parameterClass="hashmap">
+		DELETE FROM $DB_NEOS$t_co_emp WHERE group_seq = #groupSeq# AND emp_seq = #empSeq# 
+	</delete>
+	<delete id="mullenDAO.deleteDelEmpForEmpMulti" parameterClass="hashmap">
+		DELETE FROM $DB_NEOS$t_co_emp_multi WHERE group_seq = #groupSeq# AND emp_seq = #empSeq#
+	</delete>
+	<delete id="mullenDAO.deleteDelEmpForEmpDept" parameterClass="hashmap">
+		DELETE FROM $DB_NEOS$t_co_emp_dept WHERE group_seq = #groupSeq# AND emp_seq = #empSeq#
+	</delete>
+	<delete id="mullenDAO.deleteDelEmpForEmpDeptMulti" parameterClass="hashmap">
+		DELETE FROM $DB_NEOS$t_co_emp_dept_multi WHERE group_seq = #groupSeq# AND emp_seq = #empSeq#		
+	</delete>
+	<delete id="mullenDAO.deleteDelEmpForEmpComp" parameterClass="hashmap">
+		DELETE FROM $DB_NEOS$t_co_emp_comp WHERE group_seq = #groupSeq# AND emp_seq = #empSeq#
+	</delete>
+	<delete id="mullenDAO.deleteDelEmpForAuthRelate" parameterClass="hashmap">
+		DELETE FROM $DB_NEOS$t_co_auth_relate WHERE emp_seq = #empSeq#
+	</delete>
+	<delete id="mullenDAO.deleteDelEmpForMcalendar" parameterClass="hashmap">
+		DELETE FROM $DB_NEOS$t_sc_mcalendar WHERE create_seq = #empSeq#
+	</delete>
+	<delete id="mullenDAO.deleteDelEmpForMcalUser" parameterClass="hashmap">
+		DELETE FROM $DB_NEOS$t_sc_mcal_user WHERE org_seq = #empSeq#
+	</delete>
+	<delete id="mullenDAO.deleteDelEmpForMcalEmpStyle" parameterClass="hashmap">
+		DELETE FROM $DB_NEOS$t_sc_mcal_emp_style WHERE emp_seq = #empSeq#
+	</delete>
+	<delete id="mullenDAO.deleteDelEmpForMullen" parameterClass="hashmap">
+		DELETE FROM t_co_mullen WHERE group_seq = #groupSeq# AND emp_seq = #empSeq#
+	</delete>
+	
+	
+
+<!-- 	2020-01-06 멀린 기능 추가 (주성덕)	 -->	
+	<select id="mullenDAO.getUserEmail" resultMap="mullenUser" parameterClass="hashmap">
+		SELECT 
+			group_seq
+			, emp_seq
+			, #emailAddr# AS email_addr 
+		FROM $DB_NEOS$t_co_emp 
+		WHERE 
+			(CONCAT(ifnull(out_mail,'') ,'@', ifnull(out_domain,'')) = #emailAddr# or (length(ifnull(out_mail,'')) > 0 and length(ifnull(out_domain,'')) > 0 and emp_seq = #loginIdCode#)) AND group_seq = #groupSeq# limit 1
+	</select>
+	
+	<update id="mullenDAO.setUserInfo" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_emp a
+		inner join $DB_NEOS$t_co_emp_multi b on a.emp_seq = b.emp_seq and b.lang_code = #langCode#
+		   SET 		 
+		   	   a.login_id = a.login_id    
+		     <isNotEmpty property="newName">
+		     , b.modify_seq = #loginIdCode#
+		     , b.modify_date = now()
+		     , b.emp_name = #newName#
+		     , a.mobile_tel_num = #mobileTelNum#
+		     </isNotEmpty>
+		     <isNotEmpty property="outMail">
+			     <isNotEmpty property="outDomain">
+				     , a.modify_seq = #loginIdCode#
+				     , a.modify_date = now()
+				     , a.out_mail = #outMail#
+				     , a.out_domain = #outDomain#
+			     </isNotEmpty>
+		     </isNotEmpty>		     
+	       WHERE a.group_seq = #groupSeq# 
+	         AND a.emp_seq = #loginIdCode# 
+	</update>
+	
+	
+	<select id="mullenDAO.validationCheck" resultMap="mullenUser" parameterClass="hashmap">
+		select 
+			group_seq,
+			emp_seq,
+			concat(out_mail,'@',out_domain) email_addr
+		from
+			$DB_NEOS$t_co_emp
+		
+		<isEqual property="type" compareValue="0">
+			where out_mail = #outMail# and out_domain = #outDomain#
+		</isEqual>
+		<isEqual property="type" compareValue="1">
+			where (emp_seq = #id# and length(ifnull(out_mail,'')) = 0 and length(ifnull(out_domain,'')) = 0)
+		</isEqual>
+		limit 1
+	</select>
+	
+	
+	<select id="mullenDAO.checkAuthStatus" resultMap="authStatus" parameterClass="hashmap">
+		<isEqual property="emailYn" compareValue="Y">
+		SELECT group_seq
+		     , emp_seq
+		     , '400' as status
+		     , 'Y' AS email_yn 
+		  FROM $DB_NEOS$t_co_emp 
+		 WHERE 
+		 group_seq = #groupSeq# 
+		 and out_mail = #outMail# 
+		 and OUT_DOMAIN = #outDomain#
+		</isEqual>
+		<isEqual property="emailYn" compareValue="N">
+		SELECT group_seq
+		     , emp_seq
+		     , case when length(ifnull(out_mail,'')) > 0 and length(ifnull(out_domain,'')) > 0 then '400' else '100' end as status
+		     , 'N' AS email_yn 
+		  FROM $DB_NEOS$t_co_emp 
+		  WHERE 
+		  group_seq = #groupSeq#
+		  and (emp_seq = #empSeq# or login_id = #empSeq#) 
+		</isEqual>
+	</select>
+	
+	<insert id="mullenDAO.setMullenGroupInfo" parameterClass="hashmap">
+		INSERT INTO $DB_NEOS$t_co_mullen_group (
+			<isNotEmpty property="groupId">
+			group_id,
+			</isNotEmpty>
+ 			emp_seq,
+ 			create_seq,
+ 			create_date
+		) VALUES (
+			<isNotEmpty property="groupId">
+			#groupId#,
+			</isNotEmpty>
+		    #loginIdCode#,
+ 			#empSeq#,
+ 			now()
+		)
+	</insert>
+	
+	<select id="mullenDAO.getMullenGroupList" resultClass="hashmap" parameterClass="hashmap">
+		SELECT
+			a.group_id groupId,
+			a.emp_seq empSeq, 
+			$DB_NEOS$FN_GetMultiLang(#langCode#,c.emp_name_multi) empName,
+			CONCAT(b.out_mail,'@',b.out_domain) emailAddr,
+			b.pic_file_id as picFileId,
+			ifnull(b.mobile_tel_num,'') as mobileTelNum,
+			b.login_id as loginId,
+			(select comp_seq from $DB_NEOS$t_co_emp_comp where emp_seq = b.emp_Seq limit 1) as compSeq,
+			(select dept_seq from $DB_NEOS$t_co_emp_comp where emp_seq = b.emp_Seq limit 1) as deptSeq
+		FROM 
+			$DB_NEOS$t_co_mullen_group a
+		INNER JOIN $DB_NEOS$t_co_emp b ON a.emp_seq = b.emp_seq
+		INNER JOIN $DB_NEOS$v_t_co_emp_multi c ON b.emp_seq = c.emp_seq AND lang_code = 'kr'
+		where
+			group_id = (select group_id from $DB_NEOS$t_co_mullen_group where emp_seq = #empSeq# limit 1)
+	</select>
+	
+	<update id="mullenDAO.updateMobileTelNum" parameterClass="hashmap">
+		update
+			$DB_NEOS$t_co_emp
+		set
+			mobile_tel_num = #mobileTelNum#
+		where
+			emp_seq = #empSeq#
+	</update>
+	
+	
+	<select id="mullenDAO.searchMullenUser" resultClass="hashmap" parameterClass="hashmap">
+		SELECT 
+			a.group_id groupId, 
+			a.emp_seq empSeq,
+			$DB_NEOS$FN_GetMultiLang(#langCode#,c.emp_name_multi) empName,
+			CONCAT(b.out_mail,'@',b.out_domain) emailAddr,
+			ifnull(b.pic_file_id,'') as picFileId,
+			ifnull(b.mobile_tel_num,'') as mobileTelNum,
+			b.login_id as loginId,
+			(select comp_seq from $DB_NEOS$t_co_emp_comp where emp_seq = b.emp_Seq limit 1) as compSeq,
+			(select dept_seq from $DB_NEOS$t_co_emp_comp where emp_seq = b.emp_Seq limit 1) as deptSeq
+		FROM (
+			SELECT 
+				COUNT(group_id)cnt, group_id, emp_Seq
+			FROM 
+				$DB_NEOS$t_co_mullen_group
+			GROUP BY group_id
+		)a
+		INNER JOIN $DB_NEOS$t_co_emp b ON a.emp_seq = b.emp_seq
+		INNER JOIN $DB_NEOS$v_t_co_emp_multi c ON b.emp_seq = c.emp_seq AND c.lang_code = 'kr'
+		WHERE a.cnt = 1 and (b.mobile_tel_num = #searchText# OR CONCAT(b.out_mail,'@',b.out_domain) = #searchText#) and b.emp_seq != #empSeq#
+	</select>
+	
+	<insert id="mullenDAO.reqGroup" parameterClass="hashmap">
+		INSERT INTO $DB_NEOS$t_co_mullen_relate (
+		   	status,
+ 			emp_seq,
+ 			target_emp_seq,
+ 			create_seq,
+ 			create_date
+		) VALUES (
+		    #status#,
+ 			#empSeq#,
+ 			#targetEmpSeq#,
+ 			#empSeq#,
+ 			now()
+		)
+	</insert>
+	
+	<update id="mullenDAO.reqHandling" parameterClass="hashmap">
+		update
+			$DB_NEOS$t_co_mullen_relate
+		set
+			status = #status#,
+			modify_seq = #empSeq#,
+			modify_date = now()
+		where
+			seq = #seq#
+	</update>
+	
+	
+	<select id="mullenDAO.reqList" resultClass="hashmap" parameterClass="hashmap" remapResults="true">
+		<isEqual property="listType" compareValue="0">
+			SELECT
+				a.seq seq, 
+				a.target_emp_seq empSeq,
+				$DB_NEOS$FN_GetMultiLang(#langCode#,c.emp_name_multi) empName,
+				CONCAT(b.out_mail,'@',b.out_domain) emailAddr,
+				b.pic_file_id as picFileId,
+				ifnull(b.mobile_tel_num,'') as mobileTelNum,
+				b.login_id as loginId,
+				(select comp_seq from $DB_NEOS$t_co_emp_comp where emp_seq = b.emp_Seq limit 1) as compSeq,
+				(select dept_seq from $DB_NEOS$t_co_emp_comp where emp_seq = b.emp_Seq limit 1) as deptSeq
+			FROM 
+				$DB_NEOS$t_co_mullen_relate a
+			INNER JOIN $DB_NEOS$t_co_emp b ON a.emp_seq = b.emp_seq
+			INNER JOIN $DB_NEOS$v_t_co_emp_multi c ON b.emp_seq = c.emp_seq AND lang_code = 'kr'
+			where
+				a.status = '100'
+				and a.target_emp_seq = #empSeq#
+		</isEqual>
+		<isEqual property="listType" compareValue="1">	
+		SELECT
+			a.seq seq, 
+			a.target_emp_seq empSeq,
+			$DB_NEOS$FN_GetMultiLang(#langCode#,c.emp_name_multi) empName,
+			CONCAT(b.out_mail,'@',b.out_domain) emailAddr,
+			b.pic_file_id as picFileId,
+			ifnull(b.mobile_tel_num,'') as mobileTelNum,
+			b.login_id as loginId,
+			(select comp_seq from $DB_NEOS$t_co_emp_comp where emp_seq = b.emp_Seq limit 1) as compSeq,
+			(select dept_seq from $DB_NEOS$t_co_emp_comp where emp_seq = b.emp_Seq limit 1) as deptSeq
+		FROM 
+			$DB_NEOS$t_co_mullen_relate a
+		INNER JOIN $DB_NEOS$t_co_emp b ON a.target_emp_seq = b.emp_seq
+		INNER JOIN $DB_NEOS$v_t_co_emp_multi c ON b.emp_seq = c.emp_seq AND lang_code = 'kr'
+		where
+			a.status = '100'
+			and a.emp_seq = #empSeq#
+		</isEqual>	
+	</select>
+	
+	<delete id="mullenDAO.delUserGroup" parameterClass="hashmap">
+		delete from $DB_NEOS$t_co_mullen_group where emp_seq = #empSeq#
+	</delete>
+	
+	<insert id="mullenDAO.addUserGroup" parameterClass="hashmap">
+		INSERT INTO $DB_NEOS$t_co_mullen_group (
+			group_id,
+		   	emp_seq,
+ 			create_seq,
+ 			create_date
+		) VALUES (
+		    #groupId#,
+		    #empSeq#,
+		    #empSeq#,
+		    now()
+		)
+	</insert>
+	
+	
+	<insert id="mullenDAO.initUserGroup" parameterClass="hashmap">
+		INSERT INTO $DB_NEOS$t_co_mullen_group (
+		   	emp_seq,
+ 			create_seq,
+ 			create_date
+		) VALUES (
+		    #empSeq#,
+		    #empSeq#,
+		    now()
+		)
+	</insert>
+	
+	
+	<select id="mullenDAO.getGroupId" resultClass="String" parameterClass="hashmap">
+		select
+			group_id
+		from
+			$DB_NEOS$t_co_mullen_group
+		where
+			emp_seq = #empSeq#
+		limit 1
+		
+	</select>
+	
+	
+	<select id="mullenDAO.getGroupIdBySeq" resultClass="String" parameterClass="hashmap">
+		select 
+			group_id 
+		from 
+			$DB_NEOS$t_co_mullen_group 
+		where 
+			emp_seq = (select emp_seq from $DB_NEOS$t_co_mullen_relate where seq = #seq# limit 1)
+		limit 1		
+	</select>
+	
+	
+	<select id="mullenDAO.getMullenUserInfoByEmailAddr" resultMap="mullenUser" parameterClass="hashmap">
+		SELECT 
+			E.group_seq, 
+			E.emp_seq, 
+			#emailAddr# AS email_addr 
+		FROM $DB_NEOS$t_co_emp E INNER JOIN $DB_NEOS$t_co_mullen_group G
+		  ON E.EMP_SEQ = G.EMP_SEQ
+		  WHERE CONCAT(E.out_mail ,'@', E.out_domain) = #emailAddr# 
+		    AND E.group_seq = #groupSeq#
+		LIMIT 1
+	</select>
+	
+	
+	<update id="mullenDAO.deleteUser" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_emp a INNER JOIN $DB_NEOS$t_co_emp_multi b ON a.emp_seq = b.emp_seq
+			SET a.use_yn = 'D', a.out_mail = '', a.out_domain = '', a.mobile_tel_num = '', a.home_tel_num = '', b.emp_name = b.emp_seq
+		WHERE a.emp_seq = #empSeq#
+	</update>
+	
+	<delete id="mullenDAO.delUserRelate" parameterClass="hashmap">
+		DELETE FROM $DB_NEOS$t_co_mullen_relate WHERE emp_seq = #empSeq#
+	</delete>
+	
+	<select id="mullenDAO.getMullenAgreementInfo" resultClass="hashmap" parameterClass="hashmap">
+		SELECT 
+			case when ifnull(agreement1_yn,'N') = 'Y' then date_format(agreement1_accept_date,'%Y%m%d') else '' end agreement1,
+			case when ifnull(agreement2_yn,'N') = 'Y' then date_format(agreement2_accept_date,'%Y%m%d') else '' end agreement2
+		FROM $DB_NEOS$t_co_emp a 
+		LEFT JOIN $DB_NEOS$t_co_mullen_agreement b ON a.emp_seq = b.emp_seq
+		WHERE a.emp_seq = #empSeq#	
+		limit 1
+	</select>
+	
+	<insert id="mullenDAO.setMullenAgreement" parameterClass="hashmap">
+    	INSERT INTO $DB_NEOS$`t_co_mullen_agreement`
+			SET 
+				emp_seq 				    = 			#empSeq#,
+				<isEqual property="kind" compareValue="mullenAgreement1">
+					<isEqual property="agreement_yn" compareValue="Y">
+						agreement1_yn		   =		#agreement_yn#	,
+						agreement1_accept_date =		now(),
+						agreement1_cancel_Date = 		null
+					</isEqual>	
+					<isEqual property="agreement_yn" compareValue="N">
+						agreement1_yn		   =		#agreement_yn#	,					
+						agreement1_cancel_Date = 		now()
+					</isEqual>						
+				</isEqual>
+				<isEqual property="kind" compareValue="mullenAgreement2">
+					<isEqual property="agreement_yn" compareValue="Y">
+						agreement2_yn		   =		#agreement_yn#,	
+						agreement2_accept_date =		now(),
+						agreement2_cancel_Date = 		null
+					</isEqual>	
+					<isEqual property="agreement_yn" compareValue="N">
+						agreement2_yn		   =		#agreement_yn#,				
+						agreement2_cancel_Date = 		now()
+					</isEqual>						
+				</isEqual>
+			ON DUPLICATE KEY UPDATE
+				<isEqual property="kind" compareValue="mullenAgreement1">
+					<isEqual property="agreement_yn" compareValue="Y">
+						agreement1_yn		   =		#agreement_yn#,	
+						agreement1_accept_date =		now(),
+						agreement1_cancel_Date = 		null
+					</isEqual>	
+					<isEqual property="agreement_yn" compareValue="N">
+						agreement1_yn		   =		#agreement_yn#,						
+						agreement1_cancel_Date = 		now()
+					</isEqual>						
+				</isEqual>
+				<isEqual property="kind" compareValue="mullenAgreement2">
+					<isEqual property="agreement_yn" compareValue="Y">
+						agreement2_yn		   =		#agreement_yn#,	
+						agreement2_accept_date =		now(),
+						agreement2_cancel_Date = 		null
+					</isEqual>	
+					<isEqual property="agreement_yn" compareValue="N">
+						agreement2_yn		   =		#agreement_yn#,						
+						agreement2_cancel_Date = 		now()
+					</isEqual>						
+				</isEqual>
+	</insert>
+</sqlMap>

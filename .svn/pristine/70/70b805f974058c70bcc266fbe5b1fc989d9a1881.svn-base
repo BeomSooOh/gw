@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CompManage">
+	
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+	<select id="Satistics.loginSatistics" parameterClass="hashmap" resultClass="egovMap">
+		/* Satistics.loginSatistics - oracle */
+		
+		SELECT * FROM
+		(
+			SELECT ROWNUM AS RNUM
+				   , A.emp_seq
+				   , TO_CHAR(C.login_date,'YYYY-MM-DD HH24:MI:SS') AS login_date
+				   , C.access_ip
+				   , A.login_id
+				   , C.device_type
+				   , $DB_NEOS$FN_GetMultiLang(#langCode#, B.emp_name_multi) emp_name
+			FROM   $DB_NEOS$t_co_emp A
+			       INNER JOIN $DB_NEOS$v_t_co_emp_multi B
+			       ON  A.emp_seq = B.emp_seq
+			       INNER JOIN $DB_NEOS$t_co_emp_login_history C
+			       ON A.emp_seq = C.emp_seq
+			WHERE  login_date BETWEEN #frDt# AND #toDt# 
+				   AND  $DB_NEOS$FN_GetMultiLang(#langCode#, B.emp_name_multi) like '%' || #empName# || '%'
+				<isEqual prepend="AND" property="gubun" compareValue="WEB">
+					C.device_type IN ('WEB_LOGIN_CUST', 'WEB_LOGIN', 'WEB_LOGOUT')
+				</isEqual>
+				<isEqual prepend="AND" property="gubun" compareValue="MESSENGER">
+					C.device_type IN ('MESSENGER_LOGIN', 'MESSENGER_LOGOUT')
+				</isEqual>
+				<isEqual prepend="AND" property="gubun" compareValue="MOBILE">
+					C.device_type IN ('MOBILE_LOGIN', 'MOBILE_LOGOUT')
+				</isEqual>
+				AND ROWNUM <![CDATA[<=]]> #endNum#
+			ORDER BY C.login_date DESC	
+		) RESULT
+		WHERE RNUM <![CDATA[>=]]> #startNum#
+	</select>
+	
+	
+	<select id="Satistics.loginSatisticsExcel" parameterClass="hashmap" resultClass="egovMap">
+		/* Satistics.loginSatistics - oracle */
+		SELECT 
+			 $DB_NEOS$FN_GetMultiLang(#langCode#, B.emp_name_multi) || '[' || A.login_id || ']' emp_name			   
+			 , TO_CHAR(C.login_date,'YYYY-MM-DD HH24:MI:SS') AS login_date
+			 , C.access_ip
+		     , C.device_type
+		FROM   $DB_NEOS$t_co_emp A
+		       INNER JOIN $DB_NEOS$v_t_co_emp_multi B
+		       ON  A.emp_seq = B.emp_seq
+		       INNER JOIN $DB_NEOS$t_co_emp_login_history C
+		       ON A.emp_seq = C.emp_seq
+		WHERE  login_date BETWEEN #frDt# AND #toDt# 
+			   AND  $DB_NEOS$FN_GetMultiLang(#langCode#, B.emp_name_multi) like '%' || #empName# || '%'
+			<isEqual prepend="AND" property="gubun" compareValue="WEB">
+				C.device_type IN ('WEB_LOGIN_CUST', 'WEB_LOGIN', 'WEB_LOGOUT')
+			</isEqual>
+			<isEqual prepend="AND" property="gubun" compareValue="MESSENGER">
+				C.device_type IN ('MESSENGER_LOGIN', 'MESSENGER_LOGOUT')
+			</isEqual>
+			<isEqual prepend="AND" property="gubun" compareValue="MOBILE">
+				C.device_type IN ('MOBILE_LOGIN', 'MOBILE_LOGOUT')
+			</isEqual>
+		ORDER BY C.login_date DESC	
+	</select>
+	
+	
+
+	<select id="Satistics.loginSatistics_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+		/* Satistics.loginSatistics_TOTALCOUNT - oracle */
+		SELECT COUNT(*)
+		FROM   $DB_NEOS$t_co_emp A
+		       INNER JOIN $DB_NEOS$v_t_co_emp_multi B
+		       ON  A.emp_seq = B.emp_seq
+		       INNER JOIN $DB_NEOS$t_co_emp_login_history C
+		       ON A.emp_seq = C.emp_seq
+		WHERE  login_date BETWEEN #frDt# AND #toDt# 
+			   AND  B.emp_name like '%' || #empName# || '%'
+			<isEqual prepend="AND" property="gubun" compareValue="WEB">
+				C.device_type IN ('WEB_LOGIN_CUST', 'WEB_LOGIN', 'WEB_LOGOUT')
+			</isEqual>
+			<isEqual prepend="AND" property="gubun" compareValue="MESSENGER">
+				C.device_type IN ('MESSENGER_LOGIN', 'MESSENGER_LOGOUT')
+			</isEqual>
+			<isEqual prepend="AND" property="gubun" compareValue="MOBILE">
+				C.device_type IN ('MOBILE_LOGIN', 'MOBILE_LOGOUT')
+			</isEqual>			   
+	</select>
+
+	<select id="Satistics.menuSatistics" parameterClass="hashmap" resultClass="egovMap">
+		/* Satistics.menuSatistics - oracle */
+		
+		SELECT * FROM
+		(
+			SELECT
+			ROWNUM AS RNUM 
+			, CEMH.emp_seq
+			, TO_CHAR(CEMH.use_date,'YYYY-MM-DD HH24:MI:SS') AS use_date
+			, CEMH.access_ip
+			, CEMH.menu_auth
+			, CASE WHEN CEMH.menu_auth = 'USER' THEN CMM_USER.menu_nm ELSE CMM_ADMIN.menu_nm END AS menu_nm
+			, CEM.emp_name
+			, CE.login_id
+			FROM $DB_NEOS$t_co_emp_menu_history CEMH
+			JOIN $DB_NEOS$v_t_co_emp_multi CEM ON CEMH.emp_seq = CEM.emp_seq
+			JOIN $DB_NEOS$t_co_emp CE ON CEMH.emp_seq = CE.emp_seq
+			LEFT JOIN $DB_NEOS$v_t_co_menu_multi CMM_USER ON CEMH.menu_no = TO_CHAR(CMM_USER.menu_no)
+			LEFT JOIN $DB_NEOS$v_t_co_menu_adm_multi CMM_ADMIN ON CEMH.menu_no = TO_CHAR(CMM_ADMIN.menu_no)
+			WHERE CEM.emp_name_multi LIKE '%' || #empName# || '%' AND (CMM_USER.menu_nm_multi LIKE '%' || #menuName# || '%' OR CMM_ADMIN.menu_nm_multi LIKE '%' || #menuName# || '%')
+			AND CEMH.use_date BETWEEN #frDt# AND #toDt#
+			AND ROWNUM <![CDATA[<=]]> #endNum#
+			ORDER BY use_date DESC
+		) RESULT
+		WHERE RNUM <![CDATA[>=]]> #startNum#
+	</select>
+	
+	
+	<select id="Satistics.menuSatisticsExcel" parameterClass="hashmap" resultClass="egovMap">
+		/* Satistics.menuSatistics - oracle */		
+		SELECT
+		CEM.emp_name || '[' || CE.login_id || ']' as empName
+		, TO_CHAR(CEMH.use_date,'YYYY-MM-DD HH24:MI:SS') AS use_date
+		, CASE WHEN CEMH.menu_auth = 'USER' THEN CMM_USER.menu_nm ELSE CMM_ADMIN.menu_nm END AS menu_nm
+		, CEMH.access_ip
+		FROM $DB_NEOS$t_co_emp_menu_history CEMH
+		JOIN $DB_NEOS$v_t_co_emp_multi CEM ON CEMH.emp_seq = CEM.emp_seq
+		JOIN $DB_NEOS$t_co_emp CE ON CEMH.emp_seq = CE.emp_seq
+		LEFT JOIN $DB_NEOS$v_t_co_menu_multi CMM_USER ON CEMH.menu_no = TO_CHAR(CMM_USER.menu_no)
+		LEFT JOIN $DB_NEOS$v_t_co_menu_adm_multi CMM_ADMIN ON CEMH.menu_no = TO_CHAR(CMM_ADMIN.menu_no)
+		WHERE CEM.emp_name_multi LIKE '%' || #empName# || '%' AND (CMM_USER.menu_nm_multi LIKE '%' || #menuName# || '%' OR CMM_ADMIN.menu_nm_multi LIKE '%' || #menuName# || '%')
+		AND CEMH.use_date BETWEEN #frDt# AND #toDt#
+		ORDER BY use_date DESC
+	</select>
+
+	<select id="Satistics.menuSatistics_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+		/* Satistics.menuSatistics_TOTALCOUNT - oracle */
+		SELECT COUNT(*)
+		FROM $DB_NEOS$t_co_emp_menu_history CEMH
+		JOIN $DB_NEOS$v_t_co_emp_multi CEM ON CEMH.emp_seq = CEM.emp_seq
+		JOIN $DB_NEOS$t_co_emp CE ON CEMH.emp_seq = CE.emp_seq
+		LEFT JOIN $DB_NEOS$v_t_co_menu_multi CMM_USER ON CEMH.menu_no = TO_CHAR(CMM_USER.menu_no)
+		LEFT JOIN $DB_NEOS$v_t_co_menu_adm_multi CMM_ADMIN ON CEMH.menu_no = TO_CHAR(CMM_ADMIN.menu_no)
+		WHERE CEM.emp_name_multi LIKE '%' || #empName# || '%' AND (CMM_USER.menu_nm_multi LIKE '%' || #menuName# || '%' OR CMM_ADMIN.menu_nm_multi LIKE '%' || #menuName# || '%')
+		AND CEMH.use_date BETWEEN #frDt# AND #toDt# 
+	</select>
+
+</sqlMap>

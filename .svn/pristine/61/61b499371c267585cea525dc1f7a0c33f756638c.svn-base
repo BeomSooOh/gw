@@ -1,0 +1,523 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="CommonOptionManageDAO">
+
+	
+    <typeAlias  alias="CommonOptionManageVO" type="neos.cmm.systemx.commonOption.vo.CommonOptionManageVO"/>
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+	<select id="CommonOptionDAO.selectCommonOption" resultClass="CommonOptionManageVO" parameterClass="hashmap">
+		SELECT  option_seq as optionSeq
+		      , start_year as startYear
+		      , end_year as endYear
+		      , start_month as startMonth
+		      , end_month as endMonth
+			  , auto_renew_val as autoRenewVal
+			  , login_fail_cnt as loginFailCnt
+			  , info_type as infoType
+			  , pass_chk as passChk
+			  , pass_cycle as passCycle
+			  , pass_re_cycle as passReCycle
+			  , min_length as minLength
+			  , max_length as maxLength
+			  , pass_mix_val as passMixVal
+			  , pass_limit_val as passLimitVal
+			  , menu_open_scope as menuOpenScope
+			  , menu_open_scope_chk1 as menuOpenScopeChk1
+			  , menu_open_scope_chk2 as menuOpenScopeChk2
+			  , menu_open_scope_chk3 as menuOpenScopeChk3
+			  , menu_cnt as menuCnt
+			  , editor_chk as editorChk
+			  , erp_org_chart as erpOrgChart
+		FROM $DB_NEOS$t_co_cmm_option
+	</select>
+
+
+    <insert id="CommonOptionDAO.InsertCommonOption" parameterClass="CommonOptionManageVO"  >
+        INSERT INTO $DB_NEOS$t_co_cmm_option
+                    ( option_seq, start_year , end_year, start_month, end_month, 
+                      auto_renew_val, login_fail_cnt, info_type, pass_chk, pass_cycle, 
+                      pass_re_cycle, min_length, max_length, pass_mix_val, pass_limit_val,
+                      menu_open_scope, menu_open_scope_chk1, menu_open_scope_chk2, menu_open_scope_chk3, menu_cnt, 
+                      editor_chk, erp_org_chart )
+             VALUES  (100000, #startYear#, #endYear#, #startMonth#, #endMonth#,
+             		  #autoRenewVal#, #loginFailCnt#, #infoType#, #passChk#, #passCycle#,
+             		  #passReCycle#, #minLength#, #maxLength#, #passMixVal#, #passLimitVal#,
+             		  #menuOpenScope#, #menuOpenScopeChk1#, #menuOpenScopeChk2#, #menuOpenScopeChk3#, #menuCnt#,
+             		  #editorChk#, #erpOrgChart#
+             
+             ) 
+     </insert>
+
+
+    <update id="CommonOptionDAO.UpdateCommonOption" parameterClass="CommonOptionManageVO">
+        <![CDATA[
+            UPDATE $DB_NEOS$t_co_cmm_option 
+               SET start_year = #startYear#
+                 , end_year = #endYear#
+                 , start_month = #startMonth#
+                 , end_month = #endMonth#
+                 , auto_renew_val = #autoRenewVal#
+                 , login_fail_cnt = #loginFailCnt#
+                 , info_type = #infoType#
+                 , pass_chk = #passChk#
+                 , pass_cycle = #passCycle#
+                 , pass_re_cycle = #passReCycle#
+                 , min_length = #minLength#
+                 , max_length = #maxLength#
+                 , pass_mix_val = #passMixVal#
+                 , pass_limit_val = #passLimitVal#
+                 , menu_open_scope = #menuOpenScope#
+                 , menu_open_scope_chk1 = #menuOpenScopeChk1#
+                 , menu_open_scope_chk2 = #menuOpenScopeChk2#    
+                 , menu_open_scope_chk3 = #menuOpenScopeChk3#
+                 , menu_cnt = #menuCnt#
+                 , editor_chk = #editorChk#
+                 , erp_org_chart = #erpOrgChart#                                                                   
+             WHERE option_seq='100000'
+        ]]>
+    </update>
+     
+     
+   <select id="CommonOptionDAO.selectCompList"  parameterClass="hashmap" resultClass="egovMap">
+   		/* CommonOptionDAO.selectCompList - mariadb */
+		SELECT A.comp_seq, $DB_NEOS$FN_GetMultiLang(#langCode#,B.comp_name_multi) AS comp_name
+		FROM $DB_NEOS$t_co_comp A
+		   , $DB_NEOS$v_t_co_comp_multi B 
+		WHERE
+			A.comp_seq = B.comp_seq
+			AND A.group_seq = #groupSeq#
+			AND	A.use_yn = 'Y'
+		<isNotEqual property="userSe" compareValue="MASTER">
+			AND A.comp_seq = #compSeq#
+		</isNotEqual>
+		GROUP BY A.comp_seq	
+		ORDER BY A.order_num, A.comp_seq 
+	</select>
+	
+	
+	<select id="CommonOptionDAO.selectOptionList"  parameterClass="hashmap" resultClass="egovMap">
+   		/* CommonOptionDAO.selectOptionList - mariadb */
+		SELECT	option_id,
+				option_value,
+				option_gb,
+				option_group,
+				option_nm,
+				p_option_id,
+				option_value_id,
+				p_option_must_value,
+				option_level,
+				option_desc,
+				option_value_real,
+				co_id,
+				detail_code,
+				CODE,
+				lang_code,
+				case when option_id = 'com701' AND option_value != '0' then 
+					(
+						case 
+							when SUBSTRING_INDEX(option_value, '|', -1) = 'm' then CONCAT(SUBSTRING_INDEX(option_value, '|', 1),'분')
+							when SUBSTRING_INDEX(option_value, '|', -1) = 'h' then CONCAT(SUBSTRING_INDEX(option_value, '|', 1),'시간')
+							when SUBSTRING_INDEX(option_value, '|', -1) = 'd' then CONCAT(SUBSTRING_INDEX(option_value, '|', 1),'일')
+					 	end
+					 )
+				ELSE detail_name end as detail_name,
+				note, 
+				use_yn,
+				create_seq,
+				create_date,
+				modify_seq,
+				modify_date,
+				case when option_id = 'com701' AND option_value != '0' then 
+					(
+						case 
+							when SUBSTRING_INDEX(option_value, '|', -1) = 'm' then CONCAT(SUBSTRING_INDEX(option_value, '|', 1),'분')
+							when SUBSTRING_INDEX(option_value, '|', -1) = 'h' then CONCAT(SUBSTRING_INDEX(option_value, '|', 1),'시간')
+							when SUBSTRING_INDEX(option_value, '|', -1) = 'd' then CONCAT(SUBSTRING_INDEX(option_value, '|', 1),'일')
+					 	end
+					 )
+					when option_id = 'cm600' then 
+					(
+						case 
+							when SUBSTRING_INDEX(option_value, '▦', 1) = '1' then concat($DB_NEOS$get_code_detail_info('0', 'option0002', '1', #sLangCode#),'(',SUBSTRING_INDEX(option_value, '▦', -1),')')
+							ELSE $DB_NEOS$get_code_detail_info('0', 'option0002', '0', #sLangCode#)
+					 	end
+					 )
+				else detail_name_multi end as detail_name_multi, 
+				case when option_id = 'com701' AND option_value != '0' then 
+					(
+						case 
+							when SUBSTRING_INDEX(option_value, '|', -1) = 'm' then CONCAT(SUBSTRING_INDEX(option_value, '|', 1),'분')
+							when SUBSTRING_INDEX(option_value, '|', -1) = 'h' then CONCAT(SUBSTRING_INDEX(option_value, '|', 1),'시간')
+							when SUBSTRING_INDEX(option_value, '|', -1) = 'd' then CONCAT(SUBSTRING_INDEX(option_value, '|', 1),'일')
+					 	end
+					 )
+					 when option_id = 'cm600' then 
+					(
+						case 
+							when SUBSTRING_INDEX(option_value, '▦', 1) = '1' then concat($DB_NEOS$get_code_detail_info('0', 'option0002', '1', #sLangCode#),'(',SUBSTRING_INDEX(option_value, '▦', -1),')')
+							ELSE $DB_NEOS$get_code_detail_info('0', 'option0002', '0', #sLangCode#)
+					 	end
+					 )
+				else				
+					IFNULL(CASE T.option_group WHEN 'text' 
+					THEN T.option_value 
+					ELSE GROUP_CONCAT(CASE1.detail_name_multi SEPARATOR ', ')
+					END, $DB_NEOS$get_code_detail_info('0', 'TX000017306', '1', #sLangCode#))  
+				end AS select_value
+		FROM	(
+			SELECT A.option_id AS option_id, 
+			       IFNULL(B.option_value, A.option_d_value) AS option_value,
+			       A.option_gb AS option_gb,
+			       A.option_group AS option_group, 
+			       $DB_NEOS$FN_GetLanguageName(#sLangCode#,A.option_nm,A.option_nm_en,A.option_nm_jp,A.option_nm_cn) AS option_nm,
+			       A.p_option_id AS p_option_id,
+			       A.option_value_id AS option_value_id,
+			       A.p_option_must_value AS p_option_must_value,
+			       A.option_level AS option_level,
+			       $DB_NEOS$FN_GetLanguageName(#sLangCode#,A.option_desc,A.option_desc_en,A.option_desc_jp,A.option_desc_cn) AS option_desc,
+			       B.option_value AS option_value_real, 
+			       B.co_id AS co_id,
+			       A.sort_order AS sort_order
+			FROM   $DB_NEOS$tcmg_optionset A
+			    LEFT OUTER JOIN $DB_NEOS$tcmg_optionvalue B
+			    ON A.option_id = B.option_id AND B.co_id = #compSeq#
+			 
+			WHERE A.module_gb = #type# 
+			<isNotEqual property="optionId" compareValue="appPathSeq800">
+				AND (A.use_yn != 'N' or a.use_yn is null)
+			</isNotEqual>
+			<isNotEmpty property="cmFlag">
+				AND A.option_id in('com100','com101','com200','com201','com210','com300','com301','com500','com501','com600','com220','com700','com701')
+			</isNotEmpty>
+			<isEmpty property="cmFlag">
+				AND A.option_id not in('com100','com101','com200','com201','com210','com300','com301','com500','com501','com600','com220','com700','com701')
+			</isEmpty>
+			
+			)	T
+			LEFT OUTER JOIN	(
+				SELECT  detail_code, 
+				        CODE, 
+				        lang_code, 
+				        detail_name, 
+				        note, 
+				        use_yn, 
+				        create_seq, 
+				        create_date, 
+				        modify_seq, 
+				        modify_date, 
+				        $DB_NEOS$FN_GetMultiLang(#sLangCode#, detail_name_multi) as detail_name_multi
+				 FROM   $DB_NEOS$v_t_co_code_detail_multi
+			)	CASE1
+			ON 	T.option_value_id = CASE1.code AND T.option_value  LIKE  CONCAT('%',CASE1.detail_code,'%')
+		WHERE T.option_gb = #gubun#
+		<isEqual property="compare" compareValue="compare">
+		AND T.option_id = #optionId#
+		</isEqual>	
+		GROUP BY T.option_id
+		ORDER BY sort_order, CAST(SUBSTR(T.option_id, 3) AS INT) ASC
+	</select>
+	
+	
+	<select id="CommonOptionDAO.selectOptionValue"  parameterClass="hashmap" resultClass="egovMap">
+   		/* CommonOptionDAO.selectOptionValue - mariadb */
+		SELECT  A.option_id, 
+				A.option_gb, 
+				A.module_gb, 
+				A.option_group, 
+				A.option_nm, 
+				A.p_option_id, 
+				A.p_option_must_value, 
+				A.option_level, 
+				IFNULL(A.option_desc,'') AS option_desc,
+				A.option_d_value, 
+				A.option_value_id, 
+				IFNULL(A.option_desc2,'') AS option_desc2,
+				A.option_nm_en, 
+				A.option_nm_jp, 
+				A.option_nm_cn, 
+				A.option_desc_en, 
+				A.option_desc_jp, 
+				A.option_desc_cn, 
+				A.use_yn, 
+				C.detail_code,
+				$DB_NEOS$FN_GetMultiLang(#langCode#, C.detail_name_multi) AS detail_name,
+				IFNULL(B.option_value, A.option_d_value) AS option_value_display
+		FROM   $DB_NEOS$tcmg_optionset A
+		    LEFT JOIN $DB_NEOS$tcmg_optionvalue B
+		    ON A.option_id = B.option_id AND B.co_id = #compSeq#
+		    INNER JOIN $DB_NEOS$v_t_co_code_detail_multi C
+		    ON A.option_value_id = C.code
+		    INNER JOIN $DB_NEOS$t_co_code_detail D
+		    ON C.code = D.code AND C.detail_code = D.detail_code
+		WHERE A.option_id = #optionId# and A.option_group = #gubunType#
+		ORDER BY D.order_num DESC
+	</select>
+	
+	<insert id="CommonOptionDAO.insertOptionValue" parameterClass="java.util.Map">
+		/* CommonOptionDAO.insertOptionValue - mariadb */
+		INSERT INTO $DB_NEOS$tcmg_optionvalue 
+		VALUES(#optionId#, #compSeq#, #optionValue#, #empSeq#, NOW(), null, null)
+	</insert>
+	
+	<update id="CommonOptionDAO.updateOptionValue" parameterClass="java.util.Map">
+		/* CommonOptionDAO.updateOptionValue - mariadb */
+		UPDATE $DB_NEOS$tcmg_optionset A LEFT OUTER JOIN $DB_NEOS$tcmg_optionvalue B ON 
+		A.option_id=B.option_id 
+		SET B.option_value = #optionValue#, B.modify_by = #empSeq#, B.modify_dt = NOW()
+		WHERE A.option_id = #optionId# 
+			AND B.co_id = #compSeq#
+	</update>
+	
+	<select id="CommonOptionDAO.selectLoginOptionValue" parameterClass="hashmap" resultClass="egovMap">
+		/* CommonOptionDAO.selectLoginOptionValue - mariadb */
+		SELECT *, IFNULL(B.option_value, A.option_d_value) as option_real_value
+		FROM   $DB_NEOS$tcmg_optionset A
+		    LEFT JOIN $DB_NEOS$tcmg_optionvalue B
+		    ON A.option_id = B.option_id AND B.co_id = 0
+		<isNotEmpty property="option">
+			WHERE A.option_id like CONCAT(#option#, '_')
+		</isNotEmpty>
+		<isNotEmpty property="optionArray">
+			WHERE A.option_id IN ($optionArray$)
+		</isNotEmpty>		
+	</select>
+	
+	<select id="CommonOptionDAO.selectGroupOptionValue" parameterClass="hashmap" resultClass="egovMap">
+		/* CommonOptionDAO.selectGroupOptionValue - mariadb */
+		SELECT *, IFNULL(B.option_value, A.option_d_value) as option_real_value
+		FROM   $DB_NEOS$tcmg_optionset A
+		    LEFT JOIN $DB_NEOS$tcmg_optionvalue B
+		    ON A.option_id = B.option_id AND B.co_id = #compSeq#
+		WHERE A.option_id = #option#
+	</select>
+	
+	<select id="CommonOptionDAO.selectErpOptionValue" parameterClass="hashmap" resultClass="egovMap">
+		/* CommonOptionDAO.selectErpOptionValue - mariadb */
+		SELECT *, IFNULL(B.option_value, A.option_d_value) as option_real_value
+		FROM   $DB_NEOS$tcmg_optionset A
+		    LEFT JOIN $DB_NEOS$tcmg_optionvalue B
+		    ON A.option_id = B.option_id AND B.co_id = #compSeq#
+		WHERE A.option_gb = '2' 
+		  AND A.option_id = #option#
+	</select>
+	
+	<select id="CommonOptionDAO.selectErpEmpOptionValue" parameterClass="hashmap" resultClass="egovMap">
+		/* CommonOptionDAO.selectErpEmpOptionValue - mariadb */
+		SELECT *, IFNULL(B.option_value, A.option_d_value) as option_real_value
+		FROM   $DB_NEOS$tcmg_optionset A
+		    LEFT JOIN $DB_NEOS$tcmg_optionvalue B
+		    ON A.option_id = B.option_id AND B.co_id = #compSeq#
+		WHERE A.option_gb = '2' 
+		  AND A.p_option_id = #option#
+	</select>
+	
+	<update id="CommonOptionDAO.resetEmpPwdDate" parameterClass="java.util.Map">
+		update $DB_NEOS$t_co_emp set passwd_date='1900-01-01';
+	</update>	
+	
+	<update id="CommonOptionDAO.changeOrderDutyPosition" parameterClass="java.util.Map">
+		update $DB_NEOS$t_co_emp_dept A 
+		LEFT JOIN $DB_NEOS$t_co_comp_duty_position POSI ON A.position_code = POSI.dp_seq AND POSI.dp_type='POSITION'
+		LEFT JOIN $DB_NEOS$t_co_comp_duty_position DUTY ON A.duty_code = DUTY.dp_seq AND DUTY.dp_type='DUTY'
+		LEFT JOIN $DB_NEOS$t_co_emp E ON A.emp_seq = e.emp_seq
+		LEFT JOIN $DB_NEOS$v_t_co_emp_multi vem ON A.emp_seq = vem.emp_seq and vem.lang_code = 'kr'
+		SET A.order_text = CONCAT(
+									LPAD(IF(IFNULL(POSI.order_num,'') = '','9999999999',POSI.order_num),10,'0'),'|',		-- 직급
+									LPAD(IF(IFNULL(DUTY.order_num,'') = '','9999999999',DUTY.order_num),10,'0'),'|',		-- 직책
+									LPAD(IF(IFNULL(A.order_num,'') = '','9999999999',A.order_num),10,'0'),'|',				-- 사용자정렬값
+									IFNULL(LPAD(IF(IFNULL(DATE_FORMAT(E.join_day, '%Y%m%d'),'99999999') = '00000000','99999999',DATE_FORMAT(E.join_day, '%Y%m%d')),8,'0'),'99999999'),'|',	-- 입사일
+									IFNULL(vem.emp_name,''))
+		WHERE A.group_seq = #groupSeq# 
+		  AND A.comp_seq = #compSeq#
+	</update>	
+	
+	<select id="CommonOptionDAO.getErpSyncCompList" parameterClass="hashmap" resultClass="egovMap">
+		/* CommonOptionDAO.getErpSyncCompList - mariaDB */
+		SELECT 	
+			A.group_seq, 
+			A.comp_seq, 
+			erp_seq, 
+			achr_gbn, 
+			erp_type_code,
+			(
+				case 
+				   when erp_type_code = 'ERPiU' then 'iu'
+				   when erp_type_code = 'iCUBE' then 'icube'
+				   else 'etc'
+				end
+			) as erp_type,
+			erp_name, 
+			database_type, 
+			driver, 
+			url, 
+			userid, 
+			password, 
+			A.create_seq, 
+			A.create_date, 
+			A.modify_seq, 
+			A.modify_date, 
+			erp_comp_name, 
+			erp_comp_seq, 
+			A.use_yn,
+			IFNULL(org_sync_status, '') as orgSyncStatus,
+			date_format(org_sync_date, '%Y-%m-%d %H:%i:%s') as org_sync_date,
+			$DB_NEOS$FN_GetMultiLang(#langCode#,B.comp_name_multi) AS comp_name
+		FROM $DB_NEOS$t_co_erp A JOIN $DB_NEOS$v_t_co_comp_multi B
+		  ON A.comp_seq = B.comp_seq 
+		where achr_gbn = #achrGbn# 
+	</select>
+	
+	<select id="CommonOptionDAO.getNewErpSyncComp" parameterClass="hashmap" resultClass="egovMap">
+		/* CommonOptionDAO.getNewErpSyncComp - mariaDB */
+		SELECT 	
+			group_seq, 
+			comp_seq, 
+			erp_seq, 
+			achr_gbn, 
+			erp_type_code,
+			(
+				case 
+				   when erp_type_code = 'ERPiU' then 'iu'
+				   when erp_type_code = 'iCUBE' then 'icube'
+				   else 'etc'
+				end
+			) as erp_type,
+			erp_name, 
+			database_type, 
+			driver, 
+			url, 
+			userid, 
+			password, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date, 
+			erp_comp_name, 
+			erp_comp_seq, 
+			use_yn,
+			org_sync_status,
+			date_format(org_sync_date, '%Y-%m-%d %H:%i:%s') as org_sync_date
+		FROM 
+			$DB_NEOS$t_co_erp 
+		where
+			comp_seq = #compSeq#
+			and achr_gbn = #achrGbn# 
+	</select>
+	
+	<select id="CommonOptionDAO.getGroupOptionList" parameterClass="hashmap" resultClass="egovMap">
+		select
+		a.option_id,
+		ifnull(b.option_value, a.option_d_value) as option_value
+		from $DB_NEOS$tcmg_optionset a
+		left join $DB_NEOS$tcmg_optionvalue b on a.option_id = b.option_id and b.co_id in ('0',#compSeq#)
+		where a.option_id in ($optionList$)
+	</select>	
+	
+	<update id="commonOptionDAO.changePasswdStausCode" parameterClass="java.util.Map">
+		/* commonOptionDAO.changePasswdStausCode - mariaDB */
+		update $DB_NEOS$t_co_emp set
+		  passwd_status_code = #passwdStatusCode#
+	</update>
+	
+	<update id="commonOptionDAO.changeEmpPwdDate" parameterClass="java.util.Map">
+		update $DB_NEOS$t_co_emp set 
+		  passwd_status_code = #passwdStatusCode#
+		where  emp_seq = #empSeq#
+	</update>
+	
+	
+	<update id="commonOptionDAO.changeBizDisplayYn" parameterClass="java.util.Map">
+		update 
+			$DB_NEOS$t_co_biz 
+		set 
+		  display_yn = #displayYn#
+		where  
+			comp_seq = #compSeq#
+	</update>
+	
+	<select id="commonOptionDAO.getCommonOptionList" parameterClass="hashmap" resultClass="hashmap">
+	    select
+				a.option_id OPTION_ID,
+				a.option_nm OPTION_NM,
+				ifnull(b.option_value, a.option_d_value) OPTION_VALUE,
+				a.p_option_id,
+				a.option_level,
+				c.comp_seq CO_ID,
+				'1' USE_YN,
+				'1' DISPLAY_YN			
+			From $DB_NEOS$tcmg_optionset a
+	    	join $DB_NEOS$t_co_comp c on c.use_yn = 'Y'
+			left join $DB_NEOS$tcmg_optionvalue b on a.option_id = b.option_id and c.comp_seq = b.co_id
+			where 
+				a.module_gb = #type# and a.option_gb = '2'
+	    union
+	    select
+				a.option_id OPTION_ID,
+				a.option_nm OPTION_NM,
+				ifnull(b.option_value, a.option_d_value) OPTION_VALUE,
+				a.p_option_id,
+				a.option_level,
+				c.comp_seq CO_ID,
+				'1' USE_YN,
+				'1' DISPLAY_YN			
+			From $DB_NEOS$tcmg_optionset a
+			join $DB_NEOS$t_co_comp c on c.use_yn = 'Y'
+			left join $DB_NEOS$tcmg_optionvalue b on a.option_id = b.option_id and b.co_id = '0'
+			where 
+				a.module_gb = #type# and a.option_gb = '1'
+				
+		union
+	    SELECT
+			a.option_id OPTION_ID,
+			a.option_nm OPTION_NM,
+			IFNULL(b.option_value, a.option_d_value) OPTION_VALUE,
+			a.p_option_id,
+			a.option_level,
+			'0' as CO_ID,
+			IFNULL(a.USE_YN,1) USE_YN,
+			IFNULL(a.DISPLAY_YN,1) DISPLAY_YN		
+		FROM $DB_NEOS$tcmg_optionset a
+		LEFT JOIN $DB_NEOS$tcmg_optionvalue b ON a.option_id = b.option_id AND b.co_id = '0'
+		WHERE 
+			a.module_gb = 'app' AND IFNULL(a.USE_YN, '1') > '0'
+				
+		UNION
+        
+        SELECT
+			a.option_id OPTION_ID,
+			a.option_nm OPTION_NM,
+			IFNULL(b.option_value, a.option_d_value) OPTION_VALUE,
+			a.p_option_id,
+			a.option_level,
+			'0' as CO_ID,
+			IFNULL(a.USE_YN,1) USE_YN,
+			IFNULL(a.DISPLAY_YN,1) DISPLAY_YN		
+		FROM $DB_NEOS$tcmg_optionset a
+		LEFT JOIN $DB_NEOS$tcmg_optionvalue b ON a.option_id = b.option_id AND b.co_id = '0'
+		WHERE 
+			a.module_gb = #type# AND IFNULL(a.USE_YN, '1') > '0'  
+			
+		UNION
+        
+        SELECT
+			a.option_id OPTION_ID,
+			a.option_nm OPTION_NM,
+			IFNULL(b.option_value, a.option_d_value) OPTION_VALUE,
+			a.p_option_id,
+			a.option_level,
+			'0' as CO_ID,
+			IFNULL(a.USE_YN,1) USE_YN,
+			IFNULL(a.DISPLAY_YN,1) DISPLAY_YN		
+		FROM $DB_NEOS$tcmg_optionset a
+		LEFT JOIN $DB_NEOS$tcmg_optionvalue b ON a.option_id = b.option_id AND b.co_id = '0'
+		WHERE 
+			a.module_gb = 'msg' AND IFNULL(a.USE_YN, '1') > '0'  	
+			
+		UNION ALL
+
+		SELECT
+			'gwTitle', '그룹웨어 타이틀', ifnull(group_display_name,''), NULL, 1, 0, 1, 1
+		FROM $DB_NEOS$t_co_group	
+	</select>
+</sqlMap>

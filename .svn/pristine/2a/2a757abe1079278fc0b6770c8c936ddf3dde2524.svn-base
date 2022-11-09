@@ -1,0 +1,9 @@
+# 계좌 스크래핑 호출 웹서비스 클라이언트 생성#
+
+1. Apache-Ant, Apache-Axis2 설치되어 있어야 한다.
+2. 커맨트 창에서 아래 명령어 실행하거나 build.xml 우클릭 -> Run as -> Ant Build ...
+   ant check.dependency gen.account_stub 
+3. bizbox.account.ws.client.jar 파일 생성된다.
+4. wsdl 읽어서 다수의 CLASS 파일 생성되므로 
+   build.xml 파일 임의의 폴더로 복사하여 커맨드 창으로 빌드 하는걸 추천
+   (프로젝트 에서는 jar 파일만 참조하면 된다)

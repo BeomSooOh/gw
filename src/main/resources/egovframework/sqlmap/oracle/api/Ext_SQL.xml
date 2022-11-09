@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org//dtd/sql-map-2.dtd">
+<sqlMap namespace="ExtDAO">
+
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	
+	<resultMap class="String" id="resultMessage" >
+		<result property="resultmsg" column="resultmsg" />
+	</resultMap>
+	
+	<parameterMap id="selectSsoTokenParam" class="hashMap">
+	    <parameter property="groupSeq" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="compSeq" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="empSeq" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="formKind" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="formAppKind" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="approvalId" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="formId" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="docId" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="urlPath" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="urlPath2" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="targetPage" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="popYn" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    <parameter property="userIP" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+	    
+	    <parameter property="resultmsg" javaType="java.sql.ResultSet" jdbcType="ORACLECURSOR" mode="OUT" />
+  	</parameterMap>
+
+
+	<procedure id="ExtDAO.getExtSSO" parameterClass="hashmap" resultClass="egovMap">
+	    <![CDATA[
+	    	EXEC $DB_NEOS$P_ext_checkSSOToken(#token#)
+	     ]]>
+    </procedure>
+	
+	<procedure id="ExtDAO.getExtToken" parameterMap="selectSsoTokenParam" resultMap="resultMessage">
+	    <![CDATA[
+    	    { CALL $DB_NEOS$P_EXT_SELECTSSOTOKEN(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)} 
+ 	     ]]>   
+    </procedure>
+	
+	<select id="ExtDAO.getExtInfo" parameterClass="hashmap" resultClass="egovMap">
+		select e.login_id, ec.erp_comp_seq, ec.ext_code 
+			from $DB_NEOS$t_co_erp_comp ec, $DB_NEOS$t_co_emp e
+		where ec.group_seq = #groupSeq#
+		  and ec.comp_seq = #compSeq#
+		  and ec.group_seq = e.group_seq
+		  and e.emp_seq = #empSeq#
+	</select>
+	
+	<select id="ExtDAO.getErpInfo" parameterClass="hashmap" resultClass="egovMap">
+		<isNotEmpty property="kicpaNum">
+	     	select a.group_seq, a.comp_seq, a.emp_seq, c.ea_type
+	     	from $DB_NEOS$t_co_emp_comp a
+	     	join $DB_NEOS$t_co_erp b on a.comp_seq = b.comp_seq and b.use_yn = 'Y'
+	     	join $DB_NEOS$t_co_comp c on a.comp_seq = c.comp_seq
+	      	join $DB_NEOS$t_custom_kicpa d on a.emp_seq = d.emp_seq
+			where d.kicpa_num = #kicpaNum# and a.work_status = '999' and a.use_yn = 'Y'
+			<isNotEmpty property="erpTypeCode">
+			  	AND b.erp_type_code = #erpTypeCode#
+			</isNotEmpty>
+			and ROWNUM = 1
+		</isNotEmpty>
+		<isEmpty property="kicpaNum">
+			<isNotEmpty property="ccode">
+		     	 select a.group_seq, a.comp_seq, a.emp_seq, c.ea_type
+		     	 from $DB_NEOS$t_co_emp_comp a
+		     	 join $DB_NEOS$t_co_erp b on a.comp_seq = b.comp_seq and b.use_yn = 'Y' and b.erp_comp_seq = #ccode# AND b.achr_gbn = #module#
+		     	 join $DB_NEOS$t_co_comp c on a.comp_seq = c.comp_seq
+				 where a.erp_emp_seq = #erpSeq# and a.work_status = '999' and a.use_yn = 'Y'
+				 <isNotEmpty property="erpTypeCode">
+				 	AND b.erp_type_code = #erpTypeCode#
+				 </isNotEmpty>
+				 and ROWNUM = 1
+			</isNotEmpty>
+			<isEmpty property="ccode">
+				select a.group_seq, a.comp_seq, a.emp_seq, c.ea_type
+				<isNotEmpty property="erpSeq">
+					from $DB_NEOS$t_co_emp_comp a
+				  	join $DB_NEOS$t_co_comp c on a.comp_seq = c.comp_seq
+				  	<isNotEmpty property="erpCompSeq">
+				  		join $DB_NEOS$t_co_erp b on a.comp_seq = b.comp_seq and b.use_yn = 'Y' and b.erp_comp_seq = #erpCompSeq# 
+					  	<isNotEmpty property="module">
+					  		AND b.achr_gbn = #module#
+					  	</isNotEmpty>
+					  	<isNotEmpty property="erpTypeCode">
+				  			AND b.erp_type_code = #erpTypeCode#
+				  	  	</isNotEmpty>	
+				  	</isNotEmpty>
+				 	where BINARY(a.erp_emp_seq) = #erpSeq# and a.work_status = '999' and a.use_yn = 'Y'
+				  	<isNotEmpty property="compSeq">
+				  		AND c.comp_seq = #compSeq#
+				  	</isNotEmpty>	
+				  	and ROWNUM = 1
+				</isNotEmpty>
+				<isNotEmpty property="empSeq">
+			  		from $DB_NEOS$t_co_emp_comp a
+			  		join $DB_NEOS$t_co_comp c on a.comp_seq = c.comp_seq
+			  		where a.emp_seq = #empSeq#
+			   		and a.comp_seq = #compSeq#
+			   		and a.work_status = '999' and a.use_yn = 'Y'
+			   		and ROWNUM = 1
+				</isNotEmpty>
+				<isNotEmpty property="loginId">
+			  		from $DB_NEOS$v_user_info a
+			  		join $DB_NEOS$t_co_comp c on a.comp_seq = c.comp_seq
+			  		where a.login_id = #loginId#
+			   		<isNotEmpty property="compSeq">
+			   			and a.comp_seq = #compSeq#
+			   		</isNotEmpty>
+			   		and a.main_dept_yn = 'Y' and a.work_status = '999' and a.use_yn = 'Y'
+			   		<isNotEmpty property="loginPasswd">
+			   			and a.login_passwd = #loginPasswd#
+			   		</isNotEmpty>
+			   		and ROWNUM = 1
+				</isNotEmpty>
+			</isEmpty>			
+		</isEmpty>	
+	</select>	
+	
+	<select id="ExtDAO.getSWLinkInfo" parameterClass="hashmap" resultClass="egovMap">
+		<isEqual property="pType" compareValue="mail">
+			<![CDATA[
+				select menu_no,
+					menu_no as gnb_menu_no,
+					'0' as lnb_menu_no,
+					$DB_NEOS$get_menu_first_info('1', menu_no, 'kr') as link_nm_kr,
+					url_gubun,
+					url_path
+					from $DB_NEOS$t_co_menu
+				where url_gubun = #pType#
+				  and rownum = 1
+			]]>
+		</isEqual>
+		<isEqual property="pType" compareValue="edms">
+			<![CDATA[
+				select menu_no,
+					menu_no as gnb_menu_no,
+					'0' as lnb_menu_no,
+					$DB_NEOS$get_menu_first_info('1', menu_no, 'kr') as link_nm_kr,
+					url_gubun,
+					url_path
+					from $DB_NEOS$t_co_menu
+				where url_gubun = #pType#
+				  and rownum = 1
+			]]>
+		</isEqual>
+		<isEqual property="pType" compareValue="ea">
+			<![CDATA[
+				select menu_no,
+					$DB_NEOS$get_menu_first_info('0', menu_no, 'kr') as gnb_menu_no,
+					menu_no as lnb_menu_no,
+					$DB_NEOS$get_menu_first_info('1', menu_no, 'kr') as link_nm_kr,
+					url_gubun,
+					url_path
+					from $DB_NEOS$t_co_menu
+				where url_gubun = 'ea'
+				  and upper_menu_no = 0
+				  and rownum = 1
+			]]>
+		</isEqual>
+	</select>	
+	
+	
+	<select id="ExtDAO.getLinkInfo" parameterClass="hashMap" resultClass="egovMap">
+		/* ExtDAO.getLinkInfo - oracle */
+		select * From $DB_NEOS$t_ext_tcmg_link
+		where link_type = #moduleTp# and link_detail_type = #type#
+	</select>
+	
+</sqlMap>

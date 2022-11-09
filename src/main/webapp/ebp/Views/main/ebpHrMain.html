@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>D-ERP</title>
+    
+    <!--css-->
+	<link rel="stylesheet" type="text/css" href="../../Scripts/jqueryui/jquery-ui.css"/>
+	<link rel="stylesheet" type="text/css" href="../../css/common.css">
+	<link rel="stylesheet" type="text/css" href="../../css/layout.css">
+	<link rel="stylesheet" type="text/css" href="../../css/portlet.css">
+	<link rel="stylesheet" type="text/css" href="../../css/main.css">
+	    
+    <!--js-->
+    <script type="text/javascript" src="../../Scripts/jquery-1.9.1.min.js"></script> 
+	<script type="text/javascript" src="../../Scripts/jqueryui/jquery.min.js"></script>
+	<script type="text/javascript" src="../../Scripts/jqueryui/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="../../Scripts/common.js"></script>
+	
+	<!-- mCustomScrollbar -->
+    <link rel="stylesheet" type="text/css" href="../../Scripts/mCustomScrollbar/jquery.mCustomScrollbar.css"/>
+    <script type="text/javascript" src="../../Scripts/mCustomScrollbar/jquery.mCustomScrollbar.js"></script>
+
+	<!-- 메인 js -->
+	<script type="text/javascript" src="../../Scripts/jquery.alsEN-1.0.min.js"></script>
+	<script type="text/javascript" src="../../Scripts/jquery.bxslider.min.js"></script>
+
+
+
+	<script type="text/javascript">	
+
+	 $(document).ready(function() {
+		//알림탭
+		$(".alert_tab li").on("click",function(){
+			var mapClass = $(this).children().attr("class");
+			
+			$(".alert_tab li").removeClass('on');
+			$(this).addClass('on');
+			$(".tabCon").hide();
+			$("." + "_" + mapClass).removeClass("animated1s fadeInDown").toggleClass("animated1s fadeInDown").show();
+		});
+					
+		//컨텐츠를 클릭할때(컨텐츠에 타이틀도 포함)
+		$(".list_con").on("click",function(){
+			$(this).parent().removeClass("unread");
+		});
+		
+		//접고 펼치기
+		$(".toggle_btn").on("click",function(){
+			$(this).toggleClass("down");
+			$(this).parent().parent().find(".sub_detail").removeClass("animated1s fadeIn").toggleClass("animated1s fadeIn").toggle();
+			
+			//멘션 접고 펼치기
+			if($(this).hasClass("down")){
+				$(this).parent().parent().find(".mention_detail").removeClass("ellipsis").toggleClass("animated1s fadeIn");
+			}else{
+				$(this).parent().parent().find(".mention_detail").removeClass("animated1s fadeIn").toggleClass("ellipsis");
+			}
+		});
+		
+		// 알림 스크롤 이벤트
+		$(".mention_alert_box .m_mentionCon").scroll(function(){
+			$(".tag_date").css("top",$(this).scrollTop()+10);				
+			TagInAm();
+		});
+		
+		//스크롤 끝나면 이벤트
+		$(".mention_alert_box .m_mentionCon").scrollEnd(function(){
+			TagOutAm();
+		},1000);
+		
+	});
+	
+	//스크롤 에니메이션 실행
+	function TagInAm(){
+		$(".tag_date").removeClass("animated05s fadeOutLeft").addClass("animated05s fadeInLeft").show();
+	};
+	
+	//스크롤 에니메이션 초기화
+	function TagOutAm(){
+		$(".tag_date").stop().removeClass("animated05s fadeInLeft").addClass("animated05s fadeOutLeft");
+	};
+
+
+	$(document).ready(function() {
+
+		// 배너슬라이드
+		var slider = $('.workst .bxslider').bxSlider({
+		auto: true,        // 자동 실행 여부
+		controls: false,   // 좌,우 컨트롤 버튼 숨기기/보이기
+		speed: 700,        // 이동 속도를 설정	
+		pause: 5000,     // 이미지 변환속도
+		mode: 'fade',     // 가로 방향 수평 슬라이드 (horizontal(좌우), vertical(상하)', 'fade(제자리)') 
+		autoHover: true,  // 마우스 오버시 정지
+		//pager:true,        // 하단 이미지 보기 버튼 
+		//controls:false,      // 좌,우 컨트롤 버튼 숨기기/보이기
+		//autoControls:false,  //  슬라이드 시작/멈춤 
+		onSliderLoad: function (){
+			$('.bx-pager-link').click(function(){
+				var i = $(this).data('slide-index');
+				slider.goToSlide(i);
+				slider.stopAuto();
+				slider.startAuto();
+				return false;
+			});
+			}
+		});
+
+		//나의근무현황 탭
+		$(".myworkst_tab li").on("click",function(){
+			var mapClass = $(this).children().attr("class");
+			
+			$(".myworkst_tab li").removeClass('on');
+			$(this).addClass('on');
+			$(".tabcon").hide();
+			$("." + "_" + mapClass).removeClass("animated1s fadeInDown").toggleClass("animated1s fadeInDown").show();
+		});
+
+		//퀵
+		$("#quick").als({
+			visible_items: 5,
+			scrolling_items: 1,
+			orientation: "horizontal",
+			circular: "yes",
+			autoscroll: "yes",
+			interval: 3000,
+			direction: "left"
+		});	
+
+		//프로필팝업 온오프
+		$(".divi_txt").on("click",function(){
+			$(".profile_box").toggle();
+
+		});
+		//알림팝업 온오프
+		$(".alert_btn").on("click",function(){
+			$(".mention_alert_box").toggle();
+		});
+		
+		//메뉴 더보기로 자동 복사
+		gnb_menu();
+		
+		//카운트메뉴 펄스효과
+		$(".fm_div_in span.cnt").siblings(".ico").addClass("cntPulse");
+		
+		
+		//더보기 클릭시
+		$(document).mouseup(function (e){
+			if($(e.target).attr("moreBtn")  == null){
+				$(".gnb_more").removeClass("on");
+				$(".gnb_more_box").addClass("close");
+				$(".gnb_more_box").removeClass("open");
+			}
+			else{
+				 if (!$(".gnb_more").hasClass("on"))
+				 {
+					$(".gnb_more").addClass("on");
+					$(".gnb_more_box").addClass("open");
+					$(".gnb_more_box").removeClass("close");
+				  
+				 } else {
+					 
+				   $(".gnb_more").removeClass("on");
+					$(".gnb_more_box").addClass("close");
+					$(".gnb_more_box").removeClass("open");
+				 }		
+				var fmiCnt = $(".gnb_more_box .more_box_in > div").size();
+				var fmihei= Math.round(fmiCnt/2)*77
+				 $(".gnb_more_box.open .more_box_in").css("height",fmihei);
+			}
+		});
+		
+		//더보기 박스에서 마우스가 떠났을시 닫힘
+		$(".more_box_in").mouseleave(function(){ 
+			$(".gnb_more").removeClass("on");
+			$(".gnb_more_box").addClass("close");
+			$(".gnb_more_box").removeClass("open");
+		});
+
+	});	
+
+	//메뉴 더보기 박스로 복사
+	function gnb_menu(){ 	 
+	  var td_size = $(".m_ta table td").size();
+	  var num = 8;
+		if (td_size >10)
+		 {
+			$(".m_ta table td").eq(num).nextAll("td").hide();
+			var menuCln = $(".m_ta table td").eq(num).nextAll("td").children(".fm_div").clone();
+			$(".more_box_in").html(menuCln); 
+			$(".m_ta table").css("marginRight","157px")
+		  }		
+	}
+	</script>	
+
+</head>
+<body class="main_bg">
+	<div class="portal_wrap expbg">
+	<!-- 
+	fm_ea 전자결재
+	fm_ma 메일
+	fm_sc 일정
+	fm_wk 업무관리
+	fm_bd 게시판
+	fm_ds 인사/근태
+	fm_ex 회계
+	fm_dc 문서
+	fm_mp 마이페이지
+	fm_et 확장기능
+	fm_of 원피스
+	fm_st 시스템설정
+	fm_cb 동호회
+	-->
+	<div class="gnb_menu"><!-- 메뉴 -->
+		<div class="gnb_menu_in">
+		<div class="m_ta">
+			<table cellspacing="0" cellpadding="0">
+				<tr>
+					<td>
+						<div class="fm_div fm_ea">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">전자결재</div>
+								<span class="cnt">99</span>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div class="fm_div fm_ma">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">메일</div>
+								<span class="cnt">99</span>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div class="fm_div fm_sc">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">일정</div>
+								<span class="cnt">99</span>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div class="fm_div fm_wk">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">업무관리</div>
+								<span class="cnt">99</span>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div class="fm_div fm_bd">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">게시판</div>
+								<span class="cnt">99</span>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div class="fm_div fm_ds">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">인사/근태</div>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div class="fm_div fm_st">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">시스템설정</div>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div class="fm_div fm_at">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">회계</div>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div class="fm_div fm_cb">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">동호회</div>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div class="fm_div fm_dc">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">문서</div>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div class="fm_div fm_of">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">ONEFFICE</div>
+								<span class="cnt">99</span>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div class="fm_div fm_mp">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">마이페이지</div>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div class="fm_div fm_et">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">확장기능</div>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div class="fm_div fm_st">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">시스템설정</div>
+							</div>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div class="gnb_more" moreBtn="Y">
+			<div class="fm_div plus" moreBtn="Y">
+				<div class="fm_div_in" moreBtn="Y">
+					<div class="ico" moreBtn="Y"></div>
+					<div class="ico_bg" moreBtn="Y"></div>
+					<div class="txt" moreBtn="Y">더보기</div>
+				</div>
+			</div>
+		</div>
+		<div class="gnb_more_box">
+			<div class="more_box_in">
+				
+			</div>
+		</div>
+		</div><!--// gnb_menu_in -->
+	</div><!--// 메뉴 -->
+
+
+	<!-- main_wrap -->
+	<div class="main_wrap">			    		
+		<div class="portletGrid grid10 nonGrid">
+			
+			<!-- 포틀릿 영역 --------------------------------------------------------------------------------------------------->
+			<div class="portletDiv" style="height:870px;">
+				
+				<!-- 아이프레임 박스 (내정보 2*2) -->
+				<div style="top:8px;left:8px" class="portletBox col2 row2">
+					<div class="ptl_content nocon">						
+						<div class="userinfo">
+							<!-- 접속자 정보 -->
+							<div class="user">
+								<div class="user_pic">
+									<div class="bg_pic"></div>
+									<span class="img_pic">
+										<img src="../../Images/bg/pic_Noimg.png" alt="" />
+										<!-- <img src="../../Images/temp/temp_pic.png" alt="" /> -->
+									</span>				
+								</div>
+								<div class="mb10 name">윤준 부장</div>
+								<div class="Scon_ts">(주)더존비즈온</div>
+							</div>
+							<!-- 출근/퇴근 -->
+							<div class="worktime">
+								<div id="container">
+									<ul class="tabs">
+										<li class="active" rel="tab1">출근</li>
+										<li rel="tab2">퇴근</li>
+									</ul>
+									<div class="tab_container">
+										<div id="tab1" class="tab_content"><em>출근</em> 2019.05.13 월요일 08:31:09</div>
+										<div id="tab2" class="tab_content" style="display:none"><em>퇴근</em> 2019.05.13 월요일 16:31:09</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+							
+				
+				
+				<!-- 아이프레임 박스 (배너2*4) -->
+				<div style="top:8px;left:244px" class="titleBox col4 row2">
+					<!-- 타이틀 영역 -->
+					<h2 class="sc">
+						<span>일정캘린더</span>
+					</h2>
+					<div class="ptl_content">
+						<!-- 컨텐츠 영역 :: 최초 컨텐츠 미설정 시 .ptl_content가 비어있으면  .nocon 클래스 생성-->
+						<div class="ptl_calendar horizontal">
+							<div class="calendar_wrap">
+								<div class="select_date">
+									<a title="이전" class="prev" href="#n"></a>
+									<span id="">2018.12</span>
+									<a title="다음" class="next" href="#n"></a>
+								</div>
+	
+								<div  class="calender_ta" name="calenderTable">
+								  <table cellspacing="0" cellpadding="0">
+									<tbody>
+										<tr>
+											<th class="sun">일</th>
+											<th>월</th>
+											<th>화</th>
+											<th>수</th>
+											<th>목</th>
+											<th>금</th>
+											<th class="sat">토</th>
+										</tr>
+										<tr>
+											<td class="sun other_mon"><a name="26" title="" onclick="#">26</a></td>
+											<td class="other_mon"><a name="27" title="" onclick="#">27</a></td>
+											<td class="other_mon"><a name="28" title="" onclick="#">28</a></td>
+											<td class="other_mon"><a name="29" title="" onclick="#">29</a></td>
+											<td class="other_mon "><a name="30" title="" onclick="#"class="special_day">30</a></td>
+											<td class="other_mon"><a name="31" title="" onclick="#">31</a></td>
+											<td class="sat"><a name="1" title="" class="schedule" onclick="#">1</a></td>
+										</tr>
+										<tr>
+											<td class="sun"><a name="2" title="" onclick="#">2</a></td>
+											<td><a name="3" title="" onclick="#">3</a></td>
+											<td><a name="4" title="" onclick="#">4</a></td>
+											<td><a name="5" title="" onclick="#">5</a></td>
+											<td><a name="6" title="" onclick="#">6</a></td>
+											<td><a name="7" title="" onclick="#">7</a></td>
+											<td class="sat"><a name="8" title="" onclick="#">8</a></td>
+										</tr>
+										<tr>
+											<td class="sun"><a name="9" title="" onclick="#">9</a></td>
+											<td><a name="10" title="" onclick="#">10</a></td>
+											<td><a name="11" title="" onclick="#">11</a></td>
+											<td><a name="12" title="" onclick="#">12</a></td>
+											<td><a name="13" title="" onclick="#">13</a></td>
+											<td><a name="14" title="" class="today" onclick="#">14</a></td>
+											<td class="sat"><a name="15" title="" onclick="#">15</a></td>
+										</tr>
+										<tr>
+											<td class="sun"><a name="16" title="" onclick="#">16</a></td>
+											<td><a name="17" title="" onclick="#">17</a></td>
+											<td><a name="18" title="" onclick="#">18</a></td>
+											<td><a name="19" title="" onclick="#">19</a></td>
+											<td><a name="20" title="" onclick="#">20</a></td>
+											<td><a name="21" title="" onclick="#">21</a></td>
+											<td class="sat"><a name="22" title="" onclick="#">22</a></td>
+										</tr>
+										<tr>
+											<td class="sun"><a name="23" title="" onclick="#">23</a></td>
+											<td><a name="24" title="" onclick="#">24</a></td>
+											<td><a name="25" title="" onclick="#">25</a></td>
+											<td><a name="26" title="" onclick="#">26</a></td>
+											<td><a name="27" title="" class="selon" onclick="#">27</a></td>
+											<td><a name="28" title="" onclick="#">28</a></td>
+											<td class="sat"><a name="29" title="" onclick="#">29</a></td>
+										</tr>
+										<tr>
+											<td class="sun"><a name="30" title="" onclick="#">30</a></td>
+											<td><a name="31" title="" onclick="#">31</a></td>
+											<td class="other_mon"><a name="1" title="" onclick="#">1</a></td>
+											<td class="other_mon"><a name="2" title="" onclick="#">2</a></td>
+											<td class="other_mon"><a name="3" title="" onclick="#">3</a></td>
+											<td class="other_mon"><a name="4" title="" onclick="#">4</a></td>
+											<td class="other_mon sat"><a name="5" title="" onclick="#">5</a></td>
+										</tr>
+									</tbody>
+								  </table>
+								</div>                
+							</div>
+							
+							<div class="horizon_right">
+								<!-- 항목셀렉트 -->
+								<div class="calendar_select">
+									<select style="width:100%;">
+										<option value="total" selected="selected">전체일정</option>
+										<option value="indivi">개인일정</option>
+										<option value="share">공유일정</option>
+										<option value="special">기념일</option>
+									</select>
+								</div>
+								
+								<!-- 리스트 -->
+								<div class="calendar_div st1" style="display:block">
+									<h3>2018.12.24 <span class="fr mr20 fwn"><span class="text_blue fwb">8</span>건</span></h3>
+									<div class="calendar_list ScrollY">
+										<ul>
+											<li>
+												<span class="time">09:00~18:00</span> 
+												<span class="txt">서버 이전작업</span>
+											</li>
+											<li>
+												<span class="time">09:00~10:00</span> 
+												<span class="txt">임직원 성과목표 교육</span>
+											</li>
+											<li>
+												<span class="time">11:00~12:00</span> 
+												<span class="txt">솔루션 업체 미팅솔루션 업체 미팅</span>
+											</li>
+											<li>
+												<span class="time">14:00~16:00</span> 
+												<span class="txt">솔루션 업체 미팅솔루션 업체 미팅</span>
+											</li>
+											<li>
+												<span class="time">15:00~18:00</span> 
+												<span class="txt">고객사 방문</span>
+											</li>
+										</ul>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>				
+
+
+				<!-- 타이틀 박스 (임직원연차사용관리_가로형4*2) -->
+				<div style="top:8px;left:716px" class="titleBox col4 row2">
+					<!-- 타이틀 영역 -->
+					<h2 class="wk">
+						<span>임직원 연차사용관리</span>
+					</h2>
+					<div class="ptl_content">							
+						<div class="hraum">	
+							<p class="graph"><img src="../../Images/temp/hr_aumgraph.png" alt=""/></p>
+							<div class="graph_con">
+								<ul>
+									<li class="gbg red">조치필요</li>
+									<li class="text" style="width:89px;">홍길동 외 8명</li>
+									<li class="percent">30%</li>
+								</ul>
+								<ul>
+									<li class="gbg yellow">관리필요</li>
+									<li class="text" style="width:89px;">김더존 외 5명</li>
+									<li class="percent">25%</li>
+								</ul>
+								<ul>
+									<li class="gbg green">양호</li>
+									<li class="text" style="width:89px;">이양호 외 25명</li>
+									<li class="percent">45%</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+												
+				
+				<!-- 타이틀 박스 -->
+				<div style="top:244px;left:8px" class="titleBox col2 row2">
+					<!-- 타이틀 영역 -->
+					<h2 class="wt">
+						<span>금주 근무시간</span>
+					</h2>
+					<div class="ptl_content">					
+						<div class="weektime"><img src="../../Images/temp/hr_weektime.png" alt=""/></div>
+					</div>					
+				</div>
+
+								
+				<!-- 타이틀 박스 -->
+				<div style="top:244px;left:244px" class="titleBox col4 row2">
+					<h2 class="ws">
+						<span>나의 근무현황</span>
+						<span class="myworkst_tab">
+							<ul>
+								<li class="on"><a href="#n" onclick="return false;" class="tab01">주별</a></li>
+								<li><a href="#n" onclick="return false;" class="tab02">월별</a></li>
+								<li><a href="#n" onclick="return false;" class="tab03">년도별</a></li>
+							</ul>
+						</span>
+					</h2>					
+					<div class="ptl_content">
+						<!-- 주별 -->
+						<div class="myworkst">
+							<div class="tabcon _tab01">
+								<div class="graph"><img src="../../Images/temp/myworkst_graph01.png" alt=""/></div>
+								<div class="wstype">
+									<dl class="type01">
+										<dt>기본근무</dt>
+										<dd>32시간</dd>
+									</dl>
+									<dl class="type02">
+										<dt><span></span>연장근무</dt>
+										<dd>7시간</dd>
+									</dl>
+									<dl class="type03">
+										<dt><span></span>휴일근무</dt>
+										<dd>6시간</dd>
+									</dl>
+								</div>
+							</div>						
+						
+							<!-- 월별 -->
+							<div class="tabcon _tab02" style="display:none;">
+								<div class="graph"><img src="../../Images/temp/myworkst_graph02.png" alt=""/></div>
+								<div class="wstype">
+									<dl class="type01">
+										<dt>기본근무</dt>
+										<dd>132시간</dd>
+									</dl>
+									<dl class="type02">
+										<dt><span></span>연장근무</dt>
+										<dd>20시간</dd>
+									</dl>
+									<dl class="type03">
+										<dt><span></span>휴일근무</dt>
+										<dd>6시간</dd>
+									</dl>
+								</div>
+							</div>
+
+							<!-- 년도별 -->
+							<div class="tabcon _tab03" style="display:none;">
+								<div class="graph"><img src="../../Images/temp/myworkst_graph03.png" alt=""/></div>
+								<div class="wstype">
+									<dl class="type01">
+										<dt>기본근무</dt>
+										<dd>1232시간</dd>
+									</dl>
+									<dl class="type02">
+										<dt><span></span>연장근무</dt>
+										<dd>100시간</dd>
+									</dl>
+									<dl class="type03">
+										<dt><span></span>휴일근무</dt>
+										<dd>40시간</dd>
+									</dl>
+								</div>
+							</div>
+
+						</div>
+					</div>
+				</div>
+				
+																
+				
+				<!-- 타이틀 박스 -->
+				<div style="top:244px;left:716px" class="titleBox col2 row2">
+					<!-- 타이틀 영역 -->
+					<h2 class="ws">
+						<span>연장근무신청</span>
+						<a href="#n" class="more" title="더보기"></a>
+					</h2>
+					<div class="ptl_content">							
+						<div class="overtime">
+							<div class="select">
+								<select style="width:100%;">
+									<option value="total">전체일정</option>
+									<option value="indivi" selected="selected">개인일정</option>
+								</select>
+							</div>
+							<div class="overtimeCon ScrollY" style="height:150px;">
+								<ul>
+									<li class="list" style="width:175px;">
+										<a href="#n">
+											<p class="dt">홍길동 사원 <span class="text_blue">2시간</span></p>
+											<p class="dd">클라우드 전략 보고서 작성</p>
+										</a>
+									</li>
+									<li class="box bg01">대기</li>									
+								</ul>
+								<ul>
+									<li class="list" style="width:175px;">
+										<a href="#n">
+											<p class="dt">이정미 선임 <span class="text_blue">2시간</span></p>
+											<p class="dd">Bizbox Alpha 근태관리 화면설계</p>
+										</a>
+									</li>
+									<li class="box bg01">대기</li>									
+								</ul>
+								<ul>
+									<li class="list" style="width:175px;">
+										<a href="#n">
+											<p class="dt">이준혁 주임 <span class="text_blue">2시간</span></p>
+											<p class="dd">UC설계팀 주간업무보고서 취합</p>
+										</a>
+									</li>
+									<li class="box bg02">승인</li>									
+								</ul>
+								<!-- <ul>
+									<li class="list" style="width:175px;">
+										<a href="#n">
+											<p class="dt">정현석 과장 <span class="text_blue">2시간</span></p>
+											<p class="dd">UC기획팀 주간업무보고서 취합</p>
+										</a>
+									</li>
+									<li class="box bg02">승인</li>									
+								</ul> -->
+							</div>
+						</div>
+
+
+
+					</div>
+				</div>
+								
+				
+				<!-- 포틀릿박스 (통합알림2*4) -->
+				<div style="top:244px;left:952px" class="portletBox col2 row4">
+					<div class="ptl_content nocon">
+						<!-- 컨텐츠 영역 :: 최초 컨텐츠 미설정 시 .ptl_content가 비어있으면  .nocon 클래스 생성-->
+						<div class="ptc_box">
+						
+						<!-- 통합알림/멘션 -->
+						<div class="ptl_mention">
+							<ul class="alert_tab clear">
+			                    <li class="on">
+			                        <a href="#n" onclick="return false;" class="tab01">
+			                        <span class="ico"></span>								
+			                        <span class="txt">알림전체</span>
+			                        <span class="new" id="alertNewIcon"></span>
+			                        </a>
+			                    </li>
+			                    <li class="">
+			                        <a href="#n" onclick="return false;" class="tab02">
+			                        <span class="ico"></span>
+			                        <span class="txt">알파멘션</span>
+			                        <span class="new" id="mentionNewIcon"></span>
+			                        </a>
+			                    </li>
+			                </ul>
+							<div class="mentionCon ScrollY">
+								<!-- 알림전체 -->
+								<!--
+									1. li의 클래스 unread는 신규리스트일 경우 무조건 생성되며, 읽음처리 시 class명 제거해야합니다.
+
+									2. icon의 class는 아래와 같습니다.(아이콘)
+									- 메일 : maill
+									- 쪽지 : msg
+									- 결재 : ea
+									- 팩스 : fax
+									- 일정 : sc
+									- 업무관리 : wk
+									- 게시판 : bd
+									- 문서  : dc
+									- 업무보고 : wkr
+									- 인감 : stamp
+								-->
+								<div class="tabCon _tab01">
+									<ul>
+										<li class="dayline today"><span>오늘</span> 08.23 수요일</li>
+										<!-- 메일알림-->
+										<li class="unread">
+											<div class="icon mail"></div>
+											<div class="list_con">
+												<a href="#n" onclick="return false;" class="title" title="메일 홍길동">메일 홍길동</a>
+												<dl>
+													<dt>품의 내용 관련 메일 발송합니다. 메일 제목 상단에</dt>
+													<dd class="sub_detail">
+													- 받는사람 : 김길동(kim@douzone.com),박길동(park@douzone.com)<br>
+													- 내용 : 메일내용 길어지면 300자 말줄임...
+													</dd>
+												</dl>
+											</div>
+											<div class="list_fn">
+												<span class="date">10:36</span>
+												<a href="#n" onclick="return false;" class="toggle_btn"></a>
+											</div>
+										</li>
+
+										<!-- 결재알림-->
+										<li class="unread">
+											<div class="icon ea"></div>
+											<!-- 내용 -->
+											<div class="list_con">
+												<a href="#n" onclick="return false;" class="title" title="전자결재 홍길동">전자결재 홍길동</a>
+												<dl>
+													<dt>전자결재 새로운 결재가 도착하였습니다.</dt>
+													<dd class="sub_detail">
+														- 품의번호 : 더존비즈온-포털-16-00003<br>
+														- 제목 : 연차휴가 신청의 건<br>
+														- 작성일자 : 2016.03.10 09:30<br>
+														- 기안부서/기안자 : 포털/박길동 연구원
+													</dd>
+												</dl>
+											</div>
+											<!-- 날짜 및 펼침버튼-->
+											<div class="list_fn">
+												<span class="date">10:36</span>
+												<a href="#n" onclick="return false;" class="toggle_btn"></a>
+											</div>
+										</li>
+
+										<!-- 쪽지알림-->
+										<li class="unread">
+											<div class="icon msg"></div>
+											<!-- 내용 -->
+											<div class="list_con">
+												<a href="#n" onclick="return false;" class="title" title="쪽지 홍길동">쪽지 홍길동</a>
+												<dl>
+													<dt>새로운 쪽지가 도착하였습니다.</dt>
+													<dd class="sub_detail">
+														- 품의번호 : 더존비즈온-포털-16-00003<br>
+														- 제목 : 연차휴가 신청의 건<br>
+														- 작성일자 : 2016.03.10 09:30<br>
+														- 기안부서/기안자 : 포털/박길동 연구원
+													</dd>
+												</dl>
+											</div>
+											<!-- 날짜 및 펼침버튼-->
+											<div class="list_fn">
+												<span class="date">10:36</span>
+												<a href="#n" onclick="return false;" class="toggle_btn"></a>
+											</div>
+										</li>
+
+										<!-- 일정등록-->
+										<li class="unread">
+											<div class="icon sc"></div>
+											<!-- 내용 -->
+											<div class="list_con">
+												<a href="#n" onclick="return false;" class="title" title="일정 홍길동">일정 홍길동</a>
+												<dl>
+													<dt>새로운 일정을 등록하였습니다.</dt>
+													<dd class="sub_detail">
+														- 품의번호 : 더존비즈온-포털-16-00003<br>
+														- 제목 : 연차휴가 신청의 건<br>
+														- 작성일자 : 2016.03.10 09:30<br>
+														- 기안부서/기안자 : 포털/박길동 연구원
+													</dd>
+												</dl>
+											</div>
+											<!-- 날짜 및 펼침버튼-->
+											<div class="list_fn">
+												<span class="date">10:36</span>
+												<a href="#n" onclick="return false;" class="toggle_btn"></a>
+											</div>
+										</li>
+
+										<!-- 게시판등록-->
+										<li class="unread">
+											<div class="icon sc"></div>
+											<!-- 내용 -->
+											<div class="list_con">
+												<a href="#n" onclick="return false;" class="title" title="일정 홍길동">일정 김기훈</a>
+												<dl>
+													<dt>[휴가신청서] 일정을 등록하였습니다.</dt>
+													<dd class="sub_detail">
+														- 품의번호 : 더존비즈온-포털-16-00003<br>
+														- 제목 : 연차휴가 신청의 건<br>
+														- 작성일자 : 2016.03.10 09:30<br>
+														- 기안부서/기안자 : 포털/박길동 연구원
+													</dd>
+												</dl>
+											</div>
+											<!-- 날짜 및 펼침버튼-->
+											<div class="list_fn">
+												<span class="date">10:36</span>
+												<a href="#n" onclick="return false;" class="toggle_btn"></a>
+											</div>
+										</li>
+
+
+										<li class="dayline"><span>08.22</span>화요일</li>
+										<!-- 메일알림-->
+										<li class="unread">
+											<div class="pic_wrap">
+												<div class="pic"></div>
+												<div class="div_img">
+													<!-- <img src="../../../Images/bg/pic_Noimg.png" alt=""> -->
+													<img src="../../Images/temp/temp_pic.png" alt="" class="mCS_img_loaded">
+												</div>
+											</div>
+											<div class="list_con">
+												<a href="#n" onclick="return false;" class="title" title="일반대화방 박철민">일반대화방 해바라기</a>
+												<dl>
+													<dt><span class="ea"></span>방화벽 서버 구매요청의 건</dt> <!-- 필요 없을 시 삭제 -->
+													<dd class="mention_detail ellipsis">
+														<span class="msg"></span>
+														<span class="mt_marking">@홍길동</span> 대리님 결재라인이 잘못되었습니다. 결재라인이 없어야될 인원인 홍길동 대리님은 빼고 상신하여 주시기 바랍니다. 내용은 300자 말줄임해주세요.내용은 300자 말줄임해주세요.내용은 300자 말줄임해주세요...
+														<a href="#n" onclick="return false;" class="more_btn">상세보기</a>
+													</dd>
+												</dl>
+											</div>
+											<div class="list_fn">
+												<span class="date">10:36</span>
+												<a href="#n" onclick="return false;" class="toggle_btn"></a>
+											</div>
+										</li>
+										<!-- 메일알림-->
+										<li class="unread">
+											<div class="pic_wrap">
+												<div class="pic"></div>
+												<div class="div_img">
+													<img src="../../Images/bg/pic_Noimg.png" alt="" class="mCS_img_loaded">
+												</div>
+											</div>
+											<div class="list_con">
+												<a href="#n" onclick="return false;" class="title" title="일반대화방 박철민">일반대화방 해바라기</a>
+												<dl>
+													<dt><span class="ea"></span>방화벽 서버 구매요청의 건</dt> <!-- 필요 없을 시 삭제 -->
+													<dd class="mention_detail ellipsis">
+														<span class="msg"></span>
+														<span class="mt_marking">@홍길동</span> 대리님 결재라인이 잘못되었습니다. 결재라인이 없어야될 인원인 홍길동 대리님은 빼고 상신하여 주시기 바랍니다. 내용은 300자 말줄임해주세요.내용은 300자 말줄임해주세요.내용은 300자 말줄임해주세요...
+														<a href="#n" onclick="return false;" class="more_btn">상세보기</a>
+													</dd>
+												</dl>
+											</div>
+											<div class="list_fn">
+												<span class="date">10:36</span>
+												<a href="#n" onclick="return false;" class="toggle_btn"></a>
+											</div>
+										</li>
+									</ul>
+									</div> <!--// tabCon _tab01 -->
+									<div class="tabCon _tab02">
+										<ul>													
+											<li class="unread">
+												<div class="pic_wrap">
+													<div class="pic"></div>
+													<div class="div_img">
+														<img src="../../Images/bg/pic_Noimg.png" alt="" class="mCS_img_loaded">
+													</div>
+												</div>
+												<div class="list_con">
+													<a href="#n" onclick="return false;" class="title" title="[일반대화방] 이정미님의 알파멘션">[일반대화방] 이정미님의 알파멘션</a>
+													<dl>
+														<dd class="mention_detail ellipsis">
+															<span class="msg"></span>
+															<span class="mt_marking">@이정미</span> 대리님 결재라인이 잘되요...
+														</dd>
+													</dl>
+												</div>
+												<div class="list_fn">
+													<span class="date">10:36</span>
+													<a href="#n" onclick="return false;" class="toggle_btn"></a>
+												</div>
+											</li>
+											 <li class="unread">
+												<div class="pic_wrap">
+													<div class="pic"></div>
+													<div class="div_img">
+														<img src="../../Images/bg/pic_Noimg.png" alt="" class="mCS_img_loaded">
+													</div>
+												</div>
+												<div class="list_con">
+													<a href="#n" onclick="return false;" class="title" title="[프로젝트대화방] 이정미님의 알파멘션">[프로젝트대화방] 이정미님의 알파멘션</a>
+													<dl>
+														<dd class="mention_detail ellipsis">
+															<span class="promsg"></span>
+															<span class="mt_marking">@이정미</span> 대리님 결재라인이 잘되요...
+														</dd>
+													</dl>
+												</div>
+												<div class="list_fn">
+													<span class="date">10:36</span>
+													<a href="#n" onclick="return false;" class="toggle_btn"></a>
+												</div>
+											</li>
+										</ul>
+									</div><!--// tabCon _tab02 -->
+
+								</div>
+								</div>	<!--// mentionCon -->
+						</div><!--// ptl_mention -->
+						</div><!--// ptc_box -->
+					</div><!--// ptl_content -->
+				</div><!-- portletBox -->
+
+
+
+				<!-- 타이틀 박스 -->
+				<div style="top:480px;left:8px" class="portletBox col2 row2">
+					<div class="portletBox_link">
+						<p>
+							<a href="#n" class="link01">경비지출</a>
+							<a href="#n" class="link03">재직증명서</a>
+						</p>
+						<p class="pt20">						
+							<a href="#n" class="link03">급여내역조회</a>
+							<a href="#n" class="link04">개인연말정산</a>
+						</p>
+					</div>
+				</div>
+
+
+				<!-- 타이틀 박스 (근무현황) -->
+				<div style="top:480px;left:244px" class="titleBox col4 row2">
+					<!-- 타이틀 영역 -->
+					<h2 class="ws">
+						<span>근무현황</span>
+						<span class="ws_more"><a href="#n" class="more" title="더보기">UC기획부</a></span>
+						
+					</h2>
+					<div class="ptl_content">
+						<div class="workst">
+							<ul class="bxslider">
+								<li><img src="../../Images/temp/workst_img01.png" alt=""/></li>
+								<li><img src="../../Images/temp/workst_img02.png" alt=""/></li>
+							</ul>
+						</div>
+					</div>
+				</div>
+								
+				
+				
+				
+				<!-- 타이틀 박스 (노트2*2) -->
+				<div style="top:480px;left:716px" class="titleBox col2 row2">
+					<!-- 타이틀 영역 -->
+					<h2 class="bd">
+						<span>공지사항</span>
+						<a href="#n" class="more" title="더보기"></a>
+					</h2>
+					<div class="ptl_content ScrollY">		
+						<div class="exp_notice">
+							<ul>
+								<li class="new"><a href="#n">통근버스노선표안내 <img src="../../Images/ico/icon_new.png" class="mtImg" alt=""/></a></li>
+								<li><a href="#n">2017년 귀속분 연말정산 세법</a></li>
+								<li><a href="#n">더존베이커리 2018년 1월 메뉴</a></li>
+								<li><a href="#n">1월 3주차 주간메뉴 안내</a></li>
+								<li><a href="#n">통근버스 노선안내 (노선표 첨부 / 2018. 12. 03(월)부터 시행.)</a></li>
+								<li><a href="#n">AT 자격시험 기술감독관 교육</a></li>
+
+							</ul>
+						</div>
+					</div>
+				</div>
+				
+				
+										
+				<!-- quick -->			
+				<div style="top:716px;left:8px" class="iframeBox col10 row1">
+					<div class="ptl_content">
+						<div class="i_quick">
+							<div id="quick">
+								<span class="als-prev"><img src="../../Images/btn/btn_quick_prev.png" alt="이전" /></span>
+								<div class="als-viewport">
+									<ul class="als-wrapper">
+										<li class="als-item"><a href="#" target="_blank"><img src="../../Images/temp/quick01.png" alt="신설법인 경영도우미" /></a></li>
+										<li class="als-item"><a href="#" target="_blank"><img src="../../Images/temp/quick02.png" alt="더존홈페이지 개편안내" /></a></li>
+										<li class="als-item"><a href="#" target="_blank"><img src="../../Images/temp/quick03.png" alt="2015년 부가가치세신고 실무강좌" /></a></li>
+										<li class="als-item"><a href="#" target="_blank"><img src="../../Images/temp/quick04.png" alt="하계직무연수 안내" /></a></li>
+										<li class="als-item"><a href="#" target="_blank"><img src="../../Images/temp/quick05.png" alt="더존 Smart A 클라우드 에디션 7가지 효익" /></a></li>
+										<li class="als-item"><a href="#" target="_blank"><img src="../../Images/temp/quick06.png" alt="더존 전국  IT 코디센터" /></a></li>
+										<li class="als-item"><a href="#" target="_blank"><img src="../../Images/temp/quick07.png" alt="더존 그린팩스" /></a></li>
+										<li class="als-item"><a href="#" target="_blank"><img src="../../Images/temp/quick08.png" alt="통합정보화 솔루션구축 방안 세미나" /></a></li>
+										<li class="als-item"><a href="#" target="_blank"><img src="../../Images/temp/quick09.png" alt="정보화 추진 전략 세미나" /></a></li>
+										<li class="als-item"><a href="#" target="_blank"><img src="../../Images/temp/quick10.png" alt="더존 온라인 고객센터" /></a></li>
+									</ul>
+								</div>
+								<span class="als-next"><img src="../../Images/btn/btn_quick_next.png" alt="다음" /></span>
+							</div>
+						</div>
+					</div>
+				</div>
+
+
+
+		
+				
+				
+			</div><!-- //포틀릿 영역 --------------------------------------------------------------------------------------------------->
+		</div>
+	</div>
+</div>
+	<!-- // main_wrap end -->
+</body>
+</html>

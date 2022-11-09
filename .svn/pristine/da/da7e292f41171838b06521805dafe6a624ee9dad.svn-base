@@ -1,0 +1,1161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="api.orgchart.dao.Sqlite">
+	<update id="createCompTable">
+		CREATE TABLE t_co_comp ( 
+			group_seq varchar(32) NOT NULL, 
+		 	comp_seq varchar(32) NOT NULL, 
+			parent_comp_seq varchar(32) DEFAULT NULL,
+			comp_regist_num varchar(32) DEFAULT NULL, 
+			comp_num varchar(32) DEFAULT NULL, 
+			standard_code varchar(8) DEFAULT NULL,
+			tel_num varchar(32) DEFAULT NULL,
+			fax_num varchar(32) DEFAULT NULL,
+			homepg_addr varchar(512) DEFAULT NULL,
+			comp_domain varchar(512) DEFAULT NULL,
+			email_addr varchar(64) DEFAULT NULL,
+			email_domain varchar(256) DEFAULT NULL,
+			zip_code varchar(32) DEFAULT NULL,
+			sms_id varchar(128) DEFAULT NULL,
+			sms_passwd varchar(128) DEFAULT NULL,
+			native_lang_code varchar(32) DEFAULT NULL,
+			order_num decimal(65,0) DEFAULT NULL, 
+			member decimal(10,0) DEFAULT NULL ,
+			memeber_messenger decimal(10,0) DEFAULT NULL ,
+			memeber_orgchart decimal(10,0) DEFAULT NULL ,
+			member_messenger decimal(10,0) DEFAULT NULL ,
+			member_orgchart decimal(10,0) DEFAULT NULL ,
+			member_display decimal(10,0) DEFAULT NULL ,
+			member_messenger_display decimal(10,0) DEFAULT NULL ,
+			member_orgchart_display decimal(10,0) DEFAULT NULL ,
+			member_mail_display decimal(10,0) DEFAULT NULL ,
+			member_ea_display decimal(10,0) DEFAULT NULL ,			
+			use_yn char(1) DEFAULT 'Y',
+			comp_email_yn char(1) DEFAULT 'Y',
+			create_seq varchar(32) DEFAULT NULL, 
+			create_date datetime DEFAULT NULL,
+			modify_seq varchar(32) DEFAULT NULL,
+			modify_date datetime DEFAULT NULL,
+			PRIMARY KEY (comp_seq)
+		)
+	</update>
+	
+	<update id="createCompMultiTable">
+		CREATE TABLE t_co_comp_multi (
+			group_seq varchar(32) NOT NULL, 
+			comp_seq varchar(32) NOT NULL, 
+			lang_code varchar(32) NOT NULL, 
+			comp_name varchar(128) NOT NULL, 
+			comp_display_name varchar(128) DEFAULT NULL, 
+			owner_name varchar(64) DEFAULT NULL, 
+			sender_name varchar(64) DEFAULT NULL, 
+			biz_condition varchar(128) DEFAULT NULL, 
+			item varchar(128) DEFAULT NULL, 
+			addr varchar(256) DEFAULT NULL, 
+			detail_addr varchar(256) DEFAULT NULL, 
+			use_yn char(1) DEFAULT 'Y', 
+			create_seq varchar(32) DEFAULT NULL, 
+			create_date datetime DEFAULT NULL, 
+			modify_seq varchar(32) DEFAULT NULL, 
+			modify_date datetime DEFAULT NULL, 
+			PRIMARY KEY (comp_seq,lang_code)
+		)
+	</update>
+	
+	<update id="createBizTable">
+		CREATE TABLE t_co_biz (
+			group_seq varchar(32) NOT NULL ,
+			comp_seq varchar(32) NOT NULL ,
+			biz_seq varchar(32) NOT NULL ,
+			comp_regist_num varchar(32) DEFAULT NULL ,
+			comp_num varchar(32) DEFAULT NULL ,
+			tel_num varchar(32) DEFAULT NULL ,
+			fax_num varchar(32) DEFAULT NULL ,
+			homepg_addr varchar(512) DEFAULT NULL ,
+			zip_code varchar(32) DEFAULT NULL ,
+			display_yn char(1) DEFAULT NULL ,
+			native_lang_code varchar(32) DEFAULT NULL ,
+			order_num decimal(10,0) DEFAULT NULL ,
+			member decimal(10,0) DEFAULT NULL ,
+			memeber_messenger decimal(10,0) DEFAULT NULL ,
+			memeber_orgchart decimal(10,0) DEFAULT NULL ,
+			member_messenger decimal(10,0) DEFAULT NULL ,
+			member_orgchart decimal(10,0) DEFAULT NULL ,
+			member_display decimal(10,0) DEFAULT NULL ,
+			member_messenger_display decimal(10,0) DEFAULT NULL ,
+			member_orgchart_display decimal(10,0) DEFAULT NULL ,
+			member_mail_display decimal(10,0) DEFAULT NULL ,
+			member_ea_display decimal(10,0) DEFAULT NULL ,			
+			use_yn char(1) DEFAULT 'Y' ,
+			create_seq varchar(32) DEFAULT NULL ,
+			create_date datetime DEFAULT NULL ,
+			modify_seq varchar(32) DEFAULT NULL ,
+			modify_date datetime DEFAULT NULL ,
+			PRIMARY KEY (biz_seq)
+		)
+	</update>
+	
+	<update id="createBizMultiTable">
+		CREATE TABLE t_co_biz_multi (
+			group_seq varchar(32) NOT NULL ,
+			comp_seq varchar(32) NOT NULL ,
+			biz_seq varchar(32) NOT NULL ,
+			lang_code varchar(32) NOT NULL ,
+			biz_name varchar(128) NOT NULL ,
+			owner_name varchar(64) DEFAULT NULL ,
+			biz_condition varchar(128) DEFAULT NULL ,
+			item varchar(128) DEFAULT NULL ,
+			addr varchar(256) DEFAULT NULL ,
+			detail_addr varchar(256) DEFAULT NULL ,
+			use_yn char(1) DEFAULT 'Y' ,
+			create_seq varchar(32) DEFAULT NULL ,
+			create_date datetime DEFAULT NULL ,
+			modify_seq varchar(32) DEFAULT NULL ,
+			modify_date datetime DEFAULT NULL ,
+			PRIMARY KEY (biz_seq,lang_code)
+		)
+	</update>
+	
+	<update id="createDeptTable">
+		CREATE TABLE t_co_dept (
+			group_seq varchar(32) NOT NULL ,
+			comp_seq varchar(32) NOT NULL ,
+			biz_seq varchar(32) NOT NULL ,
+			dept_seq varchar(32) NOT NULL ,
+			parent_dept_seq varchar(32) DEFAULT NULL ,
+			tel_num varchar(32) DEFAULT NULL ,
+			fax_num varchar(32) DEFAULT NULL ,
+			homepg_addr varchar(512) DEFAULT NULL ,
+			zip_code varchar(32) DEFAULT NULL ,
+			susin_yn char(1) DEFAULT NULL,
+			vir_dept_yn char(1) DEFAULT 'N' ,
+			team_yn char(1) DEFAULT 'N' ,
+			native_lang_code varchar(32) DEFAULT NULL ,
+			path varchar(256) DEFAULT NULL ,
+			ptype decimal(10,0) DEFAULT NULL ,
+			dept_level decimal(10,0) DEFAULT NULL ,
+			member decimal(10,0) DEFAULT NULL ,
+			memeber_messenger decimal(10,0) DEFAULT NULL ,
+			memeber_orgchart decimal(10,0) DEFAULT NULL ,
+			member_messenger decimal(10,0) DEFAULT NULL ,
+			member_orgchart decimal(10,0) DEFAULT NULL ,
+			member_display decimal(10,0) DEFAULT NULL ,
+			member_messenger_display decimal(10,0) DEFAULT NULL ,
+			member_orgchart_display decimal(10,0) DEFAULT NULL ,
+			member_mail_display decimal(10,0) DEFAULT NULL ,
+			member_ea_display decimal(10,0) DEFAULT NULL ,<!--2017.12.20 결재 전용 사용자 수 추가 박창  -->
+			display_yn char(1) DEFAULT 'Y' ,
+			order_num decimal(10,0) DEFAULT NULL ,
+			use_yn char(1) DEFAULT 'Y' ,
+			ea_yn char(1) DEFAULT 'Y' ,<!--2017.12.20 결재전용 부서 유 추가 박창  -->
+			create_seq varchar(32) DEFAULT NULL ,
+			create_date datetime DEFAULT NULL ,
+			modify_seq varchar(32) DEFAULT NULL ,
+			modify_date datetime DEFAULT NULL ,
+			PRIMARY KEY (dept_seq)
+		)
+	</update>
+	
+	<update id="createDeptMultiTable">
+		CREATE TABLE t_co_dept_multi (
+			dept_seq varchar(32) NOT NULL ,
+			lang_code varchar(32) NOT NULL ,
+			group_seq varchar(32) NOT NULL ,
+			comp_seq varchar(32) NOT NULL ,
+			biz_seq varchar(32) NOT NULL ,
+			dept_name varchar(128) NOT NULL ,
+			dept_display_name varchar(128) DEFAULT NULL ,
+			sender_name varchar(64) DEFAULT NULL ,
+			addr varchar(256) DEFAULT NULL ,
+			detail_addr varchar(256) DEFAULT NULL ,
+			path_name varchar(512) DEFAULT NULL ,
+			use_yn char(1) DEFAULT 'Y' ,
+			create_seq varchar(32) DEFAULT NULL ,
+			create_date datetime DEFAULT NULL ,
+			modify_seq varchar(32) DEFAULT NULL ,
+			modify_date datetime DEFAULT NULL ,
+			PRIMARY KEY (dept_seq,lang_code)
+		)
+	</update>
+	
+	<update id="createEmpTable">
+		CREATE TABLE t_co_emp (
+			emp_seq varchar(32) NOT NULL ,
+			login_id varchar(32) NOT NULL ,
+			emp_num varchar(32) DEFAULT NULL ,
+			erp_emp_num varchar(32) DEFAULT NULL ,
+			email_addr varchar(64) DEFAULT NULL ,
+			out_mail varchar(64) DEFAULT NULL ,
+			out_domain varchar(256) DEFAULT NULL ,
+			mobile_use_yn char(1) DEFAULT NULL ,
+			messenger_use_yn char(1) DEFAULT NULL ,
+			job_code varchar(32) DEFAULT NULL ,
+			status_code varchar(32) DEFAULT NULL ,
+			main_comp_seq varchar(32) DEFAULT NULL ,
+			duty_code varchar(32) DEFAULT NULL ,
+			position_code varchar(32) DEFAULT NULL ,
+			native_lang_code varchar(32) DEFAULT NULL ,
+			license_check_yn char(1) DEFAULT NULL ,
+			join_day date DEFAULT NULL ,
+			resign_day date DEFAULT NULL ,
+			gender_code varchar(32) DEFAULT NULL ,
+			bday date DEFAULT NULL ,
+			lunar_yn char(1) DEFAULT NULL ,
+			work_status varchar(32) DEFAULT NULL ,
+			home_tel_num varchar(32) DEFAULT NULL ,
+			mobile_tel_num varchar(32) DEFAULT NULL ,
+			wedding_yn char(1) DEFAULT NULL ,
+			wedding_day date DEFAULT NULL ,
+			zip_code varchar(32) DEFAULT NULL ,
+			pic_file_id varchar(64) DEFAULT NULL ,
+			sign_file_id varchar(64) DEFAULT NULL ,
+			use_yn char(1) DEFAULT 'Y' ,
+			private_yn char(1) DEFAULT 'Y' ,
+			create_seq varchar(32) DEFAULT NULL ,
+			create_date datetime DEFAULT NULL ,
+			modify_seq varchar(32) DEFAULT NULL ,
+			modify_date datetime DEFAULT NULL ,
+			PRIMARY KEY (emp_seq)
+		)
+	</update>
+	
+	<update id="createEmpMultiTable">
+		CREATE TABLE t_co_emp_multi (
+			emp_seq varchar(32) NOT NULL ,
+			lang_code varchar(32) NOT NULL ,
+			emp_name varchar(128) NOT NULL ,
+			addr varchar(256) DEFAULT NULL ,
+			detail_addr varchar(256) DEFAULT NULL ,
+			main_work varchar(128) DEFAULT NULL ,
+			use_yn char(1) DEFAULT 'Y' ,
+			create_seq varchar(32) DEFAULT NULL ,
+			create_date datetime DEFAULT NULL ,
+			modify_seq varchar(32) DEFAULT NULL ,
+			modify_date datetime DEFAULT NULL ,
+			PRIMARY KEY (emp_seq,lang_code)
+		)
+	</update>
+	
+	<update id="createEmpDeptTable">
+		CREATE TABLE t_co_emp_dept (
+			group_seq varchar(32) NOT NULL ,
+			comp_seq varchar(32) NOT NULL ,
+			biz_seq varchar(32) NOT NULL ,
+			dept_seq varchar(32) NOT NULL ,
+			emp_seq varchar(32) NOT NULL ,
+			main_comp_yn char(1) DEFAULT NULL ,
+			main_dept_yn char(1) DEFAULT NULL ,
+			duty_code varchar(32) DEFAULT NULL ,
+			position_code varchar(32) DEFAULT NULL ,
+			tel_num varchar(32) DEFAULT NULL ,
+			fax_num varchar(32) DEFAULT NULL ,
+			zip_code varchar(32) DEFAULT NULL ,
+			orgchart_display_yn char(1) DEFAULT NULL ,
+			messenger_display_yn char(1) DEFAULT NULL ,
+			ea_display_yn char(1) DEFAULT NULL ,<!--2017.12.20 결재 표시 유무 추가 박창  -->
+			order_num int(4) DEFAULT NULL ,
+			use_yn char(1) DEFAULT 'Y' ,
+			order_text varchar(70) DEFAULT NULL ,
+			create_seq varchar(32) DEFAULT NULL ,
+			create_date date DEFAULT NULL ,
+			modify_seq varchar(32) DEFAULT NULL ,
+			modify_date datetime DEFAULT NULL ,
+			PRIMARY KEY (dept_seq,emp_seq)
+		)
+	</update>
+	
+	<update id="createEmpDeptMultiTable">
+		CREATE TABLE t_co_emp_dept_multi (
+		  dept_seq varchar(32) NOT NULL,
+		  emp_seq varchar(32) NOT NULL,
+		  lang_code varchar(32) NOT NULL,
+		  group_seq varchar(32) DEFAULT NULL,
+		  comp_seq varchar(32) DEFAULT NULL,
+		  biz_seq varchar(32) DEFAULT NULL,
+		  addr varchar(256) DEFAULT NULL,
+		  detail_addr varchar(256) DEFAULT NULL,
+		  use_yn char(1) DEFAULT 'Y',
+		  create_seq varchar(32) DEFAULT NULL,
+		  create_date datetime DEFAULT NULL,
+		  modify_seq varchar(32) DEFAULT NULL,
+		  modify_date datetime DEFAULT NULL,
+		  PRIMARY KEY (dept_seq,emp_seq,lang_code)
+		)
+	</update>
+	
+	<update id="createCompDutyPositionTable">
+		CREATE TABLE t_co_comp_duty_position (
+			dp_seq varchar(32) NOT NULL ,
+			comp_seq varchar(32) NOT NULL ,
+			dp_type varchar(16) NOT NULL ,
+			use_yn char(1) DEFAULT 'Y' ,
+			order_num int(4) DEFAULT NULL ,
+			create_seq varchar(32) DEFAULT NULL ,
+			create_date datetime DEFAULT NULL ,
+			modify_seq varchar(32) DEFAULT NULL ,
+			modify_date datetime DEFAULT NULL ,
+			PRIMARY KEY (dp_seq, comp_seq, dp_type)
+		)
+	</update>
+	
+	<update id="createCompDutyPositionMultiTable">
+		CREATE TABLE t_co_comp_duty_position_multi (
+			dp_seq varchar(32) NOT NULL ,
+			comp_seq varchar(32) NOT NULL ,
+			dp_type varchar(16) NOT NULL ,
+			dp_name varchar(128) DEFAULT NULL ,
+			lang_code varchar(32) NOT NULL ,
+			desc_text varchar(512) DEFAULT NULL ,
+			comment_text varchar(512) DEFAULT NULL ,
+			use_yn char(1) DEFAULT NULL ,
+			create_seq varchar(32) DEFAULT NULL ,
+			create_date datetime DEFAULT NULL ,
+			modify_seq varchar(32) DEFAULT NULL ,
+			modify_date datetime DEFAULT NULL ,
+			PRIMARY KEY (dp_seq,lang_code, comp_seq, dp_type)
+		)
+	</update>
+	
+	<update id="createCompEmpSortTable">
+		CREATE TABLE t_co_comp_emp_sort (
+		  comp_seq varchar(32) NOT NULL ,
+		  sort_field varchar(32) NOT NULL ,
+		  sort_type varchar(8) NOT NULL ,
+		  order_num int(1) NOT NULL DEFAULT '0' ,
+		  use_yn char(1) DEFAULT NULL ,
+		  create_seq varchar(32) DEFAULT NULL ,
+		  create_date datetime DEFAULT NULL ,
+		  modify_seq varchar(32) DEFAULT NULL ,
+		  modify_date datetime DEFAULT NULL ,
+		  PRIMARY KEY (comp_seq,order_num)
+		)
+	</update>
+	
+	<update id="createGrouppingTable">
+		CREATE TABLE t_co_groupping (
+		  group_seq varchar(32) NOT NULL,
+		  groupping_seq varchar(32) NOT NULL,
+		  groupping_name varchar(32) NOT NULL,
+		  use_yn char(1) DEFAULT 'Y',
+		  create_seq varchar(32) DEFAULT NULL,
+		  create_date datetime DEFAULT NULL,
+		  modify_seq varchar(32) DEFAULT NULL,
+		  modify_date datetime DEFAULT NULL,
+		  PRIMARY KEY (groupping_seq)
+		)
+	</update>
+	
+	<update id="createGrouppingCompTable">
+		CREATE TABLE t_co_groupping_comp (
+		  groupping_seq varchar(32) NOT NULL,
+		  comp_seq varchar(32) NOT NULL,
+		  use_yn char(1) DEFAULT 'Y',
+		  create_seq varchar(32) DEFAULT NULL,
+		  create_date datetime DEFAULT NULL,
+		  modify_seq varchar(32) DEFAULT NULL,
+		  modify_date datetime DEFAULT NULL,
+		  PRIMARY KEY (groupping_seq,comp_seq)
+		)
+	</update>
+	
+	<update id="createEmpCompTable">
+		CREATE TABLE  t_co_emp_comp (
+		  emp_seq VARCHAR(32) NOT NULL,
+			group_seq VARCHAR(32) NOT NULL,
+			comp_seq VARCHAR(32) NOT NULL,
+			biz_seq VARCHAR(32) NULL,
+			dept_seq VARCHAR(32) NULL,
+			erp_emp_seq VARCHAR(32) NULL,
+			erp_comp_seq VARCHAR(32) NULL,
+			erp_biz_seq VARCHAR(32) NULL,
+			erp_dept_seq VARCHAR(32) NULL,
+			check_work_yn VARCHAR(1) NULL,
+			att_card_no VARCHAR(32) NULL,
+			shift VARCHAR(32) NULL,
+			job_code VARCHAR(32) NULL,
+			status_code VARCHAR(32) NULL,
+			resign_day DATE NULL,
+			work_status VARCHAR(32) NULL,
+			use_yn CHAR(1) NULL DEFAULT 'Y',
+			create_seq VARCHAR(32) NULL,
+			create_date DATETIME NULL,
+			modify_seq VARCHAR(32) NULL,
+			modify_date DATETIME NULL,
+			PRIMARY KEY (comp_seq, emp_seq)
+		)
+	</update>
+	
+	<update id="createEmpResignTable">
+		
+		CREATE TABLE  t_co_emp_resign (
+		  	emp_seq VARCHAR(32) NOT NULL,
+			emp_name VARCHAR(128) NULL,
+			dept_seq VARCHAR(32) NULL,
+			dept_name VARCHAR(128) NULL,
+			path_name VARCHAR(512) NULL,
+			join_day VARCHAR(20) NULL,
+			resign_day VARCHAR(20) NULL,
+			lang_code VARCHAR(32) NOT NULL,
+		  	work_status VARCHAR(32) NULL,
+		  	PRIMARY KEY (emp_seq, lang_code)
+		)
+		
+	</update>
+
+	<insert id="addCompData" parameterType="java.util.Map">
+		INSERT INTO t_co_comp (
+			comp_seq, 
+			parent_comp_seq, 
+			group_seq, 
+			comp_regist_num, 
+			comp_num, 
+			standard_code, 
+			tel_num, 
+			fax_num, 
+			homepg_addr, 
+			comp_domain, 
+			email_addr, 
+			email_domain, 
+			zip_code, 
+			sms_id, 
+			sms_passwd, 
+			native_lang_code, 
+			order_num, 
+			member,
+			memeber_messenger,
+			memeber_orgchart,
+			member_messenger,
+			member_orgchart,
+			member_display,
+			member_messenger_display,
+			member_orgchart_display,
+			member_mail_display,
+			member_ea_display,			
+			use_yn, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date,
+			comp_email_yn
+		) VALUES 
+		<foreach collection="dataList" item="list" separator=",">
+		(
+			#{list.comp_seq}, 
+			#{list.parent_comp_seq}, 
+			#{list.group_seq}, 
+			#{list.comp_regist_num}, 
+			#{list.comp_num}, 
+			#{list.standard_code}, 
+			#{list.tel_num}, 
+			#{list.fax_num}, 
+			#{list.homepg_addr}, 
+			#{list.comp_domain}, 
+			#{list.email_addr}, 
+			#{list.email_domain}, 
+			#{list.zip_code}, 
+			#{list.sms_id}, 
+			#{list.sms_passwd}, 
+			#{list.native_lang_code}, 
+			#{list.order_num}, 
+			#{list.member}, 
+			#{list.memeber_messenger}, 
+			#{list.memeber_orgchart}, 
+			#{list.member_messenger}, 
+			#{list.member_orgchart}, 
+			#{list.member_display}, 
+			#{list.member_messenger_display}, 
+			#{list.member_orgchart_display},
+			#{list.member_mail_display},
+			#{list.member_ea_display},				
+			#{list.use_yn},
+			#{list.create_seq}, 
+			#{list.create_date}, 
+			#{list.modify_seq}, 
+			#{list.modify_date}, 
+			#{list.comp_email_yn}
+		)
+		</foreach> 
+	</insert>
+	
+	<insert id="addCompMultiData" parameterType="java.util.Map">
+		INSERT INTO t_co_comp_multi (
+			comp_seq, 
+			lang_code, 
+			group_seq, 
+			comp_name, 
+			comp_display_name, 
+			owner_name,
+			sender_name, 
+			biz_condition, 
+			item, 
+			addr, 
+			detail_addr, 
+			use_yn,
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date
+		) VALUES 
+		<foreach collection="dataList" item="list" separator=",">
+		(
+			#{list.comp_seq}, 
+			#{list.lang_code}, 
+			#{list.group_seq}, 
+			#{list.comp_name}, 
+			#{list.comp_display_name}, 
+			#{list.owner_name},
+			#{list.sender_name}, 
+			#{list.biz_condition}, 
+			#{list.item}, 
+			#{list.addr}, 
+			#{list.detail_addr}, 
+			#{list.use_yn},
+			#{list.create_seq}, 
+			#{list.create_date}, 
+			#{list.modify_seq}, 
+			#{list.modify_date}
+		)
+		</foreach>
+	</insert>
+	
+	<insert id="addBizData" parameterType="java.util.Map">
+		INSERT INTO t_co_biz (
+			biz_seq, 
+			group_seq, 
+			comp_seq, 
+			comp_regist_num, 
+			comp_num, 
+			tel_num, 
+			fax_num, 
+			homepg_addr, 
+			zip_code, 
+			display_yn, 
+			native_lang_code,
+			order_num, 
+			member,
+			memeber_messenger,
+			memeber_orgchart,
+			member_messenger,
+			member_orgchart,
+			member_display,
+			member_messenger_display,
+			member_orgchart_display,
+			member_mail_display,
+			member_ea_display,			
+			use_yn,
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date 
+		) VALUES 
+		<foreach collection="dataList" item="list" separator=",">
+			(
+			#{list.biz_seq}, 
+			#{list.group_seq}, 
+			#{list.comp_seq}, 
+			#{list.comp_regist_num}, 
+			#{list.comp_num}, 
+			#{list.tel_num}, 
+			#{list.fax_num}, 
+			#{list.homepg_addr}, 
+			#{list.zip_code}, 
+			#{list.display_yn}, 
+			#{list.native_lang_code},
+			#{list.order_num}, 
+			#{list.member}, 
+			#{list.memeber_messenger}, 
+			#{list.memeber_orgchart}, 
+			#{list.member_messenger}, 
+			#{list.member_orgchart}, 
+			#{list.member_display}, 
+			#{list.member_messenger_display}, 
+			#{list.member_orgchart_display},
+			#{list.member_mail_display},
+			#{list.member_ea_display},			
+			#{list.use_yn},
+			#{list.create_seq}, 
+			#{list.create_date}, 
+			#{list.modify_seq}, 
+			#{list.modify_date}
+			)
+		</foreach>
+	</insert>
+	
+	<insert id="addBizMultiData" parameterType="java.util.Map">
+		INSERT INTO t_co_biz_multi (
+			biz_seq, 
+			lang_code, 
+			group_seq, 
+			comp_seq, 
+			biz_name, 
+			owner_name, 
+			biz_condition, 
+			item, 
+			addr, 
+			detail_addr,
+			use_yn,
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date 
+		) VALUES 
+		<foreach collection="dataList" item="list" separator=",">
+			(
+			#{list.biz_seq}, 
+			#{list.lang_code}, 
+			#{list.group_seq}, 
+			#{list.comp_seq}, 
+			#{list.biz_name}, 
+			#{list.owner_name}, 
+			#{list.biz_condition}, 
+			#{list.item}, 
+			#{list.addr}, 
+			#{list.detail_addr},
+			#{list.use_yn},
+			#{list.create_seq}, 
+			#{list.create_date}, 
+			#{list.modify_seq}, 
+			#{list.modify_date}
+			)
+		</foreach>
+	</insert>
+	
+	<insert id="addDeptData" parameterType="java.util.Map">
+		INSERT INTO t_co_dept (
+			dept_seq, 
+			group_seq, 
+			comp_seq, 
+			biz_seq, 
+			parent_dept_seq, 
+			tel_num, 
+			fax_num, 
+			homepg_addr, 
+			zip_code, 
+			susin_yn, 
+			vir_dept_yn, 
+			team_yn, 
+			native_lang_code, 
+			path, 
+			ptype, 
+			dept_level,
+			member,
+			memeber_messenger,
+			memeber_orgchart,
+			member_messenger,
+			member_orgchart,
+			member_display,
+			member_messenger_display,
+			member_orgchart_display,
+			member_mail_display,
+			member_ea_display, <!--부서 결재 사용 유무 추가 2017.12.20 박창 -->
+			display_yn, 
+			order_num, 
+			use_yn,
+			ea_yn,<!--부서 결재 사용 유무 추가 2017.12.20 박창 -->
+			create_seq, 
+			create_date, 
+			modify_seq,
+			modify_date 
+		) VALUES 
+		<foreach collection="dataList" item="list" separator=",">
+			(
+			#{list.dept_seq}, 
+			#{list.group_seq}, 
+			#{list.comp_seq}, 
+			#{list.biz_seq}, 
+			#{list.parent_dept_seq}, 
+			#{list.tel_num}, 
+			#{list.fax_num}, 
+			#{list.homepg_addr}, 
+			#{list.zip_code}, 
+			#{list.susin_yn}, 
+			#{list.vir_dept_yn}, 
+			#{list.team_yn}, 
+			#{list.native_lang_code}, 
+			#{list.path}, 
+			#{list.ptype}, 
+			#{list.dept_level},
+			#{list.member}, 
+			#{list.memeber_messenger}, 
+			#{list.memeber_orgchart}, 
+			#{list.member_messenger}, 
+			#{list.member_orgchart}, 
+			#{list.member_display}, 
+			#{list.member_messenger_display}, 
+			#{list.member_orgchart_display},
+			#{list.member_mail_display},
+			#{list.member_ea_display}, 		<!--부서 결재 사용 유무 추가 2017.12.20 박창 -->	
+			#{list.display_yn}, 
+			#{list.order_num}, 
+			#{list.use_yn},
+			#{list.ea_yn},			<!--부서 결재 사용 유무 추가 2017.12.20 박창 -->
+			#{list.create_seq}, 
+			#{list.create_date}, 
+			#{list.modify_seq},
+			#{list.modify_date}
+			)
+		</foreach>
+	</insert>
+	
+	<insert id="addDeptMultiData" parameterType="java.util.Map">
+		INSERT INTO t_co_dept_multi (
+			dept_seq, 
+			lang_code, 
+			group_seq, 
+			comp_seq, 
+			biz_seq, 
+			dept_name, 
+			dept_display_name, 
+			sender_name, 
+			addr, 
+			detail_addr, 
+			path_name, 
+			use_yn,
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date
+		) VALUES 
+		<foreach collection="dataList" item="list" separator=",">
+			(
+			#{list.dept_seq}, 
+			#{list.lang_code}, 
+			#{list.group_seq}, 
+			#{list.comp_seq}, 
+			#{list.biz_seq}, 
+			#{list.dept_name}, 
+			#{list.dept_display_name}, 
+			#{list.sender_name}, 
+			#{list.addr}, 
+			#{list.detail_addr}, 
+			#{list.path_name}, 
+			#{list.use_yn},
+			#{list.create_seq}, 
+			#{list.create_date}, 
+			#{list.modify_seq}, 
+			#{list.modify_date}
+			)
+		</foreach>
+	</insert>
+	
+	<insert id="addEmpData" parameterType="java.util.Map">
+		INSERT INTO t_co_emp (
+			emp_seq, 
+			login_id, 
+			emp_num, 
+			erp_emp_num, 
+			email_addr, 
+			out_mail,
+			out_domain,
+			mobile_use_yn, 
+			messenger_use_yn, 
+			job_code, 
+			status_code, 
+			main_comp_seq,
+			duty_code, 
+			position_code, 
+			native_lang_code, 
+			license_check_yn, 
+			join_day, 
+			resign_day, 
+			gender_code, 
+			bday, 
+			lunar_yn, 
+			work_status, 
+			home_tel_num, 
+			mobile_tel_num, 
+			wedding_yn, 
+			wedding_day, 
+			zip_code, 
+			pic_file_id, 
+			sign_file_id, 
+			use_yn,
+			private_yn,
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date 
+		) VALUES 
+		<foreach collection="dataList" item="list" separator=",">
+			(
+			#{list.emp_seq}, 
+			#{list.login_id}, 
+			#{list.emp_num}, 
+			#{list.erp_emp_num}, 
+			#{list.email_addr}, 
+			#{list.out_mail},
+			#{list.out_domain},
+			#{list.mobile_use_yn}, 
+			#{list.messenger_use_yn}, 
+			#{list.job_code}, 
+			#{list.status_code}, 
+			#{list.main_comp_seq},
+			#{list.duty_code}, 
+			#{list.position_code}, 
+			#{list.native_lang_code}, 
+			#{list.license_check_yn}, 
+			#{list.join_day}, 
+			#{list.resign_day}, 
+			#{list.gender_code}, 
+			#{list.bday}, 
+			#{list.lunar_yn}, 
+			#{list.work_status}, 
+			#{list.home_tel_num}, 
+			#{list.mobile_tel_num}, 
+			#{list.wedding_yn}, 
+			#{list.wedding_day}, 
+			#{list.zip_code}, 
+			#{list.pic_file_id}, 
+			#{list.sign_file_id}, 
+			#{list.use_yn},
+			#{list.private_yn},
+			#{list.create_seq}, 
+			#{list.create_date}, 
+			#{list.modify_seq}, 
+			#{list.modify_date}
+			)
+		</foreach>
+	</insert>
+	
+	<insert id="addEmpMultiData" parameterType="java.util.Map">
+		INSERT INTO t_co_emp_multi (
+			emp_seq, 
+			lang_code, 
+			emp_name, 
+			addr, 
+			detail_addr, 
+			main_work, 
+			use_yn,
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date 
+		) VALUES 
+		<foreach collection="dataList" item="list" separator=",">
+			(
+			#{list.emp_seq}, 
+			#{list.lang_code}, 
+			#{list.emp_name}, 
+			#{list.addr}, 
+			#{list.detail_addr}, 
+			#{list.main_work}, 
+			#{list.use_yn},
+			#{list.create_seq}, 
+			#{list.create_date}, 
+			#{list.modify_seq}, 
+			#{list.modify_date}
+			)
+		</foreach>
+	</insert>
+	
+	<insert id="addEmpDeptData" parameterType="java.util.Map">
+		INSERT INTO t_co_emp_dept (
+			dept_seq, 
+			emp_seq, 
+			group_seq, 
+			comp_seq, 
+			biz_seq,
+			main_comp_yn,  
+			main_dept_yn, 
+			duty_code, 
+			position_code, 
+			tel_num, 
+			fax_num, 
+			zip_code, 
+			orgchart_display_yn, 
+			messenger_display_yn, 
+			ea_display_yn, <!--부서 결재 사용 유무 추가 2017.12.20 박창 -->
+			use_yn, 
+			order_num,
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date,
+			order_text
+		) VALUES 
+		<foreach collection="dataList" item="list" separator=",">
+			(
+			#{list.dept_seq}, 
+			#{list.emp_seq}, 
+			#{list.group_seq}, 
+			#{list.comp_seq}, 
+			#{list.biz_seq},
+			#{list.main_comp_yn},  
+			#{list.main_dept_yn}, 
+			#{list.duty_code}, 
+			#{list.position_code}, 
+			#{list.tel_num}, 
+			#{list.fax_num}, 
+			#{list.zip_code}, 
+			#{list.orgchart_display_yn}, 
+			#{list.messenger_display_yn},
+			#{list.ea_display_yn},			 <!--부서 결재 사용 유무 추가 2017.12.20 박창 -->
+			#{list.use_yn}, 
+			#{list.order_num},
+			#{list.create_seq}, 
+			#{list.create_date}, 
+			#{list.modify_seq}, 
+			#{list.modify_date},
+			#{list.order_text}
+			)
+		</foreach>
+	</insert>
+	
+	<insert id="addEmpDeptMultiData" parameterType="java.util.Map">
+		INSERT INTO t_co_emp_dept_multi 
+		(
+			dept_seq, 
+			emp_seq, 
+			lang_code, 
+			group_seq, 
+			comp_seq, 
+			biz_seq, 
+			addr, 
+			detail_addr, 
+			use_yn,
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date
+		)
+		VALUES
+		<foreach collection="dataList" item="list" separator=",">
+			(
+			#{list.dept_seq}, 
+			#{list.emp_seq}, 
+			#{list.lang_code}, 
+			#{list.group_seq}, 
+			#{list.comp_seq}, 
+			#{list.biz_seq}, 
+			#{list.addr}, 
+			#{list.detail_addr}, 
+			#{list.use_yn},
+			#{list.create_seq}, 
+			#{list.create_date}, 
+			#{list.modify_seq}, 
+			#{list.modify_date}
+			)
+		</foreach>
+	</insert>
+	
+	<insert id="addCompDutyPositionData" parameterType="java.util.Map">
+		INSERT INTO t_co_comp_duty_position (
+			dp_seq, 
+			comp_seq, 
+			dp_type, 
+			use_yn, 
+			order_num,
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date
+		) VALUES 
+		<foreach collection="dataList" item="list" separator=",">
+			(
+			#{list.dp_seq}, 
+			#{list.comp_seq}, 
+			#{list.dp_type}, 
+			#{list.use_yn}, 
+			#{list.order_num},
+			#{list.create_seq}, 
+			#{list.create_date}, 
+			#{list.modify_seq}, 
+			#{list.modify_date}
+			)
+		</foreach>
+	</insert>
+	
+	<insert id="addCompDutyPositionMultiData" parameterType="java.util.Map">
+		INSERT INTO t_co_comp_duty_position_multi (
+			dp_seq, 
+			lang_code, 
+			comp_seq, 
+			dp_type, 
+			dp_name, 
+			desc_text, 
+			comment_text, 
+			use_yn,
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date
+		) VALUES 
+		<foreach collection="dataList" item="list" separator=",">
+			(
+			#{list.dp_seq}, 
+			#{list.lang_code}, 
+			#{list.comp_seq}, 
+			#{list.dp_type}, 
+			#{list.dp_name}, 
+			#{list.desc_text}, 
+			#{list.comment_text}, 
+			#{list.use_yn},
+			#{list.create_seq}, 
+			#{list.create_date}, 
+			#{list.modify_seq}, 
+			#{list.modify_date}
+			)
+		</foreach>
+	</insert>
+	
+	<insert id="addCompEmpSortData" parameterType="java.util.Map">
+		INSERT INTO t_co_comp_emp_sort (
+			comp_seq, 
+			sort_field, 
+			sort_type, 
+			order_num, 
+			use_yn,
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date 
+		) VALUES 
+		<foreach collection="dataList" item="list" separator=",">
+			(
+			#{list.comp_seq}, 
+			#{list.sort_field}, 
+			#{list.sort_type}, 
+			#{list.order_num}, 
+			#{list.use_yn},
+			#{list.create_seq}, 
+			#{list.create_date}, 
+			#{list.modify_seq}, 
+			#{list.modify_date}
+			)
+		</foreach>
+	</insert>
+	
+	<insert id="addGrouppingData" parameterType="java.util.Map">
+		INSERT INTO t_co_groupping 
+		(
+			group_seq, 
+			groupping_seq, 
+			groupping_name, 
+			use_yn,
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date
+		)
+		VALUES
+		<foreach collection="dataList" item="list" separator=",">
+			(
+			#{list.group_seq}, 
+			#{list.groupping_seq}, 
+			#{list.groupping_name}, 
+			#{list.use_yn},
+			#{list.create_seq}, 
+			#{list.create_date}, 
+			#{list.modify_seq}, 
+			#{list.modify_date}
+			)
+		</foreach>
+	</insert>
+	
+	<insert id="addGrouppingCompData" parameterType="java.util.Map">
+		INSERT INTO t_co_groupping_comp 
+		(
+			groupping_seq, 
+			comp_seq, 
+			use_yn,
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date
+		)
+		VALUES
+		<foreach collection="dataList" item="list" separator=",">
+			(
+			#{list.groupping_seq}, 
+			#{list.comp_seq}, 
+			#{list.use_yn},
+			#{list.create_seq}, 
+			#{list.create_date}, 
+			#{list.modify_seq}, 
+			#{list.modify_date}
+			)
+		</foreach>
+
+	</insert>
+	
+	<insert id="addEmpCompData" parameterType="java.util.Map">
+		INSERT INTO t_co_emp_comp (
+		  emp_seq,
+		  group_seq,
+		  comp_seq,
+		  biz_seq,
+		  dept_seq,
+		  erp_emp_seq,
+		  erp_comp_seq,
+		  erp_biz_seq,
+		  erp_dept_seq,
+		  check_work_yn,
+		  att_card_no,
+		  shift,
+		  job_code,
+		  status_code,
+		  resign_day,
+		  work_status,
+		  use_yn,
+		  create_seq,
+		  create_date,
+		  modify_seq,
+		  modify_date
+		)
+		VALUES
+		  <foreach collection="dataList" item="list" separator=",">
+		    (
+		    #{list.emp_seq},
+		    #{list.group_seq},
+		    #{list.comp_seq},
+		    #{list.biz_seq},
+		    #{list.dept_seq},
+		    #{list.erp_emp_seq},
+		    #{list.erp_comp_seq},
+		    #{list.erp_biz_seq},
+		    #{list.erp_dept_seq},
+		    #{list.check_work_yn},
+		    #{list.att_card_no},
+		    #{list.shift},
+		    #{list.job_code},
+		    #{list.status_code},
+		    #{list.resign_day},
+		    #{list.work_status},
+		    #{list.use_yn},
+		    #{list.create_seq},
+		    #{list.create_date},
+		    #{list.modify_seq},
+		    #{list.modify_date}
+		    )
+		  </foreach>
+	</insert>
+	
+	<insert id="addEmpResignData" parameterType="java.util.Map">
+		INSERT INTO t_co_emp_resign (
+		   	emp_seq,
+ 			emp_name,
+ 			dept_seq,
+ 			dept_name,
+ 			path_name,
+ 			join_day,
+ 			resign_day,
+ 			lang_code,
+ 			work_status
+		)
+		VALUES
+		  <foreach collection="dataList" item="list" separator=",">
+		    (
+		    #{list.emp_seq},
+		    #{list.emp_name},
+		    #{list.dept_seq},
+		    #{list.dept_name},
+		    #{list.path_name},
+		    #{list.join_day},
+		    #{list.resign_day},
+		    #{list.lang_code},
+		    #{list.work_status}
+		    )
+		  </foreach>
+	</insert>
+	
+</mapper>

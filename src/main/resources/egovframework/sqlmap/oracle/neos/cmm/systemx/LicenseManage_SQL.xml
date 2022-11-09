@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="LicenseDAO">
+	<typeAlias alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap" />
+	
+	<select id="LicenseDAO.LicenseCountShow" parameterClass="hashMap" resultClass="egovMap">
+		/* LicenseDAO.LicenseCountShow - oracle */
+		SELECT		count(distinct a.emp_seq)<isEqual property="licenseAddGubunExt" compareValue="mail2gw">-1</isEqual> AS "license_cnt"
+	 	FROM		$DB_NEOS$t_co_emp a
+	 	JOIN        $DB_NEOS$t_co_emp_comp b on a.emp_seq = b.emp_seq
+	 	WHERE		a.group_seq = #groupSeq#
+	 	AND		    b.work_status IN ('999','004') AND NVL(a.use_yn,'Y') != 'D'
+	 	<isEqual property="licenseCheckGubun" compareValue="gw">
+	 	AND			b.use_yn = 'Y'
+	 	AND			(a.license_check_yn = '1' OR a.license_check_yn is null)
+	 	</isEqual>
+	 	<isEqual property="licenseCheckGubun" compareValue="mail">
+	 	AND			b.use_yn = 'Y'
+	 	AND			a.license_check_yn = '2'
+	 	</isEqual>
+	 	<isEqual property="licenseCheckGubun" compareValue="notLicense">
+	 	AND			a.license_check_yn = '3'
+	 	</isEqual>
+	</select>
+	
+	<select id="LicenseDAO.getGroupInfo" parameterClass="hashMap" resultClass="egovMap">
+		SELECT * FROM $DB_NEOS$t_co_group
+		WHERE group_seq = #groupSeq#
+	</select>
+	
+	<update id="LicenseDAO.updateLicenseKey" parameterClass="hashMap">
+		UPDATE $DB_NEOS$t_co_group
+		SET license_key = #licenseKey#
+		WHERE group_seq = #groupSeq# AND master_passwd = #masterPasswd#
+	</update>
+		
+</sqlMap>

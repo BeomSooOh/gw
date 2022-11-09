@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="MainManageDAO">
+
+    <typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	
+	<select id="MainManageDAO.selectMainPortlet" parameterClass="hashmap" resultClass="egovMap">
+		SELECT
+			*, get_menu_info('1', gnb_menu_no, #langCode#) as gnb_menu_nm
+		FROM t_co_main_portlet
+		WHERE
+			comp_seq = #compSeq#
+		<isNotEmpty property="portletType">
+			AND
+				portlet_type = #portletType#
+		</isNotEmpty>
+		ORDER BY order_num
+	</select>
+	
+	<select id="MainManageDAO.selectAlertReceiverList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT a.alert_seq, a.event_type as module_type, a.event_sub_type as alert_type, a.seq, a.sub_seq, a.url_path, a.alert_contents, c.lnb_menu_no, b.read_date,
+			get_menu_first_info('0', c.lnb_menu_no, #langCode#) AS gnb_menu_no,
+			get_menu_first_info('1', c.lnb_menu_no, #langCode#) AS gnb_menu_nm,
+			get_menu_info('3', c.lnb_menu_no, #langCode#) AS url_gubun,
+			get_menu_info('2', c.lnb_menu_no, #langCode#) AS menu_gubun,
+			date_format(a.create_date, '%y.%m.%d') as create_date
+		FROM `t_co_alert` a, `t_co_alert_receiver` b, `t_co_alert_menu` c
+		WHERE a.alert_seq = b.alert_seq
+		and a.event_sub_type = c.event_sub_type
+		and b.emp_seq = #empSeq#
+		and b.dept_seq = #deptSeq#
+		ORDER BY b.read_date, a.create_date desc
+		LIMIT $startRow$, $endRow$
+	</select>
+	
+	
+	<select id="MainManageDAO.selectAlertReceiverReadCnt" parameterClass="hashmap" resultClass="egovMap">
+		SELECT count(a.seq) as alert_cnt
+		FROM `t_co_alert` a, `t_co_alert_receiver` b
+		WHERE a.alert_seq = b.alert_seq
+		and b.emp_seq = #empSeq#
+		and b.dept_seq = #deptSeq#
+		and b.read_date is null
+	</select>
+	
+	<update id="MainManageDAO.updateAlertReceiver" parameterClass="hashmap">
+		UPDATE `neos`.`t_co_alert_receiver` 
+		SET
+		`read_date` = NOW()
+		WHERE
+		`alert_seq` = #alertSeq# 
+		AND `group_seq` = #groupSeq# 
+		AND `comp_seq` = #compSeq# 
+		AND `dept_seq` = #deptSeq# 
+		AND `emp_seq` = #empSeq#
+	
+	</update>
+	       
+	<select id="MainManageDAO.selectAdminAuthCnt" parameterClass="hashmap" resultClass="string">
+		select count(*) as cnt
+		from `t_co_emp_option` A, t_co_auth_adm_user_relate B
+		where A.emp_seq = B.emp_seq
+		and A.emp_seq = #empSeq#
+		and A.admin_use_yn = 'Y'
+		and B.comp_seq = #compSeq#
+	</select>
+	
+	<procedure id="MainManageDAO.selectLinkMenuInfo" parameterClass="hashmap" resultClass="egovMap">
+	    <![CDATA[
+	    	call P_TCMH_checkSSOToken(#groupSeq#, #compSeq#, #empSeq#, #linkSeq#, #ssoToken#)
+	     ]]>
+    </procedure>
+    
+</sqlMap>

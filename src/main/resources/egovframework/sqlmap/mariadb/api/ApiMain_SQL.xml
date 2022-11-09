@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org//dtd/sql-map-2.dtd">
+<sqlMap namespace="apiMainDAO">
+
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+	<select id="apiMainDAO.selectAlert_TOTAL_COUNT" parameterClass="hashmap" resultClass="string">
+		SELECT COUNT(*) AS alert_cnt
+        FROM $DB_NEOS$t_co_alert_receiver b
+        WHERE b.emp_seq = #empSeq#
+        AND b.comp_seq = #compSeq#
+        AND b.read_date IS NULL
+        <isNotEmpty property="eventType">
+        AND EXISTS (
+	        			SELECT 1 
+	        			FROM 
+	        			$DB_NEOS$t_co_alert a 
+	        			WHERE a.alert_seq = b.alert_seq
+	        			AND a.lang_code = #langCode#
+						AND a.event_type = #eventType#
+						
+        			)
+        </isNotEmpty>
+	</select>
+	
+	<select id="apiMainDAO.selectAlertList_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+		SELECT count(a.alert_seq) as TOTAL_COUNT
+		FROM $DB_NEOS$t_co_alert a, $DB_NEOS$t_co_alert_receiver b
+		WHERE a.alert_seq = b.alert_seq
+		and b.emp_seq = #empSeq#
+		and b.comp_seq = #compSeq#
+		<isNotEmpty property="langCode">
+		and a.lang_code = #langCode#
+		</isNotEmpty>
+		<isEmpty property="langCode">
+		and a.lang_code = 'kr'
+		</isEmpty>	
+		<isNotEmpty property="eventType">
+		and a.event_type = #eventType#
+		</isNotEmpty>
+		<isNotEmpty property="syncTime">
+		and LEFT(DATE_FORMAT(a.create_date,'%Y%m%d%H%i%s%f'),17) &lt; #syncTime#
+		</isNotEmpty>
+		<isNotNull property="newYn">
+		<isNotEmpty property="newYn">
+    	<isEqual property="newYn" compareValue="Y">
+		and b.read_date is null 		
+		</isEqual>			
+		</isNotEmpty>
+		</isNotNull>		
+	</select>
+	
+	<select id="apiMainDAO.selectAlertList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT 
+			a.alert_seq, 
+			IFNULL(a.event_type,'') as module_type, 
+			IFNULL(a.event_sub_type, '') as alert_type, 
+			IFNULL(a.event_type,'') as event_type, 
+			IFNULL(a.event_sub_type, '') as event_sub_type, 
+			IFNULL(a.url_path, '') as url_path, 
+			IFNULL(a.data, '') as data, 
+			IF(a.alert_title = '' or a.alert_title is null,
+			(
+			IFNULL(case a.event_type WHEN 'PROJECT' 
+		        THEN IFNULL(replace(a.alert_contents, 'null', '""'), '') 
+		        ELSE replace(a.alert_contents, concat(SUBSTRING_INDEX(a.alert_contents,']',1),']'), '')
+		      END, '') 
+		    ), a.alert_title) as alert_contents,
+			IF(b.read_date, 'Y', 'N') as read_yn,
+			IFNULL(DATE_FORMAT(b.read_date, '%Y%m%d%H%i%s'), '') AS read_date,
+			IFNULL(DATE_FORMAT(a.create_date, '%Y%m%d%H%i%s'), '') AS create_date,
+			IFNULL(b.mail_uid, '') as mail_uid,
+			IFNULL(b.mail_box_seq, '') as mail_box_seq
+		FROM $DB_NEOS$t_co_alert a, $DB_NEOS$t_co_alert_receiver b
+		WHERE a.alert_seq = b.alert_seq
+		and b.emp_seq = #empSeq#
+		and b.comp_seq = #compSeq#
+		<isNotEmpty property="langCode">
+		and a.lang_code = #langCode#
+		</isNotEmpty>
+		<isEmpty property="langCode">
+		and a.lang_code = 'kr'
+		</isEmpty>		
+		<isNotEmpty property="eventType">
+		and a.event_type = #eventType#
+		</isNotEmpty>
+		<isNotEmpty property="syncTime">
+		and LEFT(DATE_FORMAT(a.create_date,'%Y%m%d%H%i%s%f'),17) &lt; #syncTime#
+		</isNotEmpty>
+		<isNotNull property="newYn">
+		<isNotEmpty property="newYn">
+    	<isEqual property="newYn" compareValue="Y">
+		and b.read_date is null 		
+		</isEqual>			
+		</isNotEmpty>
+		ORDER BY a.create_date desc
+		</isNotNull>
+		
+		<isNull property="newYn">
+		ORDER BY IFNULL(b.read_date,'Z') desc, a.create_date desc
+		</isNull>		
+		
+		LIMIT $startNum$, $endNum$
+	</select>
+	
+	<update id="apiMainDAO.updateAlertRead" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_alert_receiver 
+		SET
+		read_date = NOW()
+		WHERE
+		 	comp_seq = #compSeq# 
+			AND emp_seq = #empSeq#
+		<isNotEmpty property="alertSeqList">
+				<iterate  prepend="AND" property="alertSeqList" open=" alert_seq IN (" close=")" conjunction="," >
+				#alertSeqList[]#
+				</iterate>
+		</isNotEmpty>
+	
+	</update>
+	
+	<update id="apiMainDAO.updateAlertAllRead" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_alert_receiver 
+		SET
+		read_date = NOW()
+		WHERE
+		 	comp_seq = #compSeq# 
+			AND emp_seq = #empSeq#
+		<isNotEmpty property="eventType">
+			AND event_type = #eventType#
+		</isNotEmpty>	
+	</update>
+	
+	<select id="apiMainDAO.selectTimeline_TOTAL_COUNT" parameterClass="hashmap" resultClass="string">
+		SELECT COUNT(*) AS timeline_cnt
+        FROM $DB_NEOS$t_co_timeline_receiver b
+        WHERE b.emp_seq = #empSeq#
+        AND b.comp_seq = #compSeq#
+        AND b.read_date IS NULL
+        <isNotEmpty property="eventType">
+        AND EXISTS (
+	        			SELECT 1 
+	        			FROM 
+	        			$DB_NEOS$t_co_timeline a 
+	        			WHERE a.tl_seq = b.tl_seq 
+	        			AND a.lang_code = #langCode#
+						AND a.event_type = #eventType#
+						
+        			)
+        </isNotEmpty>
+	</select>
+	
+	<select id="apiMainDAO.selectTimelineList_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+		SELECT COUNT(*) AS TOTAL_COUNT
+		FROM $DB_NEOS$t_co_timeline_receiver b
+		WHERE b.emp_seq = #empSeq#
+		AND b.comp_seq = #compSeq#
+		AND (
+	        			SELECT 1 
+	        			FROM 
+							$DB_NEOS$t_co_timeline a 
+	        			WHERE a.tl_seq = b.tl_seq 
+	        			AND a.lang_code = #langCode#
+	        			<isNotEmpty property="eventType">
+						AND a.event_type = #eventType#
+						</isNotEmpty>
+						<isNotEmpty property="syncTime">
+	        			AND a.create_date &lt; DATE_FORMAT(#syncTime#, '%Y-%m-%d %H:%i:%s')
+	        			</isNotEmpty>
+        			)
+	</select>
+	
+	<select id="apiMainDAO.selectTimelineList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT 
+			a.tl_seq,
+			a.sender_comp_seq,
+			a.sender_seq, 
+			IFNULL(a.event_type,'') as module_type, 
+			IFNULL(a.event_sub_type, '') as alert_type, 
+			IFNULL(a.event_type,'') as event_type, 
+			IFNULL(a.event_sub_type, '') as event_sub_type,
+			IFNULL(a.data, '') as data, 
+			IFNULL(b.mail_uid, '') as mail_uid,
+			IFNULL(b.mail_box_seq, '') as mail_box_seq,
+			IF(read_date, 'Y', 'N') as read_yn,
+			IFNULL(DATE_FORMAT(b.read_date, '%Y%m%d%H%i%s'), '') AS read_date,
+			IFNULL(DATE_FORMAT(a.create_date, '%Y%m%d%H%i%s'), '') AS create_date
+		FROM $DB_NEOS$t_co_timeline a, $DB_NEOS$t_co_timeline_receiver b
+		WHERE a.tl_seq = b.tl_seq
+		and b.emp_seq = #empSeq#
+		and b.comp_seq = #compSeq#
+		and a.lang_code = #langCode#
+		<isNotEmpty property="eventType">
+		and a.event_type = #eventType#
+		</isNotEmpty>
+		<isNotEmpty property="syncTime">
+		and LEFT(DATE_FORMAT(a.create_date,'%Y%m%d%H%i%s%f'),17) &lt; #syncTime#
+		</isNotEmpty> 
+		ORDER BY IFNULL(b.read_date,'Z') desc, a.create_date desc
+		LIMIT $startNum$, $endNum$
+	</select>
+	
+	<update id="apiMainDAO.updateTimelineRead" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_timeline_receiver 
+		SET
+		read_date = NOW()
+		WHERE
+		 	comp_seq = #compSeq# 
+			AND emp_seq = #empSeq#
+		<isNotEmpty property="tlSeqList">
+				<iterate  prepend="AND" property="tlSeqList" open=" tl_seq IN (" close=")" conjunction="," >
+				#tlSeqList[]#
+				</iterate>
+		</isNotEmpty>
+	
+	</update>
+	
+	<update id="apiMainDAO.updateTimelineAllRead" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_timeline_receiver 
+		SET
+		read_date = NOW()
+		WHERE
+		 	comp_seq = #compSeq# 
+			AND emp_seq = #empSeq#
+		<isNotEmpty property="eventType">
+			AND event_type = #eventType#
+		</isNotEmpty>
+	</update>
+	
+	
+	<select id="apiMainDAO.selectSynctime" resultClass="string" parameterClass="hashmap">
+		SELECT LEFT(DATE_FORMAT(sysdate(3),'%Y%m%d%H%i%s%f'),17) AS sysTime
+	</select>
+	
+	<select id="apiMainDAO.getGwVolumeIdx" parameterClass="hashmap" resultClass="string">
+		select 
+			(ifnull(max(idx),0)+1) idx 
+		from 
+			$DB_NEOS$t_co_group_volume_history
+		where
+			group_seq = #groupSeq#
+	</select>
+
+
+	<insert id="apiMainDAO.insertGwVolumeHistory" parameterClass="hashmap">
+		insert into 
+			$DB_NEOS$t_co_group_volume_history (idx, group_seq, gw_volume, mail_volume, target, create_date)
+		values
+			(#idx#, #groupSeq#, #gwVolume#, #mailVolume#, #target#, now())	
+	</insert>
+	
+	
+	<update id="apiMainDAO.updateGwVolume" parameterClass="hashmap">
+		update
+			$DB_NEOS$t_co_group
+		set
+			gw_volume = #gwVolume#, mail_volume = #mailVolume#
+		where
+			group_seq = #groupSeq#
+	</update>
+	
+	
+	<select id="apiMainDAO.getDownloadType" parameterClass="hashmap" resultClass="egovMap">
+		select 
+		(
+			SELECT IFNULL(B.option_value,A.option_d_value) AS val
+			FROM $DB_NEOS$tcmg_optionset A
+			LEFT JOIN $DB_NEOS$tcmg_optionvalue B ON A.option_id = B.option_id AND B.co_id = '0'
+			WHERE A.option_id = 'cm1700'
+			LIMIT 1
+		) option1,
+		(
+			SELECT IFNULL(B.option_value,A.option_d_value) AS val
+			FROM $DB_NEOS$tcmg_optionset A
+			LEFT JOIN $DB_NEOS$tcmg_optionvalue B ON A.option_id = B.option_id AND B.co_id = '0'
+			WHERE A.option_id = 'pathSeq700'
+			LIMIT 1
+		) option2,
+	    (
+			SELECT 
+	      	CASE IFNULL(B.option_value,A.option_d_value) 
+	      	WHEN '0' THEN 'limit▦'
+	      	WHEN '1' THEN IFNULL(C.option_value, 'limit▦')
+	      	WHEN '2' THEN IFNULL(D.option_value, 'limit▦')
+	      	END AS val
+			FROM $DB_NEOS$tcmg_optionset A
+			LEFT JOIN $DB_NEOS$tcmg_optionvalue B ON A.option_id = B.option_id AND B.co_id = '0'
+	      	LEFT JOIN $DB_NEOS$tcmg_optionvalue C ON C.option_id = 'cm1711'
+	      	LEFT JOIN $DB_NEOS$tcmg_optionvalue D ON D.option_id = 'cm1713'
+			WHERE A.option_id = 'cm1710'
+			LIMIT 1
+	    ) option3,
+	    (  
+			SELECT IFNULL(B.option_value,A.option_d_value) AS val
+			FROM $DB_NEOS$tcmg_optionset A
+			LEFT JOIN $DB_NEOS$tcmg_optionvalue B ON A.option_id = B.option_id AND B.co_id = '0'
+			WHERE A.option_id = 'cm1722'
+			LIMIT 1
+	    ) option4			
+		
+	</select>
+</sqlMap>

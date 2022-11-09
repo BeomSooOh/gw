@@ -1,0 +1,4 @@
+@charset "utf-8";
+
+img, fieldset, iframe{border:0 none;}
+.container.main.formal>#contents .tab-page{position:absolute; overflow:hidden; left:0; right:0; bottom:0; top:0;}

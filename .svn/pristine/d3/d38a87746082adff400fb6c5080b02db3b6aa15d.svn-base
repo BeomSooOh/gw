@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="GroupManage">
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+	<insert id="GroupManage.insertGroup" parameterClass="hashmap">
+		INSERT INTO t_co_group
+		SET 
+			group_seq        = 			#groupSeq#, 
+			group_name       = 			#groupName#, 
+			native_lang_code = 			#nativeLangCode#, 
+			mail_url         = 			#mailUrl#, 
+			messenger_url    = 			#messengerUrl#, 
+			mobile_url          = 		#mobileUrl#, 
+			sms_url          = 			#smsUrl#, 
+			use_yn           = 			'Y', 
+			create_seq       = 			#createSeq#, 
+			create_date      = 			now(), 
+			modify_seq       = 			#modifySeq#, 
+			modify_date      = 			now()
+		ON DUPLICATE KEY UPDATE
+			group_name       = 			#groupName#, 
+			native_lang_code = 			#nativeLangCode#, 
+			mail_url         = 			#mailUrl#, 
+			messenger_url    = 			#messengerUrl#, 
+			sms_url          = 			#smsUrl#, 
+			mobile_url          = 		#mobileUrl#, 
+			modify_seq       = 			#modifySeq#, 
+			modify_date      = 			now()
+	</insert>
+
+
+	<select id="GroupManage.selectGroupPathList" parameterClass="hashmap" resultClass="egovMap">
+	SELECT *
+		FROM t_co_group_path
+		WHERE 
+			true
+		<isNotEmpty property="groupSeq">
+		AND group_seq = #groupSeq#
+		</isNotEmpty>
+		<isNotEmpty property="osType">
+			AND os_type = #osType#
+		</isNotEmpty>
+		<isNotEmpty property="pathSeq">
+			AND path_seq = #pathSeq#
+		</isNotEmpty>
+		ORDER BY path_seq
+		<isNotEmpty property="pathSeq">
+		LIMIT 1
+		</isNotEmpty>
+	</select>
+	
+	<update id="GroupManage.updateGroupPath" parameterClass="hashmap">
+		update 
+			t_co_group_path
+		set
+			avail_capac = #availCapac#,
+			limit_file_count = #limitFileCount#,
+			modify_seq = #modifySeq#,
+			modify_date = now()
+		where
+			group_seq = #groupSeq#
+			and
+				path_seq = #pathSeq#
+			and
+				os_type = #osType#	
+	</update>
+	
+	<select id="GroupManage.selectGroupContainerList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT *
+		FROM 
+		(
+			SELECT a.code, a.detail_code, b.detail_name, a.order_num
+			FROM t_co_code_detail a, t_co_code_detail_multi b
+			WHERE a.code = b.code
+			AND a.detail_code = b.detail_code
+			AND b.lang_code = #langCode#
+			AND a.use_yn = 'Y'
+			AND b.use_yn = 'Y'
+			AND a.code = 'COM518'
+		) c LEFT OUTER JOIN (SELECT * FROM t_co_group_container WHERE group_seq = #groupSeq#) d ON c.detail_code = d.con_name
+		<isNotEmpty property="conName">
+			Where d.con_name = #conName#
+		</isNotEmpty>
+		ORDER BY c.order_num
+	</select>
+	
+	<insert id="GroupManage.insertGroupContainer" parameterClass="hashmap">
+		INSERT INTO t_co_group_container
+		SET 
+			group_seq        = 			#groupSeq#, 
+			con_name       	 = 			#conName#, 
+			ip				 = 			#ip#, 
+			port         	 = 			#port#, 
+			create_seq       = 			#editSeq#, 
+			create_date      = 			now(), 
+			modify_seq       = 			#editSeq#, 
+			modify_date      = 			now()
+		ON DUPLICATE KEY UPDATE
+			ip 				 = 			#ip#, 
+			port         	 = 			#port#, 
+			modify_seq       = 			#editSeq#, 
+			modify_date      = 			now()
+	</insert>
+	
+	
+	
+</sqlMap>

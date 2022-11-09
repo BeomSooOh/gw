@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org//dtd/sql-map-2.dtd">
+<sqlMap namespace="HdcsDAO">
+
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+   
+	<select id="HdcsDAO.selectAttachFileDetail" parameterClass="hashmap" resultClass="egovMap">
+  		SELECT 
+			a.file_id, 
+			b.file_sn, 
+			b.path_seq, 
+			b.file_stre_cours, 
+			b.stre_file_name, 
+			b.orignl_file_name, 
+			b.file_extsn, 
+			b.file_size
+		FROM $DB_NEOS$t_co_atch_file a, $DB_NEOS$t_co_atch_file_detail b
+		WHERE a.file_id = b.file_id
+		  AND a.use_yn = 'Y'
+		  AND b.use_yn = 'Y'
+		  AND a.file_id = #fileId#
+		<isNotEmpty property="fileSn">
+		  AND b.file_sn = #fileSn#
+		</isNotEmpty>
+	</select>
+	
+	<select id="HdcsDAO.selectGroupPath" parameterClass="hashmap" resultClass="egovMap">
+		SELECT  group_seq as "groupSeq"
+		      , absol_path as "absolPath"
+		      , limit_file_count as "limitFileCount"
+		FROM $DB_NEOS$t_co_group_path
+		WHERE group_seq = #groupSeq# 
+		  AND path_seq = #pathSeq#
+		  AND LOWER(os_type) = LOWER(#osType#) limit 1
+	</select>
+	
+</sqlMap>

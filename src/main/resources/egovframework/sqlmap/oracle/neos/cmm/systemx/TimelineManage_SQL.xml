@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="TimelineManageDAO">
+
+    <typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+    
+    <resultMap class="egovMap" id="timelinePortlet">
+		<result property="COMP_SEQ" column="COMP_SEQ" />
+    	<result property="PORTLET_TYPE" column="PORTLET_TYPE" />
+    	<result property="ORDER_NUM" column="ORDER_NUM" />
+    	<result property="GNB_MENU_NO" column="GNB_MENU_NO" />
+    	<result property="LNB_MENU_NO" column="LNB_MENU_NO" />
+    	<result property="LNB_MENU_GUBUN" column="LNB_MENU_GUBUN" />
+    	<result property="URL_PATH" column="URL_PATH" jdbcType="CLOB" javaType="java.lang.String"/>
+    	<result property="ERROR_URL_PATH" column="ERROR_URL_PATH" jdbcType="CLOB" javaType="java.lang.String"/>
+    	<result property="CREATE_SEQ" column="CREATE_SEQ" />
+    	<result property="CREATE_DATE" column="CREATE_DATE" />
+    	<result property="MODIFY_SEQ" column="MODIFY_SEQ" />
+    	<result property="MODIFY_DATE" column="MODIFY_DATE" />
+    	<result property="gnb_menu_nm" column="gnb_menu_nm" />
+    </resultMap>
+    
+    
+    <select id="TimelineManageDAO.selectTimelinePortlet" parameterClass="hashmap" resultMap="timelinePortlet">
+		SELECT
+			A.*, $DB_NEOS$get_menu_info('1', gnb_menu_no, #langCode#) as gnb_menu_nm
+		FROM $DB_NEOS$t_co_timeline_portlet A
+		WHERE
+			comp_seq = #compSeq#
+		<isNotEmpty property="portletType">
+			AND
+				portlet_type = #portletType#
+		</isNotEmpty>
+		ORDER BY order_num
+	</select>
+	
+	
+	<select id="TimelineManageDAO.selectTimelineList_test" parameterClass="hashmap" resultClass="egovMap">
+		select  distinct t.tl_seq,
+		        t.lang_code,
+		        t.event_type,
+		        t.event_sub_type,
+		        t.seq,
+		        t.sub_seq,
+		        t.url_path,
+		        t.data,
+		        (select $DB_NEOS$f_getTimelineData(#groupSeq#, #compSeq#, t.event_sub_type, t.data, t.lang_code)) as data_v,
+		        t.sender_seq,
+		        t.drafter_seq,
+		        t.create_seq,
+		        date_format(t.create_date,'%Y-%m-%d %H:%i') as create_date,
+		        t.modify_seq,
+		        date_format(t.modify_date,'%Y-%m-%d %H:%i') as modify_date,
+		        tr.group_seq,
+		        tr.comp_seq,
+		        $DB_NEOS$get_code_detail_info('0', 'option0061', '1', #langCode#) as empName,
+		        $DB_NEOS$get_code_detail_info('0', 'COM505', '004', #langCode#) as empPosition
+		  from $DB_NEOS$`t_co_timeline` t, $DB_NEOS$`t_co_timeline_receiver` tr
+		where   t.lang_code = #langCode#
+		        and t.tl_seq = tr.tl_seq
+		        and tr.group_seq = '53'
+		        and tr.comp_seq = '58'
+		  order by t.create_date desc
+		  limit 0, 20
+	</select>
+	
+	
+	<select id="TimelineManageDAO.selectTimelineList" parameterClass="hashmap" resultClass="oracleLobMap">
+<!-- 		select  t.tl_seq, -->
+<!-- 		        t.lang_code, -->
+<!-- 		        t.event_type, -->
+<!-- 		        t.event_sub_type, -->
+<!-- 		        t.seq, -->
+<!-- 		        t.sub_seq, -->
+<!-- 		        t.url_path, -->
+<!-- 		        t.data, -->
+<!-- 		        t.sender_comp_seq, -->
+<!-- 		        t.sender_seq, -->
+<!-- 		        t.drafter_seq, -->
+<!-- 		        t.create_seq, -->
+<!-- 		        date_format(t.create_date,'%Y-%m-%d %H:%i') as create_date, -->
+<!-- 		        t.modify_seq, -->
+<!-- 		        date_format(t.modify_date,'%Y-%m-%d %H:%i') as modify_date, -->
+<!-- 		        tr.group_seq, -->
+<!-- 		        tr.comp_seq, -->
+<!-- 	            NVL((select  -->
+<!-- 	              em.emp_name  -->
+<!-- 	              from v_t_co_emp_multi em  -->
+<!-- 	              where em.group_seq = e.group_seq  -->
+<!-- 	                and em.emp_seq = t.sender_seq  -->
+<!-- 	            limit 1), '') as empName, -->
+<!-- 	            NVL((select  -->
+<!-- 	              cdpm.dp_name  -->
+<!-- 	              from t_co_comp_duty_position_multi cdpm  -->
+<!-- 	              where cdpm.group_seq = e.group_seq  -->
+<!-- 	                and cdpm.lang_code = t.lang_code  -->
+<!-- 	                and cdpm.comp_seq = t.sender_comp_seq -->
+<!-- 	                and cdpm.dp_type = 'POSITION'  -->
+<!-- 	                and dp_seq = e.position_code  -->
+<!-- 	              limit 1 -->
+<!-- 	            ), '') as empPosition, -->
+<!-- 	            am.lnb_menu_no, -->
+<!-- 	            get_menu_first_info('0', am.lnb_menu_no, #langCode#) AS gnb_menu_no, -->
+<!-- 				get_menu_first_info('1', am.lnb_menu_no, #langCode#) AS gnb_menu_nm, -->
+<!-- 				get_menu_info('3', am.lnb_menu_no, #langCode#) AS url_gubun, -->
+<!-- 				get_menu_info('2', am.lnb_menu_no, #langCode#) AS menu_gubun, -->
+<!-- 				(select concat(b.email_addr, '@', a.email_domain) from t_co_comp a, t_co_emp b where b.group_seq = tr.group_seq and b.emp_seq = t.sender_seq and a.comp_seq = t.sender_comp_seq limit 1) as sender_email -->
+<!-- 		  from `t_co_timeline` t, `t_co_timeline_receiver` tr, `t_co_emp` e, `t_co_alert_menu` am -->
+<!-- 		where   t.lang_code = #langCode# -->
+<!-- 		        and t.tl_seq = tr.tl_seq -->
+<!-- 		        and tr.group_seq = #groupSeq# -->
+<!-- 		        and tr.comp_seq = #compSeq# -->
+<!-- 		        and tr.emp_seq = #empSeq# -->
+<!-- 		        and t.event_sub_type = am.event_sub_type -->
+<!-- 	            and e.group_seq = tr.group_seq -->
+<!-- 	            and e.emp_seq = t.sender_seq -->
+<!-- 		<isNotEmpty property="moduleType"> -->
+<!-- 				and t.event_type = #moduleType# -->
+<!-- 		</isNotEmpty> -->
+<!-- 		  order by t.create_date desc -->
+<!-- 		  limit 0, 10 -->
+
+			SELECT t.*
+				, NVL((select em.emp_name from $DB_NEOS$v_t_co_emp_multi em where em.group_seq = e.group_seq and em.emp_seq = t."senderSeq" and rownum = 1), ' ') as "empName"
+				, NVL($DB_NEOS$get_emp_duty_position_name(t."groupSeq", t."senderCompSeq", (select position_code from $DB_NEOS$t_co_emp_dept where emp_seq = t."senderSeq" and comp_seq = t."senderCompSeq" and main_dept_yn = 'Y' and rownum = 1), 'POSITION', #langCode#),' ') as "empPosition"				
+				, $DB_NEOS$get_menu_first_info('0', am.lnb_menu_no, #langCode#) AS "gnbMenuNo"
+				, $DB_NEOS$get_menu_first_info('1', am.lnb_menu_no, #langCode#) AS "gnbMenuNm"
+				, $DB_NEOS$get_menu_info('3', am.lnb_menu_no, #langCode#) AS "urlGubun"
+				, $DB_NEOS$get_menu_info('2', am.lnb_menu_no, #langCode#) AS "menuGubun"
+				, (select (b.email_addr || '@' || a.email_domain) from $DB_NEOS$t_co_comp a, t_co_emp b where b.group_seq = t."groupSeq" and b.emp_seq = t."senderSeq" and a.comp_seq = t."senderCompSeq" and rownum = 1) as "senderEmail"
+			FROM (
+				SELECT *
+				  FROM(
+				  		SELECT ROWNUM AS RNUM, DUMMY.*
+				  		  FROM(
+								SELECT
+									t.tl_seq as "tlSeq",
+									t.lang_code as "langCode",
+									t.event_type as "eventType",
+									t.event_sub_type as "eventSubType",
+									t.seq as "seq",
+									t.sub_seq as "subSeq",
+									t.url_path as "urlPath",
+									t.data as "data",
+									t.sender_comp_seq as "senderCompSeq",
+									t.sender_seq as "senderSeq",
+									t.drafter_seq as "drafterSeq",
+									t.create_seq as "createSeq",
+									TO_CHAR(t.create_date,'YYYY-MM-DD HH24:MI') as "createDate",
+									t.modify_seq as "modifySeq",
+									TO_CHAR(t.modify_date,'YYYY-MM-DD HH24:MI') as "modifyDate",
+									tr.group_seq as "groupSeq",
+									tr.comp_seq as "compSeq",
+									tr.emp_seq as "empSeq"
+								FROM $DB_NEOS$t_co_timeline_receiver tr
+								JOIN $DB_NEOS$t_co_timeline t ON tr.tl_seq = t.tl_seq AND t.lang_code = #langCode#
+								WHERE tr.emp_seq = #empSeq#
+								AND tr.comp_seq = #compSeq#
+								AND tr.group_seq = #groupSeq# 
+								<isNotEmpty property="moduleType">
+									and t.event_type = #moduleType#
+								</isNotEmpty>
+								ORDER BY t.create_date DESC
+								) DUMMY 
+							WHERE ROWNUM <![CDATA[<]]> #start# + #end#
+							)
+					WHERE RNUM 	<![CDATA[>=]]> #start#	
+			) t
+			JOIN $DB_NEOS$t_co_emp e ON e.emp_seq = t."empSeq"
+			JOIN $DB_NEOS$t_co_alert_menu am ON t."eventSubType" = am.event_sub_type		
+			ORDER BY t."createDate" DESC	
+	</select>
+	
+	
+	<select id="TimelineManageDAO.selectTimelineMore" parameterClass="hashmap" resultClass="egovMap">
+		select  t.tl_seq,
+		        t.lang_code,
+		        t.event_type,
+		        t.event_sub_type,
+		        t.seq,
+		        t.sub_seq,
+		        t.url_path,
+		        t.data,
+		        t.sender_comp_seq,
+		        t.sender_seq,
+		        t.drafter_seq,
+		        t.create_seq,
+		        date_format(t.create_date,'%Y-%m-%d %H:%i') as create_date,
+		        t.modify_seq,
+		        date_format(t.modify_date,'%Y-%m-%d %H:%i') as modify_date,
+		        tr.group_seq,
+		        tr.comp_seq,
+	            NVL((select 
+	              em.emp_name 
+	              from $DB_NEOS$v_t_co_emp_multi em 
+	              where em.group_seq = e.group_seq 
+	                and em.lang_code = t.lang_code 
+	                and em.emp_seq = t.sender_seq 
+	            limit 1), '') as empName,
+	            NVL((select 
+	              cdpm.dp_name 
+	              from $DB_NEOS$t_co_comp_duty_position_multi cdpm 
+	              where cdpm.group_seq = e.group_seq 
+	                and cdpm.lang_code = t.lang_code 
+	                and cdpm.comp_seq = t.sender_comp_seq
+	                and cdpm.dp_type = 'POSITION' 
+	                and dp_seq = e.position_code 
+	              limit 1
+	            ), '') as empPosition
+		  from $DB_NEOS$`t_co_timeline` t, $DB_NEOS$`t_co_timeline_receiver` tr, $DB_NEOS$`t_co_emp` e
+		where   t.lang_code = #langCode#
+		        and t.tl_seq = tr.tl_seq
+		        and tr.group_seq = #groupSeq#
+		        and tr.comp_seq = #compSeq#
+		        and tr.emp_seq = #empSeq#
+	            and e.group_seq = tr.group_seq
+	            and e.emp_seq = t.sender_seq
+		<isNotEmpty property="moduleType">
+				and t.event_type = #moduleType#
+		</isNotEmpty>
+		  order by t.create_date desc
+		  limit 0, 10
+	</select>
+	
+	
+	<select id="TimelineManageDAO.checkTimelineNew" parameterClass="hashmap" resultClass="string">
+		SELECT *
+		  FROM(
+		select  t.tl_seq
+		  from $DB_NEOS$t_co_timeline t, $DB_NEOS$t_co_timeline_receiver tr
+		where   t.lang_code = #langCode#
+		        and t.tl_seq = tr.tl_seq
+		        and tr.group_seq = #groupSeq#
+		        and tr.comp_seq = #compSeq#
+		        and tr.emp_seq = #empSeq#
+		  order by t.create_date desc
+		  	)
+		  WHERE ROWNUM = 1
+	</select>
+	
+	<select id="TimelineManageDAO.checkTimelineNewEventType" parameterClass="hashmap" resultClass="string">
+		SELECT *
+		  FROM(
+				select  t.event_type
+				  from $DB_NEOS$t_co_timeline t, $DB_NEOS$t_co_timeline_receiver tr
+				 where t.lang_code = #langCode#
+				   and t.tl_seq = tr.tl_seq
+				   and tr.group_seq = #groupSeq#
+				   and tr.comp_seq = #compSeq#
+				   and tr.emp_seq = #empSeq#
+				  order by t.create_date desc
+				)
+		WHERE ROWNUM = 1				  
+	</select>
+	
+	
+	<select id="TimelineManageDAO.selectTimelineInfo" parameterClass="hashmap" resultClass="egovMap">
+		select  t.tl_seq,
+		        t.lang_code,
+		        t.event_type,
+		        t.event_sub_type,
+		        t.seq,
+		        t.sub_seq,
+		        t.url_path,
+		        t.data,
+		        t.sender_seq,
+		        t.drafter_seq,
+		        t.create_seq,
+		        t.create_date,
+		        t.modify_seq,
+		        t.modify_date
+		  from $DB_NEOS$t_co_timeline t
+		where   t.tl_seq = '25'
+		        and t.lang_code = 'kr'
+	</select>
+	
+	
+	<delete id="TimelineManageDAO.deleteTimeline" parameterClass="hashmap">
+		DELETE FROM $DB_NEOS$t_co_timeline 
+		WHERE tl_seq = #tlSeq#
+	</delete>
+	
+	
+	<delete id="TimelineManageDAO.deleteTimelineReceiver " parameterClass="hashmap">
+		DELETE FROM $DB_NEOS$t_co_timeline_receiver 
+		WHERE tl_seq = #tlSeq#
+	</delete>
+	
+	
+	<select id="TimelineManageDAO.selectMailUrl" parameterClass="hashmap" resultClass="string">
+		select TO_CHAR(url_path) as mail_url 
+		  from $DB_NEOS$t_co_menu 
+		 where upper_menu_no = '0' and url_gubun = 'mail' 
+		   and rownum = 1
+	</select>
+
+</sqlMap>

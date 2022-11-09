@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ExCodeCommon">
+
+
+	<select id="getExCompList" parameterType="hashmap" resultType="hashmap">
+	/* getExCompList - ERPiU mssql */
+		select *from NEOE.MA_COMPANY
+		WHERE CD_COMPANY LIKE '%' + #{txtSearch} + '%' OR NM_COMPANY LIKE '%' + #{txtSearch} + '%'
+	</select>
+	
+	
+	<select id="getExEmpList" parameterType="hashmap" resultType="hashmap">
+	 /* getExCodeEmpListInfoSelect - ERPiU mssql */
+		SELECT  NO_EMP AS erpEmpSeq
+		        , NM_KOR AS erpEmpName
+		        , CD_COMPANY AS erpCompSeq
+		        , NM_COMPANY AS erpCompName
+		        , CD_BIZAREA AS erpBizSeq
+		        , NM_BIZAREA AS erpBizName
+		        , CD_DEPT AS erpDeptSeq
+		        , NM_DEPT AS erpDetpName
+		        , CD_PC AS erpPcSeq
+		        , NM_PC AS erpPcName
+		        , CD_CC AS erpCcSeq
+		        , NM_CC AS erpCcName
+		FROM    (
+		            SELECT  ISNULL ( EMP.NO_EMP, '' ) AS NO_EMP
+		                    , ISNULL ( EMP.NM_KOR, '' ) AS NM_KOR
+		                    , ISNULL ( COMPANY.CD_COMPANY, '' ) AS CD_COMPANY
+		                    , ISNULL ( COMPANY.NM_COMPANY, '' ) AS NM_COMPANY
+		                    , ISNULL ( BIZAREA.CD_BIZAREA, '' ) AS CD_BIZAREA
+		                    , ISNULL ( BIZAREA.NM_BIZAREA, '' ) AS NM_BIZAREA
+		                    , ISNULL ( DEPT.CD_DEPT, '' ) AS CD_DEPT
+		                    , ISNULL ( DEPT.NM_DEPT, '' ) AS NM_DEPT
+		                    , ISNULL ( PC.CD_PC, '' ) AS CD_PC
+		                    , ISNULL ( PC.NM_PC, '' ) AS NM_PC
+		                    , ISNULL ( CC.CD_CC, '' ) AS CD_CC
+		                    , ISNULL ( CC.NM_CC, '' ) AS NM_CC
+		            FROM    (
+		                        SELECT  CD_COMPANY
+		                                , CD_BIZAREA
+		                                , CD_DEPT
+		                                , CD_CC
+		                                , NO_EMP
+		                                , NM_KOR
+		                                , CD_INCOM
+		                        FROM    NEOE.MA_EMP A
+		                        WHERE   ( CD_INCOM = '001' OR CD_INCOM = '002' )
+		                        AND     CD_COMPANY = '${erpCompSeq}'
+		                        AND     ( NO_EMP LIKE '%' + ISNULL ( '${searchStr}', '' ) + '%'
+		                                OR NM_KOR LIKE '%' + ISNULL ( '${searchStr}', '' ) + '%' )
+		                    ) EMP
+		                    INNER JOIN
+		                    (
+		                        SELECT  CD_COMPANY
+		                                , NM_COMPANY
+		                        FROM    NEOE.MA_COMPANY A
+		                    ) COMPANY ON EMP.CD_COMPANY = COMPANY.CD_COMPANY
+		                    INNER JOIN
+		                    (
+		                        SELECT  CD_COMPANY
+		                                , CD_BIZAREA
+		                                , NM_BIZAREA
+		                                , CD_PC
+		                        FROM    NEOE.MA_BIZAREA A
+		                    ) BIZAREA ON EMP.CD_COMPANY = BIZAREA.CD_COMPANY AND EMP.CD_BIZAREA = BIZAREA.CD_BIZAREA
+		                    INNER JOIN
+		                    (
+		                        SELECT  CD_COMPANY
+		                                , CD_BIZAREA
+		                                , CD_DEPT
+		                                , NM_DEPT
+		                        FROM    NEOE.MA_DEPT A
+		                    ) DEPT ON EMP.CD_COMPANY = DEPT.CD_COMPANY AND EMP.CD_BIZAREA = DEPT.CD_BIZAREA AND EMP.CD_DEPT = DEPT.CD_DEPT
+		                    LEFT OUTER JOIN
+		                    (
+		                        SELECT  CD_COMPANY
+		                                , CD_PC
+		                                , NM_PC
+		                        FROM    NEOE.MA_PC A
+		                    ) PC ON BIZAREA.CD_COMPANY = PC.CD_COMPANY AND BIZAREA.CD_PC = PC.CD_PC
+		                    LEFT OUTER JOIN
+		                    (
+		                        SELECT  CD_COMPANY
+		                                , CD_CC
+		                                , NM_CC
+		                                , YN_USE
+		                        FROM    NEOE.MA_CC A
+		                        WHERE   YN_USE = N'Y'
+		                    ) CC ON EMP.CD_COMPANY = CC.CD_COMPANY AND EMP.CD_CC = CC.CD_CC
+		        ) A
+	</select>
+	
+    <select id="GetFiGwDocInfo" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        /* ExCodeCommon.GetFiGwDocInfo - MSSQL */
+        SELECT CD_COMPANY + '_' + CD_PC + '_' + NO_DOCU AS "appro_key"
+             , APP_FORM_KIND AS "fcode"
+             , NM_PUMM AS "subject"
+             , NM_NOTE AS "contents"
+        FROM  FI_GWDOCU
+        WHERE CD_COMPANY = '${cdCompany}'
+        AND CD_PC = '${cdPc}' 
+        AND NO_DOCU = '${noDocu}'
+    </select>
+</mapper>

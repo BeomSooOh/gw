@@ -1,0 +1,133 @@
+﻿@charset "utf-8";
+
+/**************************************************
+   Input
+**************************************************/
+.PUDD.PUDD-UI-inputField input[type="text"] {height:24px;}
+.PUDD.PUDD-UI-searchField input[type="text"] {height:24px;}
+/**************************************************
+   Button
+**************************************************/
+.PUDD.PUDD-UI-Button input[type='button'] {height:24px; background-color:#fff; border:1px solid #d3d3d3; padding:0 10px; color:#4a4a4a; font-weight:normal;}
+.PUDD.PUDD-UI-Button input[type='button']:hover{border:1px solid #8c8c8c;}
+.PUDD.PUDD-UI-Button input[disabled]{background-color:#f2f2f2; border:1px solid #e0e0e0; color:#8d8d8d;}
+
+.PUDD.PUDD-UI-Button input[type='button'].psh_btn {height:24px; background-color:#1385db;border:1px solid #5aaae6; padding:0 10px; color:#fff; font-weight:normal;margin:3px 0 0 0;}
+.PUDD.PUDD-UI-Button input[type='button'].psh_btn:hover{border: 1px solid #DCE1E4;background-color: #0876c9;}
+
+.PUDD.PUDD-UI-Button input[type='button'].small_btn {padding: 0px 4px !important; height: 18px !important; line-height: 18px; font-size: 11px; border-radius:3px;}
+.PUDD.PUDD-UI-Button input[type='button'].small_btn:hover{border: 1px solid #1c90fb;}
+
+/**************************************************
+   Textarea
+**************************************************/
+.ea_reply_modify .PUDD.PUDD-UI-textArea textarea{width: 99.8%;height: 58px;padding: 5px;}
+.ea_reply_add .PUDD.PUDD-UI-textArea textarea{width: 99.8%;height: 58px;padding: 5px;}
+
+/**************************************************
+   Calendar
+**************************************************/
+.PUDD.PUDD-UI-datePicker input[type='text']{height:24px; text-indent:0px;}
+
+/**************************************************
+   datepicker
+**************************************************/
+.div_form_bind .PUDD input[type='text'], .div_form_bind .PUDD input[type='password'] {height:24px; line-height:24px;}
+
+
+/**************************************************
+   Grid
+**************************************************/
+.twinbox.brn .PUDD.PUDD-UI-GridTable .grid-content{border-width:0 1px;}
+.PUDD.PUDD-UI-GridTable .PUDD-UI-Button input[type="button"]{height:19px;}
+
+/*.PUDD.PUDD-UI-GridTable .grid-content tbody td {padding:inherit;}
+.PUDD.PUDD-UI-GridTable .grid-header thead th {padding:inherit;}*/
+
+/*메일 테이블 a태그 */
+.PUDD.PUDD-UI-GridTable .grid-content a.mail_from_to {color:#000;}
+
+/*블릿*/
+.PUDD.PUDD-UI-GridTable .bul{padding:0 10px !important;background:#fff url('../Images/ico/ico_timeline_bullet.png') no-repeat 0px 4px !important;}
+
+/*td높이30*/
+.PUDD.PUDD-UI-GridTable.td35 .grid-content tbody td{height:35px ;box-sizing: border-box;padding: 0 5px;}
+.PUDD.PUDD-UI-GridTable.td30 .grid-content tbody td {height:30px;box-sizing: border-box;padding: 0 5px;word-break: break-all;}
+.PUDD.PUDD-UI-GridTable.td29 .grid-content tbody td{height:29px ;box-sizing: border-box;padding: 0 5px;}
+.PUDD.PUDD-UI-GridTable.td28 .grid-content tbody td{height:28px ;box-sizing: border-box;padding: 0 5px;}
+.PUDD.PUDD-UI-GridTable.td27 .grid-content tbody td{height:27px ;box-sizing: border-box;padding: 0 5px;}
+
+/**************************************************
+   selective-input
+**************************************************/
+.PUDD.PUDD-UI-selective-input .selectField .addresObjView.txt { background: #fff; border: 1px solid #999;font-size:12px;}
+
+
+/**************************************************
+   checkbox,radio
+**************************************************/
+.PUDD.PUDD-UI-ChkRadi input[type="checkbox"] + label {margin-left:0px !important;min-height:auto;height:auto;background:none; padding: 0px 0 0px 20px !important;text-indent:0px;}
+.PUDD.PUDD-UI-ChkRadi input[type="checkbox"].chkBack:checked + label{background:none;}
+.PUDD.PUDD-UI-ChkRadi input[type="checkbox"].chkBack:disabled + label{background:none;}
+
+.PUDD.PUDD-UI-ChkRadi input[type="radio"] + label {margin-left:0px !important;min-height:auto;height:auto;background:none;padding: 0px 0 0px 20px !important;text-indent:0px;}
+.PUDD.PUDD-UI-ChkRadi input[type="radio"]:checked + label{background: none;}
+.PUDD.PUDD-UI-ChkRadi input[type="radio"]:disabled + label{background: none;}
+
+
+/**************************************************
+   fileField
+**************************************************/
+.PUDD.PUDD-UI-fileField input.cloneField{min-height:24px;}
+.PUDD.PUDD-UI-fileField .btn_file{height:24px;line-height:24px;}
+.PUDD.PUDD-UI-GridTable .PUDD.PUDD-UI-fileField .btn_file:hover{border:1px solid #8c8c8c;color:#000000;text-decoration:none;}
+
+
+.PUDD.PUDD-UI-fileField input[type='button'].btn_file{height:24px;}
+
+
+/**************************************************
+   tree
+**************************************************/
+.PUDD.PUDD-UI-treeview ul.group li.item a.anchor i.ico.comp_li{background:transparent url("pudd_img/ico/pudd_treeview_s.png") no-repeat -126px 0px;}
+.PUDD.PUDD-UI-treeview ul.group li.item a.anchor i.ico.busi_li{background:transparent url("pudd_img/ico/pudd_treeview_s.png") no-repeat -126px -72px;}
+.PUDD.PUDD-UI-treeview ul.group li.item a.anchor i.ico.file {margin-top: 6px;width: 16px;height: 13px;background:url("../Images/ico/ico_tree_folder.png") 0px -65px no-repeat !important;}
+.PUDD.PUDD-UI-treeview ul.group li.item a.anchor i.ico.file-disabled{margin-top: 6px;width: 16px;height: 13px;background:url("../Images/ico/ico_tree_folder.png") -16px -113px no-repeat !important;}
+
+.PUDD.PUDD-UI-treeview ul.group li.item a.anchor i.ico.col_green{margin-top: 3px;width: 18px;height: 16px;background:url("../Images/ico/ico_organ05_close.png") -1px 0px no-repeat !important;}
+.PUDD.PUDD-UI-treeview ul.group li.item a.anchor i.ico.col_brown{margin-top: 3px;width: 18px;height: 16px;background:url("../Images/ico/ico_organ04_close.png") -1px 0px no-repeat !important;}
+.PUDD.PUDD-UI-treeview ul.group li.item a.anchor i.ico.col_disabled{margin-top: 3px;width: 18px;height: 16px;background:url("../Images/ico/ico_organ06_close.png") -1px 0px no-repeat !important;}
+
+/* tree nav */
+.sub_2dep_in.PUDD.PUDD-UI-treeview .tree_container{max-width:100%;padding:0 10px 0 15px;}
+
+.sub_2dep_in.PUDD.PUDD-UI-treeview .tree_container > ul.group > li.item.item_leaf > i.ico{background:#ffffff}
+.sub_2dep_in.PUDD.PUDD-UI-treeview .tree_container > ul.group > li.item.item_open > i.ico{background: #ffffff url("../Images/ico/32px.png") no-repeat -200px -69px;width: 15px;}
+.sub_2dep_in.PUDD.PUDD-UI-treeview .tree_container > ul.group > li.item.item_close > i.ico{background: #ffffff url("../Images/ico/32px.png") no-repeat -168px -69px;width: 15px;}
+
+.sub_2dep_in.PUDD.PUDD-UI-treeview ul.group li.item.item_leaf > i.ico{background: #ffffff url("../Images/ico/32px.png") no-repeat -235px -71px;width: 15px;}
+.sub_2dep_in.PUDD.PUDD-UI-treeview ul.group li.item.item_last .item_leaf > i.ico{background: #ffffff url("../Images/ico/32px.png") no-repeat -236px -71px;width: 10px;}
+.sub_2dep_in.PUDD.PUDD-UI-treeview ul.group li.item.item_open > i.ico{background: #ffffff url("../Images/ico/32px.png") no-repeat -200px -68px;width: 15px;}
+.sub_2dep_in.PUDD.PUDD-UI-treeview ul.group li.item.item_close > i.ico{background: #ffffff url("../Images/ico/32px.png") no-repeat -168px -69px;width: 15px;}
+
+.sub_2dep_in.PUDD.PUDD-UI-treeview ul.group li.item.item_leaf > a.anchor i.ico{display:none;}
+.sub_2dep_in.PUDD.PUDD-UI-treeview ul.group li.item.item_open > a.anchor i.ico{display:none;}
+.sub_2dep_in.PUDD.PUDD-UI-treeview ul.group li.item.item_close > a.anchor i.ico{display:none;}
+
+.sub_2dep_in.PUDD.PUDD-UI-treeview.PUDD-COLOR-blue ul.group li.item a.anchor:hover{background:#ffffff;border-radius:0px;font-weight:bold;color:#058df5;}
+.sub_2dep_in.PUDD.PUDD-UI-treeview.PUDD-COLOR-blue ul.group li.item a.anchor.hover{background:#ffffff;border-radius:0px;font-weight:bold;color:#058df5;}
+.sub_2dep_in.PUDD.PUDD-UI-treeview.PUDD-COLOR-blue ul.group li.item.item_last a.anchor:hover{background:#ffffff;border-radius:0px;font-weight:bold;color:#000000;}
+.sub_2dep_in.PUDD.PUDD-UI-treeview.PUDD-COLOR-blue ul.group li.item.item_last a.anchor.hover{background:#ffffff;border-radius:0px;font-weight:bold;color:#000000;}
+.sub_2dep_in.PUDD.PUDD-UI-treeview.PUDD-COLOR-blue ul.group li.item.item_last a.anchor.active{background:#ffffff;border-radius:0px;font-weight:bold;color:#000000;}
+.sub_2dep_in.PUDD.PUDD-UI-treeview.PUDD-COLOR-blue ul.group li.item a.anchor.active{background:#ffffff;border-radius:0px;font-weight:bold;color:#058df5;}
+
+
+/**************************************************
+   progressBar
+**************************************************/
+/*팝업::패치관리사이트 그룹사업데이트 프로그레스바 */
+.PUDD.PUDD-UI-progress.PUDD-UI-linear.progress_style1 .progressBg{float:left;width:80%;}
+.PUDD.PUDD-UI-progress.PUDD-UI-linear.progress_style1 .percent{float:right;width:20%;}
+.PUDD.PUDD-UI-progress.PUDD-UI-linear.progress_style1 .percent span {font-size:12px;}
+
+.PUDD.PUDD-UI-progress.PUDD-UI-loading2 .textBox{font-weight:bold;}

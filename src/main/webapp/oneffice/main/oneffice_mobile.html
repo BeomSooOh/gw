@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="ko" ng-app="onefficeApp" class="ui-mobile">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="description" content="" />
+		<meta name="keywords" content="" />
+		<meta name="viewport" content="width=device-width, user-scalable=0, initial-scale=1.0 , maximum-scale=1.0 , minimum-scale=1.0 ,target-densitydpi=medium-dpi" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+		<script>
+			var pageLocation = "mobile_home";
+		</script>
+		<script language="javascript" src="../common/oneffice_loader.js?ver=2.3.2"></script>
+		<!--<link href="https://fonts.googleapis.com/css?family=Noto+Sans+KR&display=swap" rel="stylesheet">-->
+		<link rel="shortcut icon" type="image/x-icon" href="../mobile/images/ico/icon_oneffice_site.png" />
+		<script>
+			var totalStyleNumber = document.styleSheets.length;
+		</script>
+		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
+		<title>ONEFFICE MOBILE</title>
+		
+	</head>
+	
+	<body id="mainContainer" class="ui-mobile-viewport ui-overlay-a" ng-controller="ctrl_main" ng-init="initMain()" style="display: none; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;">
+		<div class="status_bar" style="display:none;"></div>
+		
+		<!-- oneffice home -->
+		<div id="one_home" src="'./mobile/m_one_home.html'" class="wrap" data-role="page" ng-controller="ctrl_home" ng-init="getBaseData()">
+			<header class="head" data-height="56" data-group="2" data-role="header" style="height: 56px; position: absolute; left: 0; right:0;">
+				<div class="left_div">
+					<a ng-if="viewMode=='folderView'" class="btn_back" ng-click="moveFolderFunc(parentFolderSeq)"></a>
+					<a ng-if="viewMode=='searchView'" class="btn_back" ng-click="changeSearchMode(false)"></a>
+					<a ng-if="viewMode=='mainView'" ng-click="sideMenu()" class="btn_menu"></a>
+					<a ng-if="viewMode=='selectView' || viewMode=='shereView' || viewMode=='moveView'" 	 ng-click="closeCurrentMode()" class="btn_can"></a>
+				</div>
+				
+				<h1 class="homeTitle" ng-if="viewMode=='mainView' || viewMode=='folderView'">{{currentFolderName}}</h1>
+				<h1 ng-if="viewMode=='selectView'">{{selectCount}}개 선택</h1>
+				<h1 ng-if="viewMode=='moveView'">{{copySelectItems.length}}개 {{bMove?'이동':'복사'}}</h1>
+				<h1 ng-if="viewMode=='shereView'">사용자 공유</h1>
+				
+				<div class="head_search Results" ng-if="viewMode=='searchView'">
+					<input id="input_doc" type="search" placeholder="검색어 입력" autofocus data-role="none"/>
+				</div>
+				
+				<div class="right_div" ng-if="viewMode!='searchView'">
+					<a ng-if="viewMode=='mainView' || viewMode=='folderView'"  ng-click ="changeSearchMode(true)" href="#n" class="btn_search"></a>
+					<a ng-if="viewMode=='mainView' || viewMode=='folderView'"  ng-class="{'btn_list':docViewMode , 'btn_win':!docViewMode}" class="btn_list" ng-click="changeFileViewMode()"></a>
+					<a ng-if="viewMode=='selectView'" class="btn_del" ng-click="showTrashDialog()"></a>
+					<a ng-if="viewMode=='selectView' && currentFolderType != 7" class="btn_move" ng-click="changeSelectMoveMode(true)"></a>
+					<a ng-if="viewMode=='selectView' && currentFolderType == 7" class="btn_restore" ng-click="showTrashDialog('restore')"></a>
+<!--			 		<a href="#n" class="btn_dustbin"></a>
+					<a href="#n" class="btn_check"></a>
+					<a href="#n" class="btn_send"></a>-->
+					<a ng-if="viewMode=='mainView' || viewMode=='folderView' || viewMode=='selectView'" class="btn_more" ng-click="moreBtnClick()"></a>
+					<a ng-if="viewMode=='moveView'" class="btn_check" ng-click="execCopyMoveCommand()"></a>
+				</div>
+			</header>
+			
+			<div class="refresh" style="width: 100%; height: 0px; max-height: 150px; position: absolute; top: 56px; z-index: 1; display: none; opacity: 0;">
+				<img src="../mobile/images/ico/icon_loading_oneffice.gif" style="width: 30px; height: 30px; position: relative; top: 70%; left: 50%; transform: translate(-50%, -100%);">
+				<div class="refresh_modal" style="opacity: 0;"></div>
+			</div>
+			
+			<article class="side">
+				<div class="side_top" data-height="124" data-role="header" data-group="5">
+					<div class="prof_ta">
+						<table cellpadding="0" celspacing="0">
+							<tr>
+								<th>
+									<div class="pic">
+										<img ng-src="{{myInfo.pic}}" alt="">
+									</div>
+								</th>
+								<td>
+									<p class="na">{{myInfo.name}}</p>
+									<p class="sosok">{{myInfo.comp_name}}</p>
+								</td>
+							</tr>
+						</table>
+					</div>
+					<a href="#n" class="btn_prof_setting" ng-click="settingBtnClick()"></a>
+				</div>
+				
+				<div class="side_con " id="idx_menu_iscroll"  data-group="2" style="position: absolute; top:124px; left: 0; right:0; z-index: 3;">
+					<ul style="width: 100%;">
+						<li>
+							<div class="m1" ng-click="getListsByType(0,'MY ONEFFICE')">
+								<div class="ico"></div>
+								<div class="txt">MY ONEFFICE</div>
+							</div>
+						</li>
+						<li>
+							<div class="m2" ng-click="getListsByType(1,'공유 문서함')">
+								<div class="ico"></div>
+								<div class="txt">공유 문서함</div>
+							</div>
+							<ul>
+								<li>
+									<div class="m2_1" ng-click="getListsByType(2,'공유한 문서')">
+										<div class="ico"></div>
+										<div class="txt">공유한 문서</div>
+									</div>
+								</li>
+								<li>
+									<div class="m2_2" ng-click="getListsByType(3,'공유받은 문서')">
+										<div class="ico"></div>
+										<div class="txt">공유받은 문서</div>
+									</div>
+								</li>
+							</ul>
+						</li>
+						<li>
+							<div class="m3" ng-click="getListsByType(4,'최근 문서함')">
+								<div class="ico"></div>
+								<div class="txt">최근 문서함</div>
+							</div>
+						</li>
+						<li>
+							<div class="m4" ng-click="getListsByType(5,'보안 문서함')">
+								<div class="ico"></div>
+								<div class="txt">보안 문서함</div>
+							</div>
+						</li>
+						<li>
+							<div class="m5" ng-click="getListsByType(6,'중요 문서함')">
+								<div class="ico"></div>
+								<div class="txt">중요 문서함</div>
+							</div>
+						</li>
+						<li>
+							<div class="m6" ng-click="getListsByType(7,'휴지통')">
+								<div class="ico"></div>
+								<div class="txt">휴지통</div>
+							</div>
+						</li>
+					</ul>
+				</div>
+			</article>
+			
+			<section class="con bg_gray" ng-class="{'list_view':!docViewMode}" id="idx_doc_iscroll"  data-height="*" data-role="content" data-group="3" style="position: absolute; top:56px; left: 0; right:0; z-index: 0">
+				<div class="con_in" style="padding-bottom: 56px; right:0;">
+					<!-- 빈데이터 화면 -->
+					
+					<!-- 검색결과 -->
+					<div class="location" ng-if="viewMode=='searchView' && (fileCnt + folderCnt)>0">
+						<ul>
+							<li>검색결과 <span class='search_highlight'>{{fileCnt + folderCnt}}</span></li>
+						</ul>
+						<p class="btn"><a href="#n" class="btn_list" ng-class="{'btn_list':docViewMode, 'btn_win':!docViewMode}" ng-click="changeFileViewMode()"></a><a href="#n" class="btn_more" ng-click="moreBtnClick()"></a></p>
+					</div>
+					
+					<div id="searchResult_nothing" style="margin-top: 100px;" ng-if="viewMode === 'searchView'">
+						<div class="nodata">
+							<span class="bg"></span>
+						</div>
+						<div  style="margin-top:10px; text-align: center; color: #666">{{searchComment}}</div>
+					</div>
+					
+					<div class="template_doc">
+						<p class="tit"><span>문서양식</span></p>
+						<div id="id_template_doc_scroll" class="template_list">
+							<ul style="width: 100%; display: -webkit-box;">
+								<li ng-repeat="template in arrTemplate" style="visibility: hidden;">
+									<div class="thumb" ng-click="createTemplateFile(template)">
+										<img src="{{template.image}}">
+									</div>
+									<div style="text-align: center; margin-top: 10px;"><p>{{template.name}}</p></div>
+								</li>
+							</ul>
+						</div>
+					</div>
+					
+					<div class="location" ng-if="(viewMode=='folderView' || viewMode=='moveView' || (currentFolderType === 0 && currentFolderSeq !== '' && viewMode=='selectView')) && viewMode!='searchView'">
+						<div id="idx_location_iscroll" class="location_iscroll">
+							<ul>
+								<li ng-repeat="folder in folderPathList" ng-click="getDataLoadDocumnet(currentFolderType,folder[0])">{{folder[1]}}</li>
+							</ul>
+						</div>
+						<p class="btn" style="display:none;"><a class="btn_more" ng-if="viewMode!='selectView'" ng-click="moreBtnClick(doc)"></a></p>
+					</div>
+					
+					<div class="my_doc">
+						<p class="tit" ng-if="(viewMode === 'mainView' || (currentFolderType === 0 && currentFolderSeq === '' && viewMode === 'selectView')) && currentFolderType==0">MY ONEFFICE</p>
+						<p class="tit ownsearch" ng-if="(viewMode=='searchView')">MY ONEFFICE<span class='search_highlight'></span><a ng-click="searchMoreBtnClick(0)" class="search_more"></a></p>
+						<p class="tit folder" ng-if="(!docViewMode || viewMode=='folderView' || (currentFolderType === 0 && currentFolderSeq !== '' && viewMode=='selectView') || currentFolderType!=0) && folderCnt>0 && (viewMode!='searchView')">폴더</p>
+						<div class="my_list" style="height:auto;">
+							<div ng-repeat="doc in resultDataList | orderBy:sortAline+sortOption" on-long-press="itemOnLongPress(doc)" ng-click="fileSelectionEvent(doc)">
+								<div class="folder_div" ng-class="{'select_on':viewMode == 'selectView', 'copy_on':doc.docData.bTemp}" ng-if="doc.fileType==0">
+									<div class="folder_div_in" ng-class="{'on':doc.docData.bChecked}">
+										<table cellpadding="0" cellspacing="0">
+											<colgroup>
+												<col width="44"/>
+												<col width=""/>
+												<col width="28"/>
+											</colgroup>
+											<tr>
+												<td ng-click="moveFolderFunc(doc.seq)">
+													<div class="ico_folder" ng-class="{'bookmarked': doc.docData.bStar == 1}"></div>
+													<div class="check_div"  ng-class="{'on':doc.docData.bChecked}"></div>
+												</td>
+												<td ng-click="moveFolderFunc(doc.seq)" style="position: relative;"><p class="txt">{{doc.sortTitle}}</p></td>
+			 										<!--<td ng-click="moveFolderFunc(doc.seq)"><p class="txt">{{doc.docData.strTitle}}</p></td>-->
+												<td>
+													<div ng-click="moreBtnClick(doc)" class="ico_more" ng-if="viewMode !== 'selectView' && viewMode !== 'moveView'"></div>
+												</td>
+											</tr>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+						
+						<p class="tit doc" ng-if="(!docViewMode || viewMode=='folderView' || (currentFolderType === 0 && currentFolderSeq !== '' && viewMode === 'selectView') || currentFolderType!=0) && fileCnt>0 && (viewMode!='searchView')">문서</p>
+						<div class="my_list" style="height:auto; margin-top: 10px;">
+							<div ng-repeat="doc in resultDataList | filter:filterDocFile  | orderBy:sortAline+sortOption track by $index" on-long-press="itemOnLongPress(doc)" ng-click="fileSelectionEvent(doc)">
+								<div class="doc_div " ng-class="{'select_on':viewMode == 'selectView', 'copy_on':doc.docData.bTemp}"  ng-if="$index<maxView" ng-click="openDocument(doc)" style="visibility: hidden;">
+									<div class="preview">
+										<div style="margin-top:10px;">
+											<img ng-src="{{getThumnailImg(doc)}}" alt="">
+										</div>
+									</div>
+									<a ng-click="moreBtnClick(doc)" class="btn_more" ng-if="viewMode !== 'selectView' && viewMode !== 'moveView'"></a>
+									<div class="doc_btm" ng-class="{'on':doc.docData.bChecked}">
+										<p class="txt">{{doc.docData.strTitle}}</p>
+										<div class="dat_cond">
+											<span class="dat" ng-if="sortOption!='sortOwner'">{{doc.docData.dateModifiedDate | date:doc.docData.diffModifiedDate==1?'hh:mm':'yyyy.MM.dd'}}</span>
+											<span class="name" ng-if="sortOption=='sortOwner'">{{doc.userData.strOwnerName}}</span>
+											<div class="condi_div">
+												<ul>
+													<li ng-if="doc.nShareCount>0"><div ng-class="{'m_human_in':doc.shareInOut == 'in','m_human_out':doc.shareInOut == 'out'}" ></div></li>
+													<li ng-if="doc.docData.bStar == 1 && doc.shareInOut !== 'in'"><div class="m_star"></div></li>
+													<li ng-if="doc.docData.bSecurity==1"><div class="m_rock"></div></li>
+													<li ng-if="doc.docData.bViewer==1"><div class="m_eyes"></div></li>
+													<li ng-if="reloadComment" ng-init="updateCommentCount(doc)" ng-style="commentCountVisible(doc)"><div class="m_comment"></div></li>
+												</ul>
+											</div>
+										</div>
+									</div>
+									<div class="check_div" ng-class="{'on':doc.docData.bChecked}"></div>
+								</div>
+							</div>
+						</div>
+						<p class="tit shareoutsearch" ng-if="(viewMode=='searchView')">공유한 문서<span class='search_highlight'></span><a ng-click="searchMoreBtnClick(1)" class="search_more"></a></p>
+						<div class="my_list" ng-if="(viewMode=='searchView')" style="height:auto;">
+							<div ng-repeat="doc in resultShareOutList | orderBy:sortAline+sortOption" on-long-press="itemOnLongPress(doc)" ng-click="fileSelectionEvent(doc)">
+								<div class="folder_div" ng-class="{'select_on':viewMode == 'selectView', 'copy_on':doc.docData.bTemp}" ng-if="doc.fileType==0">
+									<div class="folder_div_in" ng-class="{'on':doc.docData.bChecked}">
+										<table cellpadding="0" cellspacing="0">
+											<colgroup>
+												<col width="44"/>
+												<col width=""/>
+												<col width="28"/>
+											</colgroup>
+											<tr>
+												<td ng-click="moveFolderFunc(doc.seq)">
+													<div class="ico_folder"></div>
+													<div class="check_div"  ng-class="{'on':doc.docData.bChecked}"></div>
+												</td>
+												<td ng-click="moveFolderFunc(doc.seq)"><p class="txt">{{doc.sortTitle}}</p></td>
+												<td>
+													<div ng-if="doc.docData.bStar==1" class="ico_book"></div>
+												</td>
+												<td>
+													<div ng-click="moreBtnClick(doc)" class="ico_more" ng-if="viewMode !== 'selectView' && viewMode !== 'moveView'"></div>
+												</td>
+											</tr>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+						
+						<div class="my_list" ng-if="(viewMode=='searchView')" style="height:auto; margin-top: 10px;">
+							<div ng-repeat="doc in resultShareOutList | orderBy:sortAline+sortOption" on-long-press="itemOnLongPress(doc)" ng-click="fileSelectionEvent(doc)">
+								<div class="doc_div " ng-class="{'select_on':viewMode == 'selectView', 'copy_on':doc.docData.bTemp}"  ng-if="doc.fileType==1" ng-click="openDocument(doc)">
+									<div class="preview">
+										<div style="margin-top:10px;">
+<!-- 											<img ng-src="{{doc.docData.imageThumbnail}}" alt=""> -->
+											<img ng-src="{{getThumnailImg(doc)}}" alt="">
+										</div>
+									</div>
+									<a ng-click="moreBtnClick(doc)" class="btn_more" ng-if="viewMode !== 'selectView' && viewMode !== 'moveView'"></a>
+									<div class="doc_btm" ng-class="{'on':doc.docData.bChecked}">
+										<p class="txt">{{doc.docData.strTitle}}</p>
+										<div class="dat_cond">
+											<span class="dat" ng-if="sortOption!='sortOwner'">{{doc.docData.dateModifiedDate | date:doc.docData.diffModifiedDate==1?'hh:mm':'yyyy.MM.dd'}}</span>
+											<span class="name" ng-if="sortOption=='sortOwner'">{{doc.userData.strOwnerName}}</span>
+											<div class="condi_div">
+												<ul>
+													<li ng-if="doc.nShareCount>0"><div class="m_human_out"></div></li>
+													<li ng-if="doc.docData.bStar==1"><div class="m_star"></div></li>
+													<li ng-if="doc.docData.bSecurity==1"><div class="m_rock"></div></li>
+													<li ng-if="doc.docData.bViewer==1"><div class="m_eyes"></div></li>
+													<li ng-if="reloadComment" ng-init="updateCommentCount(doc)" ng-style="commentCountVisible(doc)"><div class="m_comment"></div></li>
+<!-- 													<li ng-if="doc.nCommentCounts > 0"><div class="m_comment"></div></li> -->
+												</ul>
+											</div>
+										</div>
+									</div>
+									<div class="check_div" ng-class="{'on':doc.docData.bChecked}"></div>
+								</div>
+							</div>
+						</div>
+						
+						<p class="tit shareinsearch" ng-if="(viewMode=='searchView')">공유받은 문서<span class='search_highlight'></span><a ng-click="searchMoreBtnClick(2)" class="search_more"></a></p>
+						<div class="my_list" ng-if="(viewMode=='searchView')" style="height:auto;">
+							<div ng-repeat="doc in resultShareInList | orderBy:sortAline+sortOption" on-long-press="itemOnLongPress(doc)" ng-click="fileSelectionEvent(doc)">
+								<div class="folder_div" ng-class="{'select_on':viewMode == 'selectView', 'copy_on':doc.docData.bTemp}" ng-if="doc.fileType==0">
+									<div class="folder_div_in" ng-class="{'on':doc.docData.bChecked}">
+										<table cellpadding="0" cellspacing="0">
+											<colgroup>
+												<col width="44"/>
+												<col width=""/>
+												<col width="28"/>
+											</colgroup>
+											<tr>
+												<td ng-click="moveFolderFunc(doc.seq)">
+													<div class="ico_folder"></div>
+													<div class="check_div"  ng-class="{'on':doc.docData.bChecked}"></div>
+												</td>
+												<td ng-click="moveFolderFunc(doc.seq)"><p class="txt">{{doc.sortTitle}}</p></td>
+												<td>
+													<div ng-click="moreBtnClick(doc)" class="ico_more" ng-if="viewMode !== 'selectView' && viewMode !== 'moveView'"></div>
+												</td>
+											</tr>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+						
+						<div class="my_list" ng-if="(viewMode=='searchView')" style="height:auto; margin-top: 10px;">
+							<div ng-repeat="doc in resultShareInList | orderBy:sortAline+sortOption" on-long-press="itemOnLongPress(doc)" ng-click="fileSelectionEvent(doc)">
+								<div class="doc_div " ng-class="{'select_on':viewMode == 'selectView', 'copy_on':doc.docData.bTemp}"  ng-if="doc.fileType==1" ng-click="openDocument(doc)">
+									<div class="preview">
+										<div style="margin-top:10px;">
+<!-- 											<img ng-src="{{doc.docData.imageThumbnail}}" alt=""> -->
+											<img ng-src="{{getThumnailImg(doc)}}" alt="">
+										</div>
+									</div>
+									<a ng-click="moreBtnClick(doc)" class="btn_more" ng-if="viewMode !== 'selectView' && viewMode !== 'moveView'"></a>
+									<div class="doc_btm" ng-class="{'on':doc.docData.bChecked}">
+										<p class="txt">{{doc.docData.strTitle}}</p>
+										<div class="dat_cond">
+											<span class="dat" ng-if="sortOption!='sortOwner'">{{doc.docData.dateModifiedDate | date:doc.docData.diffModifiedDate==1?'hh:mm':'yyyy.MM.dd'}}</span>
+											<span class="name" ng-if="sortOption=='sortOwner'">{{doc.userData.strOwnerName}}</span>
+											<div class="condi_div">
+												<ul>
+													<li ng-if="doc.nShareCount>0"><div class="m_human_in"></div></li>
+													<li ng-if="doc.docData.bSecurity==1"><div class="m_rock"></div></li>
+													<li ng-if="doc.docData.bViewer==1"><div class="m_eyes"></div></li>
+<!-- 													<li ng-if="doc.nCommentCounts > 0"><div class="m_comment"></div></li> -->
+													<li ng-if="reloadComment" ng-init="updateCommentCount(doc)" ng-style="commentCountVisible(doc)"><div class="m_comment"></div></li>
+												</ul>
+											</div>
+										</div>
+									</div>
+									<div class="check_div" ng-class="{'on':doc.docData.bChecked}"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div> <!-- //con_in -->
+			</section>
+			
+			<div id="id_actionsheet_scroll" class="action_div" data-height="*"> <!--  btn_more 클릭시 슬라이드  -->
+				<div class="menu_container">
+					<div class="ac m_cancel">
+						<dl>
+							<dt>선택 항목 취소</dt>
+						</dl>
+					</div>
+					<div class="ac m_share">
+						<dl>
+							<dt>공유</dt>
+							<dd>꺼짐<span class="arr"></span></dd>
+						</dl>
+					</div>
+					<div class="ac m_move">
+						<dl>
+							<dt>이동</dt>
+						</dl>
+					</div>
+					<div class="ac m_copy">
+						<dl>
+							<dt>복사</dt>
+						</dl>
+					</div>
+					<div class="ac m_del line_btm">
+						<dl>
+							<dt>삭제</dt>
+						</dl>
+					</div>
+					<div class="ac m_book toggleBtn">
+						<dl>
+							<dt>중요표시</dt>
+							<dd class="">
+								<div class="toggleBG">
+									<input type="button" class="toggleFG"/>
+								</div>
+							</dd>
+						</dl>
+					</div>
+					<div class="ac m_modi">
+						<dl>
+							<dt>이름바꾸기</dt>
+						</dl>
+					</div>
+					<div class="ac m_secu">
+						<dl>
+							<dt>문서 보안</dt>
+							<dd>꺼짐<span class="arr"></span></dd>
+						</dl>
+					</div>
+					<div class="ac m_read toggleBtn">
+						<dl>
+							<dt>읽기전용 설정</dt>
+							<dd class="">
+								<div class="toggleBG">
+									<input type="button" class="toggleFG"/>
+								</div>
+							</dd>
+						</dl>
+					</div>
+					<div class="ac m_docInfo">
+						<dl>
+							<dt>문서정보</dt>
+						</dl>
+					</div>
+				</div>
+			</div>
+			
+			<div id="home_quick" class="quick_menu" ng-class="{'off':viewMode=='selectView'}">
+				<div class="quick_in" >
+					<div class="main_menu" >
+						<div class="ico"></div>
+					</div>
+					<div class="folder_menu third_floor" style="opacity:0;" ng-class="{'single_menu': currentFolderType === 4 || viewMode === 'moveView'}">
+						<div class="text" style="display: none;"><span>새 폴더</span></div>
+						<div class="ico"  ng-click="showInputDialog('newFolder')"></div>
+					</div>
+					<div class="docu_menu second_floor" style="opacity:0;" ng-if="currentFolderType !== 4 && viewMode !== 'moveView'">
+						<div class="text" style="display: none;"><span>새 문서</span></div>
+						<div class="ico"  ng-click="createNewFile()"></div>
+					</div>
+					<div class="form_menu first_floor" style="opacity:0;" ng-if="currentFolderType !== 4 && viewMode !== 'moveView'">
+						<div class="text" style="display: none;"><span>문서양식</span></div>
+						<div class="ico" ng-click="showTemplate()"></div>
+					</div>
+				</div>
+				
+				<div class="quick_modal"></div>
+			</div>
+			
+			<div class="modal"></div>
+			<div class="cancelmodal" ng-click="clearAllCheckItem()"></div>
+		</div>
+		
+		<!-- viewer -->
+		<div id="one_viewer" class="wrap" data-role="page" ng-controller="ctrl_viewer" ng-init="initViewer()" ng-if="bViewerPageLoad">
+		
+			<header id="viewer_header" class="head" data-height="56" data-group="1" data-role="header">
+				<div class="left_div">
+					<a class="btn_back" ng-click="cancelViewing()"></a>
+					<a ng-if="viewerMode=='editorMode'" class="btn_save" ng-click="saveProc()"></a>
+				</div>
+				
+				<h1 class="homeTitle" >{{currentFileName}}</h1>
+				
+				<div class="right_div">
+					<a ng-if="viewerMode=='editorMode'" class="btn_undo" ng-click="undoProc()"></a>
+					<a ng-if="viewerMode=='editorMode'" class="btn_redo" ng-click="redoProc()"></a> 
+					<a ng-if="viewerMode=='editorMode'" class="btn_insert" ng-click="insertProc()"></a>
+					<a ng-if="viewerMode=='viewerMode'" class="btn_share" ng-click="sideRightMenu('share')"></a>
+					<a ng-if="viewerMode=='viewerMode'" class="btn_comment" ng-click="menuFunc_getComment()"><div class="countBg" ng-if="CommentCount>0">{{CommentCount}}</div></a> 
+					<a class="btn_more" ng-click="sideRightMenu()"></a>
+				</div>
+			</header>
+			
+			<article class="side_right">
+				<div class="side_top" data-height="56" data-role="header" data-group="5" style="height:55px; border-bottom: 1px solid lightgray;" >
+					<div class="prof_ta" style="margin-top: 20px;">
+						<div class="doc_title" style="display: inline-block;">
+							<p class="na" style="margin-top: 0; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">{{currentFileName}}</p>
+						</div>
+						<div class="toggle_star" ng-click="menuFunc_Favorite()"></div>
+						<div class="rename" ng-click="menuFunc_Rename()"></div>
+					</div>
+				</div>
+				
+				<div class="side_con " id="idx_viewer_menu_iscroll"  data-group="2" data-height="*" style="position: absolute; top:56px; left: 0; right:0; z-index: 3; background: #fff;">
+					<ul id="side_menu_list" style="width: 100%;">
+						<li>
+							<div class="r1 on" ng-click="menuFunc_Connect()">
+								<div class="ico"></div>
+								<div class="text">원피스 커넥트</div>
+								<dd><span class="arr"></span></dd>
+							</div>
+						</li>
+						<li>
+							<div class="r2 on" ng-click="menuFunc_Report()">
+								<div class="ico"></div>
+								<div class="text">업무보고</div>
+								<dd><span class="arr"></span></dd>
+							</div>
+						</li>
+						<li>
+							<div class="r3 off" ng-click="menuFunc_getComment()">
+								<div class="ico"></div>
+								<div class="text">문서댓글</div>
+								<dd class="commentCountDiv" ng-if="CommentCount>0"><div id="comment_status">{{CommentCount}}</div></dd>
+							</div>
+						</li>
+						<li>
+							<div class="r4 on" ng-click="menuFunc_Copy()">
+								<div class="ico"></div>
+								<div class="text">사본 만들기</div>
+							</div>
+						</li>
+						<li>
+							<div class="r5 on" ng-click="menuFunc_Security()">
+								<div class="ico"></div>
+								<div class="text">문서보안 설정</div>
+							</div>
+						</li>
+						<li>
+							<div class="r6 on" ng-click="menuFunc_SlideShow()">
+								<div class="ico"></div>
+								<div class="text">슬라이드 쇼</div>
+							</div>
+						</li>
+						<li>
+							<div class="r7 off" ng-click="menuFunc_Back()">
+								<div class="ico"></div>
+								<div class="text">뒤로가기</div>
+							</div>
+						</li>
+						<li>
+							<div class="r8 toggleBtn off" ng-click="menuFunc_LinkShare()">
+								<div class="ico"></div>
+								<div class="text">링크 공유</div>
+								<dd id="viewer_share_btn" class="">
+									<div class="toggleBG" style="background:#fff; border:1px solid #e5e5e5;">
+										<input type="button" class="toggleFG" style="left:0px;" />
+									</div>
+								</dd>
+							</div>
+						</li>
+						<li>
+							<div class="r9 off" ng-click="menuFunc_LinkShareView()">
+								<div class="ico"></div>
+								<div class="text">보기 가능</div>
+								<chk><span ></span></chk>
+							</div>
+						</li>
+						<li>
+							<div class="r10 off" ng-click="menuFunc_LinkShareEdit()" style="border-bottom: 1px solid #ddd;">
+								<div class="ico"></div>
+								<div class="text">편집 가능</div>
+								<chk><span ></span></chk>
+							</div>
+						</li>
+						<li>
+							<div class="r11 off" ng-click="menuFunc_UserShare()">
+								<div class="ico"></div>
+								<div class="text">사용자 공유</div>
+								<dd id="viewer_usershare_status">꺼짐<span class="arr"></span></dd>
+							</div>
+						</li>
+						<li>
+							<div class="r12 off" ng-click="menuFunc_Unshare()">
+								<div class="ico"></div>
+								<div class="text">공유 해제</div>
+							</div>
+						</li>
+						<li>
+							<div class="r13 off" ng-click="menuFunc_LinkCopy()">
+								<div class="ico"></div>
+								<div class="text">링크 복사</div>
+							</div>
+						</li>
+						<li>
+							<div class="r14 off" ng-click="menuFunc_sendReport()">
+								<div class="ico"></div>
+								<div class="text">업무보고 보내기</div>
+							</div>
+						</li>
+						<li>
+							<div class="r15 off" ng-click="menuFunc_getReport()">
+								<div class="ico"></div>
+								<div class="text">업무보고 가져오기</div>
+							</div>
+						</li>
+					
+						<li>
+							<div class="r16 off" ng-click="menuFunc_getDocinfo()">
+								<div class="ico"></div>
+								<div class="text">문서정보</div>
+							</div>
+						</li>
+<!-- 						<li> -->
+<!-- 							<div class="r17 off" ng-click="menuFunc_getDocPrint()"> -->
+<!-- 								<div class="ico"></div> -->
+<!-- 								<div class="text">인쇄</div> -->
+<!-- 							</div> -->
+<!-- 						</li> -->
+					</ul>
+				</div>
+			</article>
+			
+			<section id="viewer_section" class="con">
+				<div id="viewerFrameContainer" style="position:fixed; left:0; width:100%; height:calc(100% - 56px); overflow: auto; -webkit-overflow-scrolling:touch;">
+<!-- 					<div id="viewerFrame" class="vieweditContainer " style="width:100%; height: 100%; overflow: auto; background:#F6F7F9; transform-origin: left top;"  ng-controller="ctrl_viewerFrame" ng-init="initViewerFrame()" ng-if="!bEditMode"></div> -->
+					<iframe id="dzeditor_0" class="editorContainer vieweditContainer" style="width:100%; height: 100%; overflow: auto; background:#F6F7F9; border: none;"  ng-controller="ctrl_editorFrame" ng-init="initEditorFrame()"></iframe>
+				</div>
+			</section>
+			<div class="topInfoContainer">
+				<div class="topInfoTxt"></div>
+				<img src="../mobile/images/btn/btn-cancel.png" ng-click="closeTopInfo()">
+			</div>
+			<div class="view_modal"></div>
+			<div class="ico_topScroll" ng-click="setScrollTopEditor()"></div>
+			<div id="id_insertsheet_container" class="action_div border_line"> <!--  btn_insert 클릭시 슬라이드  -->
+				<div class="insert_title_container">
+					<div style="height: 44px; text-align: center">
+						<ld><span class="arr_left" style="display: none;"></span></ld>
+						<dl>
+							<dt id="id_insertsheet_title">삽입</dt>
+						</dl>
+					</div>
+				</div>
+				<div id="id_insertsheet_scroll" data-height="*" style="position: relative;">
+					<div class="menu_container">
+						<div class="ac i_image">
+							<dl>
+								<dt>이미지</dt>
+							</dl>
+						</div>
+						<div class="ac i_table">
+							<dl>
+								<dt>표</dt>
+							</dl>
+						</div>
+						<div class="ac i_layout">
+							<dl>
+								<dt>레이아웃 템플릿</dt>
+							</dl>
+						</div>
+						<div class="ac i_emoticon">
+							<dl>
+								<dt>이모티콘</dt>
+							</dl>
+						</div>
+						<div class="ac i_hr_line">
+							<dl>
+								<dt>가로줄</dt>
+							</dl>
+						</div>
+						<div class="ac i_page_break">
+							<dl>
+								<dt>페이지 나누기</dt>
+							</dl>
+						</div>
+						<div class="ac i_qrcode">
+							<dl>
+								<dt>QR코드</dt>
+							</dl>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div id="viewer_quick" class="quick_menu">
+				<div class="quick_in">
+					<qDiv class="main_menu">
+						<div class="ico_write" ng-click="changeEditorMode()"></div>
+					</qDiv>
+				</div>
+			</div>
+			<div id="dzeditor_Parent_9999" class="dze_hiddenframe_container" style="display: none;">
+				<iframe id="dzeditor_9999"></iframe>
+			</div>
+		
+		</div>
+		
+		<!-- security setting -->
+		<div id="one_scty" class="wrap" data-role="page" ng-controller="ctrl_scty" ng-init="initScty() " ng-if="currentViewPage == 'one_scty'">
+			<header class="head" data-height="56" data-role="header" style="height: 56px; z-index: 1">
+				<div class="left_div">
+					<a class="btn_can" ng-click="cancelSetting()"></a>
+				</div>
+				
+				<h1 ng-if="nSettingType==1">문서 보안</h1>
+				<h1 ng-if="nSettingType!=1">암호 변경/해제</h1>
+				
+				<div class="right_div">
+					<a class="btn_check" ng-click="setPassword()"></a>
+				</div>
+			</header>
+			
+			<section class="con passwordCon" data-iscroll="" data-height="*" data-role="content">
+				<div class="con_in">
+					<div class="check ui-field-contain" data-role="fieldcontain">
+						<fieldset data-role="controlgroup">
+							<label for="radio-choice-1">암호 변경</label>
+							<input type="radio" name="radio_group" id="radio-choice-1" value="" >
+							<label for="radio-choice-2">암호 해제</label>
+							<input type="radio" name="radio_group" id="radio-choice-2" value="" >
+						</fieldset>
+					</div>
+					<div class="password_input">
+						<div class="cl pt40 current">
+							<p class="tit">현재 암호</p>
+							<div class="input">
+								<input type="password" data-clear-btn="true">
+							</div>
+						</div>
+						
+						<div class="pt20 new">
+							<p class="tit">새 암호</p>
+							<div class="input">
+								<input type="password" data-clear-btn="true">
+							</div>
+						</div>
+						
+						<div class="pt20 confirm">
+							<p class="tit">새 암호 확인</p>
+							<div class="input">
+								<input type="password" data-clear-btn="true">
+							</div>
+						</div>
+					</div>
+					<span class="text">주의 : 암호를 잊으면 문서를 복구할 수 없습니다.<br>암호는 대소문자를 구분하며, 4자 이상 20자 이하로 입력 가능 합니다.</span>
+				</div>
+			</section>
+		</div>
+		
+		<!-- share -->
+		<div id="one_share" class="wrap" data-role="page" ng-controller="ctrl_share" ng-init="initShare()"  ng-if="currentViewPage == 'one_share'">
+			<header class="head" data-height="56" data-role="header" style="height: 56px; z-index: 1">
+				<div class="left_div">
+					<a class="btn_can" ng-if="bShareSetting === true" ng-click="cancelSetting()"></a>
+					<a class="btn_shareinfo" ng-if="bShareSetting === false"></a>
+				</div>
+				
+				<h1 ng-if="bShareSetting === true">사용자 공유</h1>
+				<h1 ng-if="bShareSetting === false">공유 중인 사용자</h1>
+				
+				<div class="right_div">
+					<a class="btn_send" ng-if="bShareSetting === true" ng-class="{disabled: selectList.length === 0}" ng-click="share()"></a>
+					<a class="btn_can" ng-if="bShareSetting === false" ng-click="cancelSetting()"></a>
+				</div>
+			</header>
+			
+			<div class="userSearch" ng-show="bShareSetting === true" data-height="64" data-role="header" role="banner" style="height: 62px; margin-bottom: 3px; border-bottom: 2px solid #596677; overflow: hidden;">
+				<div id="id_select_scroll" class="searchbox" style="display: inline-block">
+					<div class="searchField" style="min-width: 100%;">
+						<!-- 선택모드 -->
+						<!-- class명 : 사원=>bg01~bg05 / 그룹=>group bg01~bg05 -->
+						<div class="selectField loading" ng-repeat="user in selectList" ng-click="checkUser($event)">
+							<span class="pic picbg">
+								<img src="../mobile/images/btn/btn-cancel.png" class="del" style="display: none" ng-click="deleteUser(user)"/>
+								<img src="{{user.pic}}" class="pic" alt=""/>
+							</span>
+							<span class="text">{{user.name}}</span>
+						</div>
+						
+						<!-- 작성모드 -->
+						<div class="writeField" style="min-width: 165px;">
+							<input type="search" placeholder="공유할 사용자 검색" data-role="none" ng-model="name" ng-change="searchUser(name)" style="width: 100%;">
+						</div>
+					</div>
+				</div>
+				
+				<!-- 조직도 버튼 -->
+				<p class="btnOrg" ng-click="selectUserInOrgTree()"></p>
+			</div>
+			
+			<section id="id_body_scroll" class="con userShare" ng-show="bShareSetting === true" data-height="*" data-role="content" style="position: relative; top:0px; left: 0; right:0; z-index: 0;">
+				<div class="con_in" style="width: 100%;">
+					<!-- 사용자 목록 -->
+					<div id="id_searchlist_scroll" class="listUser" data-height="*">
+						<table width="100%" cellpadding="0" cellspacing="0">
+							<colgroup>
+								<col width="68">
+								<col width="">
+							</colgroup>
+							
+							<tbody>
+								<tr ng-repeat="user in searchList" ng-click="selectUser(user)">
+									<td class="pic"><img src="{{user.pic}}" alt=""></td>
+									<td>
+										<dl>
+											<dt ng-bind-html="user.em_name"></dt>	<!-- 이름 -->
+											<dd>{{user.path}}</dd>					<!-- 부서 -->
+										</dl>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					
+					<!-- 빈 데이터 화면 -->
+					<div class="nodata" ng-show="selectList.length === 0 && arrViewer.length === 0 && arrEditor.length === 0">
+						<span class="bg"></span>
+					</div>
+					
+					<!-- 권한설정, 메세지입력 -->
+					<div class="authority" ng-show="selectList.length > 0">
+						<dl class="set">
+							<dt>권한설정</dt>
+							<dd>
+								<ul>
+									<li class="checkbg on" perm="R">
+										<span class="check on"></span>
+										<span class="img icon-read"></span>
+									</li>
+									<li class="pt8">보기기능</li>
+								</ul>
+								<ul>
+									<li class="checkbg" perm="W">
+										<span class="check"></span>
+										<span class="img icon-modify"></span>
+									</li>
+									<li class="pt8">편집기능</li>
+								</ul>
+							</dd>
+						</dl>
+						
+						<dl class="message">
+							<dt>메시지</dt>
+							<dd>
+								<ul>
+									<li class="checkbg on" msg_type="1">
+										<span class="check on"></span>
+										<span class="img icon-msg"></span>
+									</li>
+									<li class="pt8">쪽지</li>
+								</ul>
+								<ul>
+									<li class="checkbg" msg_type="2">
+										<span class="check"></span>
+										<span class="img icon-mail"></span>
+									</li>
+									<li class="pt8">메일</li>
+								</ul>
+								<ul style="margin: 0px;">
+									<li class="checkbg" msg_type="0">
+										<span class="check"></span>
+										<span class="img icon-msgnone"></span>
+									</li>
+									<li class="pt8">메시지없음</li>
+								</ul>
+							</dd>
+						</dl>
+						
+						<!-- 메시지 보내기 -->
+						<textarea class="messageSend" placeholder="메시지를 작성하세요"></textarea>
+					</div>
+					
+					<!-- 공유중인 사용자 -->
+					<div class="editShare" ng-class="{line: selectList.length > 0 && (arrViewer.length > 0 || arrEditor.length > 0)}">
+						<div ng-show="arrViewer.length > 0 || arrEditor.length > 0" style="padding-bottom: 25px;">
+							<h2>공유중인 사용자</h2>
+							<dl>
+								<dt>
+									<p class="set"><span class="img icon-read"></span></p>
+									<p class="text">보기가능</p>
+								</dt>
+								<dd>
+									<div id="id_viewer_scroll" data-width="*">
+											<ul>
+												<li class="viewer" ng-repeat="user in arrViewer" on-long-press="onLongPress(user, $event)" ng-mouseup="release($event)">
+													<div class="userBox">
+														<p class="pic"><img src="{{user.pic}}" alt=""></p>
+														<p class="del" share_type="{{user.type}}" share_id="{{user.id}}">
+															<img src="../mobile/images/btn/btn-del-none.png">
+														</p>
+														<p class="text">{{user.name}}</p>
+													</div>
+												</li>
+											</ul>
+									</div>
+								</dd>
+							</dl>
+							
+							<dl>
+								<dt>
+									<p class="set"><span class="img icon-modify"></span></p>
+									<p class="text">편집가능</p>
+								</dt>
+								<dd>
+									<div id="id_editor_scroll">
+										<div>
+											<ul>
+												<li class="editor" ng-repeat="user in arrEditor" on-long-press="onLongPress(user, $event)" ng-mouseup="release($event)">
+													<div class="userBox">
+														<p class="pic"><img src="{{user.pic}}" alt=""></p>
+														<p class="del" share_type="{{user.type}}" share_id="{{user.id}}">
+															<img src="../mobile/images/btn/btn-del-none.png">
+														</p>
+														<p class="text">{{user.name}}</p>
+													</div>
+												</li>
+											</ul>
+										</div>
+									</div>
+								</dd>
+							</dl>
+						</div>
+					</div>
+				</div>
+				
+				<div class="cancelmodal" style="position: absolute; top: 3px; z-index: 10;" ng-click="clearSearchList()"></div>
+			</section>
+			
+			<section id="id_sharelist_scroll" class="con" ng-show="bShareSetting === false" data-height="*" data-role="content" style="position: relative; top:0px; left: 0; right:0; z-index: 0;">
+				<div class="con_in" style="width: 100%;">
+					<!-- 오픈링크 상태 -->
+					<div ng-show="bOpenLink === true" style="width: calc(100% - 32px); height: 60px; padding: 0px 16px; border-top: 1px solid #DADADA;">
+						<div style="position: relative; top: 50%; transform: translateY(-50%);">
+							<img src="../mobile/images/ico/icon-linkage.png" style="width: 26px; height: 26px; border-radius: 19px; border: none; padding: 6px;">
+							<div style="display: inline-block; margin-left: 12px;">
+								<span style="font-size: 18px; letter-spacing: -0.8px; color: #000000; text-align: left;">오픈링크(모든 사용자 접근가능)</span>
+							</div>
+						</div>
+					</div>
+					
+					<div class="separator" ng-class="{'thick': (bOpenLink === true && arrShareUserList.length > 0)}"></div>
+					
+					<!-- 공유 사용자 목록 -->
+					<div class="shareList">
+						<ul>
+							<li ng-repeat="user in arrShareUserList">
+								<div class="info">
+									<img src="{{user.pic}}" alt="">
+									<div>
+										<span >{{user.name}} {{user.rank}}</span>		<!-- 이름 -->
+										<!--<span>{{user.path}}</span>					 부서 -->
+									</div>
+								</div>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</section>
+			
+			<div class="modal" style="position: absolute; z-index: 10; background: #00000070; background-image: url(../mobile/images/ico/icon_loading_oneffice_2.gif); background-repeat: no-repeat; background-position: center center;"></div>
+		
+		</div>
+		
+		<!-- template -->
+		<div id="one_template" class="wrap" data-role="page" ng-controller="ctrl_template" ng-init="initTemplate()" ng-if="currentViewPage == 'one_template'">
+			<header class="head" data-height="56" data-role="header" style="height: 56px; z-index: 1">
+				<div class="left_div">
+					<a class="btn_can" ng-click="cancel()"></a>
+				</div>
+				
+				<h1>문서 양식</h1>
+				
+				<div class="right_div">
+					<a class="btn_check" ng-click="confirm()"></a>
+				</div>
+			</header>
+			
+			<section id="id_template_scroll" class="con" data-height="*" data-role="content" style="position: absolute; top:56px; left: 0; right:0; z-index: 0; background: #eeeeee;">
+				<div class="con_in" style="width: 100%;">
+					<table id="id_template_grid" cellpadding="0" cellspacing="0" style="width: calc(100% - 32px); margin: 16px; table-layout: fixed;">
+						<colgroup>
+							<col width="50%">
+							<col width="50%">
+						</colgroup>
+						
+						<tbody>
+							<!-- 업무보고 -->
+<!--							<tr>
+								<td colspan="2" style="padding-bottom: 10px;">
+									<span class="temp_title">업무 보고</span>
+								</td>
+							</tr>-->
+							<tr>
+								<td class="grid_item" temp_index="0_0">
+									<div>
+										<img class="temp_img" src="../mobile/images/temp/daily_report_thumb.png">
+									</div>
+									<div style="margin-top: 10px;">
+										<span class="temp_text">일일업무보고</span>
+									</div>
+								</td>
+								<td class="grid_item" temp_index="0_1">
+									<div>
+										<img class="temp_img" src="../mobile/images/temp/often_report_thumb.png">
+									</div>
+									<div style="margin-top: 10px;">
+										<span class="temp_text">수시업무보고</span>
+									</div>
+								</td>
+							</tr>
+							
+							<!-- 회의록 -->
+<!--							<tr>
+								<td colspan="2" style="padding-bottom: 10px;">
+									<span class="temp_title">회의록</span>
+								</td>
+							</tr>-->
+							<tr>
+								<td class="grid_item" temp_index="0_2">
+									<div>
+										<img class="temp_img" src="../mobile/images/temp/weekly_report_thumb.png">
+									</div>
+									<div style="margin-top: 10px;">
+										<span class="temp_text">주간업무보고</span>
+									</div>
+								</td>
+								<td class="grid_item" temp_index="1_0">
+									<div>
+										<img class="temp_img" src="../mobile/images/temp/meeting_log_thumb.png">
+									</div>
+									<div style="margin-top: 10px;">
+										<span class="temp_text">회의록</span>
+									</div>
+								</td>
+							</tr>
+							
+							<!-- 보고서 -->
+<!--							<tr>
+								<td colspan="2" style="padding-bottom: 10px;">
+									<span class="temp_title">보고서</span>
+								</td>
+							</tr>-->
+							<tr>
+								<td class="grid_item" temp_index="2_0">
+									<div>
+										<img class="temp_img" src="../mobile/images/temp/base_report_thumb.png">
+									</div>
+									<div style="margin-top: 10px;">
+										<span class="temp_text">기본 보고서</span>
+									</div>
+								</td>
+								<td class="grid_item"></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</section>
+		</div>
+		
+		<!-- custom page -->
+		<div id="one_custom_page" class="wrap" data-role="page" ng-controller="ctrl_custom" ng-init="initCustom()" ng-if="currentViewPage == 'one_custom_page'">
+			<header class="head" data-height="56" data-role="header" style="height: 56px; z-index: 1">
+				<div class="left_div">
+					<a class="btn_can" ng-click="cancel()" style="background-image: url('../mobile/images/btn/btn-back-none.png')"></a>
+				</div>
+				
+				<h1></h1>
+				
+				<div class="right_div">
+					<a class="btn_check" ng-click="confirm()"></a>
+				</div>
+			</header>
+			
+			<section>
+				<div id="custom_content" style="width: 100%; height: 100%;"></div>
+			</section>
+						
+		</div>
+		
+		<!-- slideshow -->
+		<div id="one_slideshow" class="wrap" data-role="page" ng-controller="ctrl_slideshow" ng-init="initSlideshow()" ng-if="currentViewPage == 'one_slideshow'">
+			<header class="head sliderHead" data-height="56" data-role="header" style="height: 56px; z-index: 2">
+				<div class="left_div">
+					<a class="btn_can" ng-click="cancel()" style="background-image: url('../mobile/images/btn/btn-cancel-none.png')"></a>
+				</div>
+				
+				<h1 class="center slideTitle" style="margin-top: 0px;">{{strTitleText}}</h1>
+				
+				<div class="right_div">
+					<a class="btn_check" style="background-image: url('../mobile/images/btn/btn-slideshow-none.png')"></a>
+				</div>
+			</header>
+			
+			<section id="viewer_section" class="con">
+				<div id="viewerFrameContainer" style="position:fixed; left:0; width:100%; height:calc(100% - 56px); overflow: auto; -webkit-overflow-scrolling:touch;">
+<!-- 					<div id="sliderFrame" class="vieweditContainer" style="width:100%; height: 100%; overflow: auto; background:#F6F7F9; "  ng-controller="ctrl_sliderFrame" ng-init="initSliderFrame()"></div> -->
+					<iframe id="dzeditor_1" class="editorContainer vieweditContainer" style="width:100%; height: 100%; overflow: auto; background:#F6F7F9; border: none;"  ng-controller="ctrl_sliderFrame" ng-init="initSliderFrame()"></iframe>
+				</div>
+				<div id="pageSelector" style="position:fixed; left:0; width:100%; height:calc(100% - 56px); opacity:0; background:#ff0000;"></div>
+				<div id="pageNavigator" style="position:fixed; left:0; bottom:0; width:100%; height:56px;  background: rgba(0,0,0,0.4);">
+					<div class="slider-div" >
+						<div class="slider-prev-btn" ng-click="prevPageMove()"></div>
+						<div class="slider-number-bg">{{currentSlidePage}}/{{totalSlideNum}}</div>
+						<div class="slider-next-btn" ng-click="nextPageMove()"></div>	
+					</div>
+				</div>
+			</section>
+			
+			<div id="dzeditor_Parent_10000" class="dze_hiddenframe_container" style="display: none;">
+				<iframe id="dzeditor_10000"></iframe>
+			</div>
+		</div>
+		
+		
+		<!-- document comment -->
+		<div id="one_comment" class="wrap" data-role="page" ng-controller="ctrl_comment" ng-init="initComment() " ng-if="currentViewPage == 'one_comment'">
+			<header id="commentHeader" class="head" data-height="56" data-role="header" style="height: 56px; width:100%; z-index: 1; position: fixed;">
+				<div class="left_div">
+					<a class="btn_can" ng-click="cancelComment()"></a>
+				</div>
+				
+				<h1>문서댓글</h1>
+							
+			</header>
+			
+			<section class="con" data-role="content" style="height: calc(100% - 56px); position: relative; top: 56px;">
+				<div class="con_in commentContainer" style="height:calc(100% - 40px); overflow: scroll;"  ng-class="{'gray':CommentList.length>0 , 'white':CommentList.length==0}">
+					<div class="commentContent " style="margin: 20px;">
+						<div class="commentDlg" ng-repeat="comment in CommentList" ng-style="setCommentMargin(comment.depth)" >
+							<div style="position:relative;">
+								<span class="pic"><img ng-src="{{getCommentPrfile(comment)}}" alt=""></span>
+								<span class="cmtName">{{comment.empName}}</span>
+								<span class="cmtDate">{{comment.createDate}}</span>
+								<span >
+									<span class="cmtRpyIco"><img src="../mobile/images/ico/icon-cmt-reply-none.png"></span>
+							    	<span style="font-size:10px; color:#479de7" ng-click="replyComment(comment)">답글쓰기</span>
+								</span>
+							</div>
+							<div style="position:relative; display:table; width: 100%; height:100%;">
+								<div class="cmtEdge" ng-class="{'blue':mySeq==comment.createSeq , 'white':mySeq!=comment.createSeq}" ></div>
+								<div id="{{'comment_'+$index}}" class="cmtContents blue"  on-long-press="commentOnLongPress(comment)" ng-class="{'blue':mySeq==comment.createSeq , 'white':mySeq!=comment.createSeq}" ng-init="changeMention($index,comment)"  style="float: left;"> 
+								</div>
+								
+							</div>
+						</div>
+					</div>
+					<div style="margin-top: 100px;" ng-if="CommentList.length==0">
+						<div class="nodata">
+							<span class="bg"></span>
+						</div>
+						<div  style="margin-top:10px; text-align: center; color: #666">등록된 댓글이 없습니다.</div>
+					</div>
+				</div>
+				
+				<div class="commentWriteContainer">
+					<div class="commentReplyArea" ng-if="replyMode">{{selectedComment.empName}}에게 답글을 쓰는 중...<span class="closeReply" ng-click="closeComment()"></span></div>
+					<div class="commentReplyArea" ng-if="editMode">편집 중...<span class="closeReply" ng-click="closeComment()"></span></div>
+					<div class="searchShereUser userShare" style="z-index: 0; ">
+						<div id="id_searchlist_scroll" class="listUser" data-height="*" style="overflow:scroll">
+							<table width="100%" cellpadding="0" cellspacing="0">
+								<colgroup>
+									<col width="68">
+									<col width="">
+								</colgroup>
+								
+								<tbody>
+									<tr ng-repeat="user in searchList" ng-click="addMention(user)">
+										<td class="pic"><img src="{{user.pic}}" alt=""></td>
+										<td>
+											<dl>
+												<dt ng-bind-html="user.em_name"></dt>	<!-- 이름 -->
+												<dd>{{user.path}}</dd>					<!-- 부서 -->
+											</dl>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+					<div class="cmtEditor" style="z-index: 1">
+						<div class="cmtArea" id="cmtDiv" contenteditable="true" tabindex="0" ></div>
+						<div class="cmtSend"><img src="../mobile/images/ico/btn-cmtinput-sele.png" alt="" ng-click="insertCommnet()"></div>
+					</div>
+					<div id="sendCmtArea" style="display: none;" ></div>
+				</div>
+			</section>
+			<div id="id_actionsheet_scroll" class="action_div" data-height="*"> <!--  btn_more 클릭시 슬라이드  -->
+				<div class="menu_container">
+					<div class="ac m_move" ng-click="replyComment(false)">
+						<dl>
+							<dt>댓글</dt>
+						</dl>
+					</div>
+					<div class="ac m_modi" ng-if="actionSheetType=='myComment'" ng-click="editComment()">
+						<dl>
+							<dt>편집</dt>
+						</dl>
+					</div>
+					<div class="ac m_del" ng-if="actionSheetType=='myComment'" ng-click="deleteComment()">
+						<dl>
+							<dt>삭제</dt>
+						</dl>
+					</div>
+					<div class="ac m_copy" ng-click="copyComment()">
+						<dl>
+							<dt>복사</dt>
+						</dl>
+					</div>
+				</div>
+			</div>
+			<div class="modal"></div>
+		</div>
+		
+		
+		<!-- document information -->
+		<div id="one_docinfo" class="wrap" data-role="page" ng-controller="ctrl_docinfo" ng-init="initDocinfo() " ng-if="currentViewPage == 'one_docinfo'">
+			<header class="head" data-height="56" data-role="header" style="height: 56px; z-index: 1">
+				<div class="left_div">
+					<a class="btn_can" ng-click="cancelComment()"></a>
+				</div>
+				
+				<h1>문서정보</h1>
+							
+			</header>
+			
+			<section class="con" data-iscroll="" data-height="*" data-role="content">
+				<div class="con_in docinfoContainer" style="height:100%; ">
+					<div class="docThumb">
+						<div class="thumb">
+							<div class="thumbimg">
+								<img  ng-src="{{getThumnailImg()}}">
+							</div>
+							<div class="docExt">
+								<div class="thumbicondiv" ng-if="objDocInfo.docData.bStar == 1 && objDocInfo.shareInOut !== 'in'"><img class="important" src="../mobile/images/ico/icon-doc-bookmark-white.png"></div>
+								<div class="thumbicondiv" ng-if="objDocInfo.docData.bSecurity==1"><img class="secure" src="../mobile/images/ico/icon-doc-security-white.png"></div>
+								<div class="thumbicondiv" ng-if="objDocInfo.nShareCount>0"><img class="shared" src="../mobile/images/ico/icon-doc-share-white.png"></div>
+								<div class="thumbicondiv" ng-if="objDocInfo.docData.bViewer==1"><img class="readonly" src="../mobile/images/ico/icon-doc-readonly-white.png"></div>
+							</div>
+						</div>
+					
+					</div>
+					<div class="docTxtInfo">
+						<div class="docTxtRow doctitle">
+							<div class="docTxtTitle">제목</div>
+							<div class="docTxtContents">{{docTitle}}</div>
+						</div>
+						<div class="docTxtRow">
+							<div class="docTxtTitle">소유자</div>
+							<div class="docTxtContents">{{docOwner}}</div>
+						</div>
+						<div class="docTxtRow">
+							<div class="docTxtTitle">생성 날짜</div>
+							<div class="docTxtContents">{{docCreateDate}}</div>
+						</div>
+						<div class="docTxtRow">
+							<div class="docTxtTitle">수정 날짜</div>
+							<div class="docTxtContents">{{docModifiyDate}}</div>
+						</div>
+						<div class="docTxtRow">
+							<div class="docTxtTitle">크기</div>
+							<div class="docTxtContents">{{docSize}} {{docSizeUnit}}</div>
+						</div>
+					</div>
+				</div>
+				
+			</section>
+			
+			<div class="modal"></div>
+		</div>
+		
+		<div class="pop_layer_wrap" style="display:none;">
+			<div class="pop_layer alert_layer">
+				<div class="pl_con"></div>
+				<div class="pl_foot"></div>
+			</div>
+			<div class="pop_layer_modal" style="display:block;"></div>
+		</div>
+		
+		<div class="toast_box" style="display:none;">
+			<img class="image" src="">
+			<p class="message"></p>
+		</div>
+		<div class="dialog_layer_wrap" style="display:none;"></div>
+		<div id="debugInfo" style="color:#ff0000; position: absolute;"></div>
+		<div>
+			<div id="dpi" style="width: 1in; height: 1in; left: -100%; top: -100%; position: absolute;"></div>
+		</div>
+		
+		<div>
+			<input type="file" id="inputFile" name="file" onchange="insertImgContents(this)" style="display: none;"/>
+		</div>
+		
+		<div class="load_doc_modal" style="background: #eeeeee; opacity: 1; background-image: url(../mobile/images/ico/icon_loading_oneffice.gif); background-repeat: no-repeat; background-position: center center;"></div>
+	</body>
+</html>
+

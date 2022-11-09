@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="txt/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+</head>
+
+<link rel="stylesheet" href="/gw/html/toktok/gwpGnb.css" />
+<script type="text/javascript" src="/gw/html/toktok/GroupPortal_gnb.js"></script>
+
+<body>
+<div class="sk_tok_menu" style="width:100%; background-color: white;">
+
+     <div class="sk_tok_gnb">
+        <div id="gwpGnb" class="gwp_gnb_relative">
+            <div class="gwp_gnb_fix">
+                <div class="gwp_gnb_wrap" >
+                    <div class="gwp_gnb_header">
+                        <div class="gwp_gnb_header_left">
+                            <ul id="gwp_quickmenu">
+                                <li class="gwp_mail"><a href="javascript:GroupPortalMenuControl.QuickmenuClick('mail');" title="Mail">Mail</a></li>                             
+                                <li class="gwp_yellowpage"><a href="javascript:GroupPortalMenuControl.QuickmenuClick('yellowpage');" title="Yellowpage">Yellowpage</a></li>
+                                <li class="gwp_authentication"><a href="javascript:GroupPortalMenuControl.QuickmenuClick('authentication');" title="Authentication center">Authentication center</a></li>
+                                <li class="gwp_mobile"><a href="javascript:GroupPortalMenuControl.QuickmenuClick('mobile');" title="Mobile">Mobile</a></li>
+                            </ul>
+                        </div>
+                        <div class="gwp_gnb_header_right">
+                            <div id="gwp_search_people">
+                                <div class="gwp_input_text">
+                                    <input type="text" value="구성원검색" id="text_GroupPortal_SearchMember" onfocus="this.value='';GroupPortalMenuControl.MemberFlag=true;" onblur="GroupPortalMenuControl.CheckSearchMembers();" onkeydown="if (event.keyCode == 13) {GroupPortalMenuControl.SearchMembers();}" style="ime-mode: active;" />
+                                </div>
+                                <a href="javascript:GroupPortalMenuControl.SearchMembers();">Search</a>
+                            </div>
+                            <div id="gwp_search">
+                                <div class="gwp_input_text">
+                                    <input type="text" value="통합검색" id="text_GroupPortal_TotalSearch" onfocus="this.value='';GroupPortalMenuControl.SearchFlag=true;" onblur="GroupPortalMenuControl.CheckTotalSearch();" onkeydown="if (event.keyCode == 13) {GroupPortalMenuControl.TotalSearch();}" style="ime-mode: active;" />
+                                </div>
+                                <a href="javascript:GroupPortalMenuControl.TotalSearch();">Search</a>
+                            </div>
+                        </div>
+						<div class="gwp_bann" id="gwp_banner" style="display: block;">
+                            <a href="javascript:GroupPortalMenuControl.EthicsClick(); void(0);">
+                                <img src="/gw/html/toktok/images/toktok_ethics_k.png" /></a>
+                        </div>
+                    </div>
+                    <div class="gwp_nav_wrap">
+                        <a class="gwp_logo" href="javascript:GroupPortalMenuControl.HomeClick();">toktok</a>
+                        <div id="gwp_nav_toktok">
+                            <ul class="gwp_nav gwp_depth1">
+                                <li class="gwp_menu_depth1">
+                                    <a class="gwp_menu_depth1_link" href="javascript:GroupPortalMenuControl.MovingPage('P0000001');" id="a_Menu_P0000001">SK경영</a>
+                                </li>
+                                <li class="gwp_menu_depth1">
+                                    <a class="gwp_menu_depth1_link" href="javascript:GroupPortalMenuControl.MovingPage('P0000069');" id="a_Menu_P0000069">SK미디어센터</a>
+                                </li>
+                                <li class="gwp_menu_depth1">
+                                    <a class="gwp_menu_depth1_link" href="javascript:GroupPortalMenuControl.MovingPage('P0000133');" id="a_Menu_P0000133">SK커뮤니티</a>
+                                </li>
+                                <li class="gwp_menu_depth1">
+                                    <a class="gwp_menu_depth1_link" href="javascript:GroupPortalMenuControl.MovingPage('P0000093');" id="a_Menu_P0000093">SK라이프</a>
+                                </li>
+								<li class="gwp_menu_depth1">
+									<a class="toktokTV" href="https://int.toktoktv.sk.com" target="_blank">toktokTV</a>
+								</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+</body>

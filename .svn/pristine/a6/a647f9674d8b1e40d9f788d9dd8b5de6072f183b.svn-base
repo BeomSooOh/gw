@@ -1,0 +1,538 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="neos.cmm.erp.sqlmap.gerp.oracle">
+
+	<select id="selectCurrentTime" resultType="hashmap">
+		select TO_CHAR(systimestamp,'YYYY-MM-DD HH24:MI:SS') AS "currentTime" from dual
+	</select>
+	
+	<select id="selectMaCompList" parameterType="hashmap" resultType="hashmap">
+		/* selectMaCompList - oracle */
+		SELECT 
+			mc.COMPANY_CD   as "cdCompany",        <!-- "cdCompany",  -->
+			mc.COMPANY_NM   as "nmCompany",        <!-- "nmCompany",  -->
+			mc.CORP_FG_CD   	as "cdComfg",          <!-- "companyGn",  -->
+			mc.NATION_CD   	as "cdNation",         <!-- "fgLang",     -->
+			mc.COR_NO   	as "noCor",            <!-- "noCompany",  -->
+			mc.COMPANY_NM2  as "nm2Company",         <!-- "enCompany",  -->
+			mc.ACCSEQ_SQ   	as "sqAccseq",         <!-- "fiscalYr",   -->
+			mc.ACTG_YR_START_DT as "dtStartFis",         <!-- "fiscalSd",   -->
+			mc.ACTG_YR_END_DT   as "dtEndFis",         <!-- "fiscalEd",   -->
+			mc.TEL_NO   	as "noTel",            <!-- "noTel",      -->
+			mc.FAX_NO   	as "noFax",            <!-- "noFax",      -->
+			mc.POST_NO   	as "noPost",           <!-- "adsNo",      -->
+			mc.BASE_ADDR   as "addrBase1",        <!-- "adsH",       -->
+			mc.DTL_ADDR   as "addrBase2",        <!-- "adsD",       -->
+			mc.CEO_NM   	as "nmCeo",            <!-- "nmCeo",      -->
+			mc.RES_NO   	as "noRes",            <!-- "noRegist",   -->
+			mc.CEO_POST_NO  as "noPostCeo",        <!-- "adsNo1",     -->
+			mc.CEO_BASE_ADDR   	as "addrCeo1",         <!-- "ads1H",      -->
+			mc.CEO_DTL_ADDR   	as "addrCeo2",         <!-- "ads1D",      -->
+			mc.OPBIZ_DT   	as "dtOpen",           <!-- "dtOpen",     -->
+			mc.ESTB_DT   	as "dtSetup",          <!-- "dtStart",    -->
+			mc.CEO_NM2 		as "nm2Ceo",           <!-- "nmEng",      -->
+			mc.CONCORP_FG_CD as "cdAffiliavte",    <!-- "fgCorp",     -->
+			mc.BIZTP_TP_CD 	as "cdIndusttp",       <!-- "fgComp",     -->
+			mc.BASE_ADDR2 	as "addr2Base1",       <!-- "adsE",       -->
+			mc.BASE_ADDR2 	as "id",
+			'c' 			as "gbnOrg",
+			'c' 			as "orgDiv",
+			mc.COMPANY_CD 	as "includeDeptCode",		
+			mc.COMPANY_CD 	as "compSeq",
+			'' 				as "bizSeq",	
+			'0' 			as "parentSeq",
+			mc.COMPANY_CD 	as "path",
+			'' 				as "parentPath",
+			mc.COMPANY_NM 	as "text",
+			mc.EMAIL_NM as "nmEmail"
+		from comet.MA_COMPANY mc
+		where
+			1=1
+			<if test='cdCompany != null and cdCompany != "" '>
+			AND mc.COMPANY_CD = #{cdCompany}
+			</if>
+	</select>
+	
+	<select id="selectMaDeptList" parameterType="hashmap" resultType="hashmap">
+		/* selectMaDeptList - oracle */
+		SELECT                                     
+			DEPT_CD  		as "cdDept",		<!-- "cdDept",        -->
+			COMPANY_CD  	as "cdCompany",		<!-- "cdCompany",     -->
+			DEPT_NM  		as "nmDept",		<!-- "nmDept",     -->
+			TEL_NO  		as "noTel",			<!-- "noTel",        -->
+			BIZAREA_CD  	as "cdBizarea",		<!-- "cdBizarea",     -->
+			CC_CD  			as "cdCc",			<!-- "cdCc",          -->
+			DOCU_EXTNO_TP  		as "tpSeqno",		<!-- "tpCal",         -->
+			MAPNG_DEPT_NM  	as "nmDeptMap",		<!-- "hDept",         -->
+			CLND_TP  		as "tpCal",			<!-- "noEmpmng",      -->
+			''  			as "ynRest",		<!-- "sdDept",        -->
+			DEPT_NM2  		as "nm2Dept",		<!-- "edDept",        -->
+			DEPT_START_DT  		as "dtStart",		<!-- "dtStart",       -->
+			DEPT_END_DT  		as "dtEnd",			<!-- "dtEnd",         -->
+			INSERT_ID  		as "idInsert",		<!-- "tpDept",        -->
+			DEPT_LV  		as "lvDept",		<!-- "lbDept",        -->
+			-- SORT_SQ  		as "noSort",		<!-- "orderNum",        -->
+			UPDATE_ID  		as "idUpdate",		<!-- "ynRest",        -->
+			HOD_NO  		as "noEmpmng",		<!-- "idInsert",      -->
+			INSERT_DTS  	as "dtsInsert",		<!-- "dtsInsert",     -->
+			FAX_NO  		as "noFax",			<!-- "idUpdate",      -->
+			END_TM  		as "tmEnd",			<!-- "dtsUpdate",     -->
+			MAPNG_DEPT_CD  	as "cdDeptMap",		<!-- "cdDeptMap",     -->
+			START_TM  		as "tmStart",		<!-- "nmDeptMap",     -->
+			UP_DEPT_CD  		as "cdUpdept",		<!-- "enDept",        -->
+			RMK1_DC  		as "dcRmk1",		<!-- "dcRmk1",        -->
+			RMK2_DC  		as "dcRmk2",		<!-- "dcRmk2",        -->
+			ACCTTYPE_CD  	as "cdAccount",		<!-- "cdAccount",     -->
+			HR_BUDGET_CD  	as "cdBgdeptMap",	<!-- "cdBgdeptMap",   -->
+			USERDEF1_CD  		as "cdUser1",		<!-- "cdUser1",       -->
+			USERDEF2_CD  		as "cdUser2",		<!-- "cdUser2",       -->
+			INSERT_DTS  	as "dtsInsert",		<!-- "gwInsertTime",  -->
+			UPDATE_DTS  	as "dtsUpdate",		<!-- "gwUpdateTime",  -->
+			COMPANY_CD||DEPT_CD as "id",
+			COMPANY_CD||DEPT_CD as "deptSeq",
+			'd' as "gbnOrg",
+			'd' as "orgDiv",
+			COMPANY_CD||DEPT_CD as "includeDeptCode",
+			COMPANY_CD as "compSeq",
+			COMPANY_CD||BIZAREA_CD as "bizSeq",
+			(
+				CASE NVL(LTRIM(UP_DEPT_CD), ' ')
+					WHEN ' ' THEN COMPANY_CD||BIZAREA_CD
+					ELSE COMPANY_CD||UP_DEPT_CD
+				END
+			) as "parentSeq",
+			COMPANY_CD||'|'||COMPANY_CD||BIZAREA_CD||'|'||COMPANY_CD||DEPT_CD as "path",
+			COMPANY_CD||'|'||COMPANY_CD||BIZAREA_CD as "parentPath",
+			md.DEPT_NM as "text",
+			'N' as "team_yn"
+		from comet.MA_DEPT_MST md
+		where
+			md.COMPANY_CD = #{cdCompany}
+			<if test='cdDept != null and cdDept != "" '>
+			and md.DEPT_CD = #{cdDept}
+			</if> 
+	</select>
+	
+	<select id="selectMaDeptPathList" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+		        DEPT_SEQ		AS	"deptSeq"
+		        , H_DEPT		AS  "hDept"
+		        <if test='isCompPath == null or isCompPath == ""'>
+		        , PATH_NAME AS "pathName"
+		        , PATH		AS "path"
+		        , PARENT_PATH  AS "parentPath"
+		        </if>
+		        <if test='isCompPath != null and isCompPath == "Y"'>
+		        , COMP.COMPANY_NM||'|'||BIZ.BIZAREA_NM||'|'|| PATH_NAME AS "pathName"
+		        , A.CD_COMPANY||'|'||A.CD_COMPANY||A.CD_BIZAREA||'|'||PATH		AS "path"
+		        ,  A.PARENT_PATH  AS "parentPath"
+		        </if>
+		FROM (
+		    SELECT    
+		            A.CD_COMPANY||A.CD_DEPT AS "DEPT_SEQ"
+		           , (CASE NVL(LTRIM(CD_UPDEPT), ' ')
+		                WHEN ' ' THEN A.CD_COMPANY||A.CD_BIZAREA
+		                ELSE A.CD_COMPANY||CD_UPDEPT
+		                END
+		               ) H_DEPT
+		           -- , A.CD_COMPANY||A.H_DEPT AS "H_DEPT"
+		            , SUBSTR(sys_connect_by_path(A.NM_DEPT, '|'), 2) AS "PATH_NAME"
+		            , substr(sys_connect_by_path(A.CD_COMPANY||A.CD_DEPT, '|'), 2) AS "PATH"
+		            , ( CASE NVL(LTRIM(CD_UPDEPT), ' ')
+			              WHEN ' ' THEN CD_COMPANY||'|'||CD_COMPANY||cd_bizarea
+			              ELSE 
+                      		 A.CD_COMPANY || '|' || A.CD_COMPANY || A.CD_BIZAREA || '|' || replace(sys_connect_by_path(TRIM(A.CD_COMPANY)||TRIM(A.CD_UPDEPT), '|'), '|' || A.CD_COMPANY || '|', '')
+			              END
+			              --  ELSE A.CD_COMPANY||'|'||A.CD_COMPANY||A.CD_BIZAREA||'|'||NVL( substr(sys_connect_by_path(A.CD_COMPANY||A.H_DEPT, '|'), LENGTH(CD_COMPANY)+3),'')
+			              --  END
+			           ) AS "PARENT_PATH"
+		       --     , A.CD_COMPANY||'|'||A.CD_COMPANY||A.CD_BIZAREA||'|'||NVL(substr(sys_connect_by_path(A.CD_COMPANY||A.H_DEPT, '|'), 2),'') AS "PARENT_PATH"
+		            , A.CD_COMPANY  AS "CD_COMPANY"
+		            , A.CD_BIZAREA  AS "CD_BIZAREA"
+		    FROM    (
+		                SELECT  DEPT_CD as CD_DEPT, COMPANY_CD as CD_COMPANY, BIZAREA_CD as CD_BIZAREA, MAX(UP_DEPT_CD) AS CD_UPDEPT, MAX(DEPT_NM) AS NM_DEPT
+		                FROM    comet.MA_DEPT_MST 
+		                WHERE   COMPANY_CD  = #{cdCompany}
+		                and sysdate between DEPT_START_DT and DEPT_END_DT
+		                group by DEPT_CD, COMPANY_CD, BIZAREA_CD
+		    ) A
+		    START WITH LTRIM(CD_UPDEPT) IS NULL
+		      CONNECT BY PRIOR CD_DEPT = CD_UPDEPT
+		) A 
+		  LEFT OUTER JOIN comet.MA_COMPANY COMP ON A.CD_COMPANY = COMP.COMPANY_CD
+		  LEFT OUTER JOIN comet.MA_BIZAREA_MST BIZ  ON A.CD_BIZAREA = BIZ.BIZAREA_CD AND BIZ.COMPANY_CD = A.CD_COMPANY
+	</select>
+	
+	<select id="selectMaBizList" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			mb.BIZAREA_CD 	as "cdBizarea",         <!-- cdBizarea,   -->
+			mb.COMPANY_CD 	as "cdCompany",         <!-- cdCompany,   -->
+			mb.BIZAREA_NM 	as "nmBizarea",         <!-- nmBizarea,   -->
+			mb.COPY_BRN_TP 	as "tpBizarea",         <!-- tpBizarea,   -->
+			mb.BIZR_NO 	as "noBizarea",         <!-- noBizarea,   -->
+			mb.BIZAREA_NM2 	as "nm2Bizarea",        <!-- enBizarea,   -->
+			mb.TEL_NO 		as "noTel",             <!-- noTel,       -->
+			mb.POST_NO 		as "noAddr",            <!-- adsNo,       -->
+			mb.BASE_ADDR 	as "addrBizH",          <!-- adsH,        -->
+			mb.DTL_ADDR 	as "addrBizD",          <!-- adsD,        -->
+			mb.CEO_NM 	as "nmMaster",          <!-- nmMaster,    -->
+			mb.FAX_NO 		as "noFax",             <!-- noFax,       -->
+			mb.TAXOF_CD 		as "cdLaw",             <!-- cdLaw,       -->
+			mb.TAXOF_NM 		as "nmLaw",             <!-- nmLaw,       -->
+			mb.BIZC_NM 		as "nmJob",             <!-- tpJob,       -->
+			mb.JOBTYPE_NM 	as "nmJobtype",         <!-- clsJob,      -->
+			mb.TAX_BIZAREA_CD as "cdBizareaTax",    <!-- taxBizarea,  -->
+			mb.VAT_BIZAREA_VAT_CD as "cdBizareaVat",    <!-- vatBizarea,  -->
+			mb.CPTCTHALL_NM 	as "nmEmpcity",         <!-- nmEmpcity,   -->
+			mb.PC_CD 		as "cdPc",              <!-- cdPc,        -->
+			mb.ERPT_ID 		as "idEtax",            <!-- idEtax,      -->
+			mb.WK_BIZTP_NO 		as "noCls",             <!-- cdCls,       -->
+			mb.BIZ_BGN_DT 		as "dtOpen",            <!-- dtFopen,     -->
+			mb.BIZ_END_DT 	as "dtClose",           <!-- dtTopen,     -->
+			mb.AREA_FG_CD 		as "cdArea",            <!-- cdArea,      -->
+			mb.USE_YN 		as "ynUse",             <!-- tpUse,       -->
+			mb.BIZAREA_ADDR2 	as "addr2Biz",          <!-- dcAdsEng,    -->
+			mb.PRINT_BIZAREA_NM as "nmBizareaRpt",    <!-- nmBizRpt,    -->
+			mb.ADMINIST_DONG_CD 	as "cdEmpcity",         <!-- cdEmpcity,   -->
+			mb.EMAIL_NM 	as "nmEmail",           <!-- noEmail,     -->
+			mb.HP_NO 	as "noMobile",          <!-- noMobile,    -->
+			mb.COR_NO 		as "noCor",             
+			mb.EXTNO_RULE_NO 		as "noBiz",
+			mb.COMPANY_CD||BIZAREA_CD as "id",       
+			'b' as "gbnOrg",
+			'b' as "orgDiv",
+			mb.COMPANY_CD||mb.BIZAREA_CD as "includeDeptCode",
+			mb.COMPANY_CD as "compSeq",
+			mb.COMPANY_CD||mb.BIZAREA_CD as "bizSeq",
+			mb.COMPANY_CD as "parentSeq",
+			mb.COMPANY_CD||'|'||mb.COMPANY_CD||mb.BIZAREA_CD as "path",
+			mb.COMPANY_CD as "parentPath",
+			mb.BIZAREA_NM as "text"
+		from comet.MA_BIZAREA_MST mb
+		where
+			mb.COMPANY_CD = #{cdCompany}
+	</select>
+	
+	<select id="selectMaUserList" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			mu.USER_ID as "idUser",
+			mu.COMPANY_CD as "cdCompany",
+			mu.USER_NM as "nmUser",
+			mu.USER_FG_CD as "cdGbn", 				<!-- "usrGbn", -->
+			mu.INSERT_DTS as "gwInsertTime", 
+			mu.UPDATE_DTS as "gwUpdateTime"
+		from comet.CI_USER_MST mu
+		where 
+			mu.COMPANY_CD = #{cdCompany}
+			<if test='gwUpdateTime != null and gwUpdateTime != ""'>
+			and (mu.INSERT_DTS is null or mu.INSERT_DTS > #{gwUpdateTime}
+			</if>
+	</select>
+	
+	<select id="selectHrPhotoList" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			hp.cd_company as "cdCompany",
+			hp.no_emp as "noEmp",
+			hp.dc_photo as "dcPhoto",
+			hp.gw_insert_time as "gwInsertTime", 
+			hp.gw_update_time as "gwUpdateTime"
+		from comet.hr_photo hp
+		where
+			hp.cd_company = #{cdCompany}
+			<if test='gwUpdateTime != null and gwUpdateTime != ""'>
+			and (hp.GW_INSERT_TIME is null or hp.GW_INSERT_TIME > #{gwUpdateTime}
+			</if>
+	</select>
+	
+	<select id="selectMaEmpList" parameterType="hashmap" resultType="hashmap">
+		/* selectMaEmpList - oracle */
+		SELECT *
+		FROM (
+		select
+			COUNT(a."noEmp") OVER() "TOTAL_COUNT",
+			row_number() over(order by a."noEmp") as "ROW_NUM",
+			a.*
+		from (
+		
+			SELECT 
+				cum.USER_ID         as "loginId",
+				me.EMP_NO 			as "noEmp",
+				me.GEMP_NO			as "noGemp",
+				me.COMPANY_CD 		as "cdCompany",
+				me.KOR_NM 			as "nmKor",
+				me.BIZAREA_CD 		as "cdBizarea",
+				me.COMPANY_CD||me.BIZAREA_CD as "bizSeq",
+				me.DEPT_CD 		as "cdDept",
+				me.COMPANY_CD||me.DEPT_CD as "deptSeq",
+				(select DEPT_NM from comet.MA_DEPT_MST where DEPT_CD = me.DEPT_CD AND COMPANY_CD = me.COMPANY_CD and sysdate between DEPT_START_DT and DEPT_END_DT and rownum = 1) 		as "cdDeptName",
+				me.EMP_TP 			as "tpEmp",
+				me.EMPY_TP_CD			as "cdEmp",
+				me.POSI_CD 	as "cdDutyRank",
+				(select SYSDEF_NM from comet.ma_codedtl where COMPANY_CD = me.COMPANY_CD AND MODULE_CD='HR' AND FIELD_CD = 'P00640' AND SYSDEF_CD = me.POSI_CD) 		as "cdDutyRankName",
+				me.PSTN_CD	as "cdDutyStep",
+				(select SYSDEF_NM from comet.ma_codedtl where COMPANY_CD = me.COMPANY_CD AND MODULE_CD='HR' AND FIELD_CD = 'P00650' AND SYSDEF_CD = me.PSTN_CD) 		as "cdDutyStepName",
+				me.SLST_CD 	as "cdPayStep",
+				me.ODTY_CD 	as "cdDutyResp",
+				(select SYSDEF_NM from comet.ma_codedtl where COMPANY_CD = me.COMPANY_CD AND MODULE_CD='HR' AND FIELD_CD = 'P00980' AND SYSDEF_CD = me.ODTY_CD) 		as "cdDutyRespName",
+				me.DUTY_CD 	as "cdDutyWork",
+				NVL(me.OGRP_CD,'010') 	as "cdDutyType",
+				(select SYSDEF_NM from comet.ma_codedtl where COMPANY_CD = me.COMPANY_CD AND MODULE_CD='HR' AND FIELD_CD='P00990' AND SYSDEF_CD = me.OGRP_CD) 		as "cdDutyTypeName",
+				me.JKND_CD 	as "cdJobSeries",
+				me.SEX_CD 			as "cdSex",
+				me.GROUPECNY_DT 		as "dtGenter",
+				me.JNCO_DT 		as "dtEnter",
+				me.RETR_DT 		as "dtRetire",
+				me.RETIRESTDR_DT 		as "dtBretire",
+				me.HLOF_FG_CD 		as "cdIncom",
+				hed.RES_POST_NO 	as "noPostRes",
+				hed.BASE_RES_ADDR as "addrRes1",  				<!-- dcAddressRes1  -->
+				hed.DTL_RES_ADDR as "addrRes2",				<!-- dcAddressRes2  -->
+				hed.CUR_POST_NO 	as "noPostCur",
+				hed.BASE_CUR_ADDR as "addrCur1",				<!-- dcAddressCur1 -->
+				hed.DTL_CUR_ADDR as "addrCur2",        		<!-- dcAddressCur2 -->
+				NVL(hed.TEL_NO, ' ') 			as "noTel",
+				hed.BIRYYMM_DT 		as "dtBirth",
+				hed.ATSCOLC_CD 			as "cdDay",
+				me.TKG_CD 		as "cdPart",
+				hed.EMAIL_NM 		as "nmEmail",
+				hed.MRRG_DT 		as "dtMarry",
+				me.RMK_DC 			as "dcRmk",
+				'' 		as "dtsInsert",
+				''		as "idInsert",
+				'' 		as "dtsUpdate",
+				'' 		as "idUpdate",
+				'Y'	 				as "ynUse",
+				 hed.MRRG_YN 		as "ynMarry",
+				'' 	as "gwInsertTime",
+				'' 	as "gwUpdateTime",
+				''					as "erpPicFileId",
+				'Y'					as "mainDeptYn"
+				<!-- 사진 현재 지원하지 않음.. ,(select no_emp from comet.hr_photo where cd_company = me.cd_company and no_emp = me.no_emp) as "erpPicFileId" -->
+			from comet.HR_EMP_MST me
+			inner join comet.HR_EMPINFO_DTL hed on me.COMPANY_CD = hed.COMPANY_CD and me.EMP_NO = hed.EMP_NO
+			inner join comet.CI_USER_MST cum on cum.GEMP_NO = me.GEMP_NO
+			where
+				me.COMPANY_CD = #{cdCompany}
+				<if test='noEmpList != null and noEmpList != ""'>
+					and me.EMP_NO in (${noEmpList})
+				</if> 
+				
+				<if test='empName != null and empName != ""'>
+				and me.KOR_NM like '%${empName}%'
+				</if>
+				<if test='deptName != null and deptName != ""'>
+				and me.DEPT_CD IN (select DEPT_CD from comet.MA_DEPT_MST where DEPT_NM like '%${deptName}%')
+				</if>
+				<if test='deptEmpName != null and deptEmpName != ""'>
+				and (me.DEPT_CD IN (select DEPT_CD from comet.MA_DEPT_MST where DEPT_NM like '%${deptEmpName}%') or me.KOR_NM like '%${deptEmpName}%')
+				</if>
+				<if test='workStatus != null and workStatus != ""'>
+					and me.HLOF_FG_CD = #{workStatus}
+				</if>
+			 union
+             SELECT 
+             	cum.USER_ID         as "loginId",
+				hhh.EMP_NO 			as noEmp,
+				me.GEMP_NO			as "noGemp",
+				hhh.COMPANY_CD 		as "cdCompany",
+				me.KOR_NM 			as "nmKor",
+				hhh.BIZAREA_CD 		as "cdBizarea",
+				hhh.COMPANY_CD||hhh.BIZAREA_CD as "bizSeq",
+				hhh.CTS_DEPT_CD 		as "cdDept",
+				hhh.COMPANY_CD||hhh.CTS_DEPT_CD as "deptSeq",
+				(select DEPT_NM from comet.MA_DEPT_MST where DEPT_CD = hhh.CTS_DEPT_CD AND COMPANY_CD = hhh.COMPANY_CD and sysdate between DEPT_START_DT and DEPT_END_DT) 		as "cdDeptName",
+				me.EMP_TP 			as "tpEmp",
+				me.EMPY_TP_CD			as "cdEmp",
+				hhh.POSI_CD 	as "cdDutyRank",
+				(select SYSDEF_NM from comet.ma_codedtl where COMPANY_CD = hhh.COMPANY_CD AND MODULE_CD='HR' AND FIELD_CD = 'P00640' AND SYSDEF_CD = hhh.POSI_CD) 		as "cdDutyRankName",
+				hhh.PSTN_CD	as "cdDutyStep",
+				(select SYSDEF_NM from comet.ma_codedtl where COMPANY_CD = hhh.COMPANY_CD AND MODULE_CD='HR' AND FIELD_CD = 'P00650' AND SYSDEF_CD = hhh.PSTN_CD) 		as "cdDutyStepName",
+				me.SLST_CD 	as "cdPayStep",
+				hhh.ODTY_CD 	as "cdDutyResp",
+				(select SYSDEF_NM from comet.ma_codedtl where COMPANY_CD = hhh.COMPANY_CD AND MODULE_CD='HR' AND FIELD_CD = 'P00980' AND SYSDEF_CD = hhh.ODTY_CD) 		as "cdDutyRespName",
+				hhh.DUTY_CD 	as "cdDutyWork",
+				NVL(me.OGRP_CD,'010') 	as "cdDutyType",
+				(select SYSDEF_NM from comet.ma_codedtl where COMPANY_CD = hhh.COMPANY_CD AND MODULE_CD='HR' AND FIELD_CD = 'P00990' AND SYSDEF_CD = me.OGRP_CD) 		as "cdDutyTypeName",
+				me.JKND_CD 	as "cdJobSeries",
+				me.SEX_CD 			as "cdSex",
+				me.GROUPECNY_DT 		as "dtGenter",
+				me.JNCO_DT 		as "dtEnter",
+				me.RETR_DT 		as "dtRetire",
+				me.RETIRESTDR_DT 		as "dtBretire",
+				me.HLOF_FG_CD 		as "cdIncom",
+				hed.RES_POST_NO 	as "noPostRes",
+				hed.BASE_RES_ADDR as "addrRes1",  			
+				hed.DTL_RES_ADDR as "addrRes2",			
+				hed.CUR_POST_NO 	as "noPostCur",
+				hed.BASE_CUR_ADDR as "addrCur1",			
+				hed.DTL_CUR_ADDR as "addrCur2",        	
+				NVL(hed.TEL_NO, ' ') 			as "noTel",
+				hed.BIRYYMM_DT 		as "dtBirth",
+				hed.ATSCOLC_CD 			as "cdDay",
+				me.TKG_CD 		    as "cdPart",
+				hed.EMAIL_NM 		as "nmEmail",
+				hed.MRRG_DT 		as "dtMarry",
+				me.RMK_DC 			as "dcRmk",
+				'' 		as "dtsInsert",
+				'' 		as "idInsert",
+				'' 		as "dtsUpdate",
+				'' 		as "idUpdate",
+				hhh.GNFD_ST_YN 		as "ynUse",
+				hed.MRRG_YN 		as "ynMarry",
+				'' 	as "gwInsertTime",
+				'' 	as "gwUpdateTime",
+				''					as "erpPicFileId",
+				'N'					as "mainDeptYn"
+			from comet.HR_EMP_MST me
+			left outer join comet.HR_EMPINFO_DTL hed on me.COMPANY_CD = hed.COMPANY_CD and me.EMP_NO = hed.EMP_NO
+			join comet.HR_HUANCON_HST hhh on me.COMPANY_CD = hhh.COMPANY_CD and me.EMP_NO = hhh.EMP_NO
+			join comet.CI_USER_MST cum on cum.GEMP_NO = hhh.EMP_NO
+			where
+				me.COMPANY_CD = #{cdCompany}
+				<if test='noEmpList != null and noEmpList != ""'>
+					and hhh.EMP_NO in (${noEmpList})
+				</if> 
+				
+				<if test='empName != null and empName != ""'>
+				and me.KOR_NM like '%${empName}%'
+				</if>
+				<if test='deptName != null and deptName != ""'>
+				and hhh.CTS_DEPT_CD IN (select DEPT_CD from comet.MA_DEPT_MST where DEPT_NM like '%${deptName}%')
+				</if>
+				<if test='workStatus != null and workStatus != ""'>
+					and me.HLOF_FG_CD = #{workStatus}
+				</if>
+			) a
+		) pagetable
+		<if test='startNum != null and autoYn != "Y"'>
+		where ROW_NUM between ${startNum} and ${endNum}
+		</if>
+	</select>
+	
+	<select id="selectMaCodedtlList" parameterType="hashmap" resultType="hashmap" useCache="false">
+		SELECT 
+			mc.COMPANY_CD as "cdCompany",
+			mc.FIELD_CD as "cdField",
+			mc.SYSDEF_CD <if test='aliasCode !=null and aliasCode != ""'>as "${aliasCode}"</if> <if test='aliasCode ==null or aliasCode == ""'>as "cdSysdef"</if>,
+			mc.SYSCODE_YN as "ynSyscode",
+			mc.SYSDEF_NM <if test='aliasName !=null and aliasName != ""'>as "${aliasName}"</if> <if test='aliasName ==null or aliasName == ""'>as "nmSysdef"</if>,
+			mc.INSERT_DTS as "gwInsertTime", 
+			mc.UPDATE_DTS as "gwUpdateTime"
+		from comet.MA_CODEDTL mc
+		where
+			mc.COMPANY_CD = #{cdCompany}
+			and mc.MODULE_CD = 'HR'
+			and mc.FIELD_CD = #{cdField}
+		order by mc.SYSDEF_CD
+	</select>
+	
+	<select id="selectMaDeptGwDelete" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			d.cd_dept as "cdDept",
+			d.cd_company as "cdCompany",
+			d.gw_delete_time as "gwDeleteTime"
+		from comet.ma_dept_gw_delete d
+		where
+			d.cd_company = #{cdCompany}
+			and (d.gw_delete_time is null or d.gw_delete_time between TO_DATE(#{startSyncTime}, 'YYYY-MM-DD HH24:MI:SS') and TO_DATE(#{endSyncTime}, 'YYYY-MM-DD HH24:MI:SS'))
+	</select>
+	
+	<select id="selectMaUserGwDelete" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			d.id_user as "idUser",
+			d.cd_company as "cdCompany",
+			d.gw_delete_time as "gwDeleteTime"
+		from comet.ma_user_gw_delete d
+		where
+			d.cd_company = #{cdCompany}
+			and (d.gw_delete_time is null or d.gw_delete_time between TO_DATE(#{startSyncTime}, 'YYYY-MM-DD HH24:MI:SS') and TO_DATE(#{endSyncTime}, 'YYYY-MM-DD HH24:MI:SS'))
+	</select>
+	
+	<select id="selectHrPhotoGwDelete" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			d.no_emp as "noEmp",
+			d.cd_company as "cdCompany",
+			d.gw_delete_time as "gwDeleteTime"
+		from comet.hr_photo_gw_delete d
+		where
+			d.cd_company = #{cdCompany}
+			and (d.gw_delete_time is null or d.gw_delete_time between TO_DATE(#{startSyncTime}, 'YYYY-MM-DD HH24:MI:SS') and TO_DATE(#{endSyncTime}, 'YYYY-MM-DD HH24:MI:SS'))
+	</select>
+	
+	<select id="selectMaEmpGwDelete" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			d.no_emp as "noEmp",
+			d.cd_company as "cdCompany",
+			d.gw_delete_time as "gwDeleteTime"
+		from comet.ma_emp_gw_delete d
+		where
+			d.cd_company = #{cdCompany}
+			and (d.gw_delete_time is null or d.gw_delete_time between TO_DATE(#{startSyncTime}, 'YYYY-MM-DD HH24:MI:SS') and TO_DATE(#{endSyncTime}, 'YYYY-MM-DD HH24:MI:SS'))
+	</select>
+	
+	<select id="selectMaCodedtlGwDelete" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			d.cd_field as "cdField",
+			d.cd_sysdef as "cdSysdef",
+			d.cd_company as "cdCompany",
+			d.gw_delete_time as "gwDeleteTime"
+		from comet.ma_codedtl_gw_delete d
+		where
+			d.cd_company = #{cdCompany}
+			and (d.gw_delete_time is null or d.gw_delete_time between TO_DATE(#{startSyncTime}, 'YYYY-MM-DD HH24:MI:SS') and TO_DATE(#{endSyncTime}, 'YYYY-MM-DD HH24:MI:SS'))
+	</select>
+	
+	<!-- <select id="selectCustomList" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			NVL(e.NO_EMP,' ') as "erpNum",
+			NVL(e.NO_INS,' ') as "customNum",
+			NVL(e.NO_EMP,' ') as "loginId"
+		from comet.ma_emp e
+		where
+			e.cd_company = #{cdCompany}
+			and (e.gw_insert_time is null or e.gw_update_time between TO_DATE(#{startSyncTime}, 'YYYY-MM-DD HH24:MI:SS') and TO_DATE(#{endSyncTime}, 'YYYY-MM-DD HH24:MI:SS'))
+	</select> -->
+	
+	<!-- <select id="selectErpEmpWorkCodeList" parameterType="hashmap" resultType="hashmap">
+		select me.cd_incom as "erpCode"
+		from comet.ma_emp me
+		where
+			me.cd_company = #{cdCompany}
+		group by me.cd_incom	
+	</select> -->
+	
+	<!-- <update id="updateMaEmpGwUpdateDate" parameterType="hashmap">
+		update	comet.ma_emp
+		set GW_INSERT_TIME = 
+			<if test='timeType == "SS"'>
+				sysdate
+			</if>
+			<if test='timeType == "MI"'>
+				sysdate
+			</if>
+		where
+			CD_COMPANY = #{erpCompSeq}
+			<if test='erpEmpSeq != null and erpEmpSeq != ""'>
+			and no_emp = #{erpEmpSeq}
+			</if>
+	</update> -->
+	
+	<!-- <update id="updateMaDeptGwUpdateDate" parameterType="hashmap">
+		update	comet.ma_dept
+		set GW_INSERT_TIME = 
+			<if test='timeType == "SS"'>
+				sysdate
+			</if>
+			<if test='timeType == "MI"'>
+				sysdate
+			</if>
+		where
+			CD_COMPANY = #{erpCompSeq}
+			<if test='erpDeptSeq != null and erpDeptSeq != ""'>
+			and cd_dept = #{erpDeptSeq}
+			</if>
+			and GW_INSERT_TIME is null
+	</update> -->
+	
+</mapper>

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="orgchartDAO">
+	<select id="orgchartDAO.getOrgchartPath" parameterClass="java.lang.String" resultClass="java.lang.String">
+		SELECT file_path 
+		FROM t_co_orgchart
+		WHERE group_seq = #groupSeq#
+	</select>
+	
+	<select id="orgchartDAO.getOrgchartDt" parameterClass="java.util.Map" resultClass="java.lang.String">
+		 SELECT DATE_FORMAT(req_date, '%Y%m%d%H%m%s') as "orgChartDt"
+		 FROM t_co_orgchart
+		 WHERE group_seq = #groupSeq#
+		 <isNotNull  property="orgChartDt">
+			<isNotEmpty property="orgChartDt">
+			AND DATE_FORMAT(req_date, '%Y%m%d%H%m%s') > #orgChartDt#
+			</isNotEmpty>
+		</isNotNull>
+	</select>
+	
+	<select id="orgchartDAO.selectGroupList" resultClass="hashmap">
+		SELECT 
+			group_seq as "groupSeq",
+			group_name as "groupName"
+		FROM t_co_group
+	</select>
+	
+	<select id="orgchartDAO.selectCompBizDeptList" parameterClass="java.util.Map" resultClass="hashmap">
+		SELECT  
+		     oc.group_seq as "grpSeq"
+		    ,oc.gbn_org as "gbnOrg"
+		    ,oc.comp_seq as "compSeq"
+		    ,ccm.comp_name as "compName"
+		    ,oc.biz_seq as "bizSeq"
+		    ,IFNULL(cbm.biz_name, '') as "bizName"
+		    ,oc.dept_seq as "deptSeq"
+		    ,IFNULL(cdm.dept_name, '') as "deptName"
+		    ,oc.parent_seq as "parentSeq"
+		    ,oc.level as "level"
+		    ,IFNULL(oc.order_num,'') as "order"
+		    ,IFNULL(oc.path,'') as "path"
+		    ,CASE WHEN oc.gbn_org = 'c' AND cb.display_yn = 'Y' THEN IFNULL(CONCAT(ccm.comp_name, '|', CONCAT(cbm.biz_name, '|', cdm.path_name)),'')
+		        WHEN cb.display_yn = 'N' THEN IFNULL(CONCAT(ccm.comp_name, '|', cdm.path_name),'')
+		        ELSE '' END AS pathName
+		    ,IFNULL(a.member,0) as "member"
+		FROM v_org_chart oc
+		LEFT JOIN
+		(
+		    SELECT A.path, IFNULL(SUM(B.cnt), 0) AS member
+		    FROM v_org_chart A
+		    LEFT JOIN
+		    (
+		        SELECT CASE WHEN cb.display_yn = 'Y' THEN CONCAT(cb.comp_seq, '|', CONCAT(cb.biz_seq, '|', cd.path))
+		            ELSE CONCAT(cb.comp_seq, '|', cd.path) END as path, COUNT(ed.emp_seq) cnt
+		        FROM t_co_dept cd, t_co_emp_dept ed, t_co_biz cb
+		        WHERE ed.group_seq = #groupSeq#
+		            AND ed.group_seq = cd.group_seq
+		            AND ed.dept_seq = cd.dept_seq
+		            AND ed.group_seq = cb.group_seq
+		            AND ed.biz_seq = cb.biz_seq
+		            AND ed.use_yn = 'Y'
+		            AND cd.use_yn = 'Y'
+		            AND cb.use_yn = 'Y'
+		        GROUP BY cd.path
+		    ) B
+		    ON B.path like concat(A.path,'%')
+		    WHERE A.group_seq = #groupSeq#
+		    GROUP BY A.path  
+		) a
+		ON oc.path = a.path
+		LEFT JOIN t_co_biz cb
+		ON      oc.biz_seq = cb.biz_seq
+		LEFT JOIN t_co_comp_multi ccm
+		ON      oc.comp_seq = ccm.comp_seq AND ccm.lang_code = #langCode#
+		LEFT JOIN t_co_biz_multi cbm
+		ON      oc.biz_seq = cbm.biz_seq AND cbm.lang_code = #langCode#
+		LEFT JOIN t_co_dept_multi cdm
+		ON      oc.dept_seq = cdm.dept_seq AND cdm.lang_code = #langCode#           
+		WHERE	oc.group_seq = #groupSeq#
+		<isNotNull property="compSeq"><isNotEmpty property="compSeq">AND oc.comp_seq = #compSeq#</isNotEmpty></isNotNull>
+		<isNotNull property="bizSeq"><isNotEmpty property="bizSeq">AND oc.biz_seq = #bizSeq#</isNotEmpty></isNotNull>
+		<isNotNull property="deptSeq"><isNotEmpty property="deptSeq">AND oc.dept_seq = #deptSeq#</isNotEmpty></isNotNull>
+		ORDER BY oc.path
+	</select>
+	
+	<select id="orgchartDAO.selectEmpList" parameterClass="java.util.Map" resultClass="hashmap">
+		SELECT 
+		      A.emp_seq as "empSeq"
+		    , A.login_id as "loginId"
+		    , tcem.emp_name as "empName"
+		    , IFNULL((SELECT dp_name FROM t_co_comp_duty_position_multi WHERE dp_seq = A.position_code AND lang_code = #langCode# AND dp_type = 'POSITION' LIMIT 1), '') as "positionName"
+		    , IFNULL((SELECT detail_name FROM t_co_code_detail_multi WHERE detail_code = A.job_code AND CODE = 'COM503' AND lang_code = #langCode#), '') as "jobName"
+		    , IFNULL(tcem.main_work, '') as "mainWord"
+		    , tced.group_seq as "grpSeq"
+		    , tced.dept_seq as "deptSeq"
+		    , IFNULL(A.email_addr, '') as "emailAddr"
+		    , RNUM as "order"
+		    , A.pic_file_id as "picFileId"
+		FROM  (SELECT 
+		            tce.emp_seq
+		          , tce.login_id
+		          , tce.position_code
+		          , tce.job_code
+		          , tce.email_addr
+		          , tce.pic_file_id
+		          , (@RNUM := @RNUM + 1) as RNUM
+		      FROM  t_co_emp tce, (SELECT @RNUM := 0) A
+		      ORDER BY tce.position_code, tce.job_code, tce.create_date) A
+		JOIN  t_co_emp_multi tcem
+		ON    A.emp_seq = tcem.emp_seq AND tcem.lang_code = #langCode#
+		JOIN t_co_dept tcde
+    	ON    tcde.group_seq = #groupSeq# AND tcde.comp_seq = #compSeq# 
+    	AND  CONCAT('|',tcde.path,'|') like CONCAT('%|',#deptSeq#,'|%')
+		JOIN  t_co_emp_dept tced
+		ON    A.emp_seq = tced.emp_seq AND tced.group_seq = #groupSeq# AND tced.comp_seq = #compSeq# 
+		AND tced.dept_seq = tcde.dept_seq
+		<isNotNull property="bizSeq"><isNotEmpty property="bizSeq">AND tced.biz_seq = #bizSeq#</isNotEmpty></isNotNull>
+	</select>
+	
+	<update id="orgchartDAO.insertEmpNum" parameterClass="java.util.Map">
+	
+		INSERT INTO t_co_emp_comp
+		(
+			  erp_emp_seq
+			, group_seq
+			, comp_seq
+			, emp_seq
+		)	
+		VALUES 
+		(
+			  #empNum#
+			, #groupSeq#
+			, #compSeq#
+			, #empSeq#
+		)
+		ON DUPLICATE KEY UPDATE erp_emp_seq = #empNum#
+	</update>
+	
+	<select id="orgchartDAO.selectCompDomain" parameterClass="java.util.Map" resultClass="java.lang.String">
+		 SELECT comp_domain as "domain"
+		 FROM t_co_comp
+		 WHERE group_seq = #groupSeq#
+		 AND comp_seq = #compSeq#
+	</select>
+</sqlMap>

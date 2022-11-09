@@ -1,0 +1,276 @@
+package ebp.portalView.service.impl;
+
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import ebp.portalView.constants.RelatedSearchConstants;
+import ebp.portalView.dao.RelatedDAO;
+import ebp.portalView.service.EbpRelatedSearchService;
+import ebp.portalView.vo.RelatedLink;
+import ebp.portalView.vo.RelatedSearch;
+import io.searchbox.core.SearchResult;
+import io.searchbox.core.SearchResult.Hit;
+import main.constants.FormatConstants;
+import neos.cmm.util.CommonUtil;
+import neos.cmm.util.DateUtil;
+import neos.cmm.util.DateUtil.DateFormat;
+import neos.cmm.util.code.CommonCodeUtil;
+import neos.helper.DateHelper;
+
+@Service("EbpRelatedSearchService")
+public class EbpRelatedSearchServiceImpl implements EbpRelatedSearchService {
+
+	@Autowired
+	private EbpRelatedSearchIndex ebpRelatedSearchIndex;
+	
+	@Autowired
+	RelatedDAO relatedDAO;
+
+	@Override
+	public List<RelatedSearch> getRelatedSearchKeyword(Map<String, String> reqParams) throws Exception {
+		List<RelatedSearch> relatedWordList = new ArrayList<>();
+		int size = Integer.parseInt(reqParams.get("size"));
+		String type = reqParams.get("type");
+		String searchWord = reqParams.get("searchWord");
+		
+		//연관 검색어/연관 메뉴 조회 쿼리
+		BoolQueryBuilder query = QueryBuilders.boolQuery();
+		query.must( QueryBuilders.queryStringQuery("searchWord :" + searchWord + ""));
+		query.must( QueryBuilders.queryStringQuery("useYn :" + "Y" + ""));
+		
+		//연관검색어
+		if(RelatedSearchConstants.TYPE_RELATED_SEARCH_WORD.equals(type)) {
+			
+			query.must( QueryBuilders.existsQuery("relatedSearchWord"));
+		
+		}
+		//연관메뉴
+		else if(RelatedSearchConstants.TYPE_RELATED_MENU.equals(type)) {
+			
+			query.must( QueryBuilders.existsQuery("menuId"));
+			
+		}else {
+			return relatedWordList;
+		}
+		
+		//소스빌더
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+				 .query(query)
+				 .from(0)
+				 .size(size)
+				 .sort(SortBuilders.fieldSort("count").order(SortOrder.DESC))
+				 .explain(false);
+		
+		SearchResult searchResult = ebpRelatedSearchIndex.getSearchClient().search(RelatedSearchConstants.EL_ALIAS_NAME_RELATED_SEARCH, new ArrayList<String>() { 
+            { 
+                add(RelatedSearchConstants.EL_TYPE_RELATED_SEARCH); 
+            } 
+        }, sourceBuilder);
+		
+		if ( searchResult != null ) {
+			List<Hit<HashMap, Void>> searchHits = searchResult.getHits(HashMap.class);
+			relatedWordList = searchResult.getSourceAsObjectList(RelatedSearch.class);
+			for(int i=0;i<relatedWordList.size();i++) {
+				relatedWordList.get(i).setId((String)searchHits.get(i).source.get("es_metadata_id"));
+			}
+		}
+
+		return relatedWordList;
+	}
+
+	@Override
+	public void saveRelatedSearchKeyword(Map<String, String> reqParams) throws Exception {
+		
+		//0:연관메뉴 저장, 1:연관검색어 저장
+		String saveType = reqParams.get("saveType");
+		String langCode = reqParams.get("langCode");
+		//현재시간 포매팅
+		String now = DateHelper.convertDateToString(Calendar.getInstance().getTime(), FormatConstants.FORMAT_DATE_STRICT);
+		//연관메뉴 저장처리
+		if(RelatedSearchConstants.TYPE_RELATED_MENU.equals(saveType)) {
+			//해당 데이터 조회
+			RelatedSearch relatedSearch = getRelatedSearch(reqParams);
+			
+			if(relatedSearch == null) {
+				//데이터 없으면 insert
+				String mainSource = jsonBuilder()
+						.startObject()
+							.field("searchWord", reqParams.get("searchWord"))
+							.field("menuModule", reqParams.get("menuModule"))
+							.field("menuId", reqParams.get("menuId"))
+							.field("menuName", reqParams.get("menuName"))
+							.field("count", 1)
+							.field("modifiedDate", now)
+							.field("useYn", "Y")
+						.endObject().string();
+				ebpRelatedSearchIndex.insert(mainSource);
+			}else {
+				//데이터 있으면 baseDay, maxCount 조건 판단해서 update
+				executeRelatedSearchUpdate(relatedSearch, now, langCode);
+			}
+			
+		}
+		//연관검색어 저장처리
+		else if(RelatedSearchConstants.TYPE_RELATED_SEARCH_WORD.equals(saveType)) {
+			//해당 데이터 조회
+			RelatedSearch relatedSearch = getRelatedSearch(reqParams);
+			
+			if(relatedSearch == null) {
+				//데이터 없으면 insert
+				String mainSource = jsonBuilder()
+						.startObject()
+							.field("searchWord", reqParams.get("searchWord"))
+							.field("relatedSearchWord", reqParams.get("relatedSearchWord"))
+							.field("count", 1)
+							.field("modifiedDate", now)
+							.field("useYn", "Y")
+						.endObject().string();
+				ebpRelatedSearchIndex.insert(mainSource);
+			}else {
+				//데이터 있으면 baseDay, maxCount 조건 판단해서 update
+				executeRelatedSearchUpdate(relatedSearch, now, langCode);
+			}
+		}
+	}
+
+	//업데이트
+	private void executeRelatedSearchUpdate(RelatedSearch relatedSearch, String now, String langCode) throws Exception{
+		//update기준일수, Max Count 설정 가져오기
+		int baseDay = 1;
+		int maxCount = 10;
+		List<Map<String, String>> codeList = CommonCodeUtil.getCodeList("POT001", langCode);
+		if(codeList != null) {
+			for(int i=0;i<codeList.size();i++) {
+				Map<String, String> codeMap = codeList.get(i);
+				String code = codeMap.get("CODE");
+				String value = codeMap.get("FLAG_1");
+				
+				if(StringUtils.isNotBlank(code) && StringUtils.isNotBlank(value) && CommonUtil.isNumeric(value)) {
+					if(RelatedSearchConstants.RELATED_UPDATE_COMMON_CODE_BASE_DAY.equals(code)) {
+						baseDay = Integer.parseInt(value);
+					}else if(RelatedSearchConstants.RELATED_UPDATE_COMMON_CODE_MAX_COUNT.equals(code)) {
+						maxCount = Integer.parseInt(value);
+					}
+				}
+			}
+		}
+		
+		Date lastModifiedDate = DateUtil.convertDate(relatedSearch.getModifiedDate(), DateFormat.STANDARD);	
+		int count = relatedSearch.getCount();
+		
+		long diffOfDay = DateUtil.getDateDiff("d", lastModifiedDate, new Date());
+
+		//baseDay >= modifiedDate - 현재시간  && count >= maxCount ---> update 안함
+		//마지막 업데이트 날짜가 기준일수 내에 있으면서 카운트가 기준 maxCount 이상이면 update안함
+		if(baseDay < diffOfDay || count < maxCount) {
+			//update 실행
+			String mainSource = jsonBuilder()
+					.startObject()
+						.startObject("doc")
+							.field("modifiedDate", now)
+							.field("count", count + 1)
+						.endObject()
+					.endObject().string();
+			
+			ebpRelatedSearchIndex.update(relatedSearch.getId(), mainSource);
+		}
+	}
+
+	private RelatedSearch getRelatedSearch(Map<String, String> reqParams) throws Exception{
+		
+		RelatedSearch relatedSearch = null;
+		
+		String saveType = reqParams.get("saveType");
+		String searchWord = reqParams.get("searchWord");
+		String menuModule = reqParams.get("menuModule");
+		String menuId = reqParams.get("menuId");
+		String menuName = reqParams.get("menuName");
+		String relatedSearchWord = reqParams.get("relatedSearchWord");
+		BoolQueryBuilder query = QueryBuilders.boolQuery();
+		
+		if(RelatedSearchConstants.TYPE_RELATED_MENU.equals(saveType)) {
+			
+			//연관 메뉴 조회 쿼리
+			query.must( QueryBuilders.queryStringQuery("searchWord :" + searchWord + ""));
+			query.must( QueryBuilders.queryStringQuery("menuModule :" + menuModule + ""));
+			query.must( QueryBuilders.queryStringQuery("menuId :" + menuId + ""));
+			query.must( QueryBuilders.queryStringQuery("menuName :" + menuName + ""));
+			
+			
+		}else if(RelatedSearchConstants.TYPE_RELATED_SEARCH_WORD.equals(saveType)) {
+			
+			//연관 검색어 조회 쿼리
+			query.must( QueryBuilders.queryStringQuery("searchWord :" + searchWord + ""));
+			query.must( QueryBuilders.queryStringQuery("relatedSearchWord :" + relatedSearchWord + ""));
+			
+		}
+		
+		//소스빌더
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+				 .query(query)
+				 .from(0)
+				 .size(1)
+				 .sort(SortBuilders.fieldSort("modifiedDate").order(SortOrder.DESC))
+				 .explain(false);
+		
+		SearchResult searchResult = ebpRelatedSearchIndex.getSearchClient().search(RelatedSearchConstants.EL_ALIAS_NAME_RELATED_SEARCH, new ArrayList<String>() { 
+            { 
+                add(RelatedSearchConstants.EL_TYPE_RELATED_SEARCH); 
+            } 
+        }, sourceBuilder);
+		
+		if ( searchResult != null ) {
+			List<Hit<HashMap, Void>> searchHits = searchResult.getHits(HashMap.class);
+			List<RelatedSearch> relatedSearchList = searchResult.getSourceAsObjectList(RelatedSearch.class);
+			for(int i=0;i<relatedSearchList.size();i++) {
+				relatedSearchList.get(i).setId((String)searchHits.get(i).source.get("es_metadata_id"));
+				relatedSearch = relatedSearchList.get(i);
+				break;
+			}
+		}
+		
+		return relatedSearch;
+	}
+
+	@Override
+	public List<RelatedLink> getRelatedLink(Map<String, Object> reqParams) throws Exception {
+		
+		String menuFilter = getMenuFilter();
+		reqParams.put("menuFilter", menuFilter);
+		return relatedDAO.selectRelatedLink(reqParams);
+	}
+
+	private String getMenuFilter() {
+		String menuFilter = "";
+		//TODO 접근 가능 메뉴 조회 (derp, 타시스템 등등)
+		String[] menus = {"1000","2000"};
+		
+		for(int i = 0; i < menus.length; i++){
+			menuFilter += ",'" + menus[i] + "'";
+		}
+		
+		if(menus.length > 0) {
+			menuFilter = menuFilter.substring(1);
+		}else {
+			menuFilter = "'NOTAUTH'";
+		}
+		
+		return menuFilter;
+	}
+	
+}

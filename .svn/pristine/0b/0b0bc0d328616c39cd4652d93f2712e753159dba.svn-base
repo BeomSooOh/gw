@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="relatedDAO">
+	
+	<resultMap id="relatedLink" class="ebp.portalView.vo.RelatedLink">
+		<result property="id"    		column="id"/>
+        <result property="searchWord"     		column="search_word"/>
+        <result property="url"     		column="url"/>
+        <result property="menuId"     		column="menu_id"/>
+	</resultMap>
+	
+	<select id="relatedDAO.selectRelatedLink" resultMap="relatedLink" parameterClass="hashmap">
+		SELECT id
+		     , search_word
+		     , url
+		     , menu_id 
+		  FROM $DB_NEOS$t_co_related_link
+		 WHERE search_word like concat('%',#searchWord#,'%')
+		 <isNotEmpty property="menuFilter">
+			AND menu_id in ($menuFilter$)
+		</isNotEmpty>
+		 LIMIT 0, $count$
+	</select>
+</sqlMap>

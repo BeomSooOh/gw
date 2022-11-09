@@ -1,0 +1,158 @@
+package api.menuAccess.vo;
+
+public class MenuAccessVO {
+	private String groupSeq;
+	private String typeCode;
+    private String empSeq;
+	private String empName;
+    private String loginId;
+    private String langCode;
+	private String useDate;
+	private String menuNo;
+	private String menuName;
+    private String menuSubNo; //mobile 전용
+    private String menuSubName; //mobile 전용
+    private String useDevice; //mobile 전용
+    private String useModel; //mobile 전용
+    private String menuAuth; //web 전용
+    private String accessIp; //web 전용
+    private String aceessType;
+    
+    private int totalCount;
+
+    public String getGroupSeq() {
+        return groupSeq;
+    }
+
+    public void setGroupSeq(String groupSeq) {
+        this.groupSeq = groupSeq;
+    }
+    
+    public String getEmpSeq() {
+        return empSeq;
+    }
+
+    public void setEmpSeq(String empSeq) {
+        this.empSeq = empSeq;
+    }
+
+    public String getEmpName() {
+        return empName;
+    }
+
+    public void setEmpName(String empName) {
+        this.empName = empName;
+    }
+
+    public String getLoginId() {
+        return loginId;
+    }
+
+    public void setLoginId(String loginId) {
+        this.loginId = loginId;
+    }
+
+    public String getLangCode() {
+        return langCode;
+    }
+
+    public void setLangCode(String langCode) {
+        this.langCode = langCode;
+    }
+
+    public String getUseDate() {
+        return useDate;
+    }
+
+    public void setUseDate(String useDate) {
+        this.useDate = useDate;
+    }
+
+    public String getMenuNo() {
+        return menuNo;
+    }
+
+    public void setMenuNo(String menuNo) {
+        this.menuNo = menuNo;
+    }
+
+    public String getMenuName() {
+        return menuName;
+    }
+
+    public void setMenuName(String menuName) {
+        this.menuName = menuName;
+    }
+
+    public String getMenuSubNo() {
+        return menuSubNo;
+    }
+
+    public void setMenuSubNo(String menuSubNo) {
+        this.menuSubNo = menuSubNo;
+    }
+
+    public String getMenuSubName() {
+        return menuSubName;
+    }
+
+    public void setMenuSubName(String menuSubName) {
+        this.menuSubName = menuSubName;
+    }
+
+    public String getUseDevice() {
+        return useDevice;
+    }
+
+    public void setUseDevice(String useDevice) {
+        this.useDevice = useDevice;
+    }
+
+    public String getUseModel() {
+        return useModel;
+    }
+
+    public void setUseModel(String useModel) {
+        this.useModel = useModel;
+    }
+
+    public String getMenuAuth() {
+        return menuAuth;
+    }
+
+    public void setMenuAuth(String menuAuth) {
+        this.menuAuth = menuAuth;
+    }
+
+    public String getAccessIp() {
+        return accessIp;
+    }
+
+    public void setAccessIp(String accessIp) {
+        this.accessIp = accessIp;
+    }
+
+    public String getAceessType() {
+        return aceessType;
+    }
+
+    public void setAceessType(String aceessType) {
+        this.aceessType = aceessType;
+    }
+
+    public int getTotalCount() {
+        return totalCount;
+    }
+
+    public void setTotalCount(int totalCount) {
+        this.totalCount = totalCount;
+    }
+
+    public String getTypeCode() {
+        return typeCode;
+    }
+
+    public void setTypeCode(String typeCode) {
+        this.typeCode = typeCode;
+    }
+}

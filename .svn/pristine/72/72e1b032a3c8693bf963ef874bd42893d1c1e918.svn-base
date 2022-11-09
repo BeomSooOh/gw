@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="orgchartDAO">
+	<select id="orgchartDAO.getOrgSyncTaskList" resultClass="hashmap">
+		SELECT
+		      group_seq as "groupSeq"
+		    , file_path as "filePath"
+		    , req_date as "reqDate"
+		    , task_status as "taskStatus"
+		FROM t_co_orgchart
+		WHERE task_status = '1'
+	</select>
+	
+	<update id="orgchartDAO.updateOrgSyncTask" parameterClass="hashmap">
+		UPDATE t_co_orgchart
+		SET	task_status = #taskStatus#
+		 <isNotNull  property="filePath">
+			<isNotEmpty property="filePath">
+			, file_path = #filePath#
+			</isNotEmpty>
+		</isNotNull>
+		WHERE group_seq = #groupSeq#
+	</update>
+
+
+	<update id="orgchartDAO.updateOrgSyncTaskComplete" parameterClass="hashmap">
+		UPDATE t_co_orgchart
+		SET	task_status = CAST(task_status AS INT) - 2
+			, file_path = #filePath#
+			, req_date = SYSDATE()
+		WHERE group_seq = #groupSeq#
+	</update>
+	
+	<select id="orgchartDAO.getCompList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+			comp_seq, 
+			parent_comp_seq, 
+			group_seq, 
+			comp_regist_num, 
+			comp_num, 
+			standard_code, 
+			tel_num, 
+			fax_num, 
+			homepg_addr, 
+			comp_domain, 
+			email_addr, 
+			email_domain, 
+			zip_code, 
+			sms_id, 
+			sms_passwd, 
+			native_lang_code, 
+			order_num, 
+			use_yn, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date
+		FROM t_co_comp
+		WHERE group_seq = #groupSeq#
+		AND use_yn = 'Y'
+	</select>
+	
+	<select id="orgchartDAO.getCompMultiList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+			comp_seq, 
+			lang_code, 
+			group_seq, 
+			comp_name, 
+			comp_display_name, 
+			owner_name,
+			sender_name, 
+			biz_condition, 
+			item, 
+			addr, 
+			detail_addr, 
+			use_yn, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date
+		FROM t_co_comp_multi
+		WHERE group_seq = #groupSeq#
+		AND use_yn = 'Y'
+	</select>
+	
+	<select id="orgchartDAO.getBizList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+			biz_seq, 
+			group_seq, 
+			comp_seq, 
+			comp_regist_num, 
+			comp_num, 
+			tel_num, 
+			fax_num, 
+			homepg_addr, 
+			zip_code, 
+			display_yn, 
+			native_lang_code,
+			order_num, 
+			use_yn, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date 
+		FROM t_co_biz
+		WHERE group_seq = #groupSeq#
+		AND use_yn = 'Y'
+	</select>
+	
+	<select id="orgchartDAO.getBizMultiList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+			biz_seq, 
+			lang_code, 
+			group_seq, 
+			comp_seq, 
+			biz_name, 
+			owner_name, 
+			biz_condition, 
+			item, 
+			addr, 
+			detail_addr,
+			use_yn, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date 
+		FROM t_co_biz_multi
+		WHERE group_seq = #groupSeq#
+		AND use_yn = 'Y'
+	</select>
+	
+	<select id="orgchartDAO.getDeptList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+			A.dept_seq, 
+			group_seq, 
+			comp_seq, 
+			biz_seq, 
+			parent_dept_seq, 
+			tel_num, 
+			fax_num, 
+			homepg_addr, 
+			zip_code, 
+			susin_yn, 
+			vir_dept_yn, 
+			team_yn, 
+			native_lang_code, 
+			CONCAT(CONCAT('|', path), '|')  as "path",
+			ptype, 
+			dept_level, 
+			B.member,
+			order_num, 
+			use_yn, 
+			create_seq, 
+			create_date, 
+			modify_seq,
+			modify_date 
+		FROM t_co_dept A
+		JOIN 
+		(
+		    SELECT A.dept_seq, IFNULL(SUM(B.cnt), 0) AS member
+		    FROM t_co_dept A
+		    left outer join
+		    (
+		        SELECT b.path, COUNT(emp_seq) cnt
+		        FROM t_co_dept b, t_co_emp_dept A
+		        WHERE A.group_seq = #groupSeq#
+		            AND A.group_seq = b.group_seq
+		            AND A.dept_seq = b.dept_seq
+		            AND A.use_yn = 'Y'
+		        GROUP BY b.path
+		    ) B
+		    ON B.path like concat(A.path,'%')
+		    WHERE A.group_seq = #groupSeq#
+		    AND A.use_yn = 'Y'
+		    GROUP BY A.dept_seq
+		) B
+		ON A.dept_seq = B.dept_seq
+		WHERE A.group_seq = #groupSeq#
+		AND A.use_yn = 'Y'
+	</select>
+	
+	<select id="orgchartDAO.getDeptMultiList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+			dept_seq, 
+			lang_code, 
+			group_seq, 
+			comp_seq, 
+			biz_seq, 
+			dept_name, 
+			dept_display_name, 
+			sender_name, 
+			addr, 
+			detail_addr, 
+			path_name, 
+			use_yn, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date 
+		FROM t_co_dept_multi
+		WHERE group_seq = #groupSeq#
+		AND use_yn = 'Y'
+	</select>
+	
+	<select id="orgchartDAO.getEmpList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+			emp_seq, 
+			login_id, 
+			emp_num, 
+			erp_emp_num, 
+			email_addr, 
+			mobile_use_yn, 
+			messenger_use_yn, 
+			job_code, 
+			status_code, 
+			duty_code, 
+			position_code, 
+			native_lang_code, 
+			license_check_yn, 
+			join_day, 
+			resign_day, 
+			gender_code, 
+			bday, 
+			lunar_yn, 
+			work_status, 
+			home_tel_num, 
+			mobile_tel_num, 
+			wedding_yn, 
+			wedding_day, 
+			zip_code, 
+			pic_file_id, 
+			sign_file_id, 
+			use_yn, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date 
+		FROM t_co_emp
+		WHERE use_yn = 'Y'
+		AND emp_seq IN (SELECT emp_seq FROM t_co_emp_dept WHERE group_seq = #groupSeq#)
+	</select>
+	
+	<select id="orgchartDAO.getEmpMultiList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+			emp_seq, 
+			lang_code, 
+			emp_name, 
+			addr, 
+			detail_addr, 
+			main_work, 
+			use_yn, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date 
+		FROM t_co_emp_multi
+		WHERE use_yn = 'Y'
+		AND emp_seq IN (SELECT emp_seq FROM t_co_emp_dept WHERE group_seq = #groupSeq#)
+	</select>
+	
+	<select id="orgchartDAO.getEmpDeptList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+			dept_seq, 
+			emp_seq, 
+			group_seq, 
+			comp_seq, 
+			biz_seq, 
+			main_dept_yn, 
+			duty_code, 
+			position_code, 
+			tel_num, 
+			fax_num, 
+			zip_code, 
+			orgchart_display_yn, 
+			messenger_display_yn, 
+			use_yn, 
+			order_num,
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date 
+		FROM t_co_emp_dept
+		WHERE group_seq = #groupSeq#
+		AND use_yn = 'Y'
+	</select>
+	
+	<select id="orgchartDAO.getCompDutyPositionList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+			dp_seq, 
+			comp_seq, 
+			dp_type, 
+			use_yn, 
+			order_num, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date 
+		FROM t_co_comp_duty_position
+		WHERE use_yn = 'Y'
+		AND comp_seq IN (SELECT comp_seq FROM t_co_comp WHERE group_seq = #groupSeq# AND use_yn = 'Y')
+	</select>
+	
+	<select id="orgchartDAO.getCompDutyPositionMultiList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+			dp_seq, 
+			lang_code, 
+			comp_seq, 
+			dp_type, 
+			dp_name, 
+			desc_text, 
+			comment_text, 
+			use_yn, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date 
+		FROM t_co_comp_duty_position_multi
+		WHERE use_yn = 'Y'
+		AND comp_seq IN (SELECT comp_seq FROM t_co_comp WHERE group_seq = #groupSeq# AND use_yn = 'Y')
+	</select>
+	
+	<select id="orgchartDAO.getCompEmpSortList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT 
+			comp_seq, 
+			sort_field, 
+			sort_type, 
+			order_num, 
+			use_yn, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date 
+		FROM t_co_comp_emp_sort
+		WHERE use_yn = 'Y'
+		AND comp_seq IN (SELECT comp_seq FROM t_co_comp WHERE group_seq = #groupSeq# AND use_yn = 'Y')
+	</select>
+</sqlMap>

@@ -1,0 +1,765 @@
+package api.menuAccess.service.impl;
+
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+
+import api.common.model.APIResponse;
+import api.menuAccess.constants.MenuAccessConstants;
+import api.menuAccess.dao.MenuAccessDAO;
+import api.menuAccess.service.MenuAccessService;
+import api.menuAccess.vo.MenuAccessVO;
+import io.searchbox.core.SearchResult;
+import io.searchbox.core.SearchResult.Hit;
+import main.constants.CommonConstants;
+import main.constants.FormatConstants;
+import neos.cmm.db.CommonSqlDAO;
+import neos.cmm.vo.Result;
+
+@Service("MenuAccessService")
+public class MenuAccessServiceImpl implements MenuAccessService {
+    private static Log logger = LogFactory.getLog(MenuAccessServiceImpl.class);
+    
+    @Autowired
+    private MenuAccessIndex menuAccessIndex;
+
+    @Resource ( name = "MenuAccessDAO" )
+    private MenuAccessDAO menuAccessDAO;
+    
+    @Resource(name = "commonSql")
+    private CommonSqlDAO commonSql;
+
+    @Override
+    public List<MenuAccessVO> getMenuAccessList(Map<String, Object> reqParams) throws Exception {
+        List<MenuAccessVO> menuAccessList = new ArrayList<>();
+        String langCode = (String) reqParams.get("langCode");
+        int page = Integer.parseInt((String) reqParams.get("page"));
+        int pageSize = Integer.parseInt((String) reqParams.get("pageSize"));
+        
+        if (pageSize > Integer.MAX_VALUE || pageSize < Integer.MIN_VALUE) {//정수형 오버플로우 방지 적용
+	        throw new IllegalArgumentException("out of bound");
+	    }
+        
+        int pageStart = page == 1 ? 0 : (page-1)*pageSize;
+        
+        String searchEmpName = (String) reqParams.get("empName");
+        String searchMenuName = (String) reqParams.get("menuName");
+
+        String startDate = (String) reqParams.get("frDt");
+        String endDate = (String) reqParams.get("toDt");
+        String format = FormatConstants.FORMAT_DATE_TIME;
+
+        // 로컬에서 온 시간(요청시간)과 서버에서 시간 비교 
+        // endDate < 서버시간의 오늘-364 이면 조회 X
+        // startDate < 서버시간의 오늘-364 이면 startDate = 서버시간의 오늘-364
+        long nowTime = System.currentTimeMillis();
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+
+        Date reqFrDt = dateFormat.parse(startDate);
+        Date reqToDt = dateFormat.parse(endDate);
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(dateFormat.parse(dateFormat.format(nowTime)));
+        cal.add(Calendar.YEAR, -1);
+        cal.add(Calendar.DATE, 1);
+        Date preYrDt = DateUtils.truncate(cal.getTime(), Calendar.DATE);
+        
+        if (preYrDt.compareTo(reqToDt) > 0) {
+            return menuAccessList;
+        }
+        if (preYrDt.compareTo(reqFrDt) > 0) {
+            startDate = dateFormat.format(preYrDt);
+        }
+
+        String typeCode = (String) reqParams.get("typeCode");
+        String groupSeq = (String) reqParams.get("groupSeq");
+        
+        BoolQueryBuilder query = QueryBuilders.boolQuery()
+                .must(QueryBuilders.termQuery("typeCode", typeCode))
+                .must(QueryBuilders.termQuery("groupSeq", groupSeq))
+                .must(QueryBuilders.rangeQuery("useDate").gte(startDate).lte(endDate).format(format))
+                ;
+        
+        if (!searchEmpName.equals("") || searchEmpName != "") {
+            query.must(QueryBuilders.queryStringQuery("empName :*" + searchEmpName + "*"));
+        }
+        if (!searchMenuName.equals("") || searchMenuName != "") {
+            BoolQueryBuilder menuShouldquery = boolQuery();
+            menuShouldquery.should(QueryBuilders.wildcardQuery("menuName", "*" + searchMenuName + "*"));
+            menuShouldquery.should(QueryBuilders.wildcardQuery("menuSubName", "*" + searchMenuName + "*"));
+            query.must(menuShouldquery);
+        }
+        
+        //소스빌더
+        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+                .query(query)
+                .from(pageStart)
+                .size(pageSize)
+                .sort(SortBuilders.fieldSort("useDate").order(SortOrder.DESC))
+                .explain(false);
+
+//        System.out.println("getMenuAccessKeyword Query:\n" + sourceBuilder.toString());
+
+        SearchResult searchResult = menuAccessIndex.getSearchClient().search(MenuAccessConstants.EL_INDEX_MENU_ACCESS, new ArrayList<String>() { 
+            { 
+                add(MenuAccessConstants.EL_TYPE_MENU_ACCESS); 
+            } 
+        }, sourceBuilder);
+
+        if ( searchResult != null ) {
+            List<Hit<HashMap, Void>> searchHits = searchResult.getHits(HashMap.class);
+            int totalCount = searchResult.getTotal();
+            menuAccessList = searchResult.getSourceAsObjectList(MenuAccessVO.class);
+            for(int i = 0 ; i < menuAccessList.size(); i++) {
+                menuAccessList.get(i).setTotalCount(totalCount);
+                
+                String empName = (String) searchHits.get(i).source.get("empName");
+                String menuName = (String) searchHits.get(i).source.get("menuName");
+                String menuSubName = (String) searchHits.get(i).source.get("menuSubName");
+                
+                if ( empName != null) {
+                    menuAccessList.get(i).setEmpName( empName + " ["+ searchHits.get(i).source.get("loginId")+ "]");
+                }
+                
+                // sub메뉴가 있으면 sub메뉴명으로 표시, 없으면 메뉴명으로 표시
+                if ( menuSubName != null && !menuSubName.equals("") ) {
+                    menuAccessList.get(i).setMenuName(menuSubName + " [" + searchHits.get(i).source.get("useDevice") + "]");
+                }
+                else if ( menuName != null ) {
+                    if (typeCode.equals("0")) {
+                        menuAccessList.get(i).setMenuName(menuName + " [" + searchHits.get(i).source.get("menuAuth") + "]");
+                    }
+                    else {
+                        menuAccessList.get(i).setMenuName(menuName + " [" + searchHits.get(i).source.get("useDevice") + "]");
+                    }
+                }
+            }
+        }
+        return menuAccessList;
+    }
+
+    @Override
+    public Map<String, Object> getMenuAccessListTotalCnt(Map<String, Object> reqParams) throws Exception {
+        Map<String, Object> resultMap = new HashMap<String, Object> ();
+        
+        String searchEmpName = (String) reqParams.get("empName");
+        String searchMenuName = (String) reqParams.get("menuName");
+
+        String startDate = (String) reqParams.get("startDate");
+        String endDate = (String) reqParams.get("endDate");
+        String format = FormatConstants.FORMAT_DATE_TIME;
+
+        String groupSeq = (String) reqParams.get("groupSeq");
+        
+        AggregationBuilder aggregation = AggregationBuilders
+                .terms("typeCnt")
+                .field("typeCode");
+        
+        BoolQueryBuilder query = QueryBuilders.boolQuery()
+                .must(QueryBuilders.termQuery("groupSeq", groupSeq))
+                .must(QueryBuilders.rangeQuery("useDate").gte(startDate).lte(endDate).format(format))
+                ;
+        
+        if (!searchEmpName.equals("") || searchEmpName != "") {
+            query.must(QueryBuilders.queryStringQuery("empName :*" + searchEmpName + "*"));
+        }
+        if (!searchMenuName.equals("") || searchMenuName != "") {
+            BoolQueryBuilder menuShouldquery = boolQuery();
+            menuShouldquery.should(QueryBuilders.wildcardQuery("menuName", "*" + searchMenuName + "*"));
+            menuShouldquery.should(QueryBuilders.wildcardQuery("menuSubName", "*" + searchMenuName + "*"));
+            query.must(menuShouldquery);
+        }
+        
+        //소스빌더
+        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+            .aggregation(aggregation)
+            .query(query)
+            .from(0)
+            .size(0)
+            ;
+        
+        SearchResult searchResult = menuAccessIndex.getSearchClient().search(MenuAccessConstants.EL_INDEX_MENU_ACCESS, new ArrayList<String>() { 
+            { 
+                add(MenuAccessConstants.EL_TYPE_MENU_ACCESS); 
+            } 
+        }, sourceBuilder);
+        
+//        System.out.println("getMenuAccessListTotalCnt Query:\n" + sourceBuilder.toString());
+        
+        Long webCnt = (long) 0;
+        Long mobileCnt = (long) 0;
+        
+        if (searchResult.getAggregations().getTermsAggregation("typeCnt").getBuckets().size() > 1) {
+            if (searchResult.getAggregations().getTermsAggregation("typeCnt").getBuckets().get(0).getKey().equals("0")) {
+                webCnt = searchResult.getAggregations().getTermsAggregation("typeCnt").getBuckets().get(0).getCount();
+                mobileCnt = searchResult.getAggregations().getTermsAggregation("typeCnt").getBuckets().get(1).getCount();
+            }
+            else {
+                webCnt = searchResult.getAggregations().getTermsAggregation("typeCnt").getBuckets().get(1).getCount();
+                mobileCnt = searchResult.getAggregations().getTermsAggregation("typeCnt").getBuckets().get(0).getCount();
+            }
+        }
+        else if (searchResult.getAggregations().getTermsAggregation("typeCnt").getBuckets().size() > 0) {
+            if (searchResult.getAggregations().getTermsAggregation("typeCnt").getBuckets().get(0).getKey().equals("0")) {
+                webCnt = searchResult.getAggregations().getTermsAggregation("typeCnt").getBuckets().get(0).getCount();
+            }
+            else {
+                mobileCnt = searchResult.getAggregations().getTermsAggregation("typeCnt").getBuckets().get(0).getCount();
+            }
+        }
+        resultMap.put("webCnt", webCnt);
+        resultMap.put("mobileCnt", mobileCnt);
+        
+        return resultMap;
+    }
+
+    @Override
+    public APIResponse saveMenuAccessList(Map<String, Object> reqParams) throws Exception {
+        // typeCode 0:web, 1:mobile
+        String typeCode = (String) reqParams.get("typeCode");
+//        if (typeCode.equals("0")) {
+//            System.out.println("saveMenuAccessList start WEB : " + reqParams);
+//        }
+//        else {
+//            System.out.println("saveMenuAccessList start Mobile : " + reqParams);
+//        }
+
+        APIResponse response = new APIResponse();
+        Result result = new Result();
+
+        String mainSource = "";
+
+        try {
+            if (!menuAccessIndex.isExistIndex(MenuAccessConstants.EL_INDEX_MENU_ACCESS)) {
+                logger.debug("saveMenuAccessList menu_access index create");
+                menuAccessIndex.init();
+            }
+        } catch (Exception e) {
+            logger.error("saveMenuAccessList menu_access index 생성 실패");
+            response.setResultCode(MenuAccessConstants.EL_CREATE_MENU_ACCESS_FAIL);
+            response.setResultMessage("MENU_ACCESS 인덱스 생성 실패");
+            response.setResult("");
+            return response;
+        }
+
+        if (typeCode.equals("1")) {
+            String groupSeq = (String) reqParams.get("groupSeq");
+            List<Map<String, Object>> reqList = (List<Map<String, Object>>) reqParams.get("listMap");
+
+            if (!(reqList.size() > 0)) {
+                response.setResultCode(CommonConstants.API_RESPONSE_SUCCESS);
+                response.setResultMessage("추가할 데이터가 없습니다.");
+                response.setResult("");
+                return response;
+            }
+            
+            for (Map<String, Object> reqMap : reqList) {
+                reqMap.put("typeCode", typeCode);
+                reqMap.put("groupSeq", groupSeq);
+//                System.out.println(reqMap);
+            }
+
+            // bulk 처리 테스트용
+            result = menuAccessIndex.insertBulk(reqList);
+        }
+        else {
+            mainSource = jsonBuilder()
+                    .startObject()
+                        .field("groupSeq", reqParams.get("groupSeq"))
+                        .field("empSeq", reqParams.get("empSeq"))
+                        .field("empName", reqParams.get("empName"))
+                        .field("loginId", reqParams.get("loginId"))
+                        .field("langCode", reqParams.get("langCode"))
+                        .field("useDate", reqParams.get("useDate"))
+                        .field("typeCode", reqParams.get("typeCode"))
+                        .field("menuNo", reqParams.get("menuNo"))
+                        .field("menuName", reqParams.get("menuName"))
+                        .field("menuAuth", reqParams.get("menuAuth"))
+                        .field("accessIp", reqParams.get("accessIp"))
+                    .endObject().string();
+//            System.out.println(mainSource);
+
+            result = menuAccessIndex.insert(mainSource);
+        }
+
+        response.setResult(result.getResult());
+        response.setResultCode(result.getResultCode());
+        response.setResultMessage(result.getResultMessage());
+        
+        return response;
+    }
+    
+    @Override
+    public APIResponse saveWebMenuAccessSync(Map<String, Object> reqParams) throws Exception {
+        APIResponse response = new APIResponse();
+        Result result = new Result();
+
+        try {
+            if (!menuAccessIndex.isExistIndex(MenuAccessConstants.EL_INDEX_MENU_ACCESS)) {
+                logger.debug("saveWebMenuAccessSync menu_access index create");
+                menuAccessIndex.init();
+            }
+        } catch (Exception e) {
+            logger.error("saveWebMenuAccessSync menu_access index 생성 실패");
+            response.setResultCode(MenuAccessConstants.EL_CREATE_MENU_ACCESS_FAIL);
+            response.setResultMessage("MENU_ACCESS 인덱스 생성 실패");
+            response.setResult("");
+            return response;
+        }
+        
+        // 서버 요청시간(dateFormat) 까지 쌓인 데이터 조회
+        // 조회한 데이터 insert bulk 처리
+        // 성공하면 조회한 데이터 테이블에서 삭제 처리
+        long nowTime = System.currentTimeMillis();
+        String format = FormatConstants.FORMAT_DATE_TIME;
+        SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+
+        reqParams.put("reqDate", dateFormat.format(nowTime));
+        
+        List<Map<String, Object>> reqList =  menuAccessDAO.menuAccessSyncList(reqParams);
+        
+//        System.out.println("MenuAccessTask.pollingWebMenuAccessSync menuAccessSyncList:" + reqList.size() + " / param:" + reqParams);
+        
+        if (!(reqList.size() > 0)) {
+            response.setResultCode(CommonConstants.API_RESPONSE_SUCCESS);
+            response.setResultMessage("추가할 데이터가 없습니다.");
+            response.setResult("");
+            return response;
+        }
+        
+        // bulk 처리 테스트용
+        result = menuAccessIndex.insertBulk(reqList);
+//        System.out.println("MenuAccessTask.pollingWebMenuAccessSync insertBulk result:" + result.getResultCode());
+        
+        // bulk insert 성공시 DB 데이터 삭제
+        if(CommonConstants.API_RESPONSE_SUCCESS.equals(result.getResultCode())) {
+            commonSql.delete("MenuAccess.deleteMenuAccessSync", reqParams);
+        }
+
+        response.setResult(result.getResult());
+        response.setResultCode(result.getResultCode());
+        response.setResultMessage(result.getResultMessage());
+        
+        return response;
+    }
+    
+    @Override
+    public APIResponse createTestMenuAccessList(Map<String, Object> reqParams) throws Exception {
+        APIResponse response = new APIResponse();
+        Result result = new Result();
+
+        String groupSeq = "demo";
+        // typeCode 0:web, 1:mobile
+        String typeCode = (String) reqParams.get("typeCode");
+//        String typeCode = "0";
+        int count = Integer.parseInt((String) reqParams.get("count"));
+        
+        String format = FormatConstants.FORMAT_DATE_TIME;
+
+        List<Map<String, Object>> reqList = new ArrayList<>();
+        Map<String, Object> listMap = new HashMap<String, Object>();
+        
+        String nowDate = new java.text.SimpleDateFormat(format).format(new java.util.Date());
+
+        long nowTime = System.currentTimeMillis();
+        SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(dateFormat.parse(dateFormat.format(nowTime)));
+        cal.add(Calendar.YEAR, -2);
+        cal.add(Calendar.DATE, -1);
+        Date preYrDt = DateUtils.truncate(cal.getTime(), Calendar.DATE);
+        
+        if (typeCode.equals("0")) {
+            nowDate = dateFormat.format(preYrDt);
+            listMap.put("groupSeq", groupSeq);
+            listMap.put("typeCode", typeCode);
+            listMap.put("empSeq", "1416");
+            listMap.put("empName", "김영조");
+            listMap.put("langCode", "kr");
+            listMap.put("loginId", "kadmin");
+            listMap.put("menuNo", "00000000");
+            listMap.put("menuName", "테스트용 메뉴");
+            listMap.put("menuAuth", "TESTER");
+            listMap.put("accessIp", "211.169.69.254");
+            listMap.put("useDate", nowDate);
+        }
+        else {
+            listMap.put("groupSeq", groupSeq);
+            listMap.put("typeCode", typeCode);
+            listMap.put("empSeq", "1513");
+            listMap.put("empName", "김영조");
+            listMap.put("langCode", "kr");
+            listMap.put("loginId", "kimyj");
+            listMap.put("menuNo", "22222222");
+            listMap.put("menuName", "모바일메뉴");
+            listMap.put("useModel", "Galaxy Note 10+");
+            listMap.put("useDevice", "Mobile");
+            listMap.put("menuSubNo", "11111111");
+            listMap.put("menuSubName", "모바일서브메뉴");
+            listMap.put("useDate", nowDate);
+        }
+        
+        for (int i = 0; i < count; i++) {
+//            listMap.put("useDate", preYrDt);
+            reqList.add(listMap);
+        }
+        
+        if (!(reqList.size() > 0)) {
+            response.setResultCode(CommonConstants.API_RESPONSE_SUCCESS);
+            response.setResultMessage("추가할 데이터가 없습니다.");
+            response.setResult(reqList);
+            return response;
+        }
+
+        // bulk 처리 테스트용
+        result = menuAccessIndex.insertBulk(reqList);
+
+        response.setResult(result.getResult());
+        response.setResultCode(result.getResultCode());
+        response.setResultMessage(result.getResultMessage());
+        
+        return response;
+    }
+
+    @Override
+    public APIResponse deleteMenuAccessList(Map<String, Object> reqParams) throws Exception {
+        APIResponse response = new APIResponse();
+        Result result = new Result();
+        
+        // useDate 컬럼 타입이 String 일경우
+        String useDateType = menuAccessIndex.getIndexFieldType(MenuAccessConstants.EL_INDEX_MENU_ACCESS, "useDate");
+        if (!useDateType.equals("date")) {
+            logger.error("menu_access index의 useDate 타입이 잘못 생성 되었습니다.");
+            response.setResultCode(MenuAccessConstants.EL_CREATE_MENU_ACCESS_FAIL);
+            response.setResultMessage("menu_access index의 useDate 타입이 잘못 생성 되었습니다.");
+            response.setResult("");
+            return response;
+        }
+        
+        // 삭제정책으로 2년전 데이터는 삭제
+        // 1. 서버 오늘 날짜 조회(toDate)
+        // 2. 2년전 날짜 계산(preDate)
+        // 3. elastic에서 preDate 이전의 데이터들의 total count 조회
+        // 3. elastic에서 preDate 이전의 데이터들의 _id 값 조회
+        // 4. _id 갯수만큼 delete bulk 처리
+        // cloud의 경우 서버 시간 기준으로 2년 이전 데이터는 삭제할꺼기 때문에 굳이 groupSeq로 나누어 조회할 필요는 없어보임.
+        
+        String format = FormatConstants.FORMAT_DATE_TIME;
+        String nowDate = new java.text.SimpleDateFormat(format).format(new java.util.Date());
+
+        long nowTime = System.currentTimeMillis();
+        SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(dateFormat.parse(dateFormat.format(nowTime)));
+        cal.add(Calendar.YEAR, -2);
+        cal.add(Calendar.DATE, 1);
+        Date preYrDt = DateUtils.truncate(cal.getTime(), Calendar.DATE);
+
+        String toDate = dateFormat.format(preYrDt);
+        
+        BoolQueryBuilder query = QueryBuilders.boolQuery()
+//                .must(QueryBuilders.termQuery("typeCode", typeCode))
+//                .must(QueryBuilders.termQuery("groupSeq", groupSeq))
+                .must(QueryBuilders.rangeQuery("useDate").lt(toDate).format(format))
+                ;
+        
+        // 삭제할 total count 조회
+        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder().fields("_id").query(query).size(0).explain(false);
+
+        SearchResult searchResult = menuAccessIndex.getSearchClient().search(
+            MenuAccessConstants.EL_INDEX_MENU_ACCESS
+            , new ArrayList<String>() { { add(MenuAccessConstants.EL_TYPE_MENU_ACCESS); } }
+            , sourceBuilder
+        );
+
+        int totalCnt = searchResult.getTotal();
+        if (totalCnt == 0) {
+            response.setResultCode(CommonConstants.API_RESPONSE_SUCCESS);
+            response.setResultMessage("삭제할 데이터가 없습니다.");
+            response.setResult("");
+            return response;
+        }
+        
+        int loopCnt = (int) Math.ceil((double)totalCnt/(double)MenuAccessConstants.DELETE_BULK_CNT);
+        
+//        System.out.println("menuAccessIndex Delete total Count = " + totalCnt + " / loop Count = " + loopCnt);
+        
+        for (int i = 0; i < loopCnt; i++) {
+            ArrayList<String> idList = new ArrayList<>();
+            sourceBuilder = new SearchSourceBuilder().fields("_id").query(query).size(MenuAccessConstants.DELETE_BULK_CNT).explain(false);
+            
+            searchResult = menuAccessIndex.getSearchClient().search(
+                    MenuAccessConstants.EL_INDEX_MENU_ACCESS, new ArrayList<String>() { { add(MenuAccessConstants.EL_TYPE_MENU_ACCESS); } }
+                    , sourceBuilder
+            );
+            
+            if ( searchResult != null ) {
+                JsonArray searchHits = searchResult.getJsonObject().get("hits").getAsJsonObject().get("hits").getAsJsonArray();
+                
+                for (JsonElement ar : searchHits) {
+                    idList.add(ar.getAsJsonObject().get("_id").getAsString());
+                }
+                result = menuAccessIndex.deleteBulk(idList);
+            }
+        }
+
+        response.setResult("Delete Count :" + totalCnt);
+        response.setResultCode(result.getResultCode());
+        response.setResultMessage(result.getResultMessage());
+        
+        return response;
+    }
+    
+    @Override
+    public List<MenuAccessVO> getMenuAccessListExcel(Map<String, Object> reqParams) throws Exception {
+        List<MenuAccessVO> menuAccessList = new ArrayList<>();
+        int rowNo = Integer.parseInt((String) reqParams.get("rowNo"));
+        int rowSize = Integer.parseInt((String) reqParams.get("rowSize"));
+        int maxRowSize = Integer.parseInt((String) reqParams.get("maxRowSize"));
+        
+        if (maxRowSize > Integer.MAX_VALUE || maxRowSize < Integer.MIN_VALUE) {//정수형 오버플로우 방지 적용
+	        throw new IllegalArgumentException("out of bound");
+	    }
+        
+        int rowStart = rowNo == 1 ? 0 : (rowNo-1)*maxRowSize;
+        String typeCode = (String) reqParams.get("typeCode");
+        String groupSeq = (String) reqParams.get("groupSeq");
+
+        String searchEmpName = (String) reqParams.get("empName");
+        String searchMenuName = (String) reqParams.get("menuName");
+        
+        String startDate = (String) reqParams.get("startDate");
+        String endDate = (String) reqParams.get("endDate");
+        String format = FormatConstants.FORMAT_DATE_TIME;
+
+        // 로컬에서 온 시간(요청시간)과 서버에서 시간 비교 
+        // endDate < 서버시간의 오늘-364 이면 조회 X
+        // startDate < 서버시간의 오늘-364 이면 startDate = 서버시간의 오늘-364
+        long nowTime = System.currentTimeMillis();
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+
+        Date reqFrDt = dateFormat.parse(startDate);
+        Date reqToDt = dateFormat.parse(endDate);
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(dateFormat.parse(dateFormat.format(nowTime)));
+        cal.add(Calendar.YEAR, -1);
+        cal.add(Calendar.DATE, 1);
+        Date preYrDt = DateUtils.truncate(cal.getTime(), Calendar.DATE);
+        
+        if (preYrDt.compareTo(reqToDt) > 0) {
+            return menuAccessList;
+        }
+        if (preYrDt.compareTo(reqFrDt) > 0) {
+            startDate = dateFormat.format(preYrDt);
+        }
+        
+        BoolQueryBuilder query = QueryBuilders.boolQuery()
+                .must(QueryBuilders.termQuery("typeCode", typeCode))
+                .must(QueryBuilders.termQuery("groupSeq", groupSeq))
+                .must(QueryBuilders.rangeQuery("useDate").gte(startDate).lte(endDate).format(format))
+                ;
+
+        if (!searchEmpName.equals("") || searchEmpName != "") {
+            query.must(QueryBuilders.queryStringQuery("empName :*" + searchEmpName + "*"));
+        }
+        if (!searchMenuName.equals("") || searchMenuName != "") {
+            BoolQueryBuilder menuShouldquery = boolQuery();
+            menuShouldquery.should(QueryBuilders.wildcardQuery("menuName", "*" + searchMenuName + "*"));
+            menuShouldquery.should(QueryBuilders.wildcardQuery("menuSubName", "*" + searchMenuName + "*"));
+            query.must(menuShouldquery);
+        }
+        
+        //소스빌더
+        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+                .query(query)
+                .from(rowStart)
+                .size(maxRowSize)
+                .sort(SortBuilders.fieldSort("useDate").order(SortOrder.DESC))
+                .explain(false);
+
+//        System.out.println("getMenuAccessKeyword Query:\n" + sourceBuilder.toString());
+
+        SearchResult searchResult = menuAccessIndex.getSearchClient().search(MenuAccessConstants.EL_INDEX_MENU_ACCESS, new ArrayList<String>() { 
+            { 
+                add(MenuAccessConstants.EL_TYPE_MENU_ACCESS); 
+            } 
+        }, sourceBuilder);
+
+        if ( searchResult != null ) {
+            List<Hit<HashMap, Void>> searchHits = searchResult.getHits(HashMap.class);
+            int totalCount = searchResult.getTotal();
+            menuAccessList = searchResult.getSourceAsObjectList(MenuAccessVO.class);
+            for(int i = 0 ; i < menuAccessList.size(); i++) {
+                menuAccessList.get(i).setTotalCount(totalCount);
+                
+                String empName = (String) searchHits.get(i).source.get("empName");
+                String menuName = (String) searchHits.get(i).source.get("menuName");
+                String menuSubName = (String) searchHits.get(i).source.get("menuSubName");
+                
+                if ( empName != null) {
+                    menuAccessList.get(i).setEmpName( empName+ " ["+ searchHits.get(i).source.get("loginId")+ "]");
+                }
+                
+                // sub메뉴가 있으면 sub메뉴명으로 표시, 없으면 메뉴명으로 표시
+                if ( menuSubName != null && !menuSubName.equals("") ) {
+                    menuAccessList.get(i).setMenuName(menuSubName + " [" + searchHits.get(i).source.get("useDevice") + "]");
+                }
+                else if ( menuName != null ) {
+                    if (typeCode.equals("0")) {
+                        menuAccessList.get(i).setMenuName(menuName + " [" + searchHits.get(i).source.get("menuAuth") + "]");
+                    }
+                    else {
+                        menuAccessList.get(i).setMenuName(menuName + " [" + searchHits.get(i).source.get("useDevice") + "]");
+                    }
+                }
+            }
+        }
+        return menuAccessList;
+    }
+    
+    @Override
+    public List<MenuAccessVO> getMenuAccessListMultiExcel(Map<String, Object> reqParams) throws Exception {
+        List<MenuAccessVO> menuAccessList = new ArrayList<>();
+        int rowNo = Integer.parseInt((String) reqParams.get("rowNo"));
+        int rowSize = Integer.parseInt((String) reqParams.get("rowSize"));
+        int maxRowSize = Integer.parseInt((String) reqParams.get("maxRowSize"));
+        
+        if (maxRowSize > Integer.MAX_VALUE || maxRowSize < Integer.MIN_VALUE) {//정수형 오버플로우 방지 적용
+	        throw new IllegalArgumentException("out of bound");
+	    }
+        
+        int rowStart = 0;
+        String typeCode = (String) reqParams.get("typeCode");
+        if (typeCode.equals("1")) {
+            rowStart = Integer.parseInt((String) reqParams.get("rowStart"));
+        }
+        else {
+            rowStart = rowNo == 1 ? 0 : (rowNo-1)*maxRowSize;
+        }
+        String groupSeq = (String) reqParams.get("groupSeq");
+
+        String searchEmpName = (String) reqParams.get("empName");
+        String searchMenuName = (String) reqParams.get("menuName");
+        
+        String startDate = (String) reqParams.get("startDate");
+        String endDate = (String) reqParams.get("endDate");
+        String format = FormatConstants.FORMAT_DATE_TIME;
+
+        // 로컬에서 온 시간(요청시간)과 서버에서 시간 비교 
+        // endDate < 서버시간의 오늘-364 이면 조회 X
+        // startDate < 서버시간의 오늘-364 이면 startDate = 서버시간의 오늘-364
+        long nowTime = System.currentTimeMillis();
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+
+        Date reqFrDt = dateFormat.parse(startDate);
+        Date reqToDt = dateFormat.parse(endDate);
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(dateFormat.parse(dateFormat.format(nowTime)));
+        cal.add(Calendar.YEAR, -1);
+        cal.add(Calendar.DATE, 1);
+        Date preYrDt = DateUtils.truncate(cal.getTime(), Calendar.DATE);
+        
+        if (preYrDt.compareTo(reqToDt) > 0) {
+            return menuAccessList;
+        }
+        if (preYrDt.compareTo(reqFrDt) > 0) {
+            startDate = dateFormat.format(preYrDt);
+        }
+        
+        BoolQueryBuilder query = QueryBuilders.boolQuery()
+                .must(QueryBuilders.termQuery("typeCode", typeCode))
+                .must(QueryBuilders.termQuery("groupSeq", groupSeq))
+                .must(QueryBuilders.rangeQuery("useDate").gte(startDate).lte(endDate).format(format))
+                ;
+
+        if (!searchEmpName.equals("") || searchEmpName != "") {
+            query.must(QueryBuilders.queryStringQuery("empName :*" + searchEmpName + "*"));
+        }
+        if (!searchMenuName.equals("") || searchMenuName != "") {
+            BoolQueryBuilder menuShouldquery = boolQuery();
+            menuShouldquery.should(QueryBuilders.wildcardQuery("menuName", "*" + searchMenuName + "*"));
+            menuShouldquery.should(QueryBuilders.wildcardQuery("menuSubName", "*" + searchMenuName + "*"));
+            query.must(menuShouldquery);
+        }
+        
+        //소스빌더
+        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+                .query(query)
+                .from(rowStart)
+                .size(rowSize)
+                .sort(SortBuilders.fieldSort("useDate").order(SortOrder.DESC))
+                .explain(false);
+
+//        System.out.println("getMenuAccessKeyword Query:\n" + sourceBuilder.toString());
+
+        SearchResult searchResult = menuAccessIndex.getSearchClient().search(MenuAccessConstants.EL_INDEX_MENU_ACCESS, new ArrayList<String>() { 
+            { 
+                add(MenuAccessConstants.EL_TYPE_MENU_ACCESS); 
+            } 
+        }, sourceBuilder);
+
+        if ( searchResult != null ) {
+            List<Hit<HashMap, Void>> searchHits = searchResult.getHits(HashMap.class);
+            int totalCount = searchResult.getTotal();
+            menuAccessList = searchResult.getSourceAsObjectList(MenuAccessVO.class);
+            for(int i = 0 ; i < menuAccessList.size(); i++) {
+                menuAccessList.get(i).setTotalCount(totalCount);
+                
+                String empName = (String) searchHits.get(i).source.get("empName");
+                String menuName = (String) searchHits.get(i).source.get("menuName");
+                String menuSubName = (String) searchHits.get(i).source.get("menuSubName");
+                
+                if ( empName != null) {
+                    menuAccessList.get(i).setEmpName( empName+ " ["+ searchHits.get(i).source.get("loginId")+ "]");
+                }
+                
+                // sub메뉴가 있으면 sub메뉴명으로 표시, 없으면 메뉴명으로 표시
+                if ( menuSubName != null && !menuSubName.equals("") ) {
+                    menuAccessList.get(i).setMenuName(menuSubName + " [" + searchHits.get(i).source.get("useDevice") + "]");
+                }
+                else if ( menuName != null ) {
+                    if (typeCode.equals("0")) {
+                        menuAccessList.get(i).setMenuName(menuName + " [" + searchHits.get(i).source.get("menuAuth") + "]");
+                    }
+                    else {
+                        menuAccessList.get(i).setMenuName(menuName + " [" + searchHits.get(i).source.get("useDevice") + "]");
+                    }
+                }
+            }
+        }
+        return menuAccessList;
+    }
+}
+

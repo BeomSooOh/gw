@@ -1,0 +1,835 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="SecondCertManage">
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+	<select id="SecondCertManage.getSecondCertOptionValue" parameterClass="hashmap" resultClass="egovMap">
+			select 
+				group_seq,
+				use_yn,
+				device_cnt,
+				`range`,
+				target,
+				approval_yn,
+				pin_yn,				
+				scWebUseYn,
+				case when `range` = 'W' or `range` = 'A' then							
+					case when target = 'A' then
+						if(checkCnt <![CDATA[ > ]]> 0, 'N', 'Y')
+					else
+						if(checkCnt <![CDATA[ > ]]> 0, 'Y', 'N')
+					end
+				else
+					'N'
+				end scUseYn,				
+				case when `range` = 'M' or `range` = 'A' then							
+					case when target = 'A' then
+						if(checkCnt <![CDATA[ > ]]> 0, 'N', 'Y')
+					else
+						if(checkCnt <![CDATA[ > ]]> 0, 'Y', 'N')
+					end
+				else
+					'N'
+				end scMobileUseYn,
+				app_confirm_yn
+				from (
+					select
+						group_seq
+						,use_yn
+						,ifnull(device_cnt,'') device_cnt
+						,`range`
+						,target
+						,approval_yn
+						,pin_yn
+						,app_confirm_yn	
+						,case when `range` = 'W' or `range` = 'A' then 'Y' else 'N' end as scWebUseYn
+						,case when `target` = 'A'
+						then(
+							(select 
+									count(*) 
+							  from $DB_NEOS$t_co_second_cert_relate 
+							  where 
+							  	org_seq = #empSeq# and `type` = 'E' and gbn_org = 'u') 
+							  +
+							 (select 
+									count(*) 
+							  from $DB_NEOS$t_co_second_cert_relate 
+							  where 
+							  	org_seq in(
+						  					select distinct comp_seq 
+						  					from $DB_NEOS$t_co_emp_comp 
+						  					where emp_seq = #empSeq# and work_status IN ('999','004')) 
+						  		and `type` = 'E' and gbn_org = 'c')
+						  	   +
+							 (select 
+									count(*) 
+							  from $DB_NEOS$t_co_second_cert_relate 
+							  where 
+							  	org_seq in (
+									select	a.dept_seq
+									from 	$DB_NEOS$t_co_dept a
+									inner join 	(
+										select		c.path 
+										From		$DB_NEOS$t_co_emp_dept a
+										INNER JOIN 	$DB_NEOS$t_co_emp_comp b ON a.emp_seq = b.emp_seq AND b.comp_seq = a.comp_seq
+										inner join 	$DB_NEOS$t_co_dept c on a.dept_seq = c.dept_seq
+										WHERE 		a.emp_seq = #empSeq# AND b.work_status IN ('999','004')
+									)	b
+									on	concat('|',b.path,'|') like concat('%|',a.path,'|%')
+									) and `type` = 'E' and gbn_org = 'd')
+						 )else(
+						 		(select 
+									count(*) 
+							  from $DB_NEOS$t_co_second_cert_relate 
+							  where 
+							  	org_seq = #empSeq# and `type` = 'I' and gbn_org = 'u') 
+							  +
+							 (select 
+									count(*) 
+							  from $DB_NEOS$t_co_second_cert_relate 
+							  where 
+							  	org_seq in(
+						  					select distinct comp_seq 
+						  					from $DB_NEOS$t_co_emp_comp 
+						  					where emp_seq = #empSeq# and work_status IN ('999','004')) 
+						  		and `type` = 'I' and gbn_org = 'c')
+						  	   +
+							 (select 
+									count(*) 
+							  from $DB_NEOS$t_co_second_cert_relate 
+							  where 
+							  	org_seq in (
+									select	a.dept_seq
+									from 	$DB_NEOS$t_co_dept a
+									inner join 	(	
+										select		c.path 
+										From		$DB_NEOS$t_co_emp_dept a
+										INNER JOIN 	$DB_NEOS$t_co_emp_comp b ON a.emp_seq = b.emp_seq AND b.comp_seq = a.comp_seq
+										inner join 	$DB_NEOS$t_co_dept c on a.dept_seq = c.dept_seq
+										WHERE 		a.emp_seq = #empSeq# AND b.work_status IN ('999','004')
+									)	b
+									on	concat('|',b.path,'|') like concat('%|',a.path,'|%')
+									) and `type` = 'I' and gbn_org = 'd')
+						 ) end checkCnt
+					from
+						$DB_NEOS$t_co_second_cert_option
+					where
+						group_seq = #groupSeq#
+				) a
+	</select>
+	
+	
+	<update id="SecondCertManage.saveSecondCertOptionInfo" parameterClass="hashmap">
+		update
+			$DB_NEOS$t_co_second_cert_option
+		set
+			use_yn = #useYn#
+			,device_cnt = #deviceCnt#	
+			,`range` = #range#
+			,target = #target#
+			,approval_yn = #approvalYn#
+			,pin_yn = #pinYn#
+			,app_confirm_yn = #appConfirmYn#			
+		where
+			group_seq = #groupSeq#	
+	</update>
+	
+	
+	<select id="SecondCertManage.selectIncludeOrgList" parameterClass="hashmap" resultClass="egovMap">
+		select
+			*,
+			case 
+			when gbn_org = 'c' 
+				then (select $DB_NEOS$FN_GetMultiLang(#langCode#,comp_name_multi) from $DB_NEOS$v_t_co_comp_multi where comp_seq = org_seq)
+			when gbn_org = 'd' 
+				then (select $DB_NEOS$FN_GetMultiLang(#langCode#,dept_name_multi) from $DB_NEOS$v_t_co_dept_multi where dept_seq = org_seq)
+			when gbn_org = 'u' 
+				then (select replace(concat($DB_NEOS$FN_GetMultiLang(#langCode#,emp_name_multi),'(',b.login_id,')'),'''', '') from $DB_NEOS$v_t_co_emp_multi a inner join $DB_NEOS$t_co_emp b on a.emp_seq = b.emp_seq where a.emp_seq = org_seq)
+			end as `text`,
+			super_key as value
+		from
+			$DB_NEOS$t_co_second_cert_relate
+		where
+			group_seq = #groupSeq# and type = 'I'
+	</select>
+	
+	<select id="SecondCertManage.selectexcludeOrgList" parameterClass="hashmap" resultClass="egovMap">
+		select
+			*,
+			case 
+			when gbn_org = 'c' 
+				then (select $DB_NEOS$FN_GetMultiLang(#langCode#,comp_name_multi) from $DB_NEOS$v_t_co_comp_multi where comp_seq = org_seq)
+			when gbn_org = 'd' 
+				then (select $DB_NEOS$FN_GetMultiLang(#langCode#,dept_name_multi) from $DB_NEOS$v_t_co_dept_multi where dept_seq = org_seq)
+			when gbn_org = 'u' 
+				then (select replace(concat($DB_NEOS$FN_GetMultiLang(#langCode#,emp_name_multi),'(',b.login_id,')'),'''', '') from $DB_NEOS$v_t_co_emp_multi a inner join $DB_NEOS$t_co_emp b on a.emp_seq = b.emp_seq where a.emp_seq = org_seq)
+			end as `text`,
+			super_key as value
+		from
+			$DB_NEOS$t_co_second_cert_relate
+		where
+			group_seq = #groupSeq# and type = 'E'
+	</select>
+	
+	<delete id="SecondCertManage.deleteSecondCertRelate" parameterClass="hashmap">
+		DELETE FROM $DB_NEOS$t_co_second_cert_relate
+	</delete>
+	
+	
+	<insert id="SecondCertManage.insertSecondCertRelate" parameterClass="hashmap">
+		INSERT INTO
+			$DB_NEOS$t_co_second_cert_relate (type, group_seq, gbn_org, org_seq, super_key)		
+		VALUES
+			(#type#,#groupSeq#,#gbnOrg#,#orgSeq#,#superKey#)
+	
+	</insert>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<select id="SecondCertManage.getSecondCertSequence" parameterClass="hashmap" resultClass="string">
+		select ifnull(max(seq),0) + 1 from $DB_NEOS$t_co_second_cert
+	</select>
+	<select id="SecondCertManage.getSecondCertKeyNum" parameterClass="hashmap" resultClass="hashmap">
+		SELECT convert(FLOOR(0 + (RAND() * 10)), int) keyNum;
+	</select>
+	<select id="SecondCertManage.getSecondCertKey" parameterClass="hashmap" resultClass="hashmap">
+		select
+			*
+		from
+			$DB_NEOS$t_co_second_cert_encrypt
+		where
+			key_num = #keyNum#
+	</select>
+	<insert id="SecondCertManage.insertSecondCertInfo" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_second_cert
+			(seq, emp_seq, `UUID`, `status`, `type`)
+		values
+			(#seq#, #empSeq#, #UUID#, #status#, #type#)
+	</insert>
+	
+	<delete id="SecondCertManage.deleteSecondCertInfo" parameterClass="hashmap">
+		delete from $DB_NEOS$t_co_second_cert
+		where emp_seq = #empSeq#
+	</delete>
+	
+	
+	<select id="SecondCertManage.getEncryptKey" parameterClass="hashmap" resultClass="egovMap">
+		select 
+			key_num, `key`
+		from
+			$DB_NEOS$t_co_second_cert_encrypt
+		where
+			key_num = #keyNum#
+	</select>
+	
+	
+	<update id="SecondCertManage.ConfirmSecondCertInfo" parameterClass="hashmap">
+		update
+			$DB_NEOS$t_co_second_cert
+		set
+			status = #status#
+		where
+			emp_seq = #empSeq#
+			<isNotEmpty property="seq">
+			and seq = #seq#
+			</isNotEmpty>
+			<isNotEmpty property="uuid">
+			and UUID = #uuid#
+			</isNotEmpty>
+			<isNotEmpty property="type">
+			and type = #type#
+			</isNotEmpty>
+	</update>
+	
+	
+	<select id="SecondCertManage.selectSecondCertInfo" parameterClass="hashmap" resultClass="egovMap" remapResults="true">
+		select
+			*
+			<isNotEmpty property="empSeq">
+			, (select count(*) from $DB_NEOS$t_co_second_cert_device where emp_seq = #empSeq# and status in('P','R')) empDevCnt
+			</isNotEmpty>			
+		from
+			$DB_NEOS$t_co_second_cert
+		where
+			seq = #seq#  
+			<isNotEmpty property="type">
+			and `type` = #type#
+			</isNotEmpty>			
+	</select>
+	
+	
+	<select id="SecondCertManage.selectSecondCertDeviceList" parameterClass="hashmap" resultClass="egovMap">
+		select
+			*,
+			(select count(*) from $DB_NEOS$t_co_second_cert_device where emp_seq = #empSeq# and status = 'P' and `type` = '2') appConfrimCnt
+		from
+			$DB_NEOS$t_co_second_cert_device
+		where
+			1=1
+			<isNotEmpty property="empSeq">
+			and emp_seq = #empSeq#
+			</isNotEmpty>
+			<isNotEmpty property="devType">
+			and `type` = #devType#
+			</isNotEmpty>
+			<isNotEmpty property="status">
+			and (`status` = #status# and `status` != 'N')
+			</isNotEmpty>			
+			<isEmpty property="status">
+			and `status` != 'N'
+			</isEmpty>
+			<isNotNull property="deviceNum">
+			and device_num = #deviceNum#
+			</isNotNull>
+	</select>
+	
+	
+	<select id="SecondCertManage.selectSecondCertDeviceList2" parameterClass="hashmap" resultClass="egovMap">
+		select
+			*
+		from
+			$DB_NEOS$t_co_second_cert_device
+		where
+			seq in ($seqList$) and emp_seq = #empSeq# and `status` = 'P'
+			<isNotEmpty property="devType">
+			and `type` = #devType#
+			</isNotEmpty>
+	</select>
+	
+	
+	<select id="SecondCertManage.selectSecondCertOption" parameterClass="hashmap" resultClass="egovMap">
+		select
+			group_seq, use_yn, ifnull(device_cnt, 0) device_cnt, `range`, target, approval_yn, pin_yn
+		from 
+			$DB_NEOS$t_co_second_cert_option
+		where
+			group_seq = #groupSeq#	
+	</select>
+	
+	
+	
+	<insert id="SecondCertManage.insertSecondCertDeviceInfo" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_second_cert_device
+		(
+			device_num, emp_seq, comp_seq, type, `status`, app_type, os_type, device_name, device_nick_name, `desc`, request_date,  
+			confirm_date, confirm_seq, create_date, create_seq, status_date, auth_date, token
+			)
+		values
+		(
+			#deviceNum#, #empSeq#, #compSeq#, #devType#, #status#, #appType#, #osType#, #deviceName#, #deviceNickName#, #desc#, now(),
+			<isEqual property="status" compareValue="P">now(), #empSeq#,</isEqual>
+			<isNotEqual property="status" compareValue="P">null, null,</isNotEqual>
+			now(), #empSeq#, now(), now(), #tken#
+		)
+	</insert>
+	
+	
+	<select id="SecondCertManage.getSecondCertSeq" parameterClass="hashmap" resultClass="string">
+	select
+		seq
+	from
+		$DB_NEOS$t_co_second_cert
+	where
+		`UUID` = #UUID# and emp_seq = #empSeq#
+	</select>
+	
+	
+	
+	<select id="SecondCertManage.getDeviceApprovalList" parameterClass="hashmap"  resultClass="egovMap">
+		select 
+			seq,
+			$DB_NEOS$FN_GetMultiLang(#langCode#,comp_name_multi) compName,
+			a.comp_seq,
+			a.emp_seq,
+			concat($DB_NEOS$FN_GetMultiLang(#langCode#,emp_name_multi),'(',login_id,')') reqId,
+			app_type,
+			device_name,
+			concat(substring(convert(request_date, char(30)),1,10),'(',
+				(CASE DAYOFWEEK(request_date)
+					WHEN '1' THEN '일'
+					WHEN '2' THEN '월'
+					WHEN '3' THEN '화'
+					WHEN '4' THEN '수'
+					WHEN '5' THEN '목'
+					WHEN '6' THEN '금'
+					WHEN '7' THEN '토'
+				End),') ', substring(convert(request_date, char(30)),11)) request_date,
+			concat(substring(convert(confirm_date, char(30)),1,10),'(',
+				(CASE DAYOFWEEK(confirm_date)
+					WHEN '1' THEN '일'
+					WHEN '2' THEN '월'
+					WHEN '3' THEN '화'
+					WHEN '4' THEN '수'
+					WHEN '5' THEN '목'
+					WHEN '6' THEN '금'
+					WHEN '7' THEN '토'
+				End),') ', substring(convert(confirm_date, char(30)),11)) confirm_date,
+			`status`,
+			case 
+			when `status` = 'P' then '승인완료'
+			when `status` = 'R' then '승인요청'
+			when `status` = 'D' then '승인반려'
+			when `status` = 'C' then '해지' end statusMulti,
+			case
+			when `app_type` = '11' then 'Phone'
+			when `app_type` = '12' then 'Tablet' end appName,
+			device_nick_name,
+			a.device_num,
+			e.dept_seq,
+			a.`type`
+		from $DB_NEOS$t_co_second_cert_device a		
+		inner join $DB_NEOS$t_co_emp d on a.emp_seq = d.emp_seq
+		inner join $DB_NEOS$t_co_emp_dept e on d.emp_seq = e.emp_seq and e.main_dept_yn = 'Y' and d.main_comp_seq = e.comp_seq
+		inner join $DB_NEOS$v_t_co_comp_multi b on e.comp_seq = b.comp_seq
+		inner join $DB_NEOS$v_t_co_emp_multi c on d.emp_seq = c.emp_seq 
+		where 1=1
+		<isNotEmpty property="compSeq">
+		and e.comp_seq = #compSeq#
+		</isNotEmpty>
+		<isNotEmpty property="status">
+		and (a.`status` = #status# and a.`status` != 'N') 
+		</isNotEmpty>
+		<isEmpty property="status">
+		and a.`status` != 'N'
+		</isEmpty>
+		<isNotEmpty property="reqId">
+		and concat($DB_NEOS$FN_GetMultiLang(#langCode#,emp_name_multi),'(',login_id,')') like CONCAT('%',ifnull(#reqId#,''),'%')
+		</isNotEmpty>
+		<isNotEmpty property="deviceType">
+		and
+		(
+			case
+			when `app_type` = '11' then 'Phone'
+			when `app_type` = '12' then 'Tablet' end
+			like CONCAT('%',ifnull(#deviceType#,''),'%')
+		)
+		</isNotEmpty>		
+		<isEqual property="userSe" compareValue="USER">
+		and a.emp_seq = #empSeq#
+		</isEqual>
+		<isNotEmpty property="fReqDate">
+		and	
+			DATE_FORMAT(request_date,'%Y-%m-%d') between #fReqDate# and #tReqDate#
+		</isNotEmpty>
+		<isNotEmpty property="txtEmpName">
+		and (d.login_id like CONCAT('%',ifnull(#txtEmpName#,''),'%') or $DB_NEOS$FN_GetMultiLang(#langCode#,emp_name_multi) like CONCAT('%',ifnull(#txtEmpName#,''),'%'))		
+		</isNotEmpty>
+		<isNotEmpty property="txtDevType">
+		and (
+				case
+				when `app_type` = '11' then 'Phone'
+				when `app_type` = '12' then 'Tablet' end
+				like CONCAT('%',ifnull(#txtDevType#,''),'%')
+				or
+				device_name like CONCAT('%',ifnull(#txtDevType#,''),'%')								
+			)		
+		</isNotEmpty>
+		order by a.request_date desc,a.emp_seq, a.comp_seq
+		<isNotEmpty property="startNum">
+			<isNotEmpty property="endNum">
+				<isNotEqual property="endNum" compareValue="0">
+					LIMIT $startNum$, $endNum$
+				</isNotEqual>
+			</isNotEmpty>
+		</isNotEmpty>
+		
+		
+		
+	</select>
+	
+	<select id="SecondCertManage.getDeviceApprovalList_TOTALCOUNT" parameterClass="hashmap"  resultClass="string">
+		select 
+			count(a.seq)
+		from $DB_NEOS$t_co_second_cert_device a		
+		inner join $DB_NEOS$t_co_emp d on a.emp_seq = d.emp_seq
+		inner join $DB_NEOS$t_co_emp_dept e on d.emp_seq = e.emp_seq and e.main_dept_yn = 'Y' and d.main_comp_seq = e.comp_seq
+		inner join $DB_NEOS$v_t_co_comp_multi b on e.comp_seq = b.comp_seq
+		inner join $DB_NEOS$v_t_co_emp_multi c on d.emp_seq = c.emp_seq
+		where 1=1
+		<isNotEmpty property="compSeq">
+		and e.comp_seq = #compSeq#
+		</isNotEmpty>
+		<isNotEmpty property="status">
+		and (a.`status` = #status# and a.`status` != 'N') 
+		</isNotEmpty>
+		<isEmpty property="status">
+		and a.`status` != 'N'
+		</isEmpty>
+		<isNotEmpty property="reqId">
+		and concat($DB_NEOS$FN_GetMultiLang(#langCode#,emp_name_multi),'(',login_id,')') like CONCAT('%',ifnull(#reqId#,''),'%')
+		</isNotEmpty>
+		<isNotEmpty property="deviceType">
+		and
+		(
+			case
+			when `app_type` = '11' then 'Phone'
+			when `app_type` = '12' then 'Tablet' end
+			like CONCAT('%',ifnull(#deviceType#,''),'%')
+		)
+		</isNotEmpty>		
+		<isEqual property="userSe" compareValue="USER">
+		and a.emp_seq = #empSeq#
+		</isEqual>
+		<isNotEmpty property="fReqDate">
+		and	
+			DATE_FORMAT(request_date,'%Y-%m-%d') between #fReqDate# and #tReqDate#
+		</isNotEmpty>
+		<isNotEmpty property="txtEmpName">
+		and (d.login_id like CONCAT('%',ifnull(#txtEmpName#,''),'%') or $DB_NEOS$FN_GetMultiLang(#langCode#,emp_name_multi) like CONCAT('%',ifnull(#txtEmpName#,''),'%'))		
+		</isNotEmpty>
+		<isNotEmpty property="txtDevType">
+		and (
+				case
+				when `app_type` = '11' then 'Phone'
+				when `app_type` = '12' then 'Tablet' end
+				like CONCAT('%',ifnull(#txtDevType#,''),'%')
+				or
+				device_name like CONCAT('%',ifnull(#txtDevType#,''),'%')								
+			)		
+		</isNotEmpty>
+	</select>
+	
+	
+	<update id="SecondCertManage.setSecondCertDevStatus" parameterClass="hashmap">
+		update
+			$DB_NEOS$t_co_second_cert_device
+		set
+			`status` = #status#
+			,confirm_seq = #confirmSeq#
+			<isEqual property="status" compareValue="P">
+			,confirm_date = now()
+				<isEmpty property="desc">
+				,`desc` = ''
+				</isEmpty>
+			</isEqual>
+			<isEqual property="status" compareValue="C">
+			,confirm_date = null
+			</isEqual>
+			<isNotEmpty property="desc">
+			,`desc` = #desc#
+			</isNotEmpty>
+			,status_date = now()
+			,auth_date = now()
+		where
+			seq in ($seqList$)
+	</update>
+	
+	
+	
+	<select id="SecondCertManage.selectSecondCertDeviceInfo" parameterClass="hashmap" resultClass="egovMap">
+		select
+			*
+		from
+			$DB_NEOS$t_co_second_cert_device
+		where
+			`seq` = #seq# and `status` != 'N'					
+	</select>
+	
+	<update id="SecondCertManage.setDeviceNickName" parameterClass="hashmap">
+		update
+			$DB_NEOS$t_co_second_cert_device
+		set
+			device_nick_name = #deviceNickName#
+		where
+			seq = #seq#	
+	</update>
+	
+	<select id="SecondCertManage.getUserPinInfo" parameterClass="hashmap" resultClass="egovMap">
+		select
+			*
+		from
+			$DB_NEOS$t_co_second_cert_pin
+		where
+			emp_seq = #empSeq#				
+	</select>
+	
+	
+	<insert id="SecondCertManage.savePinPassWord" parameterClass="hashmap">
+    	INSERT INTO $DB_NEOS$`t_co_second_cert_pin`
+			SET 
+				emp_seq 				    = 			#empSeq#,
+				pin 						= 			#pin#,
+				fail_count					= 			0,		
+				create_seq 					= 			#empSeq#,
+				create_date 				= 			now()	
+			ON DUPLICATE KEY UPDATE
+				<isEmpty property="failCount">
+				pin							= 			#pin#,
+				fail_count					= 			0,
+				</isEmpty>
+				<isNotEmpty property="failCount">
+				fail_count					= 			#failCount#,
+				</isNotEmpty>				
+				modify_seq					=			#empSeq#,
+				modify_date					=			now()    
+    </insert>
+    
+    
+    
+    <update id="SecondCertManage.setPinFailCnt" parameterClass="hashmap">
+		update
+			$DB_NEOS$`t_co_second_cert_pin`
+		set
+			fail_count = fail_count + 1
+		where
+			emp_seq = #empSeq#	
+	</update>
+	
+	
+	<delete id="SecondCertManage.deleteDeviceList" parameterClass="hashmap">
+		delete from
+			$DB_NEOS$`t_co_second_cert_device`
+		where
+			emp_seq = #empSeq# and status = 'N'			
+	</delete>
+	
+	<update id="SecondCertManage.setDeviceReg" parameterClass="hashmap">
+		update  
+			$DB_NEOS$`t_co_second_cert_device`
+		set
+			status = #status#,
+			status_date = now(),
+			auth_date = now()
+		where
+			emp_seq = #empSeq# and status = 'N'
+	</update>
+	
+	<update id="SecondCertManage.initPinFailCount" parameterClass="hashmap">
+		update  
+			$DB_NEOS$`t_co_second_cert_pin`
+		set
+			fail_count = 0
+		where
+			emp_seq = #empSeq#
+	</update>
+	
+	<select id="SecondCertManage.getDeviceInfo" parameterClass="hashmap" resultClass="egovMap">
+		select 
+			$DB_NEOS$FN_GetMultiLang(#langCode#,emp_name_multi) emp_name,
+			case
+			when `app_type` = '11' then 'Phone'
+			when `app_type` = '12' then 'Tablet' end appName
+		from $DB_NEOS$t_co_second_cert_device a
+		inner join $DB_NEOS$v_t_co_emp_multi c on a.emp_seq = c.emp_seq
+		where
+			a.emp_seq = #empSeq# and a.device_num = #deviceNum#
+	</select>
+	
+	<delete id="SecondCertManage.InitUserPinCode" parameterClass="hashmap">
+		delete from $DB_NEOS$t_co_second_cert_pin where emp_seq = #empSeq#
+	</delete>
+	
+	<select id="SecondCertManage.getUserName" parameterClass="hashmap" resultClass="string">
+		select $DB_NEOS$FN_GetMultiLang(#langCode#, emp_name_multi) from $DB_NEOS$v_t_co_emp_multi where emp_seq = #empSeq#
+	</select>
+	
+	
+	<select id="SecondCertManage.getUserDeviceHistory" parameterClass="hashmap" resultClass="egovMap">
+		select
+			case
+				when `app_type` = '11' then 'Phone'
+				when `app_type` = '12' then 'Tablet' end appName,
+			device_name,
+			concat(substring(convert(request_date, char(30)),1,10),'(',
+				(CASE DAYOFWEEK(request_date)
+					WHEN '1' THEN '일'
+					WHEN '2' THEN '월'
+					WHEN '3' THEN '화'
+					WHEN '4' THEN '수'
+					WHEN '5' THEN '목'
+					WHEN '6' THEN '금'
+					WHEN '7' THEN '토'
+				End),') ', substring(convert(request_date, char(30)),11)) request_date,
+			concat(substring(convert(status_date, char(30)),1,10),'(',
+				(CASE DAYOFWEEK(status_date)
+					WHEN '1' THEN '일'
+					WHEN '2' THEN '월'
+					WHEN '3' THEN '화'
+					WHEN '4' THEN '수'
+					WHEN '5' THEN '목'
+					WHEN '6' THEN '금'
+					WHEN '7' THEN '토'
+				End),') ', substring(convert(status_date, char(30)),11)) status_date,
+			ifnull(concat(substring(convert(confirm_date, char(30)),1,10),'(',
+				(CASE DAYOFWEEK(confirm_date)
+					WHEN '1' THEN '일'
+					WHEN '2' THEN '월'
+					WHEN '3' THEN '화'
+					WHEN '4' THEN '수'
+					WHEN '5' THEN '목'
+					WHEN '6' THEN '금'
+					WHEN '7' THEN '토'
+				End),') ', substring(convert(confirm_date, char(30)),11)), '-') confirm_date,
+			case 
+				when `status` = 'P' then '승인완료'
+				when `status` = 'R' then '승인요청'
+				when `status` = 'D' then '승인반려'
+				when `status` = 'C' then '해지' end statusMulti,
+			
+			`status`,
+			login_id,
+			$DB_NEOS$FN_GetMultiLang(#langCode#,emp_name_multi) emp_name	
+		from
+			$DB_NEOS$t_co_second_cert_device_history a		
+		left join 
+			$DB_NEOS$t_co_emp c on ifnull(a.confirm_seq,a.emp_seq) = c.emp_seq
+		left join 
+			$DB_NEOS$v_t_co_emp_multi b on c.emp_seq = b.emp_seq
+		where
+			a.emp_seq = #empSeq# and a.`status` in('P','R','D','C')
+		group by status_date, device_num
+		order by status_date desc
+	</select>
+	
+	<update id="SecondCertManage.updateDeviceAuthDate" parameterClass="hashmap">
+		update
+			$DB_NEOS$t_co_second_cert_device
+		set
+			auth_date = now()	
+		where
+			1=1
+			<isNotEmpty property="empSeq">
+			and emp_seq = #empSeq#
+			</isNotEmpty>			 
+			<isNotEmpty property="status">
+			and (`status` = #status# and `status` != 'N')
+			</isNotEmpty>			
+			<isEmpty property="status">
+			and `status` != 'N'
+			</isEmpty>
+			<isNotNull property="deviceNum">
+			and device_num = #deviceNum#
+			</isNotNull>
+	</update>
+	
+	<update id="SecondCertManage.CancelDevice" parameterClass="hashmap">
+		update
+			$DB_NEOS$t_co_second_cert_device
+		set
+			`status` = 'C',
+			`status_date` = now()
+		where
+			emp_seq = #empSeq# and `status` in ('P', 'R')
+		order by
+			auth_date
+		limit #limitCnt#
+	</update>
+	
+	
+	<select id="SecondCertManage.selectUsedDeviceInfo" parameterClass="hashmap" resultClass="egovMap">
+		select
+			*
+		from
+			$DB_NEOS$t_co_second_cert_device
+		where
+		1 = 1 
+			<isNotEmpty property="empSeq">
+				and emp_seq = #empSeq#
+			</isNotEmpty>						
+			<isNotEmpty property="isRegYn">
+				and `status` in ('P','R')
+			</isNotEmpty>
+			<isEmpty property="isRegYn">
+				and `status` != 'N'
+			</isEmpty>
+	</select>
+	
+	<select id="SecondCertManage.selectEmpSeqFromDevList" parameterClass="hashmap" resultClass="string">
+		select
+			group_concat(emp_seq) empSeq
+		from 	
+			$DB_NEOS$t_co_second_cert_device
+		where
+			seq in ($seqList$)				
+	</select>
+	
+	
+	<select id="SecondCertManage.selectSecondCertDevInfo" parameterClass="hashmap" resultClass="egovMap">
+		select 
+			(select count(*) from $DB_NEOS$t_co_second_cert_device where emp_seq = #empSeq#) devCnt,
+			(select count(*) from $DB_NEOS$t_co_second_cert_device where device_num = #deviceNum# and emp_seq = #empSeq#) empDevCnt,
+			(select `status` from $DB_NEOS$t_co_second_cert_device where device_num = #deviceNum# and emp_seq = #empSeq# limit 1) devStatus		
+	</select>
+	
+	<select id="SecondCertManage.selectOldestDevice" parameterClass="hashmap" resultClass="egovMap">
+		select		
+			case
+			when `app_type` = '11' then 'Phone'
+			when `app_type` = '12' then 'Tablet' end appName,
+			device_nick_name,
+			convert(request_date, char(10)) requestDate
+		From
+			$DB_NEOS$t_co_second_cert_device
+		where
+			emp_seq = #empSeq# and `status` in ('P', 'R')
+		order by
+			auth_date
+		limit #limitCnt#
+	</select>
+	
+	<delete id="SecondCertManage.deleteSecondCertDeviceInfo" parameterClass="hashmap">
+		delete from $DB_NEOS$t_co_second_cert_device
+		where emp_seq = #empSeq# and `type` = '1'
+	</delete>
+	
+	
+	<update id="SecondCertManage.updateDeviceTokenInfo" parameterClass="hashmap">
+		update
+			$DB_NEOS$t_co_second_cert_device
+		set
+			`token` = #token#
+		where
+			device_num = #deviceNum#
+			and emp_seq = #empSeq#
+	</update>
+	
+	<select id="SecondCertManage.selectSecondDevList" parameterClass="hashmap" resultClass="egovMap">
+		select 
+			*
+		from
+			$DB_NEOS$t_co_second_cert_device
+		where
+			 seq in ($seqList$)		
+	</select>
+	
+	<select id="SecondCertManage.deviceInfoCnt" parameterClass="hashmap" resultClass="egovMap">
+		SELECT
+			(SELECT COUNT(*) FROM $DB_NEOS$t_co_second_cert_device WHERE STATUS = 'P') AS deviceCnt,
+			(
+				SELECT count(a.emp_seq) FROM (
+				SELECT DISTINCT emp_seq FROM $DB_NEOS$t_co_second_cert_device WHERE STATUS = 'P'
+				)a
+			) AS empCnt
+	</select>
+	
+	
+	<select id="SecondCertManage.checkEmpPinInfo" parameterClass="hashmap" resultClass="egovMap">
+		SELECT 
+			*
+		FROM
+		 	$DB_NEOS$t_co_second_cert_pin
+		WHERE
+			emp_seq = #empSeq# and pin = #pin#
+	</select>
+</sqlMap>

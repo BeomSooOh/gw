@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <meta name="viewport" content="user-scalable=no, initial-scale=1.0 , maximum-scale=1.0 , minimum-scale=1.0 ,target-densitydpi=medium-dpi" />
+    <link rel="stylesheet" href="../../css/pudd.css" />
+    <link rel="stylesheet" href="../../css/comm/common.css" />
+    <link rel="stylesheet" href="../../css/animate.css" />
+    <link rel="stylesheet" href="../../css/klago.css" />
+    <script type="text/javascript" src="../../Scripts/comm/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="../../Scripts/pudd/pudd-1.1.151.min.js"></script>
+    <script type="text/javascript" src="../../Scripts/klago.js"></script>
+    <script>
+    $(function() {
+    	setTimeout(function(){
+    		$(".wehago_menu").addClass("animated1s bounce");
+    		setTimeout(function(){
+	    		$(".wehago_menu").removeClass("animated1s bounce")
+	    	},1000);
+    	},1000);
+    });
+    </script>
+    <title>KLAGO</title>
+</head>
+	<body>
+		<div id="wrap">
+			<div id="side"></div>
+			<div id="container">
+				<div class="header">
+					<div class="header_top">
+						<div class="logo">
+							<img src="../../Images/main_logo.png" />
+						</div>
+						<div class="header_util">
+							<a href="index.html" class="header_menu_btn"></a>
+						</div>
+					</div>
+					<div class="header_bot">
+						<div class="menu_search"></div>
+					</div>
+				</div>
+				<div class="contents">
+					<div class="gnb_wrap">
+						<div class="gnb"></div>
+					</div>
+					<div class="portlet">
+						<div class="wehago_menu"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html> 

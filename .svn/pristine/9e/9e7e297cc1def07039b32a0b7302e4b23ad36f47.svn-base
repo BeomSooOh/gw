@@ -1,0 +1,1104 @@
+<html lang="ko"><head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>D-ERP</title>
+
+    <!--css-->
+	<link rel="stylesheet" type="text/css" href="../../Scripts/jqueryui/jquery-ui.css">
+    <link rel="stylesheet" type="text/css" href="../../css/common.css">
+	<link rel="stylesheet" type="text/css" href="../../css/layout.css">
+	<link rel="stylesheet" type="text/css" href="../../css/main.css">
+
+    <!--js-->
+    <script type="text/javascript" src="../../Scripts/jquery-1.9.1.min.js"></script>
+	<script type="text/javascript" src="../../Scripts/jqueryui/jquery.min.js"></script>
+	<script type="text/javascript" src="../../Scripts/jqueryui/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="../../Scripts/common.js"></script>
+
+	<!-- mCustomScrollbar -->
+    <link rel="stylesheet" type="text/css" href="../../Scripts/mCustomScrollbar/jquery.mCustomScrollbar.css">
+    <script type="text/javascript" src="../../Scripts/mCustomScrollbar/jquery.mCustomScrollbar.js"></script>
+
+	<!-- 메인 js -->
+	<script type="text/javascript" src="../../Scripts/jquery.alsEN-1.0.min.js"></script>
+	<script type="text/javascript" src="../../Scripts/jquery.bxslider.min.js"></script>
+
+
+
+	<script type="text/javascript">
+	
+	var wehagoId = "";
+	var serviceCode = "";
+	var cno = "";
+	var device_id = "10ac0b6f";
+	var domain = "http://ebpdemo.bizboxa.com";
+	var softwareName = "bizbox";
+	
+	
+	function openWindow222(url,  windowName, width, height, strScroll, strResize ){
+
+		var pop = "" ;
+		windowX = Math.ceil( (window.screen.width  - width) / 2 );
+		windowY = Math.ceil( (window.screen.height - height) / 2 );
+		if(strResize == undefined || strResize == '') {
+			strResize = 0 ;
+		}
+		
+		if(windowName == "_blank"){
+			pop = window.open(url, "_blank");
+		}else{
+			pop = window.open(url, windowName, "width=" + width + ", height=" + height + ", top="+ windowY +", left="+ windowX +", scrollbars="+ strScroll+", resizable="+ strResize);	
+		}
+		
+		try {pop.focus(); } catch(e){
+			console.log(e);//오류 상황 대응 부재
+		}
+		return pop;
+	}
+
+
+	$(document).ready(function() {
+		//프로필팝업 온오프
+		$(".divi_txt").on("click",function(){
+			$(".profile_box").toggle();
+
+		});
+		//알림팝업 온오프
+		$(".alert_btn").on("click",function(){
+			$(".mention_alert_box").toggle();
+		});
+
+		//메뉴 더보기로 자동 복사
+		gnb_menu();
+
+		//카운트메뉴 펄스효과
+		$(".fm_div_in span.cnt").siblings(".ico").addClass("cntPulse");
+
+
+		//더보기 클릭시
+		$(document).mouseup(function (e){
+			if($(e.target).attr("moreBtn")  == null){
+				$(".gnb_more").removeClass("on");
+				$(".gnb_more_box").addClass("close");
+				$(".gnb_more_box").removeClass("open");
+			}
+			else{
+				 if (!$(".gnb_more").hasClass("on"))
+				 {
+					$(".gnb_more").addClass("on");
+					$(".gnb_more_box").addClass("open");
+					$(".gnb_more_box").removeClass("close");
+
+				 } else {
+
+				   $(".gnb_more").removeClass("on");
+					$(".gnb_more_box").addClass("close");
+					$(".gnb_more_box").removeClass("open");
+				 }
+				var fmiCnt = $(".gnb_more_box .more_box_in > div").size();
+				var fmihei= Math.round(fmiCnt/2)*77
+				 $(".gnb_more_box.open .more_box_in").css("height",fmihei);
+			}
+		});
+
+		//더보기 박스에서 마우스가 떠났을시 닫힘
+		$(".more_box_in").mouseleave(function(){
+			$(".gnb_more").removeClass("on");
+			$(".gnb_more_box").addClass("close");
+			$(".gnb_more_box").removeClass("open");
+		});
+
+
+		//접고 펼치기
+			$(".toggle_btn").on("click",function(){
+				$(this).toggleClass("down");
+				$(this).parent().parent().find(".sub_detail").removeClass("animated1s fadeIn").toggleClass("animated1s fadeIn").toggle();
+
+				//멘션 접고 펼치기
+				if($(this).hasClass("down")){
+					$(this).parent().parent().find(".mention_detail").removeClass("ellipsis").toggleClass("animated1s fadeIn");
+				}else{
+					$(this).parent().parent().find(".mention_detail").removeClass("animated1s fadeIn").toggleClass("ellipsis");
+				}
+			});
+
+			// 알림 스크롤 이벤트
+			$(".mention_alert_box .m_mentionCon").scroll(function(){
+				$(".tag_date").css("top",$(this).scrollTop()+10);
+				TagInAm();
+			});
+
+			//스크롤 끝나면 이벤트
+			$(".mention_alert_box .m_mentionCon").scrollEnd(function(){
+				TagOutAm();
+			},1000);
+
+	});
+
+	//메뉴 더보기 박스로 복사
+	function gnb_menu(){
+	  var td_size = $(".m_ta table td").size();
+	  var num = 8;
+		if (td_size >10)
+		 {
+			$(".m_ta table td").eq(num).nextAll("td").hide();
+			var menuCln = $(".m_ta table td").eq(num).nextAll("td").children(".fm_div").clone();
+			$(".more_box_in").html(menuCln);
+			$(".m_ta table").css("marginRight","157px")
+		  }
+	}
+	
+	
+	/* WEHAGO 서비스 호출 함수 START */
+	function wehagoService(target){
+		serviceCode = target;
+		
+		var tblParam = {};
+		
+		$.ajax({
+			type:"post",
+		    url: "/gw/getSignature.do",
+		    async: false,
+		    dataType: 'json',
+		    data: tblParam,
+		    success: function(data) { 
+		    	if(data.cno == ''){
+	    			alert("wehago 연동되어있지 않습니다.");
+	    		}else if(data.wehagoId == ''){
+	    			openWindow2("/gw/systemx/wehagoLogin.do",  "wehagoSignInPop", 450, 200, 0, 0 );
+	    		}else{
+	    			wehagoId = data.wehagoId;
+	    			cno = data.cno;
+	    			getSSOToken(data);
+	    		}
+		    },
+		    error: function(xhr) { 
+		      console.log('FAIL : ', xhr);
+		    }
+	   });
+	}
+	
+	function getSSOToken(data){
+		
+		var tblParam = {};
+		tblParam.device_id = device_id;
+		tblParam.token_sign = data.tokenSign;
+		tblParam.cno = cno;
+		
+		$.ajax({
+			type:"post",
+		    url: "http://dev.api0.wehago.com/auth/temporarily/createToken",
+		    data: tblParam,
+		    dataType: 'json',
+		    beforeSend : function(xhr){
+	            xhr.setRequestHeader("signature", data.signature);
+	            xhr.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+	        },
+		    success: function(data) { 
+		    	getWehagoServiceUrlInfo(data);
+		    },
+		    error: function(xhr) { 
+		      console.log('FAIL : ', xhr);
+		    }
+	   });
+	}
+	
+	function getWehagoServiceUrlInfo(data){
+		
+		var tblParam = {};
+		tblParam.token = data.resultData.thirdparty_a_token;
+		tblParam.wehagoId = wehagoId;
+		tblParam.cno = cno;
+		tblParam.serviceCd = serviceCode;
+		tblParam.domain = domain;
+		tblParam.softwareName = softwareName;
+		
+		$.ajax({
+			type:"post",
+		    url: "/gw/getWehagoServiceInfo.do",
+		    async: false,
+		    dataType: 'json',
+		    data: tblParam,
+		    success: function(data) { 
+		    	wehagoServicePop(data);
+		    },
+		    error: function(xhr) { 
+		      console.log('FAIL : ', xhr);
+		    }
+	   });
+	}
+	
+	
+	function wehagoServicePop(data){
+		var url = "http://dev.wehago.com/#/sso/service?security_param=" + encodeURIComponent(data.security_param) + "&software_name=" + data.softwareName + "&domain=" + data.domain;
+		window.open(url,"");
+	}
+
+	</script>
+
+</head>
+<body class="main_bg portal_ceo">
+  <div class="portal_wrap">
+<!--
+fm_ea 전자결재
+fm_ma 메일
+fm_sc 일정
+fm_wk 업무관리
+fm_bd 게시판
+fm_ds 인사/근태
+fm_ex 회계
+fm_dc 문서
+fm_mp 마이페이지
+fm_et 확장기능
+fm_of 원피스
+fm_st 시스템설정
+fm_cb 동호회
+-->
+
+		<div class="gnb_menu"><!-- 메뉴 -->
+		<div class="gnb_menu_in">
+		<div class="m_ta">
+			<table cellspacing="0" cellpadding="0" style="margin-right: 157px;">
+				<tbody><tr>
+					<td>
+						<div class="fm_div fm_ea">
+							<div class="fm_div_in">
+								<div class="ico cntPulse"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">전자결재</div>
+								<span class="cnt">6</span>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div class="fm_div fm_ma">
+							<div class="fm_div_in">
+								<div class="ico cntPulse"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">메일</div>
+								<span class="cnt">2</span>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div class="fm_div fm_sc">
+							<div class="fm_div_in">
+								<div class="ico cntPulse"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">일정</div>
+								<span class="cnt">3</span>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div class="fm_div fm_wk">
+							<div class="fm_div_in">
+								<div class="ico cntPulse"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">업무관리</div>
+								<span class="cnt">2</span>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div class="fm_div fm_bd">
+							<div class="fm_div_in">
+								<div class="ico cntPulse"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">게시판</div>
+								<span class="cnt">5</span>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div class="fm_div fm_ds">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">인사/근태</div>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div class="fm_div fm_st">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">시스템설정</div>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div class="fm_div fm_at">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">회계</div>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div class="fm_div fm_dc">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">문서</div>
+							</div>
+						</div>
+					</td>
+					<td style="display: none;">
+						<div class="fm_div fm_of">
+							<div class="fm_div_in">
+								<div class="ico cntPulse"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">ONEFFICE</div>
+								<span class="cnt">99</span>
+							</div>
+						</div>
+					</td>
+					<td style="display: none;">
+						<div class="fm_div fm_mp">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">마이페이지</div>
+							</div>
+						</div>
+					</td>
+					<td style="display: none;">
+						<div class="fm_div fm_et">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">확장기능</div>
+							</div>
+						</div>
+					</td>
+					<td style="display: none;">
+						<div class="fm_div fm_st">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">시스템설정</div>
+							</div>
+						</div>
+					</td>
+				</tr>
+			</tbody></table>
+		</div>
+		<div class="gnb_more" morebtn="Y">
+			<div class="fm_div plus" morebtn="Y">
+				<div class="fm_div_in" morebtn="Y">
+					<div class="ico" morebtn="Y"></div>
+					<div class="ico_bg" morebtn="Y"></div>
+					<div class="txt" morebtn="Y">더보기</div>
+				</div>
+			</div>
+		</div>
+		<div class="gnb_more_box close">
+			<div class="more_box_in"><div class="fm_div fm_dc">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">문서</div>
+							</div>
+						</div><div class="fm_div fm_of">
+							<div class="fm_div_in">
+								<div class="ico cntPulse"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">ONEFFICE</div>
+								<span class="cnt">99</span>
+							</div>
+						</div><div class="fm_div fm_mp">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">마이페이지</div>
+							</div>
+						</div><div class="fm_div fm_et">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">확장기능</div>
+							</div>
+						</div><div class="fm_div fm_st">
+							<div class="fm_div_in">
+								<div class="ico"></div>
+								<div class="ico_bg"></div>
+								<div class="txt">시스템설정</div>
+							</div>
+						</div></div>
+		</div>
+		</div><!--// gnb_menu_in -->
+	</div><!--// 메뉴 -->
+
+
+	<!-- main_wrap -->
+	<div class="main_wrap">
+		<div class="portletGrid grid10 nonGrid">
+
+			<div class="portletDiv" style="height:718px;"><!-- 포틀릿 영역 --------------------------------------------------------------------------------------------------->
+
+				<!-- 포틀릿박스 (통합알림2*4) -->
+			    		<div style="top:8px;left:8px" class="portletBox col2 row4">
+		    				<div class="ptl_content nocon">
+		    					<!-- 컨텐츠 영역 :: 최초 컨텐츠 미설정 시 .ptl_content가 비어있으면  .nocon 클래스 생성-->
+								<div class="ptc_box">
+  								<div class="tit_div">
+  									<h2 class="">알림전체</h2>
+  									<span class="tview">전체보기</span>
+  								</div>
+		    					<!-- 통합알림/멘션 -->
+					            <div class="ptl_mention">
+
+					                <div class="mentionCon ScrollY">
+					                    <!-- 알림전체 -->
+					                    <!--
+					                        1. li의 클래스 unread는 신규리스트일 경우 무조건 생성되며, 읽음처리 시 class명 제거해야합니다.
+
+					                        2. icon의 class는 아래와 같습니다.(아이콘)
+					                        - 메일 : maill
+					                        - 쪽지 : msg
+					                        - 결재 : ea
+					                        - 팩스 : fax
+					                        - 일정 : sc
+					                        - 업무관리 : wk
+					                        - 게시판 : bd
+					                        - 문서  : dc
+					                        - 업무보고 : wkr
+					                        - 인감 : stamp
+					                    -->
+
+					                        <ul>
+					                            <li class="dayline today"><span>오늘</span> 08.23 수요일</li>
+					                            <!-- 메일알림-->
+					                            <li class="unread">
+					                                <div class="icon mail"></div>
+					                                <div class="list_con">
+					                                    <a href="#n" onclick="return false;" class="title" title="메일 홍길동">메일 홍길동</a>
+					                                    <dl>
+					                                        <dt>품의 내용 관련 메일 발송합니다. 메일 제목 상단에</dt>
+					                                        <dd class="sub_detail">
+					                                        - 받는사람 : 김길동(kim@douzone.com),박길동(park@douzone.com)<br>
+					                                        - 내용 : 메일내용 길어지면 300자 말줄임...
+					                                        </dd>
+					                                    </dl>
+					                                </div>
+					                                <div class="list_fn">
+					                                    <span class="date">10:36</span>
+					                                    <a href="#n" onclick="return false;" class="toggle_btn"></a>
+					                                </div>
+					                            </li>
+
+					                            <!-- 결재알림-->
+					                            <li class="unread">
+					                                <div class="icon ea"></div>
+					                                <!-- 내용 -->
+					                                <div class="list_con">
+					                                    <a href="#n" onclick="return false;" class="title" title="전자결재 홍길동">전자결재 홍길동</a>
+					                                    <dl>
+					                                        <dt>전자결재 새로운 결재가 도착하였습니다.</dt>
+					                                        <dd class="sub_detail">
+					                                            - 품의번호 : 더존비즈온-포털-16-00003<br>
+					                                            - 제목 : 연차휴가 신청의 건<br>
+					                                            - 작성일자 : 2016.03.10 09:30<br>
+					                                            - 기안부서/기안자 : 포털/박길동 연구원
+					                                        </dd>
+					                                    </dl>
+					                                </div>
+					                                <!-- 날짜 및 펼침버튼-->
+					                                <div class="list_fn">
+					                                    <span class="date">10:36</span>
+					                                    <a href="#n" onclick="return false;" class="toggle_btn"></a>
+					                                </div>
+					                            </li>
+
+												<!-- 쪽지알림-->
+					                            <li class="unread">
+					                                <div class="icon msg"></div>
+					                                <!-- 내용 -->
+					                                <div class="list_con">
+					                                    <a href="#n" onclick="return false;" class="title" title="쪽지 홍길동">쪽지 홍길동</a>
+					                                    <dl>
+					                                        <dt>새로운 쪽지가 도착하였습니다.</dt>
+					                                        <dd class="sub_detail">
+					                                            - 품의번호 : 더존비즈온-포털-16-00003<br>
+					                                            - 제목 : 연차휴가 신청의 건<br>
+					                                            - 작성일자 : 2016.03.10 09:30<br>
+					                                            - 기안부서/기안자 : 포털/박길동 연구원
+					                                        </dd>
+					                                    </dl>
+					                                </div>
+					                                <!-- 날짜 및 펼침버튼-->
+					                                <div class="list_fn">
+					                                    <span class="date">10:36</span>
+					                                    <a href="#n" onclick="return false;" class="toggle_btn"></a>
+					                                </div>
+					                            </li>
+
+												<!-- 일정등록-->
+					                            <li class="unread">
+					                                <div class="icon sc"></div>
+					                                <!-- 내용 -->
+					                                <div class="list_con">
+					                                    <a href="#n" onclick="return false;" class="title" title="일정 홍길동">일정 홍길동</a>
+					                                    <dl>
+					                                        <dt>새로운 일정을 등록하였습니다.</dt>
+					                                        <dd class="sub_detail">
+					                                            - 품의번호 : 더존비즈온-포털-16-00003<br>
+					                                            - 제목 : 연차휴가 신청의 건<br>
+					                                            - 작성일자 : 2016.03.10 09:30<br>
+					                                            - 기안부서/기안자 : 포털/박길동 연구원
+					                                        </dd>
+					                                    </dl>
+					                                </div>
+					                                <!-- 날짜 및 펼침버튼-->
+					                                <div class="list_fn">
+					                                    <span class="date">10:36</span>
+					                                    <a href="#n" onclick="return false;" class="toggle_btn"></a>
+					                                </div>
+					                            </li>
+
+												<!-- 게시판등록-->
+					                            <li class="unread">
+					                                <div class="icon sc"></div>
+					                                <!-- 내용 -->
+					                                <div class="list_con">
+					                                    <a href="#n" onclick="return false;" class="title" title="일정 홍길동">일정 김기훈</a>
+					                                    <dl>
+					                                        <dt>[휴가신청서] 일정을 등록하였습니다.</dt>
+					                                        <dd class="sub_detail">
+					                                            - 품의번호 : 더존비즈온-포털-16-00003<br>
+					                                            - 제목 : 연차휴가 신청의 건<br>
+					                                            - 작성일자 : 2016.03.10 09:30<br>
+					                                            - 기안부서/기안자 : 포털/박길동 연구원
+					                                        </dd>
+					                                    </dl>
+					                                </div>
+					                                <!-- 날짜 및 펼침버튼-->
+					                                <div class="list_fn">
+					                                    <span class="date">10:36</span>
+					                                    <a href="#n" onclick="return false;" class="toggle_btn"></a>
+					                                </div>
+					                            </li>
+
+
+					                            <li class="dayline"><span>08.22</span>화요일</li>
+					                            <!-- 메일알림-->
+					                            <li class="unread">
+					                                <div class="pic_wrap">
+					                                    <div class="pic"></div>
+					                                    <div class="div_img">
+					                                        <!-- <img src="../../../Images/bg/pic_Noimg.png" alt=""> -->
+					                                        <img src="../../Images/temp/temp_pic.png" alt="" class="mCS_img_loaded">
+					                                    </div>
+					                                </div>
+					                                <div class="list_con">
+					                                    <a href="#n" onclick="return false;" class="title" title="일반대화방 박철민">일반대화방 해바라기</a>
+					                                    <dl>
+					                                        <dt><span class="ea"></span>방화벽 서버 구매요청의 건</dt> <!-- 필요 없을 시 삭제 -->
+					                                        <dd class="mention_detail ellipsis">
+					                                            <span class="msg"></span>
+					                                            <span class="mt_marking">@홍길동</span> 대리님 결재라인이 잘못되었습니다. 결재라인이 없어야될 인원인 홍길동 대리님은 빼고 상신하여 주시기 바랍니다. 내용은 300자 말줄임해주세요.내용은 300자 말줄임해주세요.내용은 300자 말줄임해주세요...
+					                                            <a href="#n" onclick="return false;" class="more_btn">상세보기</a>
+					                                        </dd>
+					                                    </dl>
+					                                </div>
+					                                <div class="list_fn">
+					                                    <span class="date">10:36</span>
+					                                    <a href="#n" onclick="return false;" class="toggle_btn"></a>
+					                                </div>
+					                            </li>
+					                            <!-- 메일알림-->
+					                            <li class="unread">
+					                                <div class="pic_wrap">
+					                                    <div class="pic"></div>
+					                                    <div class="div_img">
+					                                        <img src="../../Images/bg/pic_Noimg.png" alt="" class="mCS_img_loaded">
+					                                    </div>
+					                                </div>
+					                                <div class="list_con">
+					                                    <a href="#n" onclick="return false;" class="title" title="일반대화방 박철민">일반대화방 해바라기</a>
+					                                    <dl>
+					                                        <dt><span class="ea"></span>방화벽 서버 구매요청의 건</dt> <!-- 필요 없을 시 삭제 -->
+					                                        <dd class="mention_detail ellipsis">
+					                                            <span class="msg"></span>
+					                                            <span class="mt_marking">@홍길동</span> 대리님 결재라인이 잘못되었습니다. 결재라인이 없어야될 인원인 홍길동 대리님은 빼고 상신하여 주시기 바랍니다. 내용은 300자 말줄임해주세요.내용은 300자 말줄임해주세요.내용은 300자 말줄임해주세요...
+					                                            <a href="#n" onclick="return false;" class="more_btn">상세보기</a>
+					                                        </dd>
+					                                    </dl>
+					                                </div>
+					                                <div class="list_fn">
+					                                    <span class="date">10:36</span>
+					                                    <a href="#n" onclick="return false;" class="toggle_btn"></a>
+					                                </div>
+					                            </li>
+					                        </ul>
+					                    </div>
+										</div>	<!--// mentionCon -->
+					            </div><!--// ptl_mention -->
+                    </div><!--// ptc_box -->
+		    				</div><!--// ptl_content -->
+			    		</div><!-- portletBox -->
+
+
+
+
+				<!-- 총자금현황 박스 (배너6*2) -->
+				<div style="top:8px;left:244px" class="portletBox col6 row2">
+					<div class="ptl_content nocon">
+						<div class="total_mn">
+                <div class="tmn_head">
+                  <h2>총자금현황</h2>
+                  <div class="txt_dl">
+                    <dl>
+                      <dt>기준일자</dt>
+                      <dd class="ml5">2016.07.01&nbsp;am 09:00:00</dd>
+                    </dl>
+                  </div>
+                </div>
+                <div class="tmn_con">
+                  <table>
+                    <colgroup>
+                      <col width="50%">
+                      <col width="">
+                    </colgroup>
+                    <tbody>
+					<tr>
+                      <td class="pr10">
+                          <a href="#n" class="now_tmn">
+                            <span>현재시재액</span>
+                          </a>
+                          <div class="mn_div">
+                            13,554,660
+                          </div>
+                          <div class="tmn_ul">
+                            <ul>
+                              <li>
+                                <dl>
+                                  <dt>당일 예상 시재액</dt>
+                                  <dd class="fwb f18">12,674,000</dd>
+                                </dl>
+                              </li>
+                              <li>
+                                <dl>
+                                  <dt>시재액 구성비(%)</dt>
+                                  <dd class="fl ar" style="width:87px;margin-left:38px;"><span class="f13 mr5">현금</span><span class="f18 fwb">25</span><span>%</span></dd>
+                                  <dd><span class="f13 mr5">예적금</span><span class="f18 fwb">50</span><span>%</span></dd>
+                                </dl>
+                              </li>
+                            </ul>
+                          </div>
+                      </td>
+                      <td class="pl10">
+                        <div class="tmn_ul bk_ul">
+                          <ul>
+                            <li>
+                              <dl>
+                                <dt>순 채권금액</dt>
+                                <dd class="fwb f18">12,674,000</dd>
+                              </dl>
+                            </li>
+                            <li>
+                              <dl>
+                                <dt>매출액 <span class="f13">해당일</span></dt>
+                                <dd class="fl ar" style="width:92px;margin-left:38px;"><span class="mr5">전일대비</span><span class="down">10%</span></dd>
+                                <dd class="blue_dd">1,000,000</dd>
+                              </dl>
+                            </li>
+                          </ul>
+						  <div class="bg_tmn"></div>
+                        </div>
+
+                        <div class="tmn_ul bk_ul mt5">
+                          <ul>
+                            <li>
+                              <dl>
+                                <dt>순 금융자산</dt>
+                                <dd class="fwb f18">12,674,000</dd>
+                              </dl>
+                            </li>
+                            <li>
+                              <dl>
+                                <dt>매출액 <span class="f13">해당일</span></dt>
+                                <dd class="fl ar" style="width:92px;margin-left:38px;"><span class="mr5">전일대비</span><span class="up">10%</span></dd>
+                                <dd class="red_dd">1,000,000</dd>
+                              </dl>
+                            </li>
+                          </ul>
+						  <div class="bg_tmn"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody></table>
+                </div>
+
+
+            </div>
+					</div>
+				</div>
+
+
+				<!-- 타이틀 박스 (일정캘린더-가로형2*2) -->
+				<div style="top:8px;left:952px" class="portletBox col2 row2">
+					<div class="ptl_content nocon">
+						<!-- 컨텐츠 영역 :: 최초 컨텐츠 미설정 시 .ptl_content가 비어있으면  .nocon 클래스 생성-->
+                <div class="ebp_menu">
+                  <div class="em_head">
+                    <ul>
+                      <li class="on" style="background:none;"><a href="#n">WEHAGO 서비스</a></li>
+                    </ul>
+                  </div>
+                  <div class="em_con2">
+                      <!--
+                      wt = WE톡
+                      kc = 경비청구
+                      rt = 10분독서
+                      plus = plus
+                    -->
+                      <ul>
+                        <li class="wt">
+                          <a href="javascript:void(0);" onClick="wehagoService('communication2')">
+                            <span class="ico_div"></span>
+							<span class="ico_bg"></span>
+                            <span class="txt_div">WE톡</span>
+                          </a>
+                        </li>
+                        <li class="kc">
+                          <a href="javascript:void(0);" onClick="wehagoService('expensepersonalcard')">
+                            <span class="ico_div"></span>
+							<span class="ico_bg"></span>
+                            <span class="txt_div">경비청구</span>
+                          </a>
+                        </li>
+                        <li class="rt">
+                          <a href="javascript:void(0);" onClick="wehagoService('10mbook')">
+                            <span class="ico_div"></span>
+							<span class="ico_bg"></span>
+                            <span class="txt_div">10분 독서</span>
+                          </a>
+                        </li>
+                        <li class="plus">
+                          <a href="javascript:void(0)" onClick="wehagoService('main')">
+                            <span class="ico_div"></span>
+							<span class="ico_bg"></span>
+                          </a>
+                        </li>
+                      </ul>
+                  </div>
+                </div>
+							</div>
+				</div>
+
+        <!-- 타이틀 박스 (매출실적현황4*2) -->
+				<div style="top:244px;left:244px" class="portletBox col4 row2">
+					<div class="ptl_content nocon">
+						<!-- 컨텐츠 영역 :: 최초 컨텐츠 미설정 시 .ptl_content가 비어있으면  .nocon 클래스 생성-->
+            <div class="ptc_box2">
+            <!-- 타이틀 영역 -->
+			<div class="tit_div">
+				<h2 class="">2018 매출실적현황</h2>
+			</div>
+            <div class="pt_gr_ta1">
+                <table>
+                  <colgroup>
+                    <col width="240">
+                    <col width="">
+                  </colgroup>
+                  <tbody><tr>
+                    <td class="ac">
+                      <div class="gr_div" style="width:210px;height:187px;">
+                        <img src="../../Images/temp/img_graph01.png" alt="" class="">
+                      </div>
+                    </td>
+                    <td>
+                        <div class="pgt_list">
+                            <ul>
+                              <li class="li1">
+                                <dl>
+                                  <dt>목표금액</dt>
+                                  <dd>1,125,000,000</dd>
+                                </dl>
+                              </li>
+                              <li class="li2">
+                                <dl>
+                                  <dt>실적금액</dt>
+                                  <dd>125,000,000</dd>
+                                </dl>
+                              </li>
+                              <li class="li3">
+                                <dl>
+                                  <dt>미달금액</dt>
+                                  <dd>1,000,000,000</dd>
+                                </dl>
+                              </li>
+                            </ul>
+                        </div>
+                    </td>
+                  </tr>
+                </tbody></table>
+            </div>
+					</div><!--// ptc_box2 -->
+          </div><!--// ptl_content -->
+				</div>
+
+
+
+				<!-- 타이틀 박스 (부서판매실적4*2) -->
+				<div style="top:244px;left:716px" class="portletBox col4 row2">
+					<div class="ptl_content nocon">
+						<!-- 컨텐츠 영역 :: 최초 컨텐츠 미설정 시 .ptl_content가 비어있으면  .nocon 클래스 생성-->
+            <div class="ptc_box2">
+            <!-- 타이틀 영역 -->
+  					<div class="tit_div">
+  						<h2 class="">부서판매실적</h2>
+  					</div>
+            <div class="pt_gr_ta1">
+                <table>
+                  <colgroup>
+                    <col width="310">
+                    <col width="">
+                  </colgroup>
+                  <tbody><tr>
+                    <td class="ac">
+                      <div class="gr_div" style="width:240px;height:156px;">
+                        <img src="../../Images/temp/img_graph02.png" alt="" class="">
+                      </div>
+                    </td>
+                    <td>
+                      <div class="cg_list">
+                        <ul>
+                          <li class="li1">
+                            <dl>
+                              <dt>채권회전율</dt>
+                              <dd>11.8<span class="dan">%</span></dd>
+                            </dl>
+                          </li>
+                          <li class="li2">
+                            <dl>
+                              <dt>채권회전일</dt>
+                              <dd>30.8<span class="dan">일</span></dd>
+                            </dl>
+                          </li>
+                        </ul>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody></table>
+            </div>
+            </div><!--// ptc_box2 -->
+					</div><!--// ptl_content -->
+				</div>
+
+
+
+
+
+				<!-- 타이틀 박스 (2*2) -->
+				<div style="top:480px;left:8px" class="portletBox col2 row2">
+          <div class="ptl_content nocon">
+            <div class="ptc_box2">
+              <!-- 타이틀 영역 -->
+              <div class="tit_div pb10">
+                <h2 class="arr"><a href="#n">받은편지함</a></h2>
+              </div>
+            <!-- 컨텐츠 영역 :: 최초 컨텐츠 미설정 시 .ptl_content가 비어있으면  .nocon 클래스 생성-->
+            <div class="ptl_mail ScrollY" style="height:184px;">
+				<ul>
+					<li class="unlead line">
+						<dl>
+							<dt class="title"><a href="#n">주간업무보고서 송부</a></dt>
+							<dd class="from_info f11">관리자(admin@douzone.com)</dd>
+						</dl>
+					</li>
+					<li class="unlead line">
+						<dl>
+							<dt class="title"><a href="#n">견적서와 세금계산서</a></dt>
+							<dd class="from_info f11">관리자(admin@douzone.com)</dd>
+						</dl>
+					</li>
+					<li class="line">
+						<dl>
+							<dt class="title"><a href="#n">미팅일정 안내</a></dt>
+							<dd class="from_info f11">관리자(admin@douzone.com)</dd>
+						</dl>
+					</li>
+					<li class="line">
+						<dl>
+							<dt class="title"><a href="#n">더존 뉴스 모니터링 20190508</a></dt>
+							<dd class="from_info f11">김성훈A (kppl@douzone.com)</dd>
+						</dl>
+					</li>
+					<li class="line">
+						<dl>
+							<dt class="title"><a href="#n">[공지] 미리 써보는 ONEFFICE Mobile</a></dt>
+							<dd class="from_info f11">관리자(admin@douzone.com)</dd>
+						</dl>
+					</li>
+					<li class="line">
+						<dl>
+							<dt class="title"><a href="#n">더존 뉴스 모니터링 20190507</a></dt>
+							<dd class="from_info f11">관리자(admin@douzone.com)</dd>
+						</dl>
+					</li>
+				</ul>
+            </div>
+          </div><!-- //ptc_box2 -->
+				</div><!--//ptl_content -->
+      </div><!--//portletBox -->
+
+				<!-- 타이틀 박스 (자산성장성지표2*2) -->
+	<div style="top:480px;left:244px" class="portletBox col2 row2">
+			<div class="ptl_content nocon">
+						<!-- 컨텐츠 영역 :: 최초 컨텐츠 미설정 시 .ptl_content가 비어있으면  .nocon 클래스 생성-->
+            <div class="ptc_box2">
+            <!-- 타이틀 영역 -->
+            <div class="tit_div">
+              <h2 class="">자산성장성지표 <span class="so">(단위:%)</span></h2>
+            </div>
+            <div class="pt_gr_ta2">
+                <table>
+                  <tbody><tr>
+                    <td>
+                      <div class="gr_div" style="width:200px;height:125px;">
+                        <img src="../../Images/temp/img_graph03.png" alt="" class="">
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="bum_list">
+                        <ul>
+                          <li class="li1">총자산증가율</li>
+                          <li class="li2">유동자산증가율</li>
+                          <li class="li3">유형자산증가율</li>
+                          <li class="li4">자기자본증가율</li>
+                        </ul>
+                      </div>
+
+                    </td>
+                  </tr>
+                </tbody></table>
+            </div>
+          </div><!--// ptc_box2 -->
+					</div><!--//ptl_content -->
+				</div>
+
+        <!-- 타이틀 박스 (재고현황2*2) -->
+				<div style="top:480px;left:480px" class="portletBox col2 row2">
+					<div class="ptl_content nocon">
+						<!-- 컨텐츠 영역 :: 최초 컨텐츠 미설정 시 .ptl_content가 비어있으면  .nocon 클래스 생성-->
+            <div class="ptc_box2">
+            <!-- 타이틀 영역 -->
+            <div class="tit_div">
+              <h2 class="">재고현황 <span class="so">(단위:백만)</span></h2>
+            </div>
+            <div class="pt_gr_ta2">
+                <table>
+                  <tbody><tr>
+                    <td>
+                      <div class="gr_div" style="width:200px;height:125px;">
+                        <img src="../../Images/temp/img_graph04.png" alt="" class="" style="height:auto;margin-top:28px"><!--이미지 스타일 넣은것은 시연용 개발시 삭제-->
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="bum_list2">
+                        <ul>
+                          <li class="li1">
+                            <dl>
+                              <dt>이월재고</dt>
+                              <dd>32,123</dd>
+                            </dl>
+                          </li>
+                          <li class="li2">
+                            <dl>
+                              <dt>현재재고</dt>
+                              <dd>32,123</dd>
+                            </dl>
+                          </li>
+                          <li class="li3">
+                            <dl>
+                              <dt>평균재고</dt>
+                              <dd>32,123</dd>
+                            </dl>
+                          </li>
+                        </ul>
+                      </div>
+
+                    </td>
+                  </tr>
+                </tbody></table>
+            </div>
+          </div><!--// ptc_box2 -->
+					</div><!--//ptl_content -->
+				</div>
+
+
+
+
+        <!-- 타이틀 박스 (재고현황2*2) -->
+				<div style="top:480px;left:716px" class="portletBox col2 row2">
+					<div class="ptl_content nocon">
+						<!-- 컨텐츠 영역 :: 최초 컨텐츠 미설정 시 .ptl_content가 비어있으면  .nocon 클래스 생성-->
+            <div class="ptc_box2">
+            <!-- 타이틀 영역 -->
+            <div class="tit_div">
+              <h2 class="let1">경영실적[당기순이익] <span class="so">(단위:억원)</span></h2>
+            </div>
+            <div class="pt_gr_ta2">
+                <table>
+                  <tbody><tr>
+                    <td>
+                      <div class="gr_div" style="width:220px;height:157px;margin-top:25px;">
+                        <img src="../../Images/temp/img_graph05.png" alt="" class="" style=""><!--이미지 스타일 넣은것은 시연용 개발시 삭제-->
+                      </div>
+                    </td>
+                  </tr>
+                </tbody></table>
+            </div>
+          </div><!--// ptc_box2 -->
+					</div><!--//ptl_content -->
+				</div>
+
+
+
+
+        <!-- 타이틀 박스 (2*2) -->
+	<div style="top:480px;left:952px" class="portletBox col2 row2">
+          <div class="ptl_content nocon">
+            <div class="ptc_box2">
+              <!-- 타이틀 영역 -->
+              <div class="tit_div pb10">
+                <h2 class="arr"><a href="#n">공지사항</a></h2>
+              </div>
+              <div class="ScrollY" style="height:184px;">
+						<div class="exp_notice">
+							<ul>
+								<li class="new">통근버스노선표안내 <img src="../../Images/ico/icon_new.png" class="mtImg mCS_img_loaded" alt=""></li>
+								<li>2017년 귀속분 연말정산 세법</li>
+								<li>더존베이커리 2018년 1월 메뉴</li>
+								<li>1월 3주차 주간메뉴 안내</li>
+								<li>더존 ICT 그룹과 신라스테이 해</li>
+								<li>AT 자격시험 기술감독관 교육</li>
+							</ul>
+						</div>
+				</div>
+          </div><!-- //ptc_box2 -->
+			</div><!--//ptl_content -->
+      </div><!--//portletBox -->
+
+
+
+			</div><!-- //포틀릿 영역 --------------------------------------------------------------------------------------------------->
+		</div>
+	</div>
+	<!-- // main_wrap end -->
+  </div>
+  <!-- // portal_wrap-->
+
+
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<meta http-equiv="expires" content="0" />
+<meta http-equiv="expires" content="now" />
+<meta http-equiv="Cache-Control" content="private" />
+<meta http-equiv="Cache-Control" content="No-Cache" />
+<meta http-equiv="Pragma" content="No-Cache" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<title>[DZEditor] Data Binding JSON Diff</title>
+
+<script type='text/javascript' src="./jsondiffpatch.umd.js"></script>
+<link rel="stylesheet" href="./style.css" type="text/css" />
+<link rel="stylesheet" href="./html.css" type="text/css" />
+<link rel="stylesheet" href="./annotated.css" type="text/css" />
+
+<script>
+
+function receiveMessage(event) {
+
+	var data = event.data;
+
+	var orgBindData = data[0];
+	var bindData = data[1];
+
+	//orgBindData = { a: 3, b: 4 };
+	//bindData = { a: 5, b: 9 };
+
+	//bindData = JSON.parse(JSON.stringify(bindData), jsondiffpatch.dateReviver);
+
+	jsondiffpatch.debug = true;
+
+	var delta = jsondiffpatch.diff(orgBindData, bindData);
+
+	if(!delta) {
+		console.log("Not changed!!!");
+		alert("변경 사항이 없습니다.");
+	}
+
+	// beautiful html diff
+	document.getElementById('visual').innerHTML = jsondiffpatch.formatters.html.format(delta, orgBindData);
+
+	// self-explained json
+	//document.getElementById('annotated').innerHTML = jsondiffpatch.formatters.annotated.format(delta, bindData);
+}
+
+window.addEventListener("message", receiveMessage, false);
+
+</script>
+</head>
+
+<body>
+
+
+<h1 style="text-align:center;">Data Binding Sample DZEditor JSON Diff</h1>
+<br/>
+<div id="visual"></div>
+<hr/>
+<div id="annotated"></div>
+
+</body>
+</html>

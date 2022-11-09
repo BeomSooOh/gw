@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="MessengerDAO">
+	<!-- 모바일 웹서비스 로그인처리를 위한 resultMap -->
+	<resultMap id="loginWS" class="restful.messenger.vo.MessengerLoginVO">
+        <result property="groupSeq"    		column="groupSeq" 		nullValue=" " />
+        <result property="loginId"     		column="loginId"   		nullValue=" " />
+        <result property="loginPassword"    column="loginPassword"	nullValue=" " />
+        <result property="compSeq"     		column="compSeq"   		nullValue=" " />
+        <result property="compName"    		column="compName"     	nullValue=" " />
+        <result property="bizSeq"      		column="bizSeq"       	nullValue=" " />
+        <result property="bizName"     		column="bizName"     	nullValue=" " />
+        <result property="deptSeq"     		column="deptSeq"        nullValue=" " />
+        <result property="deptName"    		column="deptName"    	nullValue=" " />
+        <result property="empSeq"      		column="empSeq"  		nullValue=" " />
+        <result property="empName"     		column="empName"     	nullValue=" " />
+        <result property="dutyCode"    		column="dutyCode"      	nullValue=" " />
+        <result property="dutyName"    		column="dutyName"       nullValue=" " />
+        <result property="positionCode"     column="positionCode"  	nullValue=" " />
+        <result property="positionName"     column="positionName"  	nullValue=" " />
+        <result property="email"        	column="email"   		nullValue=" " />
+        <result property="nativeLangCode"	column="nativeLangCode"	nullValue=" " />
+        <result property="eaType"			column="eaType"			nullValue=" " />
+        <result property="compDomain"		column="compDomain"		nullValue=" " />
+        <result property="emailDomain"		column="emailDomain"		nullValue=" " />
+        <result property="setupVersionSeq"	column="setupVersionSeq"		nullValue="0" />
+        <result property="goToWorkYn"		column="goToWorkYn"		nullValue="N" />
+        <result property="orgnztPath"	column="orgnztPath"		nullValue=" " />
+        <result property="passwdStatusCode"	column="passwdStatusCode"		nullValue=" " />
+        <result property="passwdDate"	column="passwdDate"		nullValue=" " />
+	</resultMap>
+	
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+	<!-- 모바일 웹서비스 로그인 -->
+	<select id="MessengerDAO.actionLoginMobile" resultMap="loginWS" parameterClass="hashmap">
+		 SELECT M.LOGIN_ID AS loginId
+		 	  , M.LOGIN_PASSWD AS loginPassword
+		 	  , M.EMP_SEQ AS empSeq
+		 	  , $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(M.emp_seq, null),O.EMP_NAME_MULTI) AS empName
+			  , M.EMAIL_ADDR AS email
+			  , M.DUTY_CODE as dutyCode
+			  , $DB_NEOS$get_emp_duty_position_name(N.group_seq, N.comp_seq, N.duty_code, 'DUTY', $DB_NEOS$get_lang_code(M.emp_seq, null)) AS dutyName
+			  , M.POSITION_CODE AS positionCode
+			  , $DB_NEOS$get_emp_duty_position_name(N.group_seq, N.comp_seq, N.POSITION_CODE, 'POSITION', $DB_NEOS$get_lang_code(M.emp_seq, null)) AS positionName
+			  , N.COMP_SEQ AS compSeq
+			  , (SELECT $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(M.emp_seq, null),F.COMP_NAME_MULTI)
+				   FROM $DB_NEOS$v_t_co_comp_multi F
+				  WHERE N.COMP_SEQ=F.COMP_SEQ
+				  LIMIT 1
+				 ) AS compName
+			  , N.GROUP_SEQ AS groupSeq			  
+			  , N.BIZ_SEQ AS bizSeq
+			  , (SELECT $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(M.emp_seq, null),G.BIZ_NAME_MULTI)
+				   FROM $DB_NEOS$v_t_co_biz_multi G
+				  WHERE N.BIZ_SEQ=G.BIZ_SEQ
+				  LIMIT 1
+				 ) AS bizName
+			  , N.DEPT_SEQ AS deptSeq
+			  , (SELECT $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(M.emp_seq, null),A.DEPT_NAME_MULTI)
+				   FROM $DB_NEOS$v_t_co_dept_multi A
+				  WHERE A.DEPT_SEQ = N.DEPT_SEQ
+				  LIMIT 1
+				  ) deptName				  
+			  , $DB_NEOS$get_lang_code(M.emp_seq,null) as nativeLangCode
+			  , C.ea_type as eaType
+        	  , concat((select case when instr(messenger_url,'https') > 0 then 'https://' else 'http://' end from $DB_NEOS$t_co_group limit 1), (SELECT C.comp_domain
+				   FROM $DB_NEOS$t_co_comp C
+				  WHERE C.GROUP_SEQ = M.GROUP_SEQ AND C.COMP_SEQ = N.COMP_SEQ LIMIT 1)) as compDomain
+			  ,concat(ifnull(c.comp_mail_url, g.mail_url),'?ssoType=GW') as emailDomain
+<!-- 			  , IFNULL((select url_path as mail_url from $DB_NEOS$t_co_menu where upper_menu_no = '0' and url_gubun = 'mail' limit 1), '') as emailDomain -->
+			  , G.setup_version_seq as setupVersionSeq
+			  , D.path as orgnztPath
+			  ,if(ifnull((select come_dt from $DB_NEOS$t_at_att att where att.comp_seq=E.COMP_SEQ 
+			  		and att.group_seq=G.GROUP_SEQ 
+				   and att.att_item_code='10' 
+					and att.emp_seq=M.EMP_SEQ
+					and att.att_date = DATE_FORMAT(now(),'%Y%m%d')
+					limit 1
+				),'')='','Y','N') as goToWorkYn
+			  ,IFNULL(M.passwd_status_code, 'P') as passwdStatusCode	
+			  ,IFNULL(M.passwd_date, 'P') as passwdDate	
+		 FROM $DB_NEOS$T_CO_EMP M, $DB_NEOS$T_CO_EMP_DEPT N, $DB_NEOS$T_CO_EMP_COMP E, $DB_NEOS$V_T_CO_EMP_MULTI O, $DB_NEOS$T_CO_COMP C, $DB_NEOS$T_CO_GROUP G, $DB_NEOS$T_CO_DEPT D
+		 WHERE M.GROUP_SEQ = G.GROUP_SEQ 
+		 AND M.EMP_SEQ = N.EMP_SEQ
+		 AND M.EMP_SEQ = O.EMP_SEQ
+     	 AND M.EMP_SEQ = E.EMP_SEQ
+     	 AND N.COMP_SEQ = E.COMP_SEQ
+         AND N.COMP_SEQ = C.COMP_SEQ
+         AND N.DEPT_SEQ = D.DEPT_SEQ
+		 AND E.WORK_STATUS IN ('999','004')
+		 AND N.MAIN_DEPT_YN = 'Y'
+		 AND M.GROUP_SEQ = #groupSeq#
+		 AND M.LOGIN_ID = #loginId#
+		 AND M.LOGIN_PASSWD = IF(#loginPassword# = '▦', M.LOGIN_PASSWD, #loginPassword#) 
+		 AND M.USE_YN = 'Y'
+		 AND N.USE_YN = 'Y'
+		 AND O.USE_YN = 'Y'
+		 AND C.USE_YN = 'Y'
+		 AND D.USE_YN = 'Y'
+		 AND M.MESSENGER_USE_YN = 'Y'
+     ORDER BY CASE WHEN N.COMP_SEQ = M.main_comp_seq THEN 0 ELSE 1 END
+		 LIMIT 1
+	</select>
+
+	<select id="MessengerDAO.selectLoginVO" resultClass="hashMap" parameterClass="hashmap">
+	<![CDATA[
+	   SELECT   IFNULL(c.COMP_SEQ, '') AS compSeq
+              , $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(e.emp_seq, null),(select comp_name_multi from $DB_NEOS$v_t_co_comp_multi where comp_seq = c.comp_seq)) AS compName
+              , IFNULL(ed.BIZ_SEQ, '') AS bizSeq
+              , IFNULL((SELECT $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(e.emp_seq, null),BIZ_NAME_MULTI)
+                   FROM $DB_NEOS$V_T_CO_BIZ_MULTI 
+                  WHERE BIZ_SEQ = ed.BIZ_SEQ ),'') AS bizName 
+              , IFNULL(ed.DEPT_SEQ,'') AS deptSeq
+              , $DB_NEOS$FN_GetMultiLang($DB_NEOS$get_lang_code(e.emp_seq, null),(select dept_name_multi from $DB_NEOS$v_t_co_dept_multi where dept_seq = ed.dept_seq)) as deptName
+              , IFNULL(e.EMAIL_ADDR,'') as emailAddr  
+              , IFNULL(c.EMAIL_DOMAIN,'') as emailDomain
+              , IFNULL(ed.duty_code,'') as dutyCode
+              , IFNULL(ed.position_code, '') as positionCode
+              , $DB_NEOS$get_dept_path('|', ed.DEPT_SEQ, e.GROUP_SEQ) as orgnztPath
+         FROM $DB_NEOS$t_co_emp e
+         LEFT JOIN $DB_NEOS$t_co_emp_dept ed
+			ON	e.emp_seq = ed.emp_seq AND e.group_seq = ed.group_seq
+		LEFT JOIN $DB_NEOS$t_co_comp c
+			ON	e.group_seq = c.group_seq AND ed.comp_seq = c.comp_seq
+		LEFT JOIN $DB_NEOS$t_co_emp_comp ec
+			ON	ec.comp_seq = c.comp_seq AND e.emp_seq = ec.emp_seq         
+		LEFT JOIN $DB_NEOS$t_co_comp_multi cm
+				ON c.comp_seq = cm.comp_seq AND cm.lang_code = 'kr'
+		LEFT JOIN $DB_NEOS$t_co_dept_multi dm
+				ON dm.group_seq = e.group_seq AND c.comp_seq = dm.comp_seq AND ed.dept_Seq = dm.dept_Seq AND dm.lang_code = 'kr'
+        INNER JOIN $DB_NEOS$T_CO_DEPT D ON ed.dept_seq = D.dept_seq
+        WHERE ec.WORK_STATUS IN ('999','004')
+          AND e.LOGIN_ID = #loginId#
+          AND e.GROUP_SEQ = #groupSeq#
+          AND e.use_yn = 'Y'
+		  AND ed.use_yn = 'Y'
+		  AND cm.use_yn = 'Y'
+		  AND dm.use_yn = 'Y'
+		  AND D.ea_yn != 'Y'
+	]]>
+	</select>
+
+	<select id="MessengerDAO.selectLoginPassword" resultClass="String" parameterClass="hashmap">
+		 SELECT M.LOGIN_PASSWD AS loginPassword
+		 FROM $DB_NEOS$T_CO_EMP M, $DB_NEOS$T_CO_EMP_DEPT N, $DB_NEOS$T_CO_EMP_MULTI O
+		 WHERE M.EMP_SEQ = N.EMP_SEQ
+		 AND M.EMP_SEQ = O.EMP_SEQ
+		 AND M.WORK_STATUS IN ('999','004')
+		 AND N.MAIN_DEPT_YN = 'Y'
+		 AND M.LOGIN_ID = #loginId#
+		 AND M.GROUP_SEQ = #groupSeq#
+		 AND M.USE_YN = 'Y'
+		 AND N.USE_YN = 'Y'
+		 AND O.USE_YN = 'Y'
+		 LIMIT 1
+	</select>
+	
+	
+	<select id="MessengerDAO.selectOrgImgList" parameterClass="hashmap" resultClass="egovMap">
+<!-- 		SELECT  -->
+<!-- 			img_type, disp_mode, disp_type, file_id, '0' as file_sn -->
+<!-- 		FROM  -->
+<!-- 			t_co_org_img -->
+<!-- 		WHERE  -->
+<!-- 			org_seq = #orgSeq# -->
+<!-- 			AND -->
+<!-- 				os_type = #osType# -->
+<!-- 			AND -->
+<!-- 				app_type = #appType# -->
+			SELECT 
+			       IFNULL(B.img_type, A.img_type) AS 'img_type', 
+			       IFNULL(B.disp_mode, A.disp_mode) AS 'disp_mode',
+			       IFNULL(B.disp_type, A.disp_type) AS 'disp_type', 
+			       IFNULL(B.file_id,A.file_id) AS 'file_id', 
+			       '0' AS 'file_sn'
+			FROM   (
+			  SELECT *
+			  FROM   $DB_NEOS$t_co_org_img
+			  WHERE  app_type = #appType# 
+			  AND	 os_type = #osType#
+			  AND    (org_seq = #groupSeq#)
+			) A
+			LEFT OUTER JOIN (
+			  SELECT *
+			  FROM   $DB_NEOS$t_co_org_img
+			  WHERE  app_type = #appType# 
+			  AND	 os_type = #osType#
+			  AND    (org_seq = #orgSeq#)
+			) B
+			ON      A.os_type = B.os_type
+			AND	A.app_type = B.app_type
+			AND     A.img_type = B.img_type
+			AND     A.ph_type  = B.ph_type
+	</select>
+	
+	<select id="MessengerDAO.selectAlertInfo" resultClass="hashMap" parameterClass="hashmap">
+	<![CDATA[
+	   SELECT   bb.flag_1 as eventType
+              , aa.alert_type as eventSubType
+              , aa.alert_yn as alertYN
+         FROM $DB_NEOS$t_alert_admin aa, $DB_NEOS$t_co_code_detail bb
+        WHERE aa.group_seq = #groupSeq#
+          AND aa.comp_seq = #compSeq#
+          AND aa.use_yn = 'Y'
+          AND aa.alert_type = bb.detail_code
+          AND bb.code = 'COM510'
+	]]>
+	</select>
+	
+	<select id="MessengerDAO.selectOptionListMessanger" parameterClass="hashmap" resultClass="egovMap">
+	/* MessengerDAO.selectOptionListMessanger - MariaDB */
+			SELECT	option_id,
+				option_value,
+				option_nm,
+				IFNULL(p_option_id, '') AS p_option_id,
+				option_level,
+				option_group,	 
+				IFNULL(CASE T.option_group WHEN 'text' 
+				THEN T.option_value 
+				ELSE GROUP_CONCAT(CASE1.detail_name_multi SEPARATOR ', ')
+				END, $DB_NEOS$get_code_detail_info('0', 'TX000017306', '1', 'kr'))  AS select_value
+		FROM	(
+			SELECT A.option_id AS option_id, 
+			       IFNULL(B.option_value, A.option_d_value) AS option_value,
+			       A.option_gb AS option_gb,
+			       A.option_group AS option_group, 
+			       A.option_nm AS option_nm,
+			       A.p_option_id AS p_option_id,
+			       A.option_value_id AS option_value_id,
+			       A.p_option_must_value AS p_option_must_value,
+			       A.option_level AS option_level,
+			       A.option_desc AS option_desc,
+			       B.option_value AS option_value_real, 
+			       B.co_id AS co_id
+			FROM   $DB_NEOS$tcmg_optionset A
+			    LEFT OUTER JOIN $DB_NEOS$tcmg_optionvalue B
+			    ON A.option_id = B.option_id AND B.co_id = '0'
+	    	WHERE (A.module_gb = 'msg' or A.option_id in ('cm2200','com600'))
+			)	T
+			LEFT OUTER JOIN	(
+				SELECT  detail_code, 
+				        CODE, 
+				        lang_code, 
+				        detail_name, 
+				        note, 
+				        use_yn, 
+				        create_seq, 
+				        create_date, 
+				        modify_seq, 
+				        modify_date, 
+				        $DB_NEOS$FN_GetMultiLang('kr', detail_name_multi) as detail_name_multi
+				 FROM   $DB_NEOS$v_t_co_code_detail_multi
+			)	CASE1
+			ON 	T.option_value_id = CASE1.code AND T.option_value  LIKE  CONCAT('%',CASE1.detail_code,'%')
+		WHERE T.option_gb = '1'
+		GROUP BY T.option_id
+		ORDER BY CAST(SUBSTR(T.option_id, 3) AS INT) ASC
+	</select>
+
+	<select id="MessengerDAO.selectDownViewerMessanger" parameterClass="hashmap" resultClass="egovMap">
+	/* MessengerDAO.selectDownViewerMessanger - MariaDB */
+			SELECT	option_id,
+				option_value,
+				option_nm,
+				IFNULL(p_option_id, '') AS p_option_id,
+				option_level,
+				option_group,	 
+				IFNULL(CASE T.option_group WHEN 'text' 
+				THEN T.option_value 
+				ELSE GROUP_CONCAT(CASE1.detail_name_multi SEPARATOR ', ')
+				END, $DB_NEOS$get_code_detail_info('0', 'TX000017306', '1', 'kr'))  AS select_value
+		FROM	(
+			SELECT A.option_id AS option_id, 
+			       IFNULL(B.option_value, A.option_d_value) AS option_value,
+			       A.option_gb AS option_gb,
+			       A.option_group AS option_group, 
+			       A.option_nm AS option_nm,
+			       A.p_option_id AS p_option_id,
+			       A.option_value_id AS option_value_id,
+			       A.p_option_must_value AS p_option_must_value,
+			       A.option_level AS option_level,
+			       A.option_desc AS option_desc,
+			       B.option_value AS option_value_real, 
+			       B.co_id AS co_id
+			FROM   $DB_NEOS$tcmg_optionset A
+			    LEFT OUTER JOIN $DB_NEOS$tcmg_optionvalue B
+			    ON A.option_id = B.option_id AND B.co_id = '0'
+	    	WHERE A.module_gb = 'cm'
+			)	T
+			LEFT OUTER JOIN	(
+				SELECT  detail_code, 
+				        CODE, 
+				        lang_code, 
+				        detail_name, 
+				        note, 
+				        use_yn, 
+				        create_seq, 
+				        create_date, 
+				        modify_seq, 
+				        modify_date, 
+				        $DB_NEOS$FN_GetMultiLang('kr', detail_name_multi) as detail_name_multi
+				 FROM   $DB_NEOS$v_t_co_code_detail_multi
+			)	CASE1
+			ON 	T.option_value_id = CASE1.code AND T.option_value  LIKE  CONCAT('%',CASE1.detail_code,'%')
+		WHERE T.option_gb = '1'
+		<isNotEmpty property="parentId">
+		AND		p_option_id = #parentId#
+		AND     (option_id = 'pathSeq800' OR option_id = 'pathSeq810')
+		</isNotEmpty>
+		GROUP BY T.option_id
+		ORDER BY CAST(SUBSTR(T.option_id, 3) AS INT) ASC
+	</select>		
+	
+	
+	<select id="MessengerDAO.selectOrgImgListForGroup" parameterClass="hashmap" resultClass="egovMap">
+		  SELECT org_seq, img_type, disp_mode, disp_type, file_id, '0' as 'file_sn', ph_type
+		  FROM   $DB_NEOS$t_co_org_img
+		  WHERE  app_type = #appType# 
+		  AND	 os_type = #osType#
+		  AND    (org_seq = #groupSeq#)	
+	</select>
+	
+	
+	<select id="MessengerDAO.selectOrgImgListForComp" parameterClass="hashmap" resultClass="egovMap">
+		  SELECT org_seq, img_type, disp_mode, disp_type, file_id, '0' as 'file_sn', ph_type
+		  FROM   $DB_NEOS$t_co_org_img
+		  WHERE  app_type = #appType# 
+		  AND	 os_type = #osType#
+		  AND    (org_seq = #orgSeq#)	
+	</select>
+	
+	<select id="MessengerDAO.selectOptionListMobile" parameterClass="hashmap" resultClass="egovMap">
+		/* restDAO.selectOptionListMobile - MariaDB */
+		SELECT	option_id,
+				option_value,
+				option_nm,
+				IFNULL(p_option_id, '') AS p_option_id,
+				option_level
+		FROM	(
+			SELECT A.option_id AS option_id, 
+			       IFNULL(B.option_value, A.option_d_value) AS option_value,
+			       A.option_gb AS option_gb,
+			       A.option_group AS option_group, 
+			       A.option_nm AS option_nm,
+			       A.p_option_id AS p_option_id,
+			       A.option_value_id AS option_value_id,
+			       A.p_option_must_value AS p_option_must_value,
+			       A.option_level AS option_level,
+			       A.option_desc AS option_desc,
+			       B.option_value AS option_value_real, 
+			       B.co_id AS co_id
+			FROM   $DB_NEOS$tcmg_optionset A
+			    LEFT OUTER JOIN $DB_NEOS$tcmg_optionvalue B
+			    ON A.option_id = B.option_id AND B.co_id = '0'
+			<isEqual property="optionGubun" compareValue="cm">
+			WHERE A.module_gb = 'cm'
+			</isEqual>    
+			<isEqual property="optionGubun" compareValue="app">
+			WHERE A.module_gb = 'app'
+			</isEqual>
+			)	T
+			LEFT OUTER JOIN	(
+				SELECT  detail_code, 
+				        CODE, 
+				        lang_code, 
+				        detail_name, 
+				        note, 
+				        use_yn, 
+				        create_seq, 
+				        create_date, 
+				        modify_seq, 
+				        modify_date, 
+				        $DB_NEOS$FN_GetMultiLang('kr', detail_name_multi) as detail_name_multi
+				 FROM   $DB_NEOS$v_t_co_code_detail_multi
+			)	CASE1
+			ON 	T.option_value_id = CASE1.code AND T.option_value  LIKE  CONCAT('%',CASE1.detail_code,'%')
+		WHERE T.option_gb = '1'
+		<isEqual property="optionLevel" compareValue="1">
+		AND		option_level = '1'
+		</isEqual>
+		<isNotEmpty property="parentId">
+		AND		p_option_id = #parentId#
+		</isNotEmpty>
+		GROUP BY T.option_id
+		ORDER BY CAST(SUBSTR(T.option_id, 3) AS INT) ASC
+	</select>	
+</sqlMap>

@@ -1,0 +1,53 @@
+/*
+* 복사하기(확장-드롭다운) 다이알로그
+* commandId 로 나열
+*/
+var dzeCopyExtList = [ID_COMMAND_COPY, ID_COMMAND_COPY_EXT_STYLE];
+
+/*
+* 문단 삽입하기(시작점 / 끝점) 다이알로그
+* commandId 로 나열
+*/
+var dzeInsertParagraphList = [ID_COMMAND_INSERT_PARAGRAPH_STARTPOINT, ID_COMMAND_INSERT_PARAGRAPH_ENDPOINT];
+
+/*
+* 이미지/표 - 테두리 두께 선택 다이알로그
+* commandId 로 나열
+*/
+var dzeObjectBorderThicknessList = [ID_COMMAND_IMAGE_BORDER_NONE, ID_COMMAND_IMAGE_BORDER_1PX, ID_COMMAND_IMAGE_BORDER_2PX, ID_COMMAND_IMAGE_BORDER_3PX, ID_COMMAND_IMAGE_BORDER_4PX, ID_COMMAND_IMAGE_BORDER_5PX, ID_COMMAND_IMAGE_BORDER_6PX, ID_COMMAND_IMAGE_BORDER_7PX, ID_COMMAND_IMAGE_BORDER_8PX, ID_COMMAND_IMAGE_BORDER_9PX, ID_COMMAND_IMAGE_BORDER_10PX];
+
+/*
+* 이미지/표 - 테두리 종류 선택 다이알로그
+* commandId 로 나열
+*/
+var dzeObjectBorderTypeList = [ID_COMMAND_IMAGE_BORDER_NONE, ID_COMMAND_IMAGE_BORDER_SOLID, ID_COMMAND_IMAGE_BORDER_DASHED, ID_COMMAND_IMAGE_BORDER_DOTTED, ID_COMMAND_IMAGE_BORDER_DOUBLE];
+
+/*
+* 붙여넣기(선택하여 붙여넣기) 다이알로그
+* commandId 로 나열
+*/
+var dzePasteExtList = [ID_COMMAND_EDIT_PASTESPECIAL];
+
+/*
+* 표 - 삭제 - 행/열/표 삭제 다이알로그
+* commandId 로 나열
+*/
+var dzeTableDeleteExtList = [ID_COMMAND_TABLE_DELETE_ROW, ID_COMMAND_TABLE_DELETE_COL, ID_COMMAND_TABLE_DELETE_TABLE];
+
+/*
+* 표 - 계산식 - 가로 합계 / 세로 합계 / 가로 평균 / 세로 평균 / 가로 곱 / 세로 곱 선택 다이알로그
+* commandId 로 나열
+*/
+var dzeTableFomulaExtList = [ID_COMMAND_TABLE_HORIZONTAL_SUM, ID_COMMAND_TABLE_VERTICAL_SUM, ID_COMMAND_TABLE_HORIZONTAL_AVERAGE, ID_COMMAND_TABLE_VERTICAL_AVERAGE, ID_COMMAND_TABLE_HORIZONTAL_MULTIPLY, ID_COMMAND_TABLE_VERTICAL_MULTIPLY];
+
+/*
+* 표 - 1,000단위 구분 쉼표 - 자릿점 넣기 / 자릿점 빼기 선택 다이알로그
+* commandId 로 나열
+*/
+var dzeTableNumberFormatList = [ID_COMMAND_TABLE_TABLE_ADD_NUMBER_FORMAT, ID_COMMAND_TABLE_TABLE_REMOTE_NUMBER_FORMAT];
+
+/*
+* 표 - 선택 - 셀/열/행/표 선택 다이알로그
+* commandId 로 나열
+*/
+var dzeTableSelectList = [ID_COMMAND_TABLE_SELECT_CELL, ID_COMMAND_TABLE_SELECT_COL, ID_COMMAND_TABLE_SELECT_ROW, ID_COMMAND_TABLE_SELECT_TABLE];

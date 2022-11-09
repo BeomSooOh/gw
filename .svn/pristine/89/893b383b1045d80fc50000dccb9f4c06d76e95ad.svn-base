@@ -1,0 +1,26 @@
+package api.menuAccess.service;
+
+import java.util.List;
+import java.util.Map;
+
+import api.common.model.APIResponse;
+import api.menuAccess.vo.MenuAccessVO;
+
+public interface MenuAccessService {
+    // 메뉴사용내역 조회
+    public List<MenuAccessVO> getMenuAccessList(Map<String, Object> reqParams) throws Exception;
+    // 메뉴사용내역 total count
+    public Map<String, Object> getMenuAccessListTotalCnt(Map<String, Object> reqParams) throws Exception;
+
+    // 메뉴사용내역 저장
+    public APIResponse saveMenuAccessList(Map<String, Object> reqParams) throws Exception;
+    public APIResponse saveWebMenuAccessSync(Map<String, Object> reqParams) throws Exception;
+    public APIResponse createTestMenuAccessList(Map<String, Object> reqParams) throws Exception;
+    
+    // 메뉴사용내역 삭제
+    public APIResponse deleteMenuAccessList(Map<String, Object> reqParams) throws Exception;
+
+    public List<MenuAccessVO> getMenuAccessListExcel(Map<String, Object> reqParams) throws Exception;
+    public List<MenuAccessVO> getMenuAccessListMultiExcel(Map<String, Object> reqParams) throws Exception;
+
+}

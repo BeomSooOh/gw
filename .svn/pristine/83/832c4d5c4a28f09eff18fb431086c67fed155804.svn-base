@@ -1,0 +1,2521 @@
+package main.service.impl;
+
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
+import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.SimpleTimeZone;
+import java.util.regex.Pattern;
+
+import javax.annotation.Resource;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
+import bizbox.orgchart.service.vo.LoginVO;
+import cloud.CloudConnetInfo;
+import egovframework.com.cmm.util.EgovUserDetailsHelper;
+import io.searchbox.core.SearchResult;
+import io.searchbox.core.SearchResult.Hit;
+import main.service.MainService;
+import main.web.PagingReturnObj;
+import neos.cmm.db.CommonSqlDAO;
+
+@Repository ( "BizboxElasticSearchQuery" )
+public class BizboxElasticSearchQuery {
+
+	@Resource ( name = "MainService" )
+	MainService mainService;
+	@Resource ( name = "commonSql" )
+	public CommonSqlDAO commonSql;
+	@Autowired
+	private CustomSearchClient searchClient;
+
+	/* interface */
+	public final class SearchTypeKey {
+
+		/* 검색엔진에서 알림 조회시 사용하는 별칭명 */
+		public static final String ALERT = "ES_ALERT_ALIAS";
+		/* 검색엔진에서 통합검색 조회시 사용하는 별칭명 */
+		public static final String TSEARCH = "ES_TSEARCH_ALIAS";
+		/* 검색엔진에서 대화 조회시 사용하는 별칭명 */
+		public static final String TALK = "ES_TALK_ALIAS";
+		/* 검색엔진에서 쪽지 조회시 사용하는 별칭명 */
+		public static final String MESSAGE = "ES_MESSAGE_ALIAS";
+	}
+
+	public final class PermKeyType {
+
+		public static final String LOGIN = "Login";
+		public static final String API = "API";
+	}
+
+	private Logger LOG = LogManager.getLogger(this.getClass());
+	
+	/* alias */
+	private String getTSearchAlias ( String searchTypeKey, Map<String, String> params ) {
+		String alias = "";
+		try {
+			LoginVO loginVO = (LoginVO) EgovUserDetailsHelper.getAuthenticatedUser( );
+			Map<String, String> custInfo = new HashMap<String, String>( );
+			
+			custInfo = CloudConnetInfo.getCustInfo( loginVO != null ? loginVO.getGroupSeq( ) : params.get("groupSeq") );
+			LOG.info("getTSearchAlias. searchTypeKey=" + searchTypeKey + ", params=" + params + ", custInfo=" + custInfo + ", loginVO=" + loginVO);
+			if ( custInfo != null ) {
+				if ( custInfo.containsKey( searchTypeKey ) ) {
+					alias = custInfo.get( searchTypeKey );
+				}
+			}
+		}
+		catch ( Exception e ) {
+			throw e;
+		}
+		return alias;
+	}
+
+	/* LoginVO */
+	private LoginVO getLogin ( ) {
+		return (LoginVO) EgovUserDetailsHelper.getAuthenticatedUser( );
+	}
+
+	/* set login param ( empSeq, deptSeq, compSeq, groupSeq ) */
+	private Map<String, Object> getLoginParam ( Map<String, Object> param ) {
+		LoginVO loginVO = getLogin( );
+		/* 그룹 시퀀스 */
+		param.put( "groupSeq", loginVO.getGroupSeq( ) );
+		/* 회사 시퀀스 */
+		param.put( "compSeq", loginVO.getCompSeq( ) );
+		/* 부서 시퀀스 */
+		param.put( "deptSeq", loginVO.getOrgnztId( ) );
+		/* 사원 시퀀스 */
+		param.put( "empSeq", loginVO.getUniqId( ) );
+		return param;
+	}
+
+	/* 무엇을 하는 것인고? */
+	private Map<String, String> getPermKey ( String type, LoginVO loginVo, Map<String, String> param ) {
+		switch ( type ) {
+			case PermKeyType.LOGIN:
+				param.put( "permKey", loginVo.getOrgnztId( ) + "|" + loginVo.getUniqId( ) + "|" );
+				param.put( "permOnlyUserKey", "su|" + loginVo.getUniqId( ) + "|" ); // 사용자만 단위
+				param.put( "permUserKey", "u|" + loginVo.getCompSeq( ) + "|" + loginVo.getOrgnztId( ) + "|" + loginVo.getUniqId( ) + "|" ); // 유저단위
+				param.put( "permEmpKey", "e|" + loginVo.getCompSeq( ) + "|" + loginVo.getOrgnztId( ) + "|" + loginVo.getUniqId( ) + "|" ); // 유저단위
+				param.put( "permGroupKey", "g|" + loginVo.getGroupSeq( ) + "|" ); // 그룹단위
+				param.put( "permCompKey", "c|" + loginVo.getCompSeq( ) + "|" ); // 회사단위
+				param.put( "permCUKey", "cu|" + loginVo.getCompSeq( ) + "|" + loginVo.getUniqId( ) + "|" ); // 회사/유저 단위
+				param.put( "permDeptKey", "d|" + loginVo.getCompSeq( ) + "|" + loginVo.getOrgnztId( ) + "|" ); // 부서단위
+				param.put( "permDUKey", "du|" + loginVo.getCompSeq( ) + "|" + loginVo.getClassCode( ) + "|" ); // 직책단위
+				param.put( "permPOKey", "po|" + loginVo.getCompSeq( ) + "|" + loginVo.getPositionCode( ) + "|" ); // 직급단위
+				break;
+			case PermKeyType.API:
+				param.put( "permKey", param.get( "deptSeq" ) + "|" + param.get( "empSeq" ) + "|" );
+				param.put( "permOnlyUserKey", "su|" + param.get( "empSeq" ) + "|" ); // 사용자만 단위
+				param.put( "permUserKey", "u|" + param.get( "compSeq" ) + "|" + param.get( "deptSeq" ) + "|" + param.get( "empSeq" ) + "|" ); // 유저단위
+				param.put( "permEmpKey", "e|" + param.get( "compSeq" ) + "|" + param.get( "deptSeq" ) + "|" + param.get( "empSeq" ) + "|" ); // 유저단위
+				param.put( "permGroupKey", "g|" + param.get( "groupSeq" ) + "|" ); // 그룹단위
+				param.put( "permCompKey", "c|" + param.get( "compSeq" ) + "|" ); // 회사단위
+				param.put( "permCUKey", "cu|" + param.get( "compSeq" ) + "|" + param.get( "empSeq" ) + "|" ); // 회사/부서 단위
+				param.put( "permDeptKey", "d|" + param.get( "compSeq" ) + "|" + param.get( "deptSeq" ) + "|" ); // 부서단위
+				param.put( "permDUKey", "du|" + param.get( "compSeq" ) + "|" + param.get( "classCode" ) + "|" ); // 직책단위
+				param.put( "permPOKey", "po|" + param.get( "compSeq" ) + "|" + param.get( "positionCode" ) + "|" ); // 직급단위
+				break;
+			default:break;
+		}
+		
+		
+		//검색엔진 대문자 비교되지않는 문제로 소문자 처리.(임시)
+		param.put("permKey", param.get("permKey").toLowerCase());
+		param.put("permOnlyUserKey", param.get("permOnlyUserKey").toLowerCase());
+		param.put("permUserKey", param.get("permUserKey").toLowerCase());
+		param.put("permEmpKey", param.get("permEmpKey").toLowerCase());
+		param.put("permGroupKey", param.get("permGroupKey").toLowerCase());
+		param.put("permCompKey", param.get("permCompKey").toLowerCase());
+		param.put("permCUKey", param.get("permCUKey").toLowerCase());
+		param.put("permDeptKey", param.get("permDeptKey").toLowerCase());
+		param.put("permDUKey", param.get("permDUKey").toLowerCase());
+		param.put("permPOKey", param.get("permPOKey").toLowerCase());
+		
+		return param;
+	}
+
+	public PagingReturnObj searchElasticSearch ( Map<String, String> params, String listType ) throws Exception {
+		//System.out.println( "getTotalSearchContentHr searchElasticSearch params : " + params );
+		//System.out.println( "parkkw99 params : " + params );
+		List<Map<String, Object>> resultList = new ArrayList<Map<String, Object>>( ); // 리턴 정보를 담을 맵을 리스트로 리턴
+		PagingReturnObj returnObj = new PagingReturnObj( );
+		LoginVO loginVO = getLogin( );
+		Map<String, Object> deptPathParam = new HashMap<String, Object>( );
+		deptPathParam = getLoginParam( deptPathParam );
+		String deptPath = mainService.getDeptPathTotalSearch( deptPathParam );
+		String[] deptDepthPath;
+		String[] deptDepthTail = null;
+		////System.out.println("totalsearch deptPath : "+deptPath);
+		if (deptPath != null && deptPath.indexOf( "|" ) > -1 ) { /// 부서패스에 | 있으면
+			deptDepthPath = deptPath.split( "\\|" );
+			deptDepthTail = new String[deptDepthPath.length];
+			for ( int i = 0; i < deptDepthPath.length; i++ ) {
+				deptDepthTail[i] = "d|" + loginVO.getCompSeq( ).toLowerCase() + "|" + deptDepthPath[i].toLowerCase() + "|";
+			}
+		}
+		params = getPermKey( PermKeyType.LOGIN, loginVO, params );
+		
+		try {
+			BoolQueryBuilder qb = null;
+			String tsearchSubKeyword = ""; // 결과 내 재검색어
+			String boardType = ""; // Left메뉴 타입
+			String orderDiv = ""; // 정렬 여부
+			String fromDate = ""; // 날짜 시작일 검색
+			String toDate = ""; // 날짜 종료일 검색
+			String dateDiv = ""; // 기간선택시 선택값
+			String selectDiv = ""; // 기간선택, 직접입력
+			String detailSearchYn = ""; // 상세검색 여부
+			String syncTime = "N";
+			int pageIndex = 0;
+			long resultCnt = 0;
+			returnObj.setResultgrid( resultList );
+			returnObj.setTotalcount( resultCnt );
+			/* 이부분은 parameter를 입력받아 처리하는 부분 */
+			if ( "main".equals( params.get( "searchType" ) ) ) {
+				boardType = params.get( "boardType" ); // Left메뉴 타입
+				selectDiv = params.get( "selectDiv" ); // 기간선택, 직접입력
+				orderDiv = "B";
+				dateDiv = "total";
+				selectDiv = "S";
+				detailSearchYn = "N";
+			}
+			else if ( params.get( "tsearchKeyword" ) != null && !"".equals( params.get( "tsearchKeyword" ) ) ) { // 키워드가 있을 경우에만 쿼리 실행
+				tsearchSubKeyword = params.get( "tsearchSubKeyword" ).trim( ); // 결과 내 재검색어
+				boardType = params.get( "boardType" ); // Left메뉴 타입
+				orderDiv = params.get( "orderDiv" ); // 정렬 여부
+				fromDate = params.get( "fromDate" ); // 날짜 시작일 검색
+				toDate = params.get( "toDate" ); // 날짜 종료일 검색
+				dateDiv = params.get( "dateDiv" ); // 기간선택시 선택값
+				selectDiv = params.get( "selectDiv" ); // 기간선택, 직접입력
+				detailSearchYn = params.get( "detailSearchYn" );
+			}
+			else {
+				return returnObj;
+			}
+			/*
+			 * if(params.get("hrEmpSeq") == null && "".equals(params.get("hrEmpSeq"))){
+			 * }else{
+			 * params.put("hrEmpSeq","");
+			 * }
+			 */
+			if ( tsearchSubKeyword == null ) {
+				tsearchSubKeyword = "";
+			}
+			
+			if ( boardType == null ) {
+				boardType = "1";
+			}
+			
+			if ( orderDiv == null ) {
+				orderDiv = "B";
+			}
+			
+			if ( fromDate == null ) {
+				fromDate = "";
+			}
+			
+			if ( toDate == null ) {
+				toDate = "";
+			}
+			
+			if ( dateDiv == null ) {
+				dateDiv = "total";
+			}
+			
+			if ( selectDiv == null ) {
+				selectDiv = "S";
+			}
+			
+			if ( detailSearchYn == null ) {
+				detailSearchYn = "N";
+			}
+			
+			if ( params.get( "pageIndex" ) == null || "".equals( params.get( "pageIndex" ) ) ) {
+				pageIndex = 1;
+			}
+			
+			else {
+				pageIndex = Integer.parseInt( params.get( "pageIndex" ) );
+			}
+			
+			// 페이징 처리용 int
+			int pageNumber = pageIndex;
+			
+			if ( pageNumber <= 0 ) {
+				pageNumber += 1;
+			}
+				
+			int pageSize = 0;
+			
+			if ( "1".equals( boardType ) ) {
+				pageSize = 3;
+			}
+			else {
+				pageSize = 10;
+			}
+			// 첨부파일용 사이즈
+			int filePageSize = 0;
+			if ( "1".equals( boardType ) ) {
+				filePageSize = 8;
+			}
+			else {
+				filePageSize = 40;
+			}
+			// 원피스용 사이즈
+			int onefficePageSize = 0;
+			if ( "1".equals( boardType ) ) {
+				onefficePageSize = 8;
+			}
+			else {
+				onefficePageSize = 40;
+			}
+			// 인물검색용 사이즈
+			int hrPageSize = 0;
+			if ( "1".equals( boardType ) ) {
+				hrPageSize = 4;
+			}
+			else {
+				hrPageSize = 8;
+			}
+			int from = (pageNumber - 1) * pageSize;
+			int size = pageSize;
+			int fileFrom = (pageNumber - 1) * filePageSize;
+			int fileSize = filePageSize;
+			int onefficeFrom = (pageNumber - 1) * onefficePageSize;
+			int onefficeSize = onefficePageSize;
+			// 인물검색용 사이즈
+			int hrFrom = (pageNumber - 1) * hrPageSize;
+			int hRSize = hrPageSize;
+			params.put( "from", Integer.toString( from ) );
+			params.put( "size", Integer.toString( size ) );
+			params.put( "fileFrom", Integer.toString( fileFrom ) );
+			params.put( "fileSize", Integer.toString( fileSize ) );
+			params.put( "onefficeFrom", Integer.toString( onefficeFrom ) );
+			params.put( "onefficeSize", Integer.toString( onefficeSize ) );
+			params.put( "hrFrom", Integer.toString( hrFrom ) );
+			params.put( "hrSize", Integer.toString( hRSize ) );
+			params.put( "syncTime", syncTime );
+			qb = QueryBuilders.boolQuery( ); // Bool 쿼리빌더 초기화
+			//qb = qb.must(QueryBuilders.termQuery("del_yn", "N")); // del_yn 변수중에 N인것 적용 
+			if ( ("1".equals( boardType ) && "2".equals( listType )) || "2".equals( listType ) ) { // 업무관리
+				qb = getDateQuery( qb, fromDate, toDate, "prjSdDate", "project", dateDiv, selectDiv, "W", "N" );
+				qb = getDateQuery( qb, fromDate, toDate, "jobSdDate", "job", dateDiv, selectDiv, "W", "N" );
+				qb = getDateQuery( qb, fromDate, toDate, "workSdDate", "work", dateDiv, selectDiv, "W", "N" );
+				if ( !"2".equals( boardType ) && !"1".equals( boardType ) ) { // 카운트 조회 시 사용
+					params.put( "size", "0" );
+					returnObj = getProjectSearch( qb, "project", params, returnObj, deptDepthTail );
+				}
+				else {
+					returnObj = getProjectSearch( qb, "project", params, returnObj, deptDepthTail );
+				}
+			}
+			else if ( ("1".equals( boardType ) && "3".equals( listType )) || "3".equals( listType ) ) { // 일정
+				qb = getDateQuery( qb, fromDate, toDate, "workSdDate", "schedule", dateDiv, selectDiv, "W", "N" );
+				qb = getDateQuery( qb, fromDate, toDate, "startDate", "resource", dateDiv, selectDiv, "W", "N" );
+				if ( !"3".equals( boardType ) && !"1".equals( boardType ) ) {
+					params.put( "size", "0" );
+					returnObj = getScheduleSearch( qb, "schedule", params, returnObj, deptDepthTail );
+				}
+				else {
+					returnObj = getScheduleSearch( qb, "schedule", params, returnObj, deptDepthTail );
+				}
+			}
+			else if ( ("1".equals( boardType ) && "4".equals( listType )) || "4".equals( listType ) ) { // 노트
+				qb = getDateQuery( qb, fromDate, toDate, "noteDate", "note", dateDiv, selectDiv, "W", "N" );
+				if ( !"4".equals( boardType ) && !"1".equals( boardType ) ) {
+					params.put( "size", "0" );
+					returnObj = getNoteSearch( qb, "note", params, returnObj, deptDepthTail );
+				}
+				else {
+					returnObj = getNoteSearch( qb, "note", params, returnObj, deptDepthTail );
+				}
+			}
+			else if ( ("1".equals( boardType ) && "5".equals( listType )) || "5".equals( listType ) ) { // 업무보고
+				qb = getDateQuery( qb, fromDate, toDate, "reportDate", "report_any", dateDiv, selectDiv, "W", "N" );
+				qb = getDateQuery( qb, fromDate, toDate, "reportDate", "report_day", dateDiv, selectDiv, "W", "N" );
+				if ( !"5".equals( boardType ) && !"1".equals( boardType ) ) {
+					params.put( "size", "0" );
+					returnObj = getReportSearch( qb, "report_day", params, returnObj, deptDepthTail );
+				}
+				else {
+					returnObj = getReportSearch( qb, "report_day", params, returnObj, deptDepthTail );
+				}
+			}
+			else if ( ("1".equals( boardType ) && "6".equals( listType )) || "6".equals( listType ) ) { // 전자결재(영리)
+				qb = getDateQuery( qb, fromDate, toDate, "docDate", "eap", dateDiv, selectDiv, "W", "N" );
+				if ( !"6".equals( boardType ) && !"1".equals( boardType ) ) {
+					params.put( "size", "0" );
+					returnObj = getEaEapSearch( qb, "eap", params, returnObj, deptDepthTail );
+				}
+				else {
+					returnObj = getEaEapSearch( qb, "eap", params, returnObj, deptDepthTail );
+				}
+			}
+			else if ( ("1".equals( boardType ) && "7".equals( listType )) || "7".equals( listType ) ) { // 전자결재(비영리)
+				qb = getDateQuery( qb, fromDate, toDate, "docDate", "ea", dateDiv, selectDiv, "W", "N" );
+				if ( !"7".equals( boardType ) && !"1".equals( boardType ) ) {
+					params.put( "size", "0" );
+					returnObj = getEaEapSearch( qb, "ea", params, returnObj, deptDepthTail );
+				}
+				else {
+					returnObj = getEaEapSearch( qb, "ea", params, returnObj, deptDepthTail );
+				}
+			}
+			else if ( ("1".equals( boardType ) && "8".equals( listType )) || "8".equals( listType ) ) { // 문서
+				qb = getDateQuery( qb, fromDate, toDate, "writeDate", "edms", dateDiv, selectDiv, "W", "N" );
+				qb = getDateQuery( qb, fromDate, toDate, "writeDate", "edms", dateDiv, selectDiv, "W", "N" );
+				if ( !"8".equals( boardType ) && !"1".equals( boardType ) ) {
+					params.put( "size", "0" );
+					returnObj = getEdmsSearch( qb, "edms_eap", params, returnObj, deptDepthTail );
+				}
+				else {
+					returnObj = getEdmsSearch( qb, "edms_eap", params, returnObj, deptDepthTail );
+				}
+			}
+			else if ( ("1".equals( boardType ) && "9".equals( listType )) || "9".equals( listType ) ) { // 게시판\
+				qb = getDateQuery( qb, fromDate, toDate, "writeDate", "board", dateDiv, selectDiv, "W", "N" );
+				qb = getDateQuery( qb, fromDate, toDate, "startDate", "board_survey", dateDiv, selectDiv, "W", "N" );
+				qb = getDateQuery( qb, fromDate, toDate, "writeDate", "board", dateDiv, selectDiv, "W", "N" );
+				if ( !"9".equals( boardType ) && !"1".equals( boardType ) ) {
+					params.put( "size", "0" );
+					returnObj = getBoardSearch( qb, "board", params, returnObj, deptDepthTail );
+				}
+				else {
+					returnObj = getBoardSearch( qb, "board", params, returnObj, deptDepthTail );
+				}
+			}
+			else if ( ("1".equals( boardType ) && "10".equals( listType )) || "10".equals( listType ) ) { // 첨부파일
+				qb = getDateQuery( qb, fromDate, toDate, "timeStamp", "tsfile", dateDiv, selectDiv, "W", "N" );
+				if ( !"10".equals( boardType ) && !"1".equals( boardType ) ) {
+					params.put( "fileSize", "0" );
+					returnObj = getFileSearch( qb, "tsfile", params, returnObj, deptDepthTail );
+				}
+				else {
+					returnObj = getFileSearch( qb, "tsfile", params, returnObj, deptDepthTail );
+				}
+			}
+			else if ( ("1".equals( boardType ) && "11".equals( listType )) || "11".equals( listType ) ) { // 인물검색
+				if ( !"11".equals( boardType ) && !"1".equals( boardType ) ) {
+					if ( "Y".equals( params.get( "hrSearchYn" ) ) ) {
+						params.put( "hrSize", "1" );
+					}
+					else {
+						params.put( "hrSize", "0" );
+					}
+					returnObj = getHRSearch( params, returnObj );
+				}
+				else {
+					returnObj = getHRSearch( params, returnObj );
+				}
+			}
+			else if ( ("1".equals( boardType ) && "12".equals( listType )) || "12".equals( listType ) ) { // 원피스검색
+				qb = getDateQuery( qb, fromDate, toDate, "onefficeDate", "oneffice-1", dateDiv, selectDiv, "W", "N" );
+				if ( !"12".equals( boardType ) && !"1".equals( boardType ) ) {
+					params.put( "onefficeSize", "0" );
+					returnObj = getOnefficeSearch( qb, "oneffice", params, returnObj, deptDepthTail );
+				}
+				else {
+					returnObj = getOnefficeSearch( qb, "oneffice", params, returnObj, deptDepthTail );
+				}
+			}
+		}
+		catch ( Exception e ) {
+			throw e;
+		}
+		return returnObj;
+	}
+
+	public PagingReturnObj searchElasticSearchHr ( Map<String, String> params, String listType ) throws Exception {
+		//System.out.println( "getTotalSearchContentHr searchElasticSearch params : " + params );
+		//System.out.println( "parkkw99 params : " + params );
+		List<Map<String, Object>> resultList = new ArrayList<Map<String, Object>>( ); // 리턴 정보를 담을 맵을 리스트로 리턴
+		PagingReturnObj returnObj = new PagingReturnObj( );
+		LoginVO loginVO = getLogin( );
+		//String deptPath = loginVO.getOrgnztPath();
+		Map<String, Object> deptPathParam = new HashMap<String, Object>( );
+		deptPathParam = getLoginParam( deptPathParam );
+		String deptPath = mainService.getDeptPathTotalSearch( deptPathParam );
+		String[] deptDepthPath;
+		String[] deptDepthTail = null;
+		////System.out.println("totalsearch deptPath : "+deptPath);
+		if ( deptPath.indexOf( "|" ) > -1 ) { /// 부서패스에 | 있으면
+			deptDepthPath = deptPath.split( "\\|" );
+			deptDepthTail = new String[deptDepthPath.length];
+			for ( int i = 0; i < deptDepthPath.length; i++ ) {
+				deptDepthTail[i] = "d|" + loginVO.getCompSeq( ) + "|" + deptDepthPath[i] + "|";
+			}
+		}
+		params = getPermKey( PermKeyType.LOGIN, loginVO, params );
+		
+		try {
+			BoolQueryBuilder qb = null;
+			String tsearchSubKeyword = ""; // 결과 내 재검색어
+			String boardType = ""; // Left메뉴 타입
+			String orderDiv = ""; // 정렬 여부
+			String fromDate = ""; // 날짜 시작일 검색
+			String toDate = ""; // 날짜 종료일 검색
+			String dateDiv = ""; // 기간선택시 선택값
+			String selectDiv = ""; // 기간선택, 직접입력
+			String detailSearchYn = ""; // 상세검색 여부
+			String syncTime = "N";
+			int pageIndex = 0;
+			long resultCnt = 0;
+			returnObj.setResultgrid( resultList );
+			returnObj.setTotalcount( resultCnt );
+			/* 이부분은 parameter를 입력받아 처리하는 부분 */
+			if ( "main".equals( params.get( "searchType" ) ) ) {
+				boardType = params.get( "boardType" ); // Left메뉴 타입
+				selectDiv = params.get( "selectDiv" ); // 기간선택, 직접입력
+				orderDiv = "B";
+				dateDiv = "total";
+				selectDiv = "S";
+				detailSearchYn = "N";
+			}
+			else if ( params.get( "tsearchKeyword" ) != null && !"".equals( params.get( "tsearchKeyword" ) ) ) { // 키워드가 있을 경우에만 쿼리 실행
+				tsearchSubKeyword = params.get( "tsearchSubKeyword" ).trim( ); // 결과 내 재검색어
+				boardType = params.get( "boardType" ); // Left메뉴 타입
+				orderDiv = params.get( "orderDiv" ); // 정렬 여부
+				fromDate = params.get( "fromDate" ); // 날짜 시작일 검색
+				toDate = params.get( "toDate" ); // 날짜 종료일 검색
+				dateDiv = params.get( "dateDiv" ); // 기간선택시 선택값
+				selectDiv = params.get( "selectDiv" ); // 기간선택, 직접입력
+				detailSearchYn = params.get( "detailSearchYn" );
+			}
+			else {
+				return returnObj;
+			}
+			/*
+			 * if(params.get("hrEmpSeq") == null && "".equals(params.get("hrEmpSeq"))){
+			 * }else{
+			 * params.put("hrEmpSeq","");
+			 * }
+			 */
+			if ( tsearchSubKeyword == null ) {
+				tsearchSubKeyword = "";
+			}
+			if ( boardType == null ) {
+				boardType = "1";
+			}
+			if ( orderDiv == null ) {
+				orderDiv = "B";
+			}
+			if ( fromDate == null ) {
+				fromDate = "";
+			}
+			if ( toDate == null ) {
+				toDate = "";
+			}
+			if ( dateDiv == null ) {
+				dateDiv = "total";
+			}
+			if ( selectDiv == null ) {
+				selectDiv = "S";
+			}
+			if ( detailSearchYn == null ) {
+				detailSearchYn = "N";
+			}
+			if ( params.get( "pageIndex" ) == null || "".equals( params.get( "pageIndex" ) ) ) {
+				pageIndex = 1;
+			}
+			else {
+				pageIndex = Integer.parseInt( params.get( "pageIndex" ) );
+			}
+			// 페이징 처리용 int
+			int pageNumber = pageIndex;
+			if ( pageNumber <= 0 ) {
+				pageNumber += 1;
+			}
+			int pageSize = 99999;
+			// 첨부파일용 사이즈
+			int filePageSize = 99999;
+			// 인물검색용 사이즈
+			int from = 0;
+			int size = pageSize;
+			int fileFrom = 0;
+			int fileSize = filePageSize;
+			params.put( "from", Integer.toString( from ) );
+			params.put( "size", Integer.toString( size ) );
+			params.put( "fileFrom", Integer.toString( fileFrom ) );
+			params.put( "fileSize", Integer.toString( fileSize ) );
+			params.put( "syncTime", syncTime );
+			qb = QueryBuilders.boolQuery( ); // Bool 쿼리빌더 초기화
+			//qb = qb.must(QueryBuilders.termQuery("del_yn", "N")); // del_yn 변수중에 N인것 적용 
+			if ( ("1".equals( boardType ) && "2".equals( listType )) || "2".equals( listType ) ) { // 업무관리
+				qb = getDateQuery( qb, fromDate, toDate, "prjSdDate", "project", dateDiv, selectDiv, "W", "N" );
+				qb = getDateQuery( qb, fromDate, toDate, "jobSdDate", "job", dateDiv, selectDiv, "W", "N" );
+				qb = getDateQuery( qb, fromDate, toDate, "workSdDate", "work", dateDiv, selectDiv, "W", "N" );
+				if ( !"2".equals( boardType ) && !"1".equals( boardType ) ) { // 카운트 조회 시 사용
+					params.put( "size", "0" );
+					returnObj = getProjectSearch( qb, "project", params, returnObj, deptDepthTail );
+				}
+				else {
+					returnObj = getProjectSearch( qb, "project", params, returnObj, deptDepthTail );
+				}
+			}
+			else if ( ("1".equals( boardType ) && "3".equals( listType )) || "3".equals( listType ) ) { // 일정
+				qb = getDateQuery( qb, fromDate, toDate, "workSdDate", "schedule", dateDiv, selectDiv, "W", "N" );
+				qb = getDateQuery( qb, fromDate, toDate, "startDate", "resource", dateDiv, selectDiv, "W", "N" );
+				if ( !"3".equals( boardType ) && !"1".equals( boardType ) ) {
+					params.put( "size", "0" );
+					returnObj = getScheduleSearch( qb, "schedule", params, returnObj, deptDepthTail );
+				}
+				else {
+					returnObj = getScheduleSearch( qb, "schedule", params, returnObj, deptDepthTail );
+				}
+			}
+			else if ( ("1".equals( boardType ) && "4".equals( listType )) || "4".equals( listType ) ) { // 노트
+				qb = getDateQuery( qb, fromDate, toDate, "noteDate", "note", dateDiv, selectDiv, "W", "N" );
+				if ( !"4".equals( boardType ) && !"1".equals( boardType ) ) {
+					params.put( "size", "0" );
+					returnObj = getNoteSearch( qb, "note", params, returnObj, deptDepthTail );
+				}
+				else {
+					returnObj = getNoteSearch( qb, "note", params, returnObj, deptDepthTail );
+				}
+			}
+			else if ( ("1".equals( boardType ) && "5".equals( listType )) || "5".equals( listType ) ) { // 업무보고
+				qb = getDateQuery( qb, fromDate, toDate, "reportDate", "report_any", dateDiv, selectDiv, "W", "N" );
+				qb = getDateQuery( qb, fromDate, toDate, "reportDate", "report_day", dateDiv, selectDiv, "W", "N" );
+				if ( !"5".equals( boardType ) && !"1".equals( boardType ) ) {
+					params.put( "size", "0" );
+					returnObj = getReportSearch( qb, "report_day", params, returnObj, deptDepthTail );
+				}
+				else {
+					returnObj = getReportSearch( qb, "report_day", params, returnObj, deptDepthTail );
+				}
+			}
+			else if ( ("1".equals( boardType ) && "6".equals( listType )) || "6".equals( listType ) ) { // 전자결재(영리)
+				qb = getDateQuery( qb, fromDate, toDate, "docDate", "eap", dateDiv, selectDiv, "W", "N" );
+				if ( !"6".equals( boardType ) && !"1".equals( boardType ) ) {
+					params.put( "size", "0" );
+					returnObj = getEaEapSearch( qb, "eap", params, returnObj, deptDepthTail );
+				}
+				else {
+					returnObj = getEaEapSearch( qb, "eap", params, returnObj, deptDepthTail );
+				}
+			}
+			else if ( ("1".equals( boardType ) && "7".equals( listType )) || "7".equals( listType ) ) { // 전자결재(비영리)
+				qb = getDateQuery( qb, fromDate, toDate, "docDate", "ea", dateDiv, selectDiv, "W", "N" );
+				if ( !"7".equals( boardType ) && !"1".equals( boardType ) ) {
+					params.put( "size", "0" );
+					returnObj = getEaEapSearch( qb, "ea", params, returnObj, deptDepthTail );
+				}
+				else {
+					returnObj = getEaEapSearch( qb, "ea", params, returnObj, deptDepthTail );
+				}
+			}
+			else if ( ("1".equals( boardType ) && "8".equals( listType )) || "8".equals( listType ) ) { // 문서
+				qb = getDateQuery( qb, fromDate, toDate, "writeDate", "edms", dateDiv, selectDiv, "W", "N" );
+				qb = getDateQuery( qb, fromDate, toDate, "writeDate", "edms", dateDiv, selectDiv, "W", "N" );
+				if ( !"8".equals( boardType ) && !"1".equals( boardType ) ) {
+					params.put( "size", "0" );
+					returnObj = getEdmsSearch( qb, "edms_eap", params, returnObj, deptDepthTail );
+				}
+				else {
+					returnObj = getEdmsSearch( qb, "edms_eap", params, returnObj, deptDepthTail );
+				}
+			}
+			else if ( ("1".equals( boardType ) && "9".equals( listType )) || "9".equals( listType ) ) { // 게시판\
+				qb = getDateQuery( qb, fromDate, toDate, "writeDate", "board", dateDiv, selectDiv, "W", "N" );
+				qb = getDateQuery( qb, fromDate, toDate, "startDate", "board_survey", dateDiv, selectDiv, "W", "N" );
+				qb = getDateQuery( qb, fromDate, toDate, "writeDate", "board", dateDiv, selectDiv, "W", "N" );
+				if ( !"9".equals( boardType ) && !"1".equals( boardType ) ) {
+					params.put( "size", "0" );
+					returnObj = getBoardSearch( qb, "board", params, returnObj, deptDepthTail );
+				}
+				else {
+					returnObj = getBoardSearch( qb, "board", params, returnObj, deptDepthTail );
+				}
+			}
+			else if ( ("1".equals( boardType ) && "10".equals( listType )) || "10".equals( listType ) ) { // 첨부파일
+				qb = getDateQuery( qb, fromDate, toDate, "timeStamp", "tsfile", dateDiv, selectDiv, "W", "N" );
+				if ( !"10".equals( boardType ) && !"1".equals( boardType ) ) {
+					params.put( "size", "0" );
+					returnObj = getFileSearch( qb, "tsfile", params, returnObj, deptDepthTail );
+				}
+				else {
+					returnObj = getFileSearch( qb, "tsfile", params, returnObj, deptDepthTail );
+				}
+			}
+		}
+		catch ( Exception e ) {
+			throw e;
+		}
+		return returnObj;
+	}
+
+	//API사용을 위한 List<Map~ 리턴 
+	public PagingReturnObj searchElasticSearchApi ( Map<String, String> params, String listType ) throws Exception {
+		
+
+		
+		List<Map<String, Object>> resultList = new ArrayList<Map<String, Object>>( ); // 리턴 정보를 담을 맵을 리스트로 리턴
+		PagingReturnObj returnObj = new PagingReturnObj( );
+		
+		if(listType == null || listType.equals("")) {
+			return returnObj;
+		}
+		
+		String deptPath = params.get( "orgnztPath" );
+		String[] deptDepthPath;
+		String[] deptDepthTail = null;
+		if ( deptPath.indexOf( "|" ) > -1 ) { /// 부서패스에 | 있으면
+			deptDepthPath = deptPath.split( "\\|" );
+			deptDepthTail = new String[deptDepthPath.length];
+			for ( int i = 0; i < deptDepthPath.length; i++ ) {
+				deptDepthTail[i] = "d|" + params.get( "compSeq" ) + "|" + deptDepthPath[i] + "|";
+			}
+		}
+		params = getPermKey( PermKeyType.API, null, params );
+		
+		try {
+			BoolQueryBuilder qb = null;
+			String tsearchSubKeyword = ""; // 결과 내 재검색어
+			String boardType = ""; // Left메뉴 타입
+			String orderDiv = ""; // 정렬 여부
+			String fromDate = ""; // 날짜 시작일 검색
+			String toDate = ""; // 날짜 종료일 검색
+			String dateDiv = ""; // 기간선택시 선택값
+			String selectDiv = ""; // 기간선택, 직접입력
+			String detailSearchYn = ""; // 상세검색 여부
+			String syncTime = ""; // 최근동기화시간
+			int pageIndex = 0;
+			int pageSize = 0;
+			int filePageSize = 0;
+			int onefficePageSize = 0;
+			long resultCnt = 0;
+			returnObj.setResultgrid( resultList );
+			returnObj.setTotalcount( resultCnt );
+			//이부분은 parameter를 입력받아 처리하는 부분 
+			if ( "main".equals( params.get( "searchType" ) ) ) {
+				boardType = params.get( "boardType" ); // Left메뉴 타입
+				selectDiv = params.get( "selectDiv" ); // 기간선택, 직접입력
+				orderDiv = "B";
+				dateDiv = "total";
+				selectDiv = "S";
+				detailSearchYn = "N";
+			}
+			else if ( "content".equals( params.get( "searchType" ) ) && "N".equals( params.get( "detailSearchYn" ) ) ) { // CONTENT 검색 시 
+				boardType = params.get( "boardType" ); // Left메뉴 타입
+				orderDiv = params.get( "orderDiv" ); // 정렬 여부
+				fromDate = params.get( "fromDate" ); // 날짜 시작일 검색
+				toDate = params.get( "toDate" ); // 날짜 종료일 검색
+				dateDiv = params.get( "dateDiv" ); // 기간선택시 선택값
+				selectDiv = params.get( "selectDiv" ); // 기간선택, 직접입력
+				detailSearchYn = params.get( "detailSearchYn" );
+				syncTime = params.get( "syncTime" );
+			}
+			else if ( "content".equals( params.get( "searchType" ) ) && "Y".equals( params.get( "detailSearchYn" ) ) ) { // 상세검색 시 
+				tsearchSubKeyword = params.get( "tsearchSubKeyword" ).trim( ); // 결과 내 재검색어
+				boardType = params.get( "boardType" ); // Left메뉴 타입
+				orderDiv = params.get( "orderDiv" ); // 정렬 여부
+				fromDate = params.get( "fromDate" ); // 날짜 시작일 검색
+				toDate = params.get( "toDate" ); // 날짜 종료일 검색
+				dateDiv = params.get( "dateDiv" ); // 기간선택시 선택값
+				selectDiv = params.get( "selectDiv" ); // 기간선택, 직접입력
+				detailSearchYn = params.get( "detailSearchYn" );
+				syncTime = params.get( "syncTime" );
+			}
+			else if ( params.get( "tsearchKeyword" ) != null && !"".equals( params.get( "tsearchKeyword" ) ) ) { // 키워드가 있을 경우에만 쿼리 실행
+				tsearchSubKeyword = params.get( "tsearchSubKeyword" ).trim( ); // 결과 내 재검색어
+				boardType = params.get( "boardType" ); // Left메뉴 타입
+				orderDiv = params.get( "orderDiv" ); // 정렬 여부
+				fromDate = params.get( "fromDate" ); // 날짜 시작일 검색
+				toDate = params.get( "toDate" ); // 날짜 종료일 검색
+				dateDiv = params.get( "dateDiv" ); // 기간선택시 선택값
+				selectDiv = params.get( "selectDiv" ); // 기간선택, 직접입력
+				detailSearchYn = params.get( "detailSearchYn" );
+				syncTime = params.get( "syncTime" );
+			}
+			else {
+				return returnObj;
+			}
+			params.put( "permKey", params.get( "deptSeq" ) + "|" + params.get( "empSeq" ) );
+			params.put( "permGroupKey", params.get( "groupSeq" ) );
+			if ( tsearchSubKeyword == null ) {
+				tsearchSubKeyword = "";
+			}
+			if ( boardType == null ) {
+				boardType = "1";
+			}
+			if ( orderDiv == null ) {
+				orderDiv = "B";
+			}
+			if ( fromDate == null ) {
+				fromDate = "";
+			}
+			if ( toDate == null ) {
+				toDate = "";
+			}
+			if ( dateDiv == null ) {
+				dateDiv = "total";
+			}
+			if ( selectDiv == null ) {
+				selectDiv = "S";
+			}
+			if ( detailSearchYn == null ) {
+				detailSearchYn = "N";
+			}
+			if ( syncTime == null ) {
+				syncTime = "0";
+			}
+				
+			params.put( "syncTime", syncTime );
+			if ( params.get( "pageIndex" ) == null || "".equals( params.get( "pageIndex" ) ) ) {
+				pageIndex = 1;
+			}
+			else {
+				pageIndex = Integer.parseInt( params.get( "pageIndex" ) );
+			}
+			if ( params.get( "pageSize" ) == null || "".equals( params.get( "pageSize" ) ) ) {
+				pageSize = 3;
+			}
+			else {
+				pageSize = Integer.parseInt( params.get( "pageSize" ) );
+			}
+			if ( params.get( "filePageSize" ) == null || "".equals( params.get( "filePageSize" ) ) ) {
+				filePageSize = 3;
+			}
+			else {
+				filePageSize = Integer.parseInt( params.get( "filePageSize" ) );
+			}
+			if ( params.get( "onefficePageSize" ) == null || "".equals( params.get( "onefficePageSize" ) ) ) {
+				onefficePageSize = 3;
+			}
+			else {
+				onefficePageSize = Integer.parseInt( params.get( "onefficePageSize" ) );
+			}
+			// 페이징 처리용 int
+			int pageNumber = pageIndex;
+			if ( pageNumber <= 0 ) {
+				pageNumber += 1;
+			}
+			/*
+			 * if("1".equals(boardType)){
+			 * pageSize = 3;
+			 * }else{
+			 * pageSize = 10;
+			 * }
+			 */
+			int from = (pageNumber - 1) * pageSize;
+			int size = pageSize;
+			int fileFrom = (pageNumber - 1) * filePageSize;
+			int fileSize = filePageSize;
+			int onefficeFrom = (pageNumber - 1) * onefficePageSize;
+			int onefficeSize = onefficePageSize;
+			params.put( "from", Integer.toString( from ) );
+			params.put( "size", Integer.toString( size ) );
+			params.put( "fileFrom", Integer.toString( fileFrom ) );
+			params.put( "fileSize", Integer.toString( fileSize ) );
+			params.put( "onefficeFrom", Integer.toString( onefficeFrom ) );
+			params.put( "onefficeSize", Integer.toString( onefficeSize ) );
+			if ( dateDiv.equals( "today" ) ) { // 오늘날짜
+				fromDate = getOneDayDate( );
+				toDate = getTodayDate( );
+			}
+			else if ( dateDiv.equals( "week" ) ) { // 1주일전
+				fromDate = getOneWeekDate( );
+				toDate = getTodayDate( );
+			}
+			else if ( dateDiv.equals( "month" ) ) { // 1개월전
+				fromDate = getOneMonthDate( );
+				toDate = getTodayDate( );
+			}
+			else if ( dateDiv.equals( "year" ) ) { // 1년전
+				fromDate = getOneYearDate( );
+				toDate = getTodayDate( );
+			}
+			qb = QueryBuilders.boolQuery( ); // Bool 쿼리빌더 초기화
+			//qb = qb.must(QueryBuilders.termQuery("del_yn", "N")); // del_yn 변수중에 N인것 적용 
+			if ( "2".equals( boardType ) ) { // 업무관리
+				/* if(("Y".equals(detailSearchYn) && "S".equals(selectDiv) && "total".equals(dateDiv)) || "N".equals(detailSearchYn)){ */
+				qb = getDateQuery( qb, fromDate, toDate, "prjSdDate", "project", dateDiv, selectDiv, "M", syncTime );
+				qb = getDateQuery( qb, fromDate, toDate, "jobSdDate", "job", dateDiv, selectDiv, "M", syncTime );
+				qb = getDateQuery( qb, fromDate, toDate, "workSdDate", "work", dateDiv, selectDiv, "M", syncTime );
+				returnObj = getProjectSearch( qb, "project", params, returnObj, deptDepthTail );
+				/*
+				 * }else{
+				 * qb = getDateQuery(qb,fromDate, toDate, "prjSdDate", "project",dateDiv, selectDiv);
+				 * returnObj = getProjectSearch(qb,"project",params,returnObj);
+				 * qb = getDateQuery(qb,fromDate, toDate, "jobSdDate", "job",dateDiv, selectDiv);
+				 * returnObj = getProjectSearch(qb,"job",params,returnObj);
+				 * qb = getDateQuery(qb,fromDate, toDate, "workSdDate", "work",dateDiv, selectDiv);
+				 * returnObj = getProjectSearch(qb,"work",params,returnObj);
+				 */
+			}
+			else if ( "3".equals( boardType ) ) { // 일정
+				qb = getDateQuery( qb, fromDate, toDate, "workSdDate", "schedule", dateDiv, selectDiv, "M", syncTime );
+				qb = getDateQuery( qb, fromDate, toDate, "startDate", "resource", dateDiv, selectDiv, "M", syncTime );
+				returnObj = getScheduleSearch( qb, "schedule", params, returnObj, deptDepthTail );
+			}
+			else if ( "4".equals( boardType ) ) { // 노트
+				qb = getDateQuery( qb, fromDate, toDate, "noteDate", "note", dateDiv, selectDiv, "M", syncTime );
+				returnObj = getNoteSearch( qb, "note", params, returnObj, deptDepthTail );
+			}
+			else if ( "5".equals( boardType ) ) { // 업무보고
+				qb = getDateQuery( qb, fromDate, toDate, "reportDate", "report_any", dateDiv, selectDiv, "M", syncTime );
+				qb = getDateQuery( qb, fromDate, toDate, "reportDate", "report_day", dateDiv, selectDiv, "M", syncTime );
+				//returnObj = getReportSearch(qb,"report_any",params,returnObj);
+				returnObj = getReportSearch( qb, "report_day", params, returnObj, deptDepthTail );
+			}
+			else if ( "6".equals( boardType ) ) { // 전자결재(영리)
+				qb = getDateQuery( qb, fromDate, toDate, "docDate", "eap", dateDiv, selectDiv, "M", syncTime );
+				returnObj = getEaEapSearch( qb, "eap", params, returnObj, deptDepthTail );
+			}
+			else if ( "7".equals( boardType ) ) { // 전자결재(비영리)
+				qb = getDateQuery( qb, fromDate, toDate, "docDate", "ea", dateDiv, selectDiv, "M", syncTime );
+				returnObj = getEaEapSearch( qb, "ea", params, returnObj, deptDepthTail );
+			}
+			else if ( "8".equals( boardType ) ) { // 문서
+				qb = getDateQuery( qb, fromDate, toDate, "writeDate", "edms", dateDiv, selectDiv, "M", syncTime );
+				qb = getDateQuery( qb, fromDate, toDate, "writeDate", "edms", dateDiv, selectDiv, "M", syncTime );
+				//returnObj = getEdmsSearch(qb,"edms",params,returnObj);
+				returnObj = getEdmsSearch( qb, "edms_eap", params, returnObj, deptDepthTail );
+			}
+			else if ( "9".equals( boardType ) ) { // 게시판\
+				qb = getDateQuery( qb, fromDate, toDate, "writeDate", "board", dateDiv, selectDiv, "M", syncTime );
+				qb = getDateQuery( qb, fromDate, toDate, "startDate", "board_survey", dateDiv, selectDiv, "M", syncTime );
+				qb = getDateQuery( qb, fromDate, toDate, "writeDate", "board", dateDiv, selectDiv, "M", syncTime );
+				returnObj = getBoardSearch( qb, "board_project", params, returnObj, deptDepthTail );
+			}
+			else if ( "10".equals( boardType ) ) { // 첨부파일
+				params.put( "fileSize", params.get( "filePageSize" ) );
+				qb = getDateQuery( qb, fromDate, toDate, "timeStamp", "tsfile", dateDiv, selectDiv, "M", syncTime );
+				returnObj = getFileSearch( qb, "tsfile", params, returnObj, deptDepthTail );
+			}
+			else if ( "12".equals( boardType ) ) { // 원피스
+				params.put( "onefficeSize", params.get( "onefficePageSize" ) );
+				qb = getDateQuery( qb, fromDate, toDate, "modDate", "oneffice-1", dateDiv, selectDiv, "M", syncTime );
+				returnObj = getOnefficeSearch( qb, "oneffice", params, returnObj, deptDepthTail );
+			}
+		}
+		catch ( Exception e ) {
+			throw e;
+		}
+		return returnObj;
+	}
+
+	public static BoolQueryBuilder getDateQuery ( BoolQueryBuilder qb, String fromDate, String toDate, String dateColumn, String jobType, String dateDiv, String selectDiv, String webMobileDiv, String syncTime ) throws Exception {
+		String dateFormat = "yyyy-MM-dd";
+		String timeFormat = "T00:00:00";
+		String columnForamt = "";
+		
+		if(dateColumn != null && dateColumn.equals("secureCode")) {
+			return qb;
+		}
+		
+		//webMobileDiv : M=모바일 W=웹
+		if ( ("W".equals( webMobileDiv ) && !"total".equals( dateDiv ) && "S".equals( selectDiv ) || "M".equals( selectDiv )) || ("M".equals( webMobileDiv ) && "S".equals( selectDiv ) || "M".equals( selectDiv )) ) {
+			if ( "project".equals( jobType ) ) {
+				//dateFormat = "yyyyMMdd";
+				//timeFormat = "";
+				dateFormat = "yyyy-MM-dd";
+				timeFormat = "T00:00:00";
+				//columnForamt = "prjSdDate";
+				columnForamt = "createDate";
+			}
+			else if ( "job".equals( jobType ) ) {
+				//dateFormat = "yyyyMMdd";
+				//timeFormat = "";
+				dateFormat = "yyyy-MM-dd";
+				timeFormat = "T00:00:00";
+				//columnForamt = "jobSdDate";
+				columnForamt = "createDate";
+			}
+			else if ( "work".equals( jobType ) ) {
+				//dateFormat = "yyyyMMdd";
+				//timeFormat = "";
+				dateFormat = "yyyy-MM-dd";
+				timeFormat = "T00:00:00";
+				//columnForamt = "workSdDate";
+				columnForamt = "createDate";
+			}
+			else if ( "schedule".equals( jobType ) || "resource".equals( jobType ) ) {
+				dateFormat = "yyyy-MM-dd";
+				timeFormat = "T00:00:00";
+				columnForamt = "startDate";
+			}
+			else if ( "report_any".equals( jobType ) || "report_day".equals( jobType ) ) {
+				//dateFormat = "yyyyMMdd";
+				//timeFormat = "";
+				dateFormat = "yyyy-MM-dd";
+				timeFormat = "T00:00:00";
+				//columnForamt = "reportDate";
+				columnForamt = "createDate";
+			}
+			else if ( "eap".equals( jobType ) || "ea".equals( jobType ) ) {
+				//dateFormat = "yyyyMMdd";
+				//timeFormat = "";
+				dateFormat = "yyyy-MM-dd";
+				timeFormat = "T00:00:00";
+				//columnForamt = "docDate";
+				columnForamt = "createDate";
+			}
+			else if ( "edms".equals( jobType ) || "board".equals( jobType ) ) {
+				dateFormat = "yyyy-MM-dd";
+				timeFormat = "T00:00:00";
+				columnForamt = "writeDate";
+			}
+			else if ( "board_survey".equals( jobType ) ) {
+				dateFormat = "yyyy-MM-dd";
+				timeFormat = "T00:00:00";
+				columnForamt = "startDate";
+			}
+			else if ( "note".equals( jobType ) ) {
+				dateFormat = "yyyy-MM-dd";
+				timeFormat = "T00:00:00";
+				columnForamt = "noteDate";
+			}
+			else if ( "oneffice-1".equals( jobType ) ) {
+				dateFormat = "yyyy-MM-dd";
+				timeFormat = "T00:00:00";
+				columnForamt = "modDate";
+			}
+			else if ( "tsfile".equals( jobType ) ) {
+				dateFormat = "yyyy-MM-dd";
+				timeFormat = "T00:00:00";
+				columnForamt = "createDate";
+			}
+			if ( "M".equals( webMobileDiv ) ) { // 모바일쪽 syncTime 을 위한 분기태우기
+				String syncTimeDate = syncTime.substring( 0, 4 ) + "-" + syncTime.substring( 4, 6 ) + "-" + syncTime.substring( 6, 8 );
+				String syncTimeTemp = syncTime.substring( 0, 4 ) + "-" + syncTime.substring( 4, 6 ) + "-" + syncTime.substring( 6, 8 ) + "T" + syncTime.substring( 8, 10 ) + ":" + syncTime.substring( 10, 12 ) + ":" + syncTime.substring( 12, 14 );
+				if ( (fromDate != null && !fromDate.equalsIgnoreCase( "" )) || (toDate != null && !toDate.equalsIgnoreCase( "" )) ) { // 전체 조회가 아니고 날짜를 선택한 경우
+					if ( toDate.equals( syncTimeDate ) ) { // 검색 endDate와 syncTime 날짜가 같으면!
+						qb = QueryBuilders.boolQuery( );
+						SimpleDateFormat originFormat = new SimpleDateFormat( "yyyy-MM-dd" );
+						SimpleDateFormat newFormat = new SimpleDateFormat( dateFormat );
+						Date originDateStart = originFormat.parse( fromDate );
+						String newStartDate = newFormat.format( originDateStart ) + "" + timeFormat;
+						qb.must( QueryBuilders.rangeQuery( columnForamt ).from( newStartDate ).to( syncTimeTemp ) );
+					}
+					else { //다를 경우 WEB과 동일한 로직 태움
+						qb = QueryBuilders.boolQuery( );
+						SimpleDateFormat originFormat = new SimpleDateFormat( "yyyy-MM-dd" );
+						SimpleDateFormat newFormat = new SimpleDateFormat( dateFormat );
+						Date originDateStart = originFormat.parse( fromDate );
+						Date originDateEnd = originFormat.parse( toDate );
+						String newStartDate = newFormat.format( originDateStart ) + "" + timeFormat;
+						if ( !"".equals( timeFormat ) ) {
+							timeFormat = timeFormat.replace( "T00:00:00", "T23:59:59" );
+						}
+						String newEndDate = newFormat.format( originDateEnd ) + "" + timeFormat;
+						qb.must( QueryBuilders.rangeQuery( columnForamt ).from( newStartDate ).to( newEndDate ) );
+					}
+				}
+				else { // 전체검색인 경우
+					//전체검색인 경우 일정/자원 검색의 경우
+					//columnForamt을 startDate 기준으로 synctime을 통해 from/to를 구성하게되면(synctime은 현재 시간이 최대값이다)
+					//미래에 등록된 일정에 대해 검색이 안되므로
+					//검색 범위로 사용하는 columnForamt 을 데이터 생성일(createDate) 기준으로 바꿔 검색해야 모든 데이터가 검색된다. 
+					if ( "schedule".equals( jobType ) || "resource".equals( jobType ) ) {
+						columnForamt = "createDate";
+					}
+					qb = QueryBuilders.boolQuery( );
+					qb.must( QueryBuilders.rangeQuery( columnForamt ).from( "2000-01-01T00:00:00" ).to( syncTimeTemp ) );
+				}
+				//syncTime
+			}
+			else { // 웹쪽은 원래대로 처리
+				if ( (fromDate != null && !fromDate.equalsIgnoreCase( "" )) || (toDate != null && !toDate.equalsIgnoreCase( "" )) ) {
+					SimpleDateFormat originFormat = new SimpleDateFormat( "yyyy-MM-dd" );
+					SimpleDateFormat newFormat = new SimpleDateFormat( dateFormat );
+					qb = QueryBuilders.boolQuery( );
+					Date originDateStart = originFormat.parse( fromDate );
+					Date originDateEnd = originFormat.parse( toDate );
+					String newStartDate = newFormat.format( originDateStart ) + "" + timeFormat;
+					if ( !"".equals( timeFormat ) ) {
+						timeFormat = timeFormat.replace( "T00:00:00", "T23:59:59" );
+					}
+					String newEndDate = newFormat.format( originDateEnd ) + "" + timeFormat;
+					qb.must( QueryBuilders.rangeQuery( columnForamt ).from( newStartDate ).to( newEndDate ) );
+				}
+			}
+		}
+		return qb;
+	}
+
+	//jobType별 Query
+	@SuppressWarnings({ "serial", "unchecked", "rawtypes" })
+	public PagingReturnObj getProjectSearch ( BoolQueryBuilder getQb, String getType, Map<String, String> params, PagingReturnObj returnParam, String[] deptDepthTail ) throws Exception {
+		String sTSearch = getTSearchAlias( SearchTypeKey.TSEARCH , params);
+		if ( sTSearch.equals( "" ) ) {
+			return null;
+		}
+		
+		if(getType != null && getType.equals("secureCode")) {
+			return null;
+		}
+		
+		SortOrder order = SortOrder.DESC;
+		long resultCnt = returnParam.getTotalcount( );
+		List<Map<String, Object>> resultList = returnParam.getResultgrid( );
+		String termsQueryStr = "[";
+		BoolQueryBuilder query = boolQuery( );
+		BoolQueryBuilder queryS = getQb;
+		BoolQueryBuilder queryF = boolQuery( );
+		BoolQueryBuilder queryJ = boolQuery( );
+		String tTailTmp = "";
+		
+		//params.put("tsearchKeyword", escapeSpecialRegexChars(params.get("tsearchKeyword")));
+		
+		String tsearchKeywordTmp = params.get( "tsearchKeyword" );
+		char[] tTail = params.get( "tsearchKeyword" ).toCharArray( );
+		for ( int i = 0; i < tTail.length; i++ ) {
+			tTailTmp += tTail[i];
+		}
+		params.put( "tsearchKeyword", tTailTmp );
+		String searchWord = escapeSpecialRegexChars(params.get("tsearchKeyword"));
+		String[] arrSearchWord = null;
+		BoolQueryBuilder andQueryDcRmk = boolQuery( );
+		BoolQueryBuilder andQueryPrjName = boolQuery( );
+		BoolQueryBuilder andQueryWorkContents = boolQuery( );
+		BoolQueryBuilder andQueryWorkName = boolQuery( );
+		BoolQueryBuilder andQueryJobContents = boolQuery( );
+		BoolQueryBuilder andQueryJobName = boolQuery( );
+		//20181226_프로젝트 게시판 관련 검색 추가
+		BoolQueryBuilder andQueryCatTitle = boolQuery( );
+		BoolQueryBuilder andQueryArtTitle = boolQuery( );
+		BoolQueryBuilder andQueryArtContent = boolQuery( );
+		
+		//스페이스가 있을 경우
+		if ( searchWord.indexOf( " " ) > -1 ) {
+			arrSearchWord = searchWord.split( " " );
+			for ( String textStr : arrSearchWord ) {
+				if ( !textStr.equalsIgnoreCase( " " ) && !textStr.equalsIgnoreCase( "" ) ) {
+					andQueryDcRmk.must( QueryBuilders.queryStringQuery("dcRmk :*" + textStr + "*") );
+					andQueryPrjName.must( QueryBuilders.queryStringQuery("prjName :*" + textStr + "*") );
+					andQueryWorkContents.must( QueryBuilders.queryStringQuery("workContents :*" + textStr + "*") );
+					andQueryWorkName.must( QueryBuilders.queryStringQuery("workName :*" + textStr + "*") );
+					andQueryJobContents.must( QueryBuilders.queryStringQuery("jobContents :*" + textStr + "*") );
+					andQueryJobName.must( QueryBuilders.queryStringQuery("jobName :*" + textStr + "*") );
+					//20181226_프로젝트 게시판 관련 검색 추가
+					andQueryCatTitle.must( QueryBuilders.queryStringQuery("catTitle :*" + textStr + "*") );
+					andQueryArtTitle.must( QueryBuilders.queryStringQuery("artTitle :*" + textStr + "*") );
+					andQueryArtContent.must( QueryBuilders.queryStringQuery("artContent :*" + textStr + "*") );
+					
+					
+					if ( "[".equals( termsQueryStr ) ) {
+						termsQueryStr += textStr;
+					}
+					else {
+						termsQueryStr += "," + textStr;
+					}
+				}
+			}
+			queryS
+				.should( andQueryDcRmk )
+				.should( andQueryPrjName )
+				.should( andQueryWorkContents )
+				.should( andQueryWorkName )
+				.should( andQueryJobContents )
+				.should( andQueryJobName )
+				.should( andQueryCatTitle )
+				.should( andQueryArtTitle )
+				.should( andQueryArtContent )
+				.minimumNumberShouldMatch( 1 );
+		}
+		else { //스페이스가 없을 경우
+			queryS
+				.should( QueryBuilders.queryStringQuery("dcRmk :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("prjName :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("workContents :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("workName :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("jobContents :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("jobName :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("catTitle :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("artTitle :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("artContent :*" + searchWord + "*") )
+				;
+		}
+		termsQueryStr += "]";
+		if ( !"[]".equals( termsQueryStr ) ) {
+			queryS
+				.should( termsQuery( "dcRmk", termsQueryStr ) )
+				.should( termsQuery( "prjName", termsQueryStr ) )
+				.should( termsQuery( "workContents", termsQueryStr ) )
+				.should( termsQuery( "workName", termsQueryStr ) )
+				.should( termsQuery( "jobContents", termsQueryStr ) )
+				.should( termsQuery( "jobName", termsQueryStr ) )
+				.should( termsQuery( "catTitle", termsQueryStr ) )
+				.should( termsQuery( "artTitle", termsQueryStr ) )
+				.should( termsQuery( "artContent", termsQueryStr ) )
+				.minimumNumberShouldMatch( 1 );
+		}
+		else {
+			queryS.minimumNumberShouldMatch( 1 );
+		}
+		queryJ
+			.should( wildcardQuery( "jobType", "project*" ) )
+			.should( wildcardQuery( "jobType", "job*" ) )
+			.should( wildcardQuery( "jobType", "work*" ) )
+			.should( wildcardQuery( "jobType", "board-3" ) )
+			.minimumNumberShouldMatch( 1 );
+		queryF
+			.should( termQuery( "permList", params.get( "permOnlyUserKey" ) ) )
+			.should( termQuery( "permList", params.get( "permUserKey" ) ) )
+			.should( termQuery( "permList", params.get( "permEmpKey" ) ) )
+			.should( termQuery( "permList", params.get( "permGroupKey" ) ) )
+			.should( termQuery( "permList", params.get( "permCompKey" ) ) )
+			.should( termQuery( "permList", params.get( "permCUKey" ) ) )
+			.should( termQuery( "permList", params.get( "permDeptKey" ) ) )
+			.should( termQuery( "permList", params.get( "permDUKey" ) ) )
+			.should( termQuery( "permList", params.get( "permPOKey" ) ) )
+			.should( termQuery( "permList", "all|" ) );
+		if ( deptDepthTail != null && deptDepthTail.length > 0 ) {
+			for ( int i = 0; i < deptDepthTail.length; i++ ) {
+				queryF.should( termQuery( "permList", deptDepthTail[i] ) );
+			}
+		}
+		queryF.minimumNumberShouldMatch( 1 );
+		query.must( queryS );
+		query.must( queryF );
+		query.must( queryJ );
+		if ( "Y".equals( params.get( "hrSearchYn" ) ) ) {
+			query.must( termQuery( "empSeq", params.get( "hrEmpSeq" ) ) );
+		}
+		query.mustNot( termQuery( "jobType", "" ) );
+		
+		ArrayList<String> typeList = new ArrayList<String>() { 
+		    { 
+		        add("project"); 
+		        add("job"); 
+		        add("work");
+		        add("board_project");
+		    } 
+		};
+		//소스빌더
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+				 .query(query)
+				 .from( Integer.parseInt( params.get( "from" ) ) )
+				 .size(Integer.parseInt( params.get( "size" )))
+				 .explain(false);
+		if ( "A".equals( params.get( "orderDiv" ) ) ) {
+			sourceBuilder.sort(SortBuilders.fieldSort("_score").order(order));
+		}
+		sourceBuilder.sort(SortBuilders.fieldSort("startDate").order(order));
+		sourceBuilder.sort(SortBuilders.fieldSort("prjSdDate").order(order));
+		sourceBuilder.sort(SortBuilders.fieldSort("jobSdDate").order(order));
+		sourceBuilder.sort(SortBuilders.fieldSort("workSdDate").order(order));
+		sourceBuilder.sort(SortBuilders.fieldSort("writeDate").order(order));
+		SearchResult searchResult = searchClient.search(sTSearch, typeList, sourceBuilder);
+
+		//System.out.println( "project:" + sourceBuilder.toString() );
+		if ( searchResult != null && searchResult.isSucceeded()) {
+			List<Hit<HashMap, Void>> searchHits = searchResult.getHits(HashMap.class);
+			resultCnt += searchResult.getTotal();
+			for ( Hit<HashMap, Void> searchHit : searchHits ) {
+				resultList.add( searchHit.source );
+			}
+		}else if ( searchResult != null && !searchResult.isSucceeded()) {
+			throw new Exception(searchResult.getErrorMessage());
+		}
+		returnParam.setResultgrid( resultList );
+		returnParam.setTotalcount( resultCnt );
+		params.put( "tsearchKeyword", tsearchKeywordTmp );
+		return returnParam;
+	}
+
+	@SuppressWarnings({ "serial", "unchecked", "rawtypes" })
+	public PagingReturnObj getScheduleSearch ( BoolQueryBuilder getQb, String getType, Map<String, String> params, PagingReturnObj returnParam, String[] deptDepthTail ) throws Exception {
+		String sTSearch = getTSearchAlias( SearchTypeKey.TSEARCH, params );
+		if ( sTSearch.equals( "" ) ) {
+			return null;
+		}
+		SortOrder order = SortOrder.DESC;
+		long resultCnt = returnParam.getTotalcount( );
+		List<Map<String, Object>> resultList = returnParam.getResultgrid( );
+		String termsQueryStr = "[";
+		
+		BoolQueryBuilder query = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryS = getQb;
+		BoolQueryBuilder queryF = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryJ = QueryBuilders.boolQuery( );
+		String tTailTmp = "";
+		
+		//params.put("tsearchKeyword", escapeSpecialRegexChars(params.get("tsearchKeyword")));
+		
+		String tsearchKeywordTmp = params.get( "tsearchKeyword" );
+		char[] tTail = params.get( "tsearchKeyword" ).toCharArray( );
+		for ( int i = 0; i < tTail.length; i++ ) {
+
+			tTailTmp += tTail[i];
+		}
+		params.put( "tsearchKeyword", tTailTmp );
+		String searchWord = escapeSpecialRegexChars(params.get("tsearchKeyword"));
+		String[] arrSearchWord = null;
+		BoolQueryBuilder andQuerySchTitle = boolQuery( );
+		BoolQueryBuilder andQueryContents = boolQuery( );
+		BoolQueryBuilder andQueryReqText = boolQuery( );
+		BoolQueryBuilder andQueryResName = boolQuery( );
+		BoolQueryBuilder andQueryDescText = boolQuery( );
+		//스페이스가 있을 경우
+		if ( searchWord.indexOf( " " ) > -1 ) {
+			arrSearchWord = searchWord.split( " " );
+			for ( String textStr : arrSearchWord ) {
+				if ( !textStr.equalsIgnoreCase( " " ) && !textStr.equalsIgnoreCase( "" ) ) {
+					
+					andQuerySchTitle.must( QueryBuilders.queryStringQuery("schTitle :*" + textStr + "*") );
+					andQueryContents.must( QueryBuilders.queryStringQuery("contents :*" + textStr + "*") );
+					andQueryReqText.must( QueryBuilders.queryStringQuery("reqText :*" + textStr + "*") );
+					andQueryResName.must( QueryBuilders.queryStringQuery("resName :*" + textStr + "*") );
+					andQueryDescText.must( QueryBuilders.queryStringQuery("descText :*" + textStr + "*") );
+					
+					if ( "[".equals( termsQueryStr ) ) {
+						termsQueryStr += textStr;
+					}
+					else {
+						termsQueryStr += "," + textStr;
+					}
+				}
+			}
+			queryS.should( andQuerySchTitle ).should( andQueryContents ).should( andQueryReqText ).should( andQueryResName ).should( andQueryDescText ).minimumNumberShouldMatch( 1 );
+		}
+		else { //스페이스가 없을 경우
+			queryS
+				
+				.should( QueryBuilders.queryStringQuery("schTitle :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("contents :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("reqText :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("resName :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("descText :*" + searchWord + "*") )
+				;
+			
+		}
+		termsQueryStr += "]";
+		if ( !"[]".equals( termsQueryStr ) ) {
+			queryS.should( termsQuery( "schTitle", termsQueryStr ) ).should( termsQuery( "contents", termsQueryStr ) ).should( termsQuery( "reqText", termsQueryStr ) ).should( termsQuery( "resName", termsQueryStr ) ).should( termsQuery( "descText", termsQueryStr ) ).minimumNumberShouldMatch( 1 );
+		}
+		else {
+			queryS.minimumNumberShouldMatch( 1 );
+		}
+		queryJ.should( wildcardQuery( "jobType", "schedule*" ) ).should( wildcardQuery( "jobType", "resource*" ) ).minimumNumberShouldMatch( 1 );
+		queryF.should( termQuery( "permList", params.get( "permOnlyUserKey" ) ) ).should( termQuery( "permList", params.get( "permUserKey" ) ) ).should( termQuery( "permList", params.get( "permEmpKey" ) ) ).should( termQuery( "permList", params.get( "permGroupKey" ) ) ).should( termQuery( "permList", params.get( "permCompKey" ) ) ).should( termQuery( "permList", params.get( "permCUKey" ) ) ).should( termQuery( "permList", params.get( "permDeptKey" ) ) ).should( termQuery( "permList", params.get( "permDUKey" ) ) ).should( termQuery( "permList", params.get( "permPOKey" ) ) ).should( termQuery( "permList", "all|" ) );
+		if ( deptDepthTail != null && deptDepthTail.length > 0 ) {
+			for ( int i = 0; i < deptDepthTail.length; i++ ) {
+				queryF.should( termQuery( "permList", deptDepthTail[i] ) );
+			}
+		}
+		queryF.minimumNumberShouldMatch( 1 );
+		query.must( queryS );
+		query.must( queryF );
+		query.must( queryJ );
+		if ( "Y".equals( params.get( "hrSearchYn" ) ) ) {
+			query.must( termQuery( "empSeq", params.get( "hrEmpSeq" ) ) );
+		}
+		query.mustNot( termQuery( "jobType", "" ) );
+		
+		ArrayList<String> typeList = new ArrayList<String>() { 
+		    { 
+		        add("schedule"); 
+		        add("resource"); 
+		    } 
+		};
+		//소스빌더
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+				 .query(query)
+				 .from( Integer.parseInt( params.get( "from" ) ) )
+				 .size(Integer.parseInt( params.get( "size" )))
+				 
+				 .explain(false);
+		if ( "A".equals( params.get( "orderDiv" ) ) ) {
+			sourceBuilder.sort(SortBuilders.fieldSort("_score").order(order));
+		}
+		sourceBuilder.sort(SortBuilders.fieldSort("startDate").order(order));
+		SearchResult searchResult = searchClient.search(sTSearch, typeList, sourceBuilder);
+		
+		//System.out.println( "schedule:" + sourceBuilder.toString() );
+		if ( searchResult != null && searchResult.isSucceeded()) {
+			List<Hit<HashMap, Void>> searchHits = searchResult.getHits(HashMap.class);
+			resultCnt += searchResult.getTotal();
+			for ( Hit<HashMap, Void> searchHit : searchHits ) {
+				resultList.add( searchHit.source );
+			}
+		}else if ( searchResult != null && !searchResult.isSucceeded()) {
+			throw new Exception(searchResult.getErrorMessage());
+		}
+		
+		returnParam.setResultgrid( resultList );
+		returnParam.setTotalcount( resultCnt );
+		params.put( "tsearchKeyword", tsearchKeywordTmp );
+		return returnParam;
+	}
+
+	@SuppressWarnings({ "serial", "rawtypes", "unchecked" })
+	public PagingReturnObj getNoteSearch ( BoolQueryBuilder getQb, String getType, Map<String, String> params, PagingReturnObj returnParam, String[] deptDepthTail ) throws Exception {
+		String sTSearch = getTSearchAlias( SearchTypeKey.TSEARCH, params );
+		if ( sTSearch.equals( "" ) ) {
+			return null;
+		}
+		SortOrder order = SortOrder.DESC;
+		long resultCnt = returnParam.getTotalcount( );
+		List<Map<String, Object>> resultList = returnParam.getResultgrid( );
+		String termsQueryStr = "[";
+		
+		BoolQueryBuilder query = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryS = getQb;
+		BoolQueryBuilder queryF = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryJ = QueryBuilders.boolQuery( );
+		String tTailTmp = "";
+		
+		//params.put("tsearchKeyword", escapeSpecialRegexChars(params.get("tsearchKeyword")));
+		
+		String tsearchKeywordTmp = params.get( "tsearchKeyword" );
+		char[] tTail = params.get( "tsearchKeyword" ).toCharArray( );
+		for ( int i = 0; i < tTail.length; i++ ) {
+			tTailTmp += tTail[i];
+		}
+		params.put( "tsearchKeyword", tTailTmp );
+		String searchWord = escapeSpecialRegexChars(params.get("tsearchKeyword"));
+		String[] arrSearchWord = null;
+		BoolQueryBuilder andQueryNoteName = boolQuery( );
+		BoolQueryBuilder andQueryNoteContents = boolQuery( );
+		//스페이스가 있을 경우
+		if ( searchWord.indexOf( " " ) > -1 ) {
+			arrSearchWord = searchWord.split( " " );
+			for ( String textStr : arrSearchWord ) {
+				if ( !textStr.equalsIgnoreCase( " " ) && !textStr.equalsIgnoreCase( "" ) ) {
+					
+					andQueryNoteName.must( QueryBuilders.queryStringQuery("noteName :*" + textStr + "*") );
+					andQueryNoteContents.must( QueryBuilders.queryStringQuery("contents :*" + textStr + "*") );
+					
+					
+					if ( "[".equals( termsQueryStr ) ) {
+						termsQueryStr += textStr;
+					}
+					else {
+						termsQueryStr += "," + textStr;
+					}
+				}
+			}
+			queryS.should( andQueryNoteName ).should( andQueryNoteContents ).minimumNumberShouldMatch( 1 );
+		}
+		else { //스페이스가 없을 경우
+			queryS
+				.should( QueryBuilders.queryStringQuery("noteName :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("contents :*" + searchWord + "*") )
+				;
+		}
+		termsQueryStr += "]";
+		if ( !"[]".equals( termsQueryStr ) ) {
+			queryS.should( termsQuery( "noteName", termsQueryStr ) ).should( termsQuery( "contents", termsQueryStr ) ).minimumNumberShouldMatch( 1 );
+		}
+		else {
+			queryS.minimumNumberShouldMatch( 1 );
+		}
+		queryJ.should( termQuery( "jobType", "note" ) ).minimumNumberShouldMatch( 1 );
+		queryF.should( termQuery( "permList", params.get( "permOnlyUserKey" ) ) ).should( termQuery( "permList", params.get( "permUserKey" ) ) ).should( termQuery( "permList", params.get( "permEmpKey" ) ) ).should( termQuery( "permList", params.get( "permGroupKey" ) ) ).should( termQuery( "permList", params.get( "permCompKey" ) ) ).should( termQuery( "permList", params.get( "permCUKey" ) ) ).should( termQuery( "permList", params.get( "permDeptKey" ) ) ).should( termQuery( "permList", params.get( "permDUKey" ) ) ).should( termQuery( "permList", params.get( "permPOKey" ) ) ).should( termQuery( "permList", "all|" ) );
+		if ( deptDepthTail != null && deptDepthTail.length > 0 ) {
+			for ( int i = 0; i < deptDepthTail.length; i++ ) {
+				queryF.should( termQuery( "permList", deptDepthTail[i] ) );
+			}
+		}
+		queryF.minimumNumberShouldMatch( 1 );
+		query.must( queryS );
+		query.must( queryF );
+		query.must( queryJ );
+		if ( "Y".equals( params.get( "hrSearchYn" ) ) ) {
+			query.must( termQuery( "empSeq", params.get( "hrEmpSeq" ) ) );
+		}
+		query.mustNot( termQuery( "jobType", "" ) );
+		
+		ArrayList<String> typeList = new ArrayList<String>() { 
+		    { 
+		        add("note"); 
+		    } 
+		};
+		//소스빌더
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+				 .query(query)
+				 .from( Integer.parseInt( params.get( "from" ) ) )
+				 .size(Integer.parseInt( params.get( "size" )))
+				 
+				 .explain(false);
+		if ( "A".equals( params.get( "orderDiv" ) ) ) {
+			sourceBuilder.sort(SortBuilders.fieldSort("_score").order(order));
+		}
+		sourceBuilder.sort(SortBuilders.fieldSort("noteDate").order(order));
+		SearchResult searchResult = searchClient.search(sTSearch, typeList, sourceBuilder);
+		
+		//System.out.println( "note:" + sourceBuilder.toString() );
+		if ( searchResult != null && searchResult.isSucceeded()) {
+			List<Hit<HashMap, Void>> searchHits = searchResult.getHits(HashMap.class);
+			resultCnt += searchResult.getTotal();
+			for ( Hit<HashMap, Void> searchHit : searchHits ) {
+				resultList.add( searchHit.source );
+			}
+		}else if ( searchResult != null && !searchResult.isSucceeded()) {
+			throw new Exception(searchResult.getErrorMessage());
+		}
+		
+		returnParam.setResultgrid( resultList );
+		returnParam.setTotalcount( resultCnt );
+		params.put( "tsearchKeyword", tsearchKeywordTmp );
+		return returnParam;
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked", "serial" })
+	public PagingReturnObj getReportSearch ( BoolQueryBuilder getQb, String getType, Map<String, String> params, PagingReturnObj returnParam, String[] deptDepthTail ) throws Exception {
+		String sTSearch = getTSearchAlias( SearchTypeKey.TSEARCH, params );
+
+		if ( sTSearch.equals( "" ) ) {
+			return null;
+		}
+		
+		if(getType != null && getType.equals("secureCodding")) {
+			return null;
+		}
+		
+		SortOrder order = SortOrder.DESC;
+		long resultCnt = returnParam.getTotalcount( );
+		List<Map<String, Object>> resultList = returnParam.getResultgrid( );
+		String termsQueryStr = "[";
+		
+		BoolQueryBuilder query = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryS = getQb;
+		BoolQueryBuilder queryF = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryJ = QueryBuilders.boolQuery( );
+		String tTailTmp = "";
+		
+		//params.put("tsearchKeyword", escapeSpecialRegexChars(params.get("tsearchKeyword")));
+		
+		String tsearchKeywordTmp = params.get( "tsearchKeyword" );
+		char[] tTail = params.get( "tsearchKeyword" ).toCharArray( );
+		for ( int i = 0; i < tTail.length; i++ ) {
+
+			tTailTmp += tTail[i];
+		}
+		params.put( "tsearchKeyword", tTailTmp );
+		String searchWord = escapeSpecialRegexChars(params.get("tsearchKeyword"));
+		String[] arrSearchWord = null;
+		BoolQueryBuilder andQueryTitle = boolQuery( );
+		BoolQueryBuilder andQueryContents = boolQuery( );
+		BoolQueryBuilder andQueryContents1 = boolQuery( );
+		BoolQueryBuilder andQueryContents2 = boolQuery( );
+		//스페이스가 있을 경우
+		if ( searchWord.indexOf( " " ) > -1 ) {
+			arrSearchWord = searchWord.split( " " );
+			for ( String textStr : arrSearchWord ) {
+				if ( !textStr.equalsIgnoreCase( " " ) && !textStr.equalsIgnoreCase( "" ) ) {
+					
+					andQueryTitle.must( QueryBuilders.queryStringQuery("title :*" + textStr + "*") );
+					andQueryContents.must( QueryBuilders.queryStringQuery("contents :*" + textStr + "*") );
+					andQueryContents1.must( QueryBuilders.queryStringQuery("contents1 :*" + textStr + "*") );
+					andQueryContents2.must( QueryBuilders.queryStringQuery("contents2 :*" + textStr + "*") );
+					
+					if ( "[".equals( termsQueryStr ) ) {
+						termsQueryStr += textStr;
+					}
+					else {
+						termsQueryStr += "," + textStr;
+					}
+				}
+			}
+			queryS.should( andQueryTitle ).should( andQueryContents ).should( andQueryContents1 ).should( andQueryContents2 ).minimumNumberShouldMatch( 1 );
+		}
+		else { //스페이스가 없을 경우
+			queryS
+				.should( QueryBuilders.queryStringQuery("title :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("contents :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("contents1 :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("contents2 :*" + searchWord + "*") )
+				;
+		}
+		termsQueryStr += "]";
+		if ( !"[]".equals( termsQueryStr ) ) {
+			queryS.should( termsQuery( "title", termsQueryStr ) ).should( termsQuery( "contents", termsQueryStr ) ).should( termsQuery( "contents1", termsQueryStr ) ).should( termsQuery( "contents2", termsQueryStr ) ).minimumNumberShouldMatch( 1 );
+		}
+		else {
+			queryS.minimumNumberShouldMatch( 1 );
+		}
+		queryJ.should( wildcardQuery( "jobType", "report*" ) ).minimumNumberShouldMatch( 1 );
+		queryF.should( termQuery( "permList", params.get( "permOnlyUserKey" ) ) ).should( termQuery( "permList", params.get( "permUserKey" ) ) ).should( termQuery( "permList", params.get( "permEmpKey" ) ) ).should( termQuery( "permList", params.get( "permGroupKey" ) ) ).should( termQuery( "permList", params.get( "permCompKey" ) ) ).should( termQuery( "permList", params.get( "permCUKey" ) ) ).should( termQuery( "permList", params.get( "permDeptKey" ) ) ).should( termQuery( "permList", params.get( "permDUKey" ) ) ).should( termQuery( "permList", params.get( "permPOKey" ) ) ).should( termQuery( "permList", "all|" ) );
+		if ( deptDepthTail != null && deptDepthTail.length > 0 ) {
+			for ( int i = 0; i < deptDepthTail.length; i++ ) {
+				queryF.should( termQuery( "permList", deptDepthTail[i] ) );
+			}
+		}
+		queryF.minimumNumberShouldMatch( 1 );
+		query.must( queryS );
+		query.must( queryF );
+		query.must( queryJ );
+		if ( "Y".equals( params.get( "hrSearchYn" ) ) ) {
+			query.must( termQuery( "empSeq", params.get( "hrEmpSeq" ) ) );
+		}
+		query.mustNot( termQuery( "jobType", "" ) );
+		
+		ArrayList<String> typeList = new ArrayList<String>() { 
+		    { 
+		        add("report_any"); 
+		        add("report_day"); 
+		    } 
+		};
+		//소스빌더
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+				 .query(query)
+				 .from( Integer.parseInt( params.get( "from" ) ) )
+				 .size(Integer.parseInt( params.get( "size" )))
+				 
+				 .explain(false);
+		if ( "A".equals( params.get( "orderDiv" ) ) ) {
+			sourceBuilder.sort(SortBuilders.fieldSort("_score").order(order));
+		}
+		sourceBuilder.sort(SortBuilders.fieldSort("reportDate").order(order));
+		SearchResult searchResult = searchClient.search(sTSearch, typeList, sourceBuilder);
+
+		//System.out.println( "report:" + sourceBuilder.toString() );
+		if ( searchResult != null && searchResult.isSucceeded()) {
+			List<Hit<HashMap, Void>> searchHits = searchResult.getHits(HashMap.class);
+			resultCnt += searchResult.getTotal();
+			for ( Hit<HashMap, Void> searchHit : searchHits ) {
+				resultList.add( searchHit.source );
+			}
+		}else if ( searchResult != null && !searchResult.isSucceeded()) {
+			throw new Exception(searchResult.getErrorMessage());
+		}
+		
+		returnParam.setResultgrid( resultList );
+		returnParam.setTotalcount( resultCnt );
+		params.put( "tsearchKeyword", tsearchKeywordTmp );
+		return returnParam;
+	}
+
+	@SuppressWarnings({ "serial", "rawtypes", "unchecked" })
+	public PagingReturnObj getEaEapSearch ( BoolQueryBuilder getQb, String getType, Map<String, String> params, PagingReturnObj returnParam, String[] deptDepthTail ) throws Exception {
+		String sTSearch = getTSearchAlias( SearchTypeKey.TSEARCH, params );
+		if ( sTSearch.equals( "" ) ) {
+			return null;
+		}
+		SortOrder order = SortOrder.DESC;
+		long resultCnt = returnParam.getTotalcount( );
+		List<Map<String, Object>> resultList = returnParam.getResultgrid( );
+		String termsQueryStr = "[";
+		
+		BoolQueryBuilder query = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryS = getQb;
+		BoolQueryBuilder queryF = QueryBuilders.boolQuery( );
+		String tTailTmp = "";
+
+		//params.put("tsearchKeyword", escapeSpecialRegexChars(params.get("tsearchKeyword")));
+		
+		String tsearchKeywordTmp = params.get( "tsearchKeyword" );
+		char[] tTail = params.get( "tsearchKeyword" ).toCharArray( );
+		for ( int i = 0; i < tTail.length; i++ ) {
+			tTailTmp += tTail[i];
+		}
+		params.put( "tsearchKeyword", tTailTmp );
+		String searchWord = escapeSpecialRegexChars(params.get("tsearchKeyword"));
+		String[] arrSearchWord = null;
+		BoolQueryBuilder andQueryDocTitle = boolQuery( );
+		BoolQueryBuilder andQueryDocContent = boolQuery( );
+		BoolQueryBuilder andQueryDocNo = boolQuery( );
+		//스페이스가 있을 경우
+		if ( searchWord.indexOf( " " ) > -1 ) {
+			arrSearchWord = searchWord.split( " " );
+			for ( String textStr : arrSearchWord ) {
+				if ( !textStr.equalsIgnoreCase( " " ) && !textStr.equalsIgnoreCase( "" ) ) {
+					andQueryDocTitle.must( QueryBuilders.queryStringQuery("docTitle :*" + textStr + "*") );
+					andQueryDocContent.must( QueryBuilders.queryStringQuery("docContents :*" + textStr + "*") );
+					andQueryDocNo.must( QueryBuilders.queryStringQuery("docNo :*" + textStr + "*") );
+					
+					if ( "[".equals( termsQueryStr ) ) {
+						termsQueryStr += textStr;
+					}
+					else {
+						termsQueryStr += "," + textStr;
+					}
+				}
+			}
+			queryS.should( andQueryDocTitle ).should( andQueryDocContent ).minimumNumberShouldMatch( 1 );
+		}
+		else { //스페이스가 없을 경우
+			queryS
+				.should( QueryBuilders.queryStringQuery("docTitle :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("docNo :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("docContents :*" + searchWord + "*") )
+				;
+			
+		}
+		termsQueryStr += "]";
+		if ( !"[]".equals( termsQueryStr ) ) {
+			queryS.should( termsQuery( "docTitle", termsQueryStr ) ).should( termsQuery( "docNo", termsQueryStr ) ).should( termsQuery( "docContents", termsQueryStr ) ).minimumNumberShouldMatch( 1 );
+		}
+		else {
+			queryS.minimumNumberShouldMatch( 1 );
+		}
+		queryF.should( termQuery( "permList", params.get( "permOnlyUserKey" ) ) ).should( termQuery( "permList", params.get( "permUserKey" ) ) ).should( termQuery( "permList", params.get( "permEmpKey" ) ) ).should( termQuery( "permList", params.get( "permGroupKey" ) ) ).should( termQuery( "permList", params.get( "permCompKey" ) ) ).should( termQuery( "permList", params.get( "permCUKey" ) ) ).should( termQuery( "permList", params.get( "permDeptKey" ) ) ).should( termQuery( "permList", params.get( "permDUKey" ) ) ).should( termQuery( "permList", params.get( "permPOKey" ) ) ).should( termQuery( "permList", "all|" ) );
+		if ( deptDepthTail != null && deptDepthTail.length > 0 ) {
+			for ( int i = 0; i < deptDepthTail.length; i++ ) {
+				queryF.should( termQuery( "permList", deptDepthTail[i] ) );
+			}
+		}
+		queryF.minimumNumberShouldMatch( 1 );
+		query.must( queryS );
+		query.must( queryF );
+		if ( "Y".equals( params.get( "hrSearchYn" ) ) ) {
+			query.must( termQuery( "empSeq", params.get( "hrEmpSeq" ) ) );
+		}
+		if ( "ea".equals( getType ) ) {
+			query.must( wildcardQuery( "jobType", "eadoc*" ) );
+		}
+		else {
+			query.must( wildcardQuery( "jobType", "eapproval*" ) );
+		}
+		query.mustNot( termQuery( "jobType", "" ) );
+		
+		ArrayList<String> typeList = new ArrayList<String>() { 
+		    { 
+		        add("ea"); 
+		        add("eap"); 
+		    } 
+		};
+		//소스빌더
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+				 .query(query)
+				 .from( Integer.parseInt( params.get( "from" ) ) )
+				 .size(Integer.parseInt( params.get( "size" )))
+				 
+				 .explain(false);
+		if ( "A".equals( params.get( "orderDiv" ) ) ) {
+			sourceBuilder.sort(SortBuilders.fieldSort("_score").order(order));
+		}
+		sourceBuilder.sort(SortBuilders.fieldSort("docDate").order(order));
+		SearchResult searchResult = searchClient.search(sTSearch, typeList, sourceBuilder);
+
+		//System.out.println( "eaeap:" + sourceBuilder.toString() );
+		if ( searchResult != null && searchResult.isSucceeded()) {
+			List<Hit<HashMap, Void>> searchHits = searchResult.getHits(HashMap.class);
+			resultCnt += searchResult.getTotal();
+			for ( Hit<HashMap, Void> searchHit : searchHits ) {
+				resultList.add( searchHit.source );
+			}
+		}else if ( searchResult != null && !searchResult.isSucceeded()) {
+			throw new Exception(searchResult.getErrorMessage());
+		}
+		
+		returnParam.setResultgrid( resultList );
+		returnParam.setTotalcount( resultCnt );
+		params.put( "tsearchKeyword", tsearchKeywordTmp );
+		return returnParam;
+	}
+
+	
+	@SuppressWarnings({ "serial", "rawtypes", "unchecked" })
+	public PagingReturnObj getEdmsSearch ( BoolQueryBuilder getQb, String getType, Map<String, String> params, PagingReturnObj returnParam, String[] deptDepthTail ) throws Exception {
+		String sTSearch = getTSearchAlias( SearchTypeKey.TSEARCH, params );
+		if ( sTSearch.equals( "" ) ) {
+			return null;
+		}
+		SortOrder order = SortOrder.DESC;
+	
+		long resultCnt = returnParam.getTotalcount( );
+		List<Map<String, Object>> resultList = returnParam.getResultgrid( );
+		String termsQueryStr = "[";
+		
+		BoolQueryBuilder query = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryS = getQb;
+		BoolQueryBuilder queryFResult = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFCategory = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFboard = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFreadY = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFreadN = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFY = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFN = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryJ = QueryBuilders.boolQuery( );
+		String tTailTmp = "";
+		
+		//params.put("tsearchKeyword", escapeSpecialRegexChars(params.get("tsearchKeyword")));
+		
+		
+		String tsearchKeywordTmp = params.get( "tsearchKeyword" );
+		char[] tTail = params.get( "tsearchKeyword" ).toCharArray( );
+		for ( int i = 0; i < tTail.length; i++ ) {
+			tTailTmp += tTail[i];
+		}
+		params.put( "tsearchKeyword", tTailTmp );
+		String searchWord = escapeSpecialRegexChars(params.get("tsearchKeyword"));
+		String[] arrSearchWord = null;
+		BoolQueryBuilder andQueryArtTitle = boolQuery( );
+		BoolQueryBuilder andQueryArtContent = boolQuery( );
+		//스페이스가 있을 경우
+		if ( searchWord.indexOf( " " ) > -1 ) {
+			arrSearchWord = searchWord.split( " " );
+			for ( String textStr : arrSearchWord ) {
+				if ( !textStr.equalsIgnoreCase( " " ) && !textStr.equalsIgnoreCase( "" ) ) {
+					andQueryArtTitle.must( QueryBuilders.queryStringQuery("artTitle :*" + textStr + "*") );
+					andQueryArtContent.must( QueryBuilders.queryStringQuery("artContent :*" + textStr + "*") );
+					
+					if ( "[".equals( termsQueryStr ) ) {
+						termsQueryStr += textStr;
+					}
+					else {
+						termsQueryStr += "," + textStr;
+					}
+				}
+			}
+			queryS.should( andQueryArtTitle ).should( andQueryArtContent ).minimumNumberShouldMatch( 1 );
+		}
+		else { //스페이스가 없을 경우
+			queryS
+				.should( QueryBuilders.queryStringQuery("artTitle :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("artContent :*" + searchWord + "*") )
+				;
+		}
+		termsQueryStr += "]";
+		if ( !"[]".equals( termsQueryStr ) ) {
+			queryS.should( termsQuery( "artTitle", termsQueryStr ) ).should( termsQuery( "artContent", termsQueryStr ) ).minimumNumberShouldMatch( 1 );
+		}
+		else {
+			queryS.minimumNumberShouldMatch( 1 );
+		}
+		queryJ.should( wildcardQuery( "jobType", "edms*" ) ).minimumNumberShouldMatch( 1 );
+		queryFCategory.should( termQuery( "permCategory", params.get( "permOnlyUserKey" ) ) ).should( termQuery( "permCategory", params.get( "permUserKey" ) ) ).should( termQuery( "permCategory", params.get( "permEmpKey" ) ) ).should( termQuery( "permCategory", params.get( "permGroupKey" ) ) ).should( termQuery( "permCategory", params.get( "permCompKey" ) ) ).should( termQuery( "permCategory", params.get( "permCUKey" ) ) ).should( termQuery( "permCategory", params.get( "permDeptKey" ) ) ).should( termQuery( "permCategory", params.get( "permDUKey" ) ) ).should( termQuery( "permCategory", params.get( "permPOKey" ) ) ).should( termQuery( "permCategory", "all|" ) );
+		if ( deptDepthTail != null && deptDepthTail.length > 0 ) {
+			for ( int i = 0; i < deptDepthTail.length; i++ ) {
+				queryFCategory.should( termQuery( "permCategory", deptDepthTail[i] ) );
+			}
+		}
+		queryFCategory.minimumNumberShouldMatch( 1 );
+		queryFboard.should( termQuery( "permBoard", params.get( "permOnlyUserKey" ) ) ).should( termQuery( "permBoard", params.get( "permUserKey" ) ) ).should( termQuery( "permBoard", params.get( "permEmpKey" ) ) ).should( termQuery( "permBoard", params.get( "permGroupKey" ) ) ).should( termQuery( "permBoard", params.get( "permCompKey" ) ) ).should( termQuery( "permBoard", params.get( "permCUKey" ) ) ).should( termQuery( "permBoard", params.get( "permDeptKey" ) ) ).should( termQuery( "permBoard", params.get( "permDUKey" ) ) ).should( termQuery( "permBoard", params.get( "permPOKey" ) ) ).should( termQuery( "permBoard", "all|" ) );
+		if ( deptDepthTail != null && deptDepthTail.length > 0 ) {
+			for ( int i = 0; i < deptDepthTail.length; i++ ) {
+				queryFboard.should( termQuery( "permBoard", deptDepthTail[i] ) );
+			}
+		}
+		queryFboard.minimumNumberShouldMatch( 1 );
+		queryFreadY.must( termQuery( "readPermYn", "Y" ) );
+		queryFreadN.must( termQuery( "readPermYn", "N" ) );
+		queryFY.must( queryFreadY ).must( queryFCategory ).must( queryFboard );
+		queryFN.must( queryFreadN ).must( queryFCategory );
+		queryFResult.should( queryFY ).should( queryFN );
+		query.must( queryS );
+		query.must( queryFResult );
+		query.must( queryJ );
+		if ( "Y".equals( params.get( "hrSearchYn" ) ) ) {
+			query.must( termQuery( "empSeq", params.get( "hrEmpSeq" ) ) );
+		}
+		query.mustNot( termQuery( "jobType", "" ) );
+		
+		ArrayList<String> typeList = new ArrayList<String>() { 
+		    { 
+		        add("edms"); 
+		        add("edms_eap"); 
+		    } 
+		};
+		//소스빌더
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+				 .query(query)
+				 .from( Integer.parseInt( params.get( "from" ) ) )
+				 .size(Integer.parseInt( params.get( "size" )))
+				 
+				 .explain(false);
+		if ( "A".equals( params.get( "orderDiv" ) ) ) {
+			sourceBuilder.sort(SortBuilders.fieldSort("_score").order(order));
+		}
+		sourceBuilder.sort(SortBuilders.fieldSort("writeDate").order(order));
+		SearchResult searchResult = searchClient.search(sTSearch, typeList, sourceBuilder);
+
+		//System.out.println( "edms:" + sourceBuilder.toString() );
+		if ( searchResult != null && searchResult.isSucceeded()) {
+			List<Hit<HashMap, Void>> searchHits = searchResult.getHits(HashMap.class);
+			resultCnt += searchResult.getTotal();
+			for ( Hit<HashMap, Void> searchHit : searchHits ) {
+				resultList.add( searchHit.source );
+			}
+		}else if ( searchResult != null && !searchResult.isSucceeded()) {
+			throw new Exception(searchResult.getErrorMessage());
+		}
+		
+		returnParam.setResultgrid( resultList );
+		returnParam.setTotalcount( resultCnt );
+		params.put( "tsearchKeyword", tsearchKeywordTmp );
+		return returnParam;
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked", "serial" })
+	public PagingReturnObj getBoardSearch ( BoolQueryBuilder getQb, String getType, Map<String, String> params, PagingReturnObj returnParam, String[] deptDepthTail ) throws Exception {
+		String sTSearch = getTSearchAlias( SearchTypeKey.TSEARCH , params);
+		if ( sTSearch.equals( "" ) ) {
+			return null;
+		}
+		SortOrder order = SortOrder.DESC;
+		long resultCnt = returnParam.getTotalcount( );
+		List<Map<String, Object>> resultList = returnParam.getResultgrid( );
+		String termsQueryStr = "[";
+		
+		BoolQueryBuilder query = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryS = getQb;
+		BoolQueryBuilder queryFResult = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFCategory = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFboard = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFreadY = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFreadN = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFY = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFN = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryJ = QueryBuilders.boolQuery( );
+		String tTailTmp = "";
+		
+		//params.put("tsearchKeyword", escapeSpecialRegexChars(params.get("tsearchKeyword")));
+		
+		String tsearchKeywordTmp = params.get( "tsearchKeyword" );
+		char[] tTail = params.get( "tsearchKeyword" ).toCharArray( );
+		for ( int i = 0; i < tTail.length; i++ ) {
+			tTailTmp += tTail[i];
+		}
+		params.put( "tsearchKeyword", tTailTmp );
+		String searchWord = escapeSpecialRegexChars(params.get("tsearchKeyword"));
+		String[] arrSearchWord = null;
+		BoolQueryBuilder andQueryArtTitle = boolQuery( );
+		BoolQueryBuilder andQueryArtContent = boolQuery( );
+		//스페이스가 있을 경우
+		if ( searchWord.indexOf( " " ) > -1 ) {
+			arrSearchWord = searchWord.split( " " );
+			for ( String textStr : arrSearchWord ) {
+				if ( !textStr.equalsIgnoreCase( " " ) && !textStr.equalsIgnoreCase( "" ) ) {
+					andQueryArtTitle.must( QueryBuilders.queryStringQuery("artTitle :*" + textStr + "*"));
+					andQueryArtContent.must( QueryBuilders.queryStringQuery("artContent :*" + textStr + "*"));
+					
+					
+					if ( "[".equals( termsQueryStr ) ) {
+						termsQueryStr += textStr;
+					}
+					else {
+						termsQueryStr += "," + textStr;
+					}
+				}
+			}
+			queryS.should( andQueryArtTitle ).should( andQueryArtContent ).minimumNumberShouldMatch( 1 );
+		}
+		else { //스페이스가 없을 경우
+			queryS
+				.should( QueryBuilders.queryStringQuery("artTitle :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("artContent :*" + searchWord + "*") );
+		}
+		termsQueryStr += "]";
+		if ( !"[]".equals( termsQueryStr ) ) {
+			queryS.should( termsQuery( "artTitle", termsQueryStr ) ).should( termsQuery( "artContent", termsQueryStr ) ).should( termsQuery( "workContents", termsQueryStr ) ).minimumNumberShouldMatch( 1 );
+		}
+		else {
+			queryS.minimumNumberShouldMatch( 1 );
+		}
+		queryJ.should( wildcardQuery( "jobType", "board*" ) ).minimumNumberShouldMatch( 1 );
+		queryFCategory.should( termQuery( "permCategory", params.get( "permOnlyUserKey" ) ) ).should( termQuery( "permCategory", params.get( "permUserKey" ) ) ).should( termQuery( "permCategory", params.get( "permEmpKey" ) ) ).should( termQuery( "permCategory", params.get( "permGroupKey" ) ) ).should( termQuery( "permCategory", params.get( "permCompKey" ) ) ).should( termQuery( "permCategory", params.get( "permCUKey" ) ) ).should( termQuery( "permCategory", params.get( "permDeptKey" ) ) ).should( termQuery( "permCategory", params.get( "permDUKey" ) ) ).should( termQuery( "permCategory", params.get( "permPOKey" ) ) ).should( termQuery( "permCategory", "all|" ) );
+		if ( deptDepthTail != null && deptDepthTail.length > 0 ) {
+			for ( int i = 0; i < deptDepthTail.length; i++ ) {
+				queryFCategory.should( termQuery( "permCategory", deptDepthTail[i] ) );
+			}
+		}
+		queryFCategory.minimumNumberShouldMatch( 1 );
+		queryFboard.should( termQuery( "permBoard", params.get( "permOnlyUserKey" ) ) ).should( termQuery( "permBoard", params.get( "permUserKey" ) ) ).should( termQuery( "permBoard", params.get( "permEmpKey" ) ) ).should( termQuery( "permBoard", params.get( "permGroupKey" ) ) ).should( termQuery( "permBoard", params.get( "permCompKey" ) ) ).should( termQuery( "permBoard", params.get( "permCUKey" ) ) ).should( termQuery( "permBoard", params.get( "permDeptKey" ) ) ).should( termQuery( "permBoard", params.get( "permDUKey" ) ) ).should( termQuery( "permBoard", params.get( "permPOKey" ) ) ).should( termQuery( "permBoard", "all|" ) );
+		if ( deptDepthTail != null && deptDepthTail.length > 0 ) {
+			for ( int i = 0; i < deptDepthTail.length; i++ ) {
+				queryFboard.should( termQuery( "permBoard", deptDepthTail[i] ) );
+			}
+		}
+		queryFboard.minimumNumberShouldMatch( 1 );
+		queryFreadY.must( termQuery( "readPermYn", "Y" ) );
+		queryFreadN.must( termQuery( "readPermYn", "N" ) );
+		queryFY.must( queryFreadY ).must( queryFCategory ).must( queryFboard );
+		queryFN.must( queryFreadN ).must( queryFCategory );
+		queryFResult.should( queryFY ).should( queryFN );
+		query.must( queryS );
+		query.must( queryFResult );
+		query.must( queryJ );
+		if ( "Y".equals( params.get( "hrSearchYn" ) ) ) {
+			query.must( termQuery( "empSeq", params.get( "hrEmpSeq" ) ) );
+		}
+		query.mustNot( termQuery( "jobType", "" ) );
+		
+		ArrayList<String> typeList = new ArrayList<String>() { 
+            { 
+                add("board_survey"); 
+                add("board"); 
+                add("board_project"); 
+            } 
+        };
+		
+		//소스빌더
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+				 .query(query)
+				 .from( Integer.parseInt( params.get( "from" ) ) )
+				 .size(Integer.parseInt( params.get( "size" )))
+				 
+				 .explain(false);
+		if ( "A".equals( params.get( "orderDiv" ) ) ) {
+			sourceBuilder.sort(SortBuilders.fieldSort("_score").order(order));
+		}
+		sourceBuilder.sort(SortBuilders.fieldSort("writeDate").order(order));
+		SearchResult searchResult = searchClient.search(sTSearch, typeList, sourceBuilder);
+		
+		//System.out.println( "board:" + sourceBuilder.toString() );
+		if ( searchResult != null && searchResult.isSucceeded()) {
+			List<Hit<HashMap, Void>> searchHits = searchResult.getHits(HashMap.class);
+			resultCnt += searchResult.getTotal();
+			for ( Hit<HashMap, Void> searchHit : searchHits ) {
+				resultList.add( searchHit.source );
+			}
+		}else if ( searchResult != null && !searchResult.isSucceeded()) {
+			throw new Exception(searchResult.getErrorMessage());
+		}
+		returnParam.setResultgrid( resultList );
+		returnParam.setTotalcount( resultCnt );
+		params.put( "tsearchKeyword", tsearchKeywordTmp );
+		return returnParam;
+	}
+	
+	@SuppressWarnings({ "serial", "rawtypes", "unchecked" })
+	public PagingReturnObj getOnefficeSearch ( BoolQueryBuilder getQb, String getType, Map<String, String> params, PagingReturnObj returnParam, String[] deptDepthTail ) throws Exception {
+		String sTSearch = getTSearchAlias( SearchTypeKey.TSEARCH, params );
+		if ( sTSearch.equals( "" ) ) {
+			return null;
+		}
+		
+		if ( getType != null && getType.equals( "secureCodding" ) ) {
+			return null;
+		}
+		
+		SortOrder order = SortOrder.DESC;
+		long resultCnt = returnParam.getTotalcount( );
+		List<Map<String, Object>> resultList = returnParam.getResultgrid( );
+		String termsQueryStr = "[";
+		
+		BoolQueryBuilder query = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryS = getQb;
+		BoolQueryBuilder queryF = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryJ = QueryBuilders.boolQuery( );
+		String tTailTmp = "";
+		
+		//params.put("tsearchKeyword", escapeSpecialRegexChars(params.get("tsearchKeyword")));
+		
+		String tsearchKeywordTmp = params.get( "tsearchKeyword" );
+		char[] tTail = params.get( "tsearchKeyword" ).toCharArray( );
+		for ( int i = 0; i < tTail.length; i++ ) {
+			tTailTmp += tTail[i];
+		}
+		params.put( "tsearchKeyword", tTailTmp );
+		String searchWord = escapeSpecialRegexChars(params.get("tsearchKeyword"));
+		String[] arrSearchWord = null;
+		BoolQueryBuilder andQueryDocName = boolQuery( );
+		BoolQueryBuilder andQueryContent = boolQuery( );
+		BoolQueryBuilder andQueryOwnerName = boolQuery( );
+		//스페이스가 있을 경우
+		if ( searchWord.indexOf( " " ) > -1 ) {
+			arrSearchWord = searchWord.split( " " );
+			for ( String textStr : arrSearchWord ) {
+				if ( !textStr.equalsIgnoreCase( " " ) && !textStr.equalsIgnoreCase( "" ) ) {
+					andQueryDocName.must( QueryBuilders.queryStringQuery("docName :*" + textStr + "*") );
+					andQueryContent.must( QueryBuilders.queryStringQuery("content :*" + textStr + "*") );
+					andQueryOwnerName.must( QueryBuilders.queryStringQuery("ownerName :*" + textStr + "*") );
+					
+					if ( "[".equals( termsQueryStr ) ) {
+						termsQueryStr += textStr;
+					}
+					else {
+						termsQueryStr += "," + textStr;
+					}
+				}
+			}
+			queryS
+				.should( andQueryDocName )
+				.should( andQueryContent )
+				.should( andQueryOwnerName )
+				.minimumNumberShouldMatch( 1 );
+		}
+		else { //스페이스가 없을 경우
+			queryS
+				.should( QueryBuilders.queryStringQuery("docName :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("content :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("ownerName :*" + searchWord + "*") );
+		}
+		termsQueryStr += "]";
+		if ( !"[]".equals( termsQueryStr ) ) {
+			queryS
+				.should( termsQuery( "docName", termsQueryStr ) )
+				.should( termsQuery( "content", termsQueryStr ) )
+				.should( termsQuery( "ownerName", termsQueryStr ) )
+				.minimumNumberShouldMatch( 1 );
+		}
+		else {
+			queryS.minimumNumberShouldMatch( 1 );
+		}
+		queryJ
+			.should( termQuery( "jobType", "oneffice-1" ) )
+			.minimumNumberShouldMatch( 1 );
+		queryF
+			.should( termQuery( "permList", params.get( "permOnlyUserKey" ) ) )
+			.should( termQuery( "permList", params.get( "permUserKey" ) ) )
+			.should( termQuery( "permList", params.get( "permEmpKey" ) ) )
+			.should( termQuery( "permList", params.get( "permGroupKey" ) ) )
+			.should( termQuery( "permList", params.get( "permCompKey" ) ) )
+			.should( termQuery( "permList", params.get( "permCUKey" ) ) )
+			.should( termQuery( "permList", params.get( "permDeptKey" ) ) )
+			.should( termQuery( "permList", params.get( "permDUKey" ) ) )
+			.should( termQuery( "permList", params.get( "permPOKey" ) ) )
+			.should( termQuery( "permList", "all|" ) );
+		if ( deptDepthTail != null && deptDepthTail.length > 0 ) {
+			for ( int i = 0; i < deptDepthTail.length; i++ ) {
+				queryF.should( termQuery( "permList", deptDepthTail[i] ) );
+			}
+		}
+		queryF.minimumNumberShouldMatch( 1 );
+		query.must( queryS );
+		query.must( queryF );
+		query.must( queryJ );
+		if ( "Y".equals( params.get( "hrSearchYn" ) ) ) {
+			query.must( termQuery( "empSeq", params.get( "hrEmpSeq" ) ) );
+		}
+		query.mustNot( termQuery( "jobType", "" ) );
+		
+		ArrayList<String> typeList = new ArrayList<String>() { 
+		    { 
+		        add("oneffice"); 
+		    } 
+		};
+		//소스빌더
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+				 .query(query)
+				 .from( Integer.parseInt( params.get( "onefficeFrom" ) ) )
+				 .size(Integer.parseInt( params.get( "onefficeSize" )))
+				 
+				 .explain(false);
+		if ( "A".equals( params.get( "orderDiv" ) ) ) {
+			sourceBuilder.sort(SortBuilders.fieldSort("_score").order(order));
+		}
+		sourceBuilder.sort(SortBuilders.fieldSort("modDate").order(order));
+		SearchResult searchResult = searchClient.search(sTSearch, typeList, sourceBuilder);
+
+		//System.out.println( "oneffice:" + sourceBuilder.toString() );
+		if ( searchResult != null && searchResult.isSucceeded()) {
+			List<Hit<HashMap, Void>> searchHits = searchResult.getHits(HashMap.class);
+			resultCnt += searchResult.getTotal();
+			for ( Hit<HashMap, Void> searchHit : searchHits ) {
+				resultList.add( searchHit.source );
+			}
+		}else if ( searchResult != null && !searchResult.isSucceeded()) {
+			throw new Exception(searchResult.getErrorMessage());
+		}
+		
+		returnParam.setResultgrid( resultList );
+		returnParam.setTotalcount( resultCnt );
+		params.put( "tsearchKeyword", tsearchKeywordTmp );
+		return returnParam;
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked", "serial" })
+	public PagingReturnObj getFileSearch ( BoolQueryBuilder getQb, String getType, Map<String, String> params, PagingReturnObj returnParam, String[] deptDepthTail ) throws Exception {
+		String sTSearch = getTSearchAlias( SearchTypeKey.TSEARCH, params );
+		if ( sTSearch.equals( "" ) ) {
+			return null;
+		}
+		
+		if(getType != null && getType.equals("secureCode")) {
+			return null;
+		}
+		
+		SortOrder order = SortOrder.DESC;
+		long resultCnt = returnParam.getTotalcount( );
+		List<Map<String, Object>> resultList = returnParam.getResultgrid( );
+		String termsQueryStr = "[";
+		BoolQueryBuilder query = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryS = getQb;
+		BoolQueryBuilder queryF = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryTab = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFResult = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFCategory = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFboard = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFreadY = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFreadN = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFY = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFN = QueryBuilders.boolQuery( );
+		String tTailTmp = "";
+		
+		//params.put("tsearchKeyword", escapeSpecialRegexChars(params.get("tsearchKeyword")));
+		
+		String tsearchKeywordTmp = params.get( "tsearchKeyword" );
+		char[] tTail = params.get( "tsearchKeyword" ).toCharArray( );
+		for ( int i = 0; i < tTail.length; i++ ) {
+			tTailTmp += tTail[i];
+		}
+		params.put( "tsearchKeyword", tTailTmp );
+		String searchWord = escapeSpecialRegexChars(params.get("tsearchKeyword"));
+		String fileTabDiv = params.get( "fileTabDiv" );
+		String[] arrSearchWord = null;
+		BoolQueryBuilder andQueryTitle = boolQuery( );
+		BoolQueryBuilder andQueryFileContents = boolQuery( );
+		BoolQueryBuilder andQueryFileName = boolQuery( );
+		//스페이스가 있을 경우
+		if ( searchWord.indexOf( " " ) > -1 ) {
+			arrSearchWord = searchWord.split( " " );
+			for ( String textStr : arrSearchWord ) {
+				if ( !textStr.equalsIgnoreCase( " " ) && !textStr.equalsIgnoreCase( "" ) ) {
+					andQueryTitle.must( QueryBuilders.queryStringQuery("title :*" + textStr + "*") );
+					andQueryFileContents.must( QueryBuilders.queryStringQuery("fileContents :*" + textStr + "*") );
+					andQueryFileName.must( QueryBuilders.queryStringQuery("fileName :*" + textStr + "*") );
+					
+					if ( "[".equals( termsQueryStr ) ) {
+						termsQueryStr += textStr;
+					}
+					else {
+						termsQueryStr += "," + textStr;
+					}
+				}
+			}
+			queryS.should( andQueryTitle ).should( andQueryFileContents ).should( andQueryFileName ).minimumNumberShouldMatch( 1 );
+		}
+		else { //스페이스가 없을 경우
+			queryS
+				.should( QueryBuilders.queryStringQuery("fileName :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("title :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("fileContent :*" + searchWord + "*") )
+				;
+		}
+		termsQueryStr += "]";
+		if ( !"[]".equals( termsQueryStr ) ) {
+			queryS.should( termsQuery( "fileName", termsQueryStr ) ).should( termsQuery( "title", termsQueryStr ) ).should( termsQuery( "fileContent", termsQueryStr ) ).minimumNumberShouldMatch( 1 );
+		}
+		else {
+			queryS.minimumNumberShouldMatch( 1 );
+		}
+		queryF.should( termQuery( "permList", params.get( "permOnlyUserKey" ) ) ).should( termQuery( "permList", params.get( "permUserKey" ) ) ).should( termQuery( "permList", params.get( "permEmpKey" ) ) ).should( termQuery( "permList", params.get( "permGroupKey" ) ) ).should( termQuery( "permList", params.get( "permCompKey" ) ) ).should( termQuery( "permList", params.get( "permCUKey" ) ) ).should( termQuery( "permList", params.get( "permDeptKey" ) ) ).should( termQuery( "permList", params.get( "permDUKey" ) ) ).should( termQuery( "permList", params.get( "permPOKey" ) ) ).should( termQuery( "permList", "all|" ) );
+		if ( deptDepthTail != null && deptDepthTail.length > 0 ) {
+			for ( int i = 0; i < deptDepthTail.length; i++ ) {
+				queryF.should( termQuery( "permList", deptDepthTail[i] ) );
+			}
+		}
+		queryF.minimumNumberShouldMatch( 1 );
+		queryFCategory.should( termQuery( "permCategory", params.get( "permOnlyUserKey" ) ) ).should( termQuery( "permCategory", params.get( "permUserKey" ) ) ).should( termQuery( "permCategory", params.get( "permEmpKey" ) ) ).should( termQuery( "permCategory", params.get( "permGroupKey" ) ) ).should( termQuery( "permCategory", params.get( "permCompKey" ) ) ).should( termQuery( "permCategory", params.get( "permCUKey" ) ) ).should( termQuery( "permCategory", params.get( "permDeptKey" ) ) ).should( termQuery( "permCategory", params.get( "permDUKey" ) ) ).should( termQuery( "permCategory", params.get( "permPOKey" ) ) ).should( termQuery( "permCategory", "all|" ) );
+		if ( deptDepthTail != null && deptDepthTail.length > 0 ) {
+			for ( int i = 0; i < deptDepthTail.length; i++ ) {
+				queryFCategory.should( termQuery( "permCategory", deptDepthTail[i] ) );
+			}
+		}
+		queryFCategory.minimumNumberShouldMatch( 1 );
+		queryFboard.should( termQuery( "permBoard", params.get( "permOnlyUserKey" ) ) ).should( termQuery( "permBoard", params.get( "permUserKey" ) ) ).should( termQuery( "permBoard", params.get( "permEmpKey" ) ) ).should( termQuery( "permBoard", params.get( "permGroupKey" ) ) ).should( termQuery( "permBoard", params.get( "permCompKey" ) ) ).should( termQuery( "permBoard", params.get( "permCUKey" ) ) ).should( termQuery( "permBoard", params.get( "permDeptKey" ) ) ).should( termQuery( "permBoard", params.get( "permDUKey" ) ) ).should( termQuery( "permBoard", params.get( "permPOKey" ) ) ).should( termQuery( "permBoard", "all|" ) );
+		if ( deptDepthTail != null && deptDepthTail.length > 0 ) {
+			for ( int i = 0; i < deptDepthTail.length; i++ ) {
+				queryFboard.should( termQuery( "permBoard", deptDepthTail[i] ) );
+			}
+		}
+		queryFboard.minimumNumberShouldMatch( 1 );
+		queryFreadY.must( termQuery( "readPermYn", "Y" ) ).must( wildcardQuery( "jobType", "**" ) );
+		queryFreadN.must( termQuery( "readPermYn", "N" ) ).must( wildcardQuery( "jobType", "**" ) );
+		queryFY.must( queryFreadY ).must( queryFCategory ).must( queryFboard );
+		queryFN.must( queryFreadN ).must( queryFCategory );
+		queryFResult.should( queryFY ).should( queryFN ).should( queryF );
+		if ( "I".equals( fileTabDiv ) ) { // I 이미지
+			queryTab.should( termQuery( "fileExtsn", "jpg" ) ).should( termQuery( "fileExtsn", "JPG" ) ).should( termQuery( "fileExtsn", "gif" ) ).should( termQuery( "fileExtsn", "GIF" ) ).should( termQuery( "fileExtsn", "png" ) ).should( termQuery( "fileExtsn", "PNG" ) ).should( termQuery( "fileExtsn", "bmp" ) ).should( termQuery( "fileExtsn", "BMP" ) ).minimumNumberShouldMatch( 1 );
+		}
+		else if ( "D".equals( fileTabDiv ) ) { // D 문서
+			queryTab.should( termQuery( "fileExtsn", "pdf" ) ).should( termQuery( "fileExtsn", "pptx" ) ).should( termQuery( "fileExtsn", "ppt" ) ).should( termQuery( "fileExtsn", "xlsx" ) ).should( termQuery( "fileExtsn", "xls" ) ).should( termQuery( "fileExtsn", "docx" ) ).should( termQuery( "fileExtsn", "doc" ) ).should( termQuery( "fileExtsn", "rtf" ) ).should( termQuery( "fileExtsn", "hwp" ) ).should( termQuery( "fileExtsn", "gul" ) ).should( termQuery( "fileExtsn", "txt" ) ).minimumNumberShouldMatch( 1 );
+		}
+		else if ( "M".equals( fileTabDiv ) ) { // M 멀티디어
+			queryTab.should( termQuery( "fileExtsn", "mp4" ) ).should( termQuery( "fileExtsn", "mov" ) ).should( termQuery( "fileExtsn", "avi" ) ).should( termQuery( "fileExtsn", "asf" ) ).should( termQuery( "fileExtsn", "wmv" ) ).should( termQuery( "fileExtsn", "mpeg" ) ).should( termQuery( "fileExtsn", "mpg" ) ).should( termQuery( "fileExtsn", "mp3" ) ).should( termQuery( "fileExtsn", "wma" ) ).should( termQuery( "fileExtsn", "wav" ) ).should( termQuery( "fileExtsn", "flv" ) ).minimumNumberShouldMatch( 1 );
+		}
+		else if ( "O".equals( fileTabDiv ) ) { // O 기타
+			query.mustNot( termQuery( "fileExtsn", "jpg" ) ).mustNot( termQuery( "fileExtsn", "JPG" ) ).mustNot( termQuery( "fileExtsn", "gif" ) ).mustNot( termQuery( "fileExtsn", "GIF" ) ).mustNot( termQuery( "fileExtsn", "png" ) ).mustNot( termQuery( "fileExtsn", "PNG" ) ).mustNot( termQuery( "fileExtsn", "bmp" ) ).mustNot( termQuery( "fileExtsn", "BMP" ) ).mustNot( termQuery( "fileExtsn", "pdf" ) ).mustNot( termQuery( "fileExtsn", "pptx" ) ).mustNot( termQuery( "fileExtsn", "ppt" ) ).mustNot( termQuery( "fileExtsn", "xlsx" ) ).mustNot( termQuery( "fileExtsn", "xls" ) ).mustNot( termQuery( "fileExtsn", "docx" ) ).mustNot( termQuery( "fileExtsn", "doc" ) ).mustNot( termQuery( "fileExtsn", "rtf" ) ).mustNot( termQuery( "fileExtsn", "hwp" ) ).mustNot( termQuery( "fileExtsn", "gul" ) ).mustNot( termQuery( "fileExtsn", "txt" ) ).mustNot( termQuery( "fileExtsn", "mp4" ) ).mustNot( termQuery( "fileExtsn", "mov" ) ).mustNot( termQuery( "fileExtsn", "avi" ) )
+					.mustNot( termQuery( "fileExtsn", "asf" ) ).mustNot( termQuery( "fileExtsn", "wmv" ) ).mustNot( termQuery( "fileExtsn", "mpeg" ) ).mustNot( termQuery( "fileExtsn", "mpg" ) ).mustNot( termQuery( "fileExtsn", "mp3" ) ).mustNot( termQuery( "fileExtsn", "wma" ) ).mustNot( termQuery( "fileExtsn", "wav" ) ).mustNot( termQuery( "fileExtsn", "flv" ) );
+		}
+		query.must( queryS );
+		query.must( queryFResult );
+		query.must( queryTab );
+		if ( "Y".equals( params.get( "hrSearchYn" ) ) ) {
+			query.must( termQuery( "empSeq", params.get( "hrEmpSeq" ) ) );
+		}
+		query.mustNot( termQuery( "jobType", "" ) );
+		
+		ArrayList<String> typeList = new ArrayList<String>() { 
+		    { 
+		        add("tsFile"); 
+		    } 
+		};
+		//소스빌더
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+				 .query(query)
+				 .from( Integer.parseInt( params.get( "fileFrom" ) ) )
+				 .size(Integer.parseInt( params.get( "fileSize" )))
+				 
+				 .fetchSource( null, new String[] { "docContents", "fileContent" } )
+				 .explain(false);
+		if ( "A".equals( params.get( "orderDiv" ) ) ) {
+			sourceBuilder.sort(SortBuilders.fieldSort("_score").order(order));
+		}
+		sourceBuilder.sort(SortBuilders.fieldSort("createDate").order(order));
+		SearchResult searchResult = searchClient.search(sTSearch, typeList, sourceBuilder);
+
+		//System.out.println( "file:" + sourceBuilder.toString() );
+		if ( searchResult != null && searchResult.isSucceeded()) {
+			List<Hit<HashMap, Void>> searchHits = searchResult.getHits(HashMap.class);
+			resultCnt += searchResult.getTotal();
+			for ( Hit<HashMap, Void> searchHit : searchHits ) {
+				resultList.add( searchHit.source );
+			}
+		}else if ( searchResult != null && !searchResult.isSucceeded()) {
+			throw new Exception(searchResult.getErrorMessage());
+		}
+		
+		returnParam.setResultgrid( resultList );
+		returnParam.setTotalcount( resultCnt );
+		params.put( "tsearchKeyword", tsearchKeywordTmp );
+		return returnParam;
+	}
+
+	@SuppressWarnings({ "serial", "unchecked", "rawtypes" })
+	public PagingReturnObj getFileTabSearch ( BoolQueryBuilder getQb, String getType, Map<String, String> params, PagingReturnObj returnParam, String[] deptDepthTail, String tapDiv ) throws Exception {
+		String sTSearch = getTSearchAlias( SearchTypeKey.TSEARCH, params );
+		if ( sTSearch.equals( "" ) ) {
+			return null;
+		}
+		
+		if(getType != null && getType.equals("secureCode")) {
+			return null;
+		}
+		
+		if(tapDiv != null && tapDiv.equals("secureCode")) {
+			return null;
+		}		
+		
+		SortOrder order = SortOrder.DESC;
+		long resultCnt = returnParam.getTotalcount( );
+		List<Map<String, Object>> resultList = returnParam.getResultgrid( );
+		String termsQueryStr = "[";
+		
+		BoolQueryBuilder query = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryS = getQb;
+		BoolQueryBuilder queryTab = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryF = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFResult = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFCategory = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFboard = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFreadY = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFreadN = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFY = QueryBuilders.boolQuery( );
+		BoolQueryBuilder queryFN = QueryBuilders.boolQuery( );
+		String tTailTmp = "";
+		
+		//params.put("tsearchKeyword", escapeSpecialRegexChars(params.get("tsearchKeyword")));
+		
+		String tsearchKeywordTmp = params.get( "tsearchKeyword" );
+		char[] tTail = params.get( "tsearchKeyword" ).toCharArray( );
+		for ( int i = 0; i < tTail.length; i++ ) {
+			tTailTmp += tTail[i];
+		}
+		params.put( "tsearchKeyword", tTailTmp );
+		String searchWord = escapeSpecialRegexChars(params.get("tsearchKeyword"));
+		String[] arrSearchWord = null;
+		BoolQueryBuilder andQueryTitle = boolQuery( );
+		BoolQueryBuilder andQueryFileContents = boolQuery( );
+		BoolQueryBuilder andQueryFileName = boolQuery( );
+		//스페이스가 있을 경우
+		if ( searchWord.indexOf( " " ) > -1 ) {
+			arrSearchWord = searchWord.split( " " );
+			for ( String textStr : arrSearchWord ) {
+				if ( !textStr.equalsIgnoreCase( " " ) && !textStr.equalsIgnoreCase( "" ) ) {
+					andQueryTitle.must( QueryBuilders.queryStringQuery("title :*" + textStr + "*") );
+					andQueryFileContents.must( QueryBuilders.queryStringQuery("fileContents :*" + textStr + "*") );
+					andQueryFileName.must( QueryBuilders.queryStringQuery("fileName :*" + textStr + "*") );
+					
+					
+					if ( "[".equals( termsQueryStr ) ) {
+						termsQueryStr += textStr;
+					}
+					else {
+						termsQueryStr += "," + textStr;
+					}
+				}
+			}
+			queryS.should( andQueryTitle ).should( andQueryFileContents ).should( andQueryFileName ).minimumNumberShouldMatch( 1 );
+		}
+		else { //스페이스가 없을 경우
+			queryS
+				.should( QueryBuilders.queryStringQuery("fileName :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("title :*" + searchWord + "*") )
+				.should( QueryBuilders.queryStringQuery("fileContent :*" + searchWord + "*") )
+				;
+		}
+		termsQueryStr += "]";
+		if ( !"[]".equals( termsQueryStr ) ) {
+			queryS.should( termsQuery( "fileName", termsQueryStr ) ).should( termsQuery( "title", termsQueryStr ) ).should( termsQuery( "fileContent", termsQueryStr ) ).minimumNumberShouldMatch( 1 );
+		}
+		else {
+			queryS.minimumNumberShouldMatch( 1 );
+		}
+		queryF.should( termQuery( "permList", params.get( "permOnlyUserKey" ) ) ).should( termQuery( "permList", params.get( "permUserKey" ) ) ).should( termQuery( "permList", params.get( "permEmpKey" ) ) ).should( termQuery( "permList", params.get( "permGroupKey" ) ) ).should( termQuery( "permList", params.get( "permCompKey" ) ) ).should( termQuery( "permList", params.get( "permCUKey" ) ) ).should( termQuery( "permList", params.get( "permDeptKey" ) ) ).should( termQuery( "permList", params.get( "permDUKey" ) ) ).should( termQuery( "permList", params.get( "permPOKey" ) ) ).should( termQuery( "permList", "all|" ) );
+		if ( deptDepthTail != null && deptDepthTail.length > 0 ) {
+			for ( int i = 0; i < deptDepthTail.length; i++ ) {
+				queryF.should( termQuery( "permList", deptDepthTail[i] ) );
+			}
+		}
+		queryF.minimumNumberShouldMatch( 1 );
+		queryFCategory.should( termQuery( "permCategory", params.get( "permOnlyUserKey" ) ) ).should( termQuery( "permCategory", params.get( "permUserKey" ) ) ).should( termQuery( "permCategory", params.get( "permEmpKey" ) ) ).should( termQuery( "permCategory", params.get( "permGroupKey" ) ) ).should( termQuery( "permCategory", params.get( "permCompKey" ) ) ).should( termQuery( "permCategory", params.get( "permCUKey" ) ) ).should( termQuery( "permCategory", params.get( "permDeptKey" ) ) ).should( termQuery( "permCategory", params.get( "permDUKey" ) ) ).should( termQuery( "permCategory", params.get( "permPOKey" ) ) ).should( termQuery( "permCategory", "all|" ) );
+		if ( deptDepthTail != null && deptDepthTail.length > 0 ) {
+			for ( int i = 0; i < deptDepthTail.length; i++ ) {
+				queryFCategory.should( termQuery( "permCategory", deptDepthTail[i] ) );
+			}
+		}
+		queryFCategory.minimumNumberShouldMatch( 1 );
+		queryFboard.should( termQuery( "permBoard", params.get( "permOnlyUserKey" ) ) ).should( termQuery( "permBoard", params.get( "permUserKey" ) ) ).should( termQuery( "permBoard", params.get( "permEmpKey" ) ) ).should( termQuery( "permBoard", params.get( "permGroupKey" ) ) ).should( termQuery( "permBoard", params.get( "permCompKey" ) ) ).should( termQuery( "permBoard", params.get( "permCUKey" ) ) ).should( termQuery( "permBoard", params.get( "permDeptKey" ) ) ).should( termQuery( "permBoard", params.get( "permDUKey" ) ) ).should( termQuery( "permBoard", params.get( "permPOKey" ) ) ).should( termQuery( "permBoard", "all|" ) );
+		if ( deptDepthTail != null && deptDepthTail.length > 0 ) {
+			for ( int i = 0; i < deptDepthTail.length; i++ ) {
+				queryFboard.should( termQuery( "permBoard", deptDepthTail[i] ) );
+			}
+		}
+		queryFboard.minimumNumberShouldMatch( 1 );
+		queryFreadY.must( termQuery( "readPermYn", "Y" ) ).must( wildcardQuery( "jobType", "*board*" ) );
+		queryFreadN.must( termQuery( "readPermYn", "N" ) ).must( wildcardQuery( "jobType", "*board*" ) );
+		queryFY.must( queryFreadY ).must( queryFCategory ).must( queryFboard );
+		queryFN.must( queryFreadN ).must( queryFCategory );
+		queryFResult.should( queryFY ).should( queryFN ).should( queryF );
+		query.must( queryS );
+		query.must( queryFResult );
+		query.mustNot( termQuery( "jobType", "" ) );
+		query.must( queryTab );
+		
+		ArrayList<String> typeList = new ArrayList<String>() { 
+		    { 
+		        add("tsFile"); 
+		    } 
+		};
+		//소스빌더
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+				 .query(query)
+				 .from( Integer.parseInt( params.get( "fileFrom" ) ) )
+				 .size(Integer.parseInt( params.get( "fileSize" )))
+				 
+				 .fetchSource( null, new String[] { "docContents", "fileContent" } )
+				 .explain(false);
+		if ( "A".equals( params.get( "orderDiv" ) ) ) {
+			sourceBuilder.sort(SortBuilders.fieldSort("_score").order(order));
+		}
+		sourceBuilder.sort(SortBuilders.fieldSort("createDate").order(order));
+		SearchResult searchResult = searchClient.search(sTSearch, typeList, sourceBuilder);
+
+		//System.out.println( "file:" + sourceBuilder.toString() );
+		if ( searchResult != null && searchResult.isSucceeded()) {
+			List<Hit<HashMap, Void>> searchHits = searchResult.getHits(HashMap.class);
+			resultCnt += searchResult.getTotal();
+			for ( Hit<HashMap, Void> searchHit : searchHits ) {
+				resultList.add( searchHit.source );
+			}
+		}else if ( searchResult != null && !searchResult.isSucceeded()) {
+			throw new Exception(searchResult.getErrorMessage());
+		}
+		
+		returnParam.setResultgrid( resultList );
+		returnParam.setTotalcount( resultCnt );
+		params.put( "tsearchKeyword", tsearchKeywordTmp );
+		return returnParam;
+	}
+
+	@SuppressWarnings("unchecked")
+	public PagingReturnObj getHRSearch ( Map<String, String> params, PagingReturnObj returnParam ) throws Exception {
+		long resultCnt = returnParam.getTotalcount( );
+		List<Map<String, Object>> resultList = returnParam.getResultgrid( );
+		String termsQueryStr = "";
+		String tTailTmp = "";
+		String tsearchKeywordTmp = params.get( "tsearchKeyword" );
+		char[] tTail = params.get( "tsearchKeyword" ).toCharArray( );
+		for ( int i = 0; i < tTail.length; i++ ) {
+			tTailTmp += tTail[i];
+		}
+		params.put( "tsearchKeyword", tTailTmp );
+		String searchWord = params.get( "tsearchKeyword" );
+		String[] arrSearchWord = null;
+		if ( searchWord.indexOf( " " ) > -1 ) {
+			arrSearchWord = searchWord.split( " " );
+			for ( String textStr : arrSearchWord ) {
+				if ( !textStr.equalsIgnoreCase( " " ) && !textStr.equalsIgnoreCase( "" ) ) {
+					if ( "".equals( termsQueryStr ) ) {
+						termsQueryStr += textStr;
+					}
+					else {
+						termsQueryStr += "|" + textStr;
+					}
+				}
+			}
+		}
+		else {
+			if ( "".equals( searchWord ) ) {
+				termsQueryStr = "nokeyword";
+			}
+			else {
+				termsQueryStr = searchWord;
+			}
+		}
+		params.put( "termsQueryStr", termsQueryStr );
+		//인물검색시 생년월일은 공통옵션(프로필 생년월일 표시설정)에 따라 표기.
+		Map<String, Object> mp = new HashMap<String, Object>();
+		mp.put("optionId", "cm2200");
+		String bDayOptionValue = (String) commonSql.select("CmmnCodeDetailManageDAO.getOptionSetValue", mp);
+		params.put("bDayOptionValue", bDayOptionValue);
+		
+		resultList = commonSql.list( "EmpManage.selectTotalSearchEmpInfo", params );
+		resultCnt = (int) commonSql.select( "EmpManage.selectTotalSearchEmpInfoCnt", params );
+		returnParam.setResultgrid( resultList );
+		returnParam.setTotalcount( resultCnt );
+		params.put( "tsearchKeyword", tsearchKeywordTmp );
+		return returnParam;
+	}
+
+	public String getTodayDate ( ) {
+		Date returnStr = Calendar.getInstance( new SimpleTimeZone( 0x1ee6280, "KST" ) ).getTime( );
+		SimpleDateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd", Locale.getDefault( ) );
+		return formatter.format( returnStr );
+	}
+
+	public String getOneWeekDate ( ) {
+		Calendar cal = Calendar.getInstance( new SimpleTimeZone( 0x1ee6280, "KST" ) );
+		cal.add( Calendar.DATE, -7 );
+		Date returnStr = cal.getTime( );
+		SimpleDateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd", Locale.getDefault( ) );
+		return formatter.format( returnStr );
+	}
+
+	public String getOneDayDate ( ) {
+		Calendar cal = Calendar.getInstance( new SimpleTimeZone( 0x1ee6280, "KST" ) );
+		cal.add( Calendar.DATE, -1 );
+		Date returnStr = cal.getTime( );
+		SimpleDateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd", Locale.getDefault( ) );
+		return formatter.format( returnStr );
+	}
+
+	public String getOneMonthDate ( ) {
+		Calendar cal = Calendar.getInstance( new SimpleTimeZone( 0x1ee6280, "KST" ) );
+		cal.add( Calendar.MONTH, -1 );
+		Date weekago = cal.getTime( );
+		SimpleDateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd", Locale.getDefault( ) );
+		return formatter.format( weekago );
+	}
+
+	public String getOneYearDate ( ) {
+		Calendar cal = Calendar.getInstance( new SimpleTimeZone( 0x1ee6280, "KST" ) );
+		cal.add( Calendar.YEAR, -1 );
+		Date weekago = cal.getTime( );
+		SimpleDateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd", Locale.getDefault( ) );
+		return formatter.format( weekago );
+	}
+	private Pattern SPECIAL_REGEX_CHARS = Pattern.compile("[+-=&()|<>!{}\\[\\]\"~*?:\\\\/]");
+
+	private String escapeSpecialRegexChars(String str) {
+
+	    return SPECIAL_REGEX_CHARS.matcher(str).replaceAll("\\\\$0");
+	}
+}

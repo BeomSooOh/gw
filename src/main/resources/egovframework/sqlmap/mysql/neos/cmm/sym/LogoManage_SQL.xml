@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="LogoManageDAO">
+	<typeAlias alias="LogoManageVo" type="neos.cmm.systemx.etc.LogoManageVo"/>
+
+	<select id="LogoManageDAO.selectLogoInfo" parameterClass="java.lang.String" resultClass="LogoManageVo">
+		<![CDATA[
+			SELECT   LAYOUT_LOGO_PATH as layoutLogoPath
+				   , LOGIN_LOGO_PATH as loginLogoPath
+				   , ORD as ord
+			  FROM COMTNLOGOINFO
+			WHERE ORGAN_ID = #organId#  	
+		]]>
+	</select>
+	
+	<select id="LogoManageDAO.getDomainCompInfo" parameterClass="hashmap" resultClass="egovMap">
+            SELECT *
+            FROM t_co_comp cc
+            WHERE COMP_DOMAIN = #domain#
+            LIMIT 1
+    </select>    
+     
+	<select id="LogoManageDAO.selectLoginLogoInfo" resultClass="LogoManageVo">
+		<![CDATA[
+			SELECT ROWNUM, A.*
+			  FROM (
+					SELECT LAYOUT_LOGO_PATH as layoutLogoPath
+						      , LOGIN_LOGO_PATH as loginLogoPath
+						      , ORD as ord
+					  FROM COMTNLOGOINFO
+					WHERE ORD <> '9'
+					ORDER BY ORD
+					) A
+			 WHERE ROWNUM = 1
+		]]>
+	</select> 
+	
+	<select id="LogoManageDAO.selectLoginNotice" resultClass="java.lang.String">
+        <![CDATA[
+            SELECT NTT_CN FROM 
+            (
+              SELECT a.NTT_ID, a.NTT_CN
+              FROM PORTAL_BBS a 
+              LEFT OUTER JOIN COMVNUSERMASTER b
+              ON a.FRST_REGISTER_ID = b.ESNTL_ID 
+              LEFT OUTER JOIN COMTNBBSMASTER c
+              ON a.BBS_ID = c.BBS_ID         
+              WHERE BBS_ATTRB_CODE = 'BBST04'
+              AND A.USE_AT = 'Y'
+              ORDER BY  a.NTT_ID DESC
+            ) 
+            WHERE ROWNUM = 1
+        ]]>
+    </select>
+	
+	 
+</sqlMap>

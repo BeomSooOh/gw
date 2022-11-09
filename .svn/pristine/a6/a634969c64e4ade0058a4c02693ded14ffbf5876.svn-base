@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="orgchartDAO">
+	<select id="orgchartDAO.getOrgchartPath" parameterClass="hashmap" resultClass="java.lang.String">
+		SELECT file_path 
+		FROM $DB_NEOS$t_co_orgchart
+		WHERE group_seq = #groupSeq#
+	</select>
+	
+	<select id="orgchartDAO.getOrgchartDt" parameterClass="java.util.Map" resultClass="java.lang.String">
+		 SELECT DATE_FORMAT(req_date, '%Y%m%d%H%i%s') as "orgChartDt"
+		 FROM $DB_NEOS$t_co_orgchart
+		 WHERE group_seq = #groupSeq#
+		 <isNotNull  property="orgChartDt">
+			<isNotEmpty property="orgChartDt">
+			AND DATE_FORMAT(req_date, '%Y%m%d%H%i%s') > #orgChartDt#
+			</isNotEmpty>
+		</isNotNull>
+	</select>
+	
+	<select id="orgchartDAO.getOrgchartInfo" parameterClass="hashmap" resultClass="hashmap">
+		 SELECT 
+		 	DATE_FORMAT(req_date, '%Y%m%d%H%i%s') as "orgChartDt",
+		 	file_path as "filePath",
+		 	update_status as "updateStatus",
+		 	task_status as "taskStatus",
+		 	req_date as "reqDate",
+		 	org_status as "orgStatus",
+		 	reg_ip as "regIp"
+		 FROM $DB_NEOS$t_co_orgchart
+		 WHERE group_seq = #groupSeq#
+		 <isNotNull  property="orgChartDt">
+			<isNotEmpty property="orgChartDt">
+				<isEqual property="orgChartDt" compareValue="EMPTY">
+					AND 1=1
+				</isEqual>
+				<isNotEqual property="orgChartDt" compareValue="EMPTY">
+					AND DATE_FORMAT(req_date, '%Y%m%d%H%i%s') > #orgChartDt#
+				</isNotEqual>
+			</isNotEmpty>
+		</isNotNull>
+	</select>
+	
+	<select id="orgchartDAO.selectGroupList" resultClass="hashmap">
+		SELECT 
+			group_seq as "groupSeq",
+			group_name as "groupName"
+		FROM $DB_NEOS$t_co_group
+	</select>
+	
+	<select id="orgchartDAO.selectCompBizDeptList" parameterClass="java.util.Map" resultClass="hashmap">
+		SELECT  
+		     oc.group_seq as "grpSeq"
+		    ,oc.gbn_org as "gbnOrg"
+		    ,oc.comp_seq as "compSeq"
+		    ,$DB_NEOS$FN_GetMultiLang(#langCode#,ccm.comp_name_multi) as "compName"
+		    ,oc.biz_seq as "bizSeq"
+		    ,$DB_NEOS$FN_GetMultiLang(#langCode#,cbm.biz_name_multi) as "bizName"
+		    ,oc.dept_seq as "deptSeq"
+		    ,$DB_NEOS$FN_GetMultiLang(#langCode#,cdm.dept_name_multi) as "deptName"
+		    ,oc.parent_seq as "parentSeq"
+		    ,oc.level as "level"
+		    ,IFNULL(oc.order_num,'') as "order"
+		    ,IFNULL(oc.path,'') as "path"
+		    ,CASE WHEN oc.gbn_org = 'c' AND cb.display_yn = 'Y' THEN IFNULL(CONCAT(ccm.comp_name, '|', CONCAT(cbm.biz_name, '|', cdm.path_name)),'')
+		        WHEN cb.display_yn = 'N' THEN IFNULL(CONCAT(ccm.comp_name, '|', cdm.path_name),'')
+		        ELSE '' END AS pathName
+		    ,IFNULL(a.member,0) as "member"
+		FROM $DB_NEOS$v_org_chart oc
+		LEFT JOIN
+		(
+		    SELECT A.path, IFNULL(SUM(B.cnt), 0) AS member
+		    FROM $DB_NEOS$v_org_chart A
+		    LEFT JOIN
+		    (
+		        SELECT CASE WHEN cb.display_yn = 'Y' THEN CONCAT(cb.comp_seq, '|', CONCAT(cb.biz_seq, '|', cd.path))
+		            ELSE CONCAT(cb.comp_seq, '|', cd.path) END as path, COUNT(ed.emp_seq) cnt
+		        FROM $DB_NEOS$t_co_dept cd, $DB_NEOS$t_co_emp_dept ed, $DB_NEOS$t_co_biz cb
+		        WHERE ed.group_seq = #groupSeq#
+		            AND ed.group_seq = cd.group_seq
+		            AND ed.dept_seq = cd.dept_seq
+		            AND ed.group_seq = cb.group_seq
+		            AND ed.biz_seq = cb.biz_seq
+		            AND ed.use_yn = 'Y'
+		            AND cd.use_yn = 'Y'
+		            AND cb.use_yn = 'Y'
+		        GROUP BY cd.path
+		    ) B
+		    ON CONCAT('|',B.path,'|') LIKE CONCAT('%|',A.path,'|%')
+		    WHERE A.group_seq = #groupSeq#
+		    GROUP BY A.path  
+		) a
+		ON oc.path = a.path
+		LEFT JOIN $DB_NEOS$t_co_biz cb
+		ON      oc.biz_seq = cb.biz_seq
+		LEFT JOIN $DB_NEOS$v_t_co_comp_multi ccm
+		ON      oc.comp_seq = ccm.comp_seq
+		LEFT JOIN $DB_NEOS$v_t_co_biz_multi cbm
+		ON      oc.biz_seq = cbm.biz_seq
+		LEFT JOIN $DB_NEOS$v_t_co_dept_multi cdm
+		ON      oc.dept_seq = cdm.dept_seq   
+		WHERE	oc.group_seq = #groupSeq#
+		<isNotNull property="compSeq"><isNotEmpty property="compSeq">AND oc.comp_seq = #compSeq#</isNotEmpty></isNotNull>
+		<isNotNull property="bizSeq"><isNotEmpty property="bizSeq">AND oc.biz_seq = #bizSeq#</isNotEmpty></isNotNull>
+		<isNotNull property="deptSeq"><isNotEmpty property="deptSeq">AND oc.dept_seq = #deptSeq#</isNotEmpty></isNotNull>
+		ORDER BY oc.path
+	</select>
+	
+	<select id="orgchartDAO.selectEmpList" parameterClass="java.util.Map" resultClass="hashmap">
+		SELECT 
+		      A.emp_seq as "empSeq"
+		    , A.login_id as "loginId"
+		    , $DB_NEOS$FN_GetMultiLang(#langCode#, tcem.emp_name_multi) as "empName"
+		    , $DB_NEOS$get_emp_duty_position_name(#groupSeq#, #compSeq#, A.positione, 'POSITION', #langCode#) as "positionName"
+		    , $DB_NEOS$get_code_detail_info('0', 'COM503',  A.job_code, #langCode#) as "jobName"
+		    , IFNULL(tcem.main_work, '') as "mainWord"
+		    , tced.group_seq as "grpSeq"
+		    , tced.dept_seq as "deptSeq"
+		    , IFNULL(A.email_addr, '') as "emailAddr"
+		    , RNUM as "order"
+		    , A.pic_file_id as "picFileId"
+		FROM  (SELECT 
+		            tce.emp_seq
+		          , tce.login_id
+		          , tce.position_code
+		          , tce.job_code
+		          , tce.email_addr
+		          , tce.pic_file_id
+		          , (@RNUM := @RNUM + 1) as RNUM
+		      FROM  $DB_NEOS$t_co_emp tce, (SELECT @RNUM := 0) A
+		      ORDER BY tce.position_code, tce.job_code, tce.create_date) A
+		JOIN  $DB_NEOS$v_t_co_emp_multi tcem
+		ON    A.emp_seq = tcem.emp_seq 
+		JOIN $DB_NEOS$t_co_dept tcde
+    	ON    tcde.group_seq = #groupSeq# AND tcde.comp_seq = #compSeq# AND tcde.use_yn = 'Y'
+    	AND  CONCAT('|',tcde.path,'|') like CONCAT('%|',#deptSeq#,'|%')
+		JOIN  $DB_NEOS$t_co_emp_dept tced
+		ON    A.emp_seq = tced.emp_seq AND tced.group_seq = #groupSeq# AND tced.comp_seq = #compSeq# 
+		AND tced.dept_seq = tcde.dept_seq AND tced.use_yn = 'Y'
+		<isNotNull property="bizSeq"><isNotEmpty property="bizSeq">AND tced.biz_seq = #bizSeq#</isNotEmpty></isNotNull>
+	</select>
+	
+	<update id="orgchartDAO.insertEmpNum" parameterClass="java.util.Map">
+	
+		
+		INSERT INTO $DB_NEOS$t_co_emp_comp
+		(
+			  erp_emp_seq
+			, group_seq
+			, comp_seq
+			, emp_seq
+		)	
+		VALUES 
+		(
+			  #empNum#
+			, #groupSeq#
+			, #compSeq#
+			, #empSeq#
+		)
+		ON DUPLICATE KEY UPDATE erp_emp_seq = #empNum#
+		
+	</update>
+	
+	<select id="orgchartDAO.selectCompDomain" parameterClass="java.util.Map" resultClass="java.lang.String">
+		 SELECT comp_domain as "domain"
+		 FROM $DB_NEOS$t_co_comp
+		 WHERE group_seq = #groupSeq#
+		 AND comp_seq = #compSeq#
+	</select>
+	
+</sqlMap>

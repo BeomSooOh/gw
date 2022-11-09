@@ -1,0 +1,48 @@
+
+	<!--css-->
+	<link rel="stylesheet" type="text/css" href="../../Scripts/jqueryui/jquery-ui.css"/>
+    <link rel="stylesheet" type="text/css" href="../../css/common.css">
+	<link rel="stylesheet" type="text/css" href="../../css/portlet.css">
+	    
+    <!--js-->
+    <script type="text/javascript" src="../../Scripts/jquery-1.9.1.min.js"></script> 
+	
+	<!-- 메인 js -->
+	<script type="text/javascript" src="../../Scripts/jquery.alsEN-1.0.min.js"></script>
+	<script type="text/javascript" src="../../Scripts/jquery.bxslider.min.js"></script>
+
+	<script type="text/javascript">
+	$(document).ready(function() {
+		$("#quick").als({
+			visible_items: 5,
+			scrolling_items: 1,
+			orientation: "horizontal",
+			circular: "yes",
+			autoscroll: "yes",
+			interval: 3000,
+			direction: "left"
+		});	
+	});	
+</script>
+
+
+<div class="i_quick">
+	<div id="quick">
+		<span class="als-prev"><img src="../../Images/btn/btn_quick_prev.png" alt="이전" /></span>
+		<div class="als-viewport">
+			<ul class="als-wrapper">
+				<li class="als-item"><a href="#" target="_blank"><img src="../../Images/temp/quick01.png" alt="신설법인 경영도우미" /></a></li>
+				<li class="als-item"><a href="#" target="_blank"><img src="../../Images/temp/quick02.png" alt="더존홈페이지 개편안내" /></a></li>
+				<li class="als-item"><a href="#" target="_blank"><img src="../../Images/temp/quick03.png" alt="2015년 부가가치세신고 실무강좌" /></a></li>
+				<li class="als-item"><a href="#" target="_blank"><img src="../../Images/temp/quick04.png" alt="하계직무연수 안내" /></a></li>
+				<li class="als-item"><a href="#" target="_blank"><img src="../../Images/temp/quick05.png" alt="더존 Smart A 클라우드 에디션 7가지 효익" /></a></li>
+				<li class="als-item"><a href="#" target="_blank"><img src="../../Images/temp/quick06.png" alt="더존 전국  IT 코디센터" /></a></li>
+				<li class="als-item"><a href="#" target="_blank"><img src="../../Images/temp/quick07.png" alt="더존 그린팩스" /></a></li>
+				<li class="als-item"><a href="#" target="_blank"><img src="../../Images/temp/quick08.png" alt="통합정보화 솔루션구축 방안 세미나" /></a></li>
+				<li class="als-item"><a href="#" target="_blank"><img src="../../Images/temp/quick09.png" alt="정보화 추진 전략 세미나" /></a></li>
+				<li class="als-item"><a href="#" target="_blank"><img src="../../Images/temp/quick10.png" alt="더존 온라인 고객센터" /></a></li>
+			</ul>
+		</div>
+		<span class="als-next"><img src="../../Images/btn/btn_quick_next.png" alt="다음" /></span>
+	</div>
+</div>

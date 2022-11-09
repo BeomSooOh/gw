@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="ErpIuPartnerManageDAO">
+
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	
+	<select id="ErpIuPartnerManageDAO.selectPartnerList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT B.*
+		FROM (
+		    SELECT 
+		    	A.*, 
+		    	COUNT(*) OVER(ORDER BY GW_UPDATE_TIME) AS TOTAL_COUNT, 
+		    	ROWNUM AS RN
+		    FROM MA_PARTNER A
+		    <isNotEmpty property="lastDt">
+		    WHERE A.GW_UPDATE_TIME > to_date(#lastDt#, 'YYYY-MM-DD HH24:MI:SS')
+		    </isNotEmpty>
+		    ) B
+		WHERE RN >= $startRow$ AND RN &lt; $endRow$
+	</select>
+	
+	<select id="ErpIuPartnerManageDAO.selectPartnerDeleteList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT B.*
+        FROM (
+            SELECT 
+                A.*, 
+                COUNT(*) OVER(ORDER BY GW_DELETE_TIME) AS TOTAL_COUNT, 
+                ROWNUM AS RN
+            FROM MA_PARTNER_GW_DELETE A
+            <isNotEmpty property="lastDt">
+            WHERE A.GW_DELETE_TIME > to_date(#lastDt#, 'YYYY-MM-DD HH24:MI:SS')
+            </isNotEmpty>
+            ) B
+        WHERE RN >= $startRow$ AND RN &lt; $endRow$
+	</select>
+        
+</sqlMap>

@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="faxDAO">
+
+	<select id="faxDAO.getGroupInfo" parameterClass="hashmap" resultClass="egovMap">
+		SELECT
+			*
+		FROM t_co_group
+		<isNotEmpty property="groupSeq">
+			where group_seq = #groupSeq#		
+		</isNotEmpty>
+		LIMIT 1
+	</select>
+
+	<!-- 마스터 웹 용 -->
+	<select id="faxDAO.getFaxListMaster" parameterClass="hashmap" resultClass="hashmap">
+		SELECT  fax_seq as "faxSeq"
+		      , bill36524_id as "bill36524Id"
+		      , agent_id as "agentId"
+		      , agent_key as "agentKey"
+		      , point as "point"
+		      , use_yn as "useYn"
+		FROM t_fx_fax
+		WHERE group_seq = #groupSeq#
+		<isNotNull property="bill36524Id">
+			<isNotEmpty property="bill36524Id">
+			AND bill36524_id = #bill36524Id#
+			</isNotEmpty>
+		</isNotNull>
+		<isNotNull property="useYn">
+			<isNotEmpty property="useYn">
+			AND use_yn = #useYn#
+			</isNotEmpty>
+		</isNotNull>
+	</select>
+	
+	<select id="faxDAO.getFaxNoListMaster" parameterClass="hashmap" resultClass="hashmap">
+		SELECT  fax_no as "faxNo"
+			  , CASE WHEN EXISTS(SELECT 1 FROM t_fx_fax_sync tffs WHERE tffs.fax_seq = tffn.fax_seq AND tffs.fax_no = tffn.fax_no) THEN 'Y' ELSE 'N' END as "syncYn"
+		      , use_begin_date as "useBeginDate"
+		      , use_end_date as "useEndDate"
+		      , CASE 
+		          WHEN STR_TO_DATE(use_end_date, '%Y%m%d') <![CDATA[<]]> DATE_SUB(SYSDATE(), INTERVAL 1 MONTH) THEN 'D'
+		          WHEN STR_TO_DATE(use_end_date, '%Y%m%d') <![CDATA[<]]> SYSDATE() THEN 'C'
+		          WHEN STR_TO_DATE(use_end_date, '%Y%m%d') <![CDATA[<]]> DATE_SUB(SYSDATE(), INTERVAL 1 DAY) THEN 'B'
+		          ELSE 'A'
+		        END as "status"
+		FROM t_fx_fax_no tffn
+		WHERE fax_seq = #faxSeq#
+	</select>
+	
+	<select id="faxDAO.getDuplicateYnMaster" parameterClass="hashmap" resultClass="String">
+		SELECT CASE WHEN EXISTS(
+		  SELECT 1 FROM t_fx_fax
+		  WHERE group_seq = #groupSeq#
+		  AND bill36524_id = #bill36524Id#)
+		THEN 'Y' ELSE 'N' END as "duplicate"
+	</select>
+	
+	<insert id="faxDAO.addFaxMaster" parameterClass="hashmap">
+		INSERT INTO t_fx_fax(
+		    fax_seq
+		  , group_seq
+		  , bill36524_id
+		  , bill36524_pwd
+		  , agent_id
+		  , agent_key
+		  , point
+		  , use_yn
+		) VALUES (
+		    #faxSeq#
+		  , #groupSeq#
+		  , #bill36524Id#
+		  , #bill36524Pwd#
+		  , #agentId#
+		  , #agentKey#
+		  , #point#
+		  , #useYn#
+		)
+	</insert>
+	
+	<update id="faxDAO.editFaxMaster" parameterClass="hashmap">
+		UPDATE t_fx_fax 
+		SET <isNull property="refresh">
+				bill36524_id = #bill36524Id#
+			  , bill36524_pwd = #bill36524Pwd#
+			  , agent_id = #agentId#
+			  , agent_key = #agentKey#
+			  , use_yn = #useYn#
+			  ,
+			</isNull>
+			point = #point#
+		WHERE fax_seq = #faxSeq#
+		<isNull property="refresh">
+		AND group_seq = #groupSeq#
+		</isNull>
+	</update>
+	
+	<insert id="faxDAO.addFaxNoMaster" parameterClass="hashmap">
+		INSERT INTO t_fx_fax_no (
+		    fax_seq
+		  , fax_no
+		  , use_begin_date
+		  , use_end_date
+		) VALUES (
+		    #faxSeq#
+		  , #FaxNo#
+		  , #UseBeginDate#
+		  , #UseEndDate#
+		)
+	</insert>
+	
+	<delete id="faxDAO.delFaxMaster" parameterClass="hashmap">
+		DELETE FROM t_fx_fax 
+		WHERE fax_seq = #faxSeq#
+		AND group_seq = #groupSeq#
+	</delete>
+	
+	<delete id="faxDAO.delFaxNoMaster" parameterClass="hashmap">
+		DELETE FROM t_fx_fax_no 
+		WHERE fax_seq = #faxSeq#
+	</delete>
+	
+	<update id="faxDAO.editFaxNoMaster" parameterClass="hashmap">
+		UPDATE t_fx_fax_no 
+		SET use_begin_date = #UseBeginDate#, use_end_date = #UseEndDate#
+		WHERE fax_seq = #faxSeq#
+		AND fax_no = #FaxNo#
+	</update>
+	
+	<select id="faxDAO.getAgentIdAndAgentKeyMaster" parameterClass="hashmap" resultClass="hashmap">
+	    SELECT 	tff.agent_id as "AgentID"
+	    	  , tff.agent_key as "AgentKey"
+	    FROM t_fx_fax tff
+	    WHERE fax_seq = #faxSeq#
+	</select>
+	
+	<select id="faxDAO.getFaxNoCompListMaster" parameterClass="hashmap" resultClass="hashmap">
+		SELECT tffnc.comp_seq as "compSeq"
+			 , tccm.comp_name as "compName"
+		FROM t_fx_fax_no_comp tffnc
+		JOIN t_co_comp_multi tccm
+		ON tffnc.group_seq = tccm.group_seq
+		AND tffnc.comp_seq = tccm.comp_seq
+		WHERE fax_seq = #faxSeq#
+		AND fax_no = #faxNo#
+		AND tffnc.group_seq = #groupSeq#
+	</select>
+	
+	<delete id="faxDAO.delFaxNoCompMaster" parameterClass="hashmap">
+		DELETE FROM t_fx_fax_no_comp
+		WHERE fax_seq = #faxSeq#
+		AND fax_no = #faxNo#
+	</delete>
+	
+	<insert id="faxDAO.addFaxNoCompMaster" parameterClass="hashmap">
+		INSERT INTO t_fx_fax_no_comp (
+		    fax_seq
+		  , fax_no
+		  , group_seq
+		  , comp_seq
+		) VALUES (
+		    #faxSeq#
+		  , #faxNo#
+		  , #groupSeq#
+		  , #compSeq#
+		)
+	</insert>
+	
+	
+	
+	
+	
+	<!-- 관리자 -->
+	<select id="faxDAO.getFaxNoListAdmin" parameterClass="hashmap" resultClass="hashmap">
+		SELECT  tffn.fax_no as "faxNo"
+			  , CASE WHEN EXISTS(SELECT 1 FROM t_fx_fax_sync tffs WHERE tffs.fax_seq = tffn.fax_seq AND tffs.fax_no = tffn.fax_no) THEN 'Y' ELSE 'N' END as "syncYn"
+		      , use_begin_date as "useBeginDate"
+		      , use_end_date as "useEndDate"
+		      , CASE 
+		          WHEN STR_TO_DATE(use_end_date, '%Y%m%d') <![CDATA[<]]> DATE_SUB(SYSDATE(), INTERVAL 1 MONTH) THEN 'D'
+		          WHEN STR_TO_DATE(use_end_date, '%Y%m%d') <![CDATA[<]]> SYSDATE() THEN 'C'
+		          WHEN STR_TO_DATE(use_end_date, '%Y%m%d') <![CDATA[<]]> DATE_SUB(SYSDATE(), INTERVAL 1 DAY) THEN 'B'
+		          ELSE 'A'
+		        END as "status"
+		FROM t_fx_fax_no tffn
+		JOIN t_fx_fax_no_comp tffnc
+		ON tffn.fax_seq = tffnc.fax_seq
+		AND tffn.fax_no = tffnc.fax_no
+		WHERE tffnc.group_seq = #groupSeq#
+		AND tffnc.comp_seq = #compSeq#
+		<isNotNull property="faxNo">
+			<isNotEmpty property="faxNo">
+			AND tffn.fax_no = #faxNo#
+			</isNotEmpty>
+		</isNotNull>
+		<isNotNull property="syncYn">
+			<isNotEmpty property="syncYn">
+			<isEqual property="syncYn" compareValue="Y">
+			AND EXISTS(SELECT 1 FROM t_fx_fax_sync tffs WHERE tffs.fax_seq = tffn.fax_seq AND tffs.fax_no = tffn.fax_no)
+			</isEqual>
+			<isEqual property="syncYn" compareValue="N">
+			AND NOT EXISTS(SELECT 1 FROM t_fx_fax_sync tffs WHERE tffs.fax_seq = tffn.fax_seq AND tffs.fax_no = tffn.fax_no)
+			</isEqual>
+			</isNotEmpty>
+		</isNotNull>
+	</select>
+	
+	<select id="faxDAO.getFaxSyncList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT  org_type as "orgType"
+		      , group_seq as "groupSeq"
+		      , comp_seq as "compSeq"
+		      , org_seq  as "orgSeq"
+		FROM t_fx_fax_sync
+		WHERE fax_seq = #faxSeq#
+		AND fax_no = #faxNo#
+	</select>
+	
+	<insert id="faxDAO.addFaxSync" parameterClass="hashmap">
+		INSERT INTO t_fx_fax_sync (
+		    fax_seq
+		  , fax_no
+		  , org_type
+		  , group_seq
+		  , comp_seq
+		  , org_seq
+		) VALUES (
+		    #faxSeq#
+		  , #faxNo#
+		  , #orgType#
+		  , #groupSeq#
+		  , #compSeq#
+		  , #orgSeq#
+		)
+	</insert>
+	
+	<delete id="faxDAO.delFaxSync" parameterClass="hashmap">
+		DELETE FROM t_fx_fax_sync 
+		WHERE fax_seq = #faxSeq#
+		AND fax_no = #faxNo#
+		AND org_type = #orgType#
+		AND group_seq = #groupSeq#
+		AND comp_seq = #compSeq#
+		AND org_seq = #orgSeq#
+	</delete>
+	
+	
+	
+	
+	<!-- 사용자 -->
+	<select id="faxDAO.getFaxNoListUser" parameterClass="hashmap" resultClass="hashmap">
+		SELECT DISTINCT 
+		        tff.agent_id as "agentId"
+			  , tff.agent_key as "agentKey"
+			  , tffs.fax_no as "faxNo"
+		FROM t_fx_fax_sync tffs
+		  JOIN t_fx_fax tff
+		  ON tffs.fax_seq = tff.fax_seq
+		<!-- 1차에서 겸직처리 없이 감 추후 겸직 처리 추가시 아래 WHERE 절 지우고 주석 제거
+		<isNotNull property="compSeq">
+		  	<isNotEmpty property="compSeq">
+	    WHERE ((tffs.org_type = 'E' AND tffs.group_seq = #groupSeq# AND tffs.comp_seq = #compSeq# AND org_seq = #empSeq#)
+	    <isNotNull property="depts">
+	    	<isNotEmpty property="depts"> 
+		  OR (tffs.org_type = 'D' AND tffs.group_seq = #groupSeq# AND tffs.comp_seq = #compSeq# AND org_seq IN ($depts$))
+		  	</isNotEmpty>
+		</isNotNull>
+	      )
+	    	</isNotEmpty>
+	    </isNotNull>
+	    -->
+	    WHERE ((tffs.org_type = 'E' AND tffs.group_seq = #groupSeq# AND org_seq = #empSeq#)
+	    <isNotNull property="depts">
+	    	<isNotEmpty property="depts"> 
+		  	OR (tffs.org_type = 'D' AND tffs.group_seq = #groupSeq# AND org_seq IN ($depts$))
+		  	</isNotEmpty>
+		</isNotNull>
+	      )
+		ORDER BY tffs.group_seq, tffs.comp_seq, tff.agent_id, tff.agent_key, tffs.fax_no
+	</select>
+	
+	
+	
+	<!-- 모바일 용 -->
+	<select id="faxDAO.getDeptPath" parameterClass="hashmap" resultClass="String">
+		SELECT REPLACE(path, '|', ',') FROM t_co_dept
+		WHERE dept_seq IN (
+		  	SELECT dept_seq
+		  	FROM t_co_emp_dept
+		  	WHERE group_seq = #groupSeq#
+		  	<isNotNull property="compSeq">
+		  		<isNotEmpty property="compSeq">
+		  		AND comp_seq = #compSeq#
+		  		</isNotEmpty>
+		  	</isNotNull>
+	        AND emp_seq = #empSeq#
+	        AND use_yn = 'Y'
+		  	)
+	</select>
+	
+	<select id="faxDAO.getUserCompList" parameterClass="hashmap" resultClass="String">
+		SELECT DISTINCT comp_seq
+		FROM t_co_emp_dept
+		WHERE group_seq = #groupSeq#
+		AND emp_seq = #empSeq#
+		AND use_yn = 'Y'
+	</select>
+	
+	<select id="faxDAO.getFaxNoListForMobile" parameterClass="hashmap" resultClass="hashmap">
+	    SELECT DISTINCT 
+	            tff.agent_id as "AgentID"
+	    	  , tff.agent_key as "AgentKey"
+	    	  , tffs.fax_no as "FaxNo"
+	   	FROM t_fx_fax_sync tffs
+        JOIN t_fx_fax tff
+        ON tffs.fax_seq = tff.fax_seq
+        <!-- 1차에서 겸직처리 없이 감 추후 겸직 처리 추가시 아래 WHERE 절 지우고 주석 제거
+        <isNotNull property="compSeq">
+		  	<isNotEmpty property="compSeq">
+	    WHERE ((tffs.org_type = 'E' AND tffs.group_seq = #groupSeq# AND tffs.comp_seq = #compSeq# AND org_seq = #empSeq#)
+	    <isNotNull property="depts">
+	    	<isNotEmpty property="depts"> 
+		  	OR (tffs.org_type = 'D' AND tffs.group_seq = #groupSeq# AND tffs.comp_seq = #compSeq# AND org_seq IN ($depts$))
+		  	</isNotEmpty>
+		</isNotNull>
+	      )
+	    	</isNotEmpty>
+	    </isNotNull>
+	    -->
+	    WHERE ((tffs.org_type = 'E' AND tffs.group_seq = #groupSeq# AND org_seq = #empSeq#)
+	    <isNotNull property="depts">
+	    	<isNotEmpty property="depts">
+		  	OR (tffs.org_type = 'D' AND tffs.group_seq = #groupSeq# AND org_seq IN ($depts$))
+		  	</isNotEmpty>
+		</isNotNull>
+	      )
+	    ORDER BY tffs.group_seq, tffs.comp_seq, tff.agent_id, tff.agent_key, tffs.fax_no
+	</select>
+	
+	<select id="faxDAO.getAlarmUserList" parameterClass="hashmap" resultClass="hashmap">
+		SELECT DISTINCT groupSeq, compSeq, empSeq
+		FROM (
+		    SELECT  tffs.group_seq as "groupSeq"
+		          , tffs.comp_seq as "compSeq"
+		          , tffs.org_seq as "empSeq"
+		    FROM t_fx_fax tff
+		    JOIN t_fx_fax_sync tffs
+		    ON tff.fax_seq = tffs.fax_seq
+		    WHERE tff.agent_id = #AgentID#
+		    AND tff.agent_key = #AgentKey#
+		    AND tffs.fax_no = #FaxNo#
+		    AND tffs.org_type = 'E'
+		    UNION
+		    SELECT  tced.group_seq as "groupSeq"
+		          , tced.comp_seq as "compSeq"
+		          , tced.emp_seq as "empSeq"
+		    FROM t_fx_fax tff
+		    JOIN t_fx_fax_sync tffs
+		    ON tff.fax_seq = tffs.fax_seq
+		    JOIN t_co_emp_dept tced
+		    ON tffs.org_type = 'D' AND tffs.group_seq = tced.group_seq AND tffs.org_seq = tced.dept_seq
+		    WHERE tff.agent_id = #AgentID#
+		    AND tff.agent_key = #AgentKey#
+		    AND tffs.fax_no = #FaxNo#
+		    AND tffs.org_type = 'D'
+		) A
+	</select>
+</sqlMap>

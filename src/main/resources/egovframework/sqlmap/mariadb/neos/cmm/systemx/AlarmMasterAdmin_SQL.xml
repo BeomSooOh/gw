@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="alarmMasterAdmin">
+
+	<typeAlias alias="alarmMasterVO" type="neos.cmm.systemx.alarm.master.vo.AlarmMasterVO"/>
+	<typeAlias alias="alarmAdminVO" type="neos.cmm.systemx.alarm.admin.vo.AlarmAdminVO"/>
+	
+	<select id="alarmMasterAdmin.selectAlarmInfo" parameterClass="hashmap" resultClass="egovMap">
+   			SELECT  
+			     oc.group_seq as grp_seq
+			    ,oc.gbn_org as gbn_org
+			    ,oc.comp_seq as comp_seq
+			    ,$DB_NEOS$FN_GetMultiLang(#langCode#,ccm.comp_name_multi) as comp_name
+			    ,oc.biz_seq as biz_seq
+			    ,$DB_NEOS$FN_GetMultiLang(#langCode#,cbm.biz_name_multi) as biz_name
+			    ,oc.dept_seq as dept_seq
+			    ,$DB_NEOS$FN_GetMultiLang(#langCode#,cdm.dept_name_multi) as dept_name
+			    ,oc.parent_seq as parent_seq
+			    ,oc.level as level
+			    ,oc.order_num as "order"
+			    ,oc.path
+			    ,(CASE WHEN oc.gbn_org = 'c' AND cb.display_yn = 'Y' THEN CONCAT(ccm.comp_name, '|', CONCAT(cbm.biz_name, '|', cdm.path_name))
+			        WHEN cb.display_yn = 'N' THEN CONCAT(ccm.comp_name, '|', cdm.path_name) END) as path_name
+			    ,a.member as member
+			    ,ifnull(am.alert_yn,'B') AS alert
+			    ,ifnull(am.push_yn,'B') AS push
+			    ,ifnull(am.talk_yn,'B') AS talk
+			    ,ifnull(am.mail_yn,'B') AS mail
+			    ,ifnull(am.sms_yn,'N') AS sms
+			    ,ifnull(am.portal_yn,'B') AS portal
+			    ,ifnull(am.timeline_yn,'B') AS timeline
+			FROM $DB_NEOS$v_org_chart oc
+			LEFT JOIN
+			(
+			    SELECT A.path, IFNULL(SUM(B.cnt), 0) AS member
+			    FROM $DB_NEOS$v_org_chart A
+			    LEFT JOIN
+			    (
+			        SELECT CASE WHEN cb.display_yn = 'Y' THEN CONCAT(cb.comp_seq, '|', CONCAT(cb.biz_seq, '|', cd.path))
+			            ELSE CONCAT(cb.comp_seq, '|', cd.path) END as path, COUNT(ed.emp_seq) cnt
+			        FROM $DB_NEOS$t_co_dept cd, $DB_NEOS$t_co_emp_dept ed, $DB_NEOS$t_co_biz cb
+			        WHERE ed.group_seq = #groupSeq#
+			        <isNotEmpty property="compSeqList">
+				    AND ed.comp_seq IN ($compSeqList$)
+				    </isNotEmpty>
+			            AND ed.group_seq = cd.group_seq
+			            AND ed.dept_seq = cd.dept_seq
+			            AND ed.group_seq = cb.group_seq
+			            AND ed.biz_seq = cb.biz_seq
+			            AND ed.use_yn = 'Y'
+			            AND cd.use_yn = 'Y'
+			            AND cb.use_yn = 'Y'
+			        GROUP BY cd.path
+			    ) B
+			    ON B.path like concat(A.path,'%')
+			    WHERE A.group_seq =  #groupSeq#
+			    <isNotEmpty property="compSeqList">
+			    and A.comp_seq IN ($compSeqList$)
+			    </isNotEmpty>
+			    GROUP BY A.path  
+			) a
+			ON oc.path = a.path
+			LEFT JOIN $DB_NEOS$t_co_biz cb
+			ON      oc.biz_seq = cb.biz_seq
+			LEFT JOIN $DB_NEOS$v_t_co_comp_multi ccm
+			ON      oc.comp_seq = ccm.comp_seq
+			LEFT JOIN $DB_NEOS$v_t_co_biz_multi cbm
+			ON      oc.biz_seq = cbm.biz_seq
+			LEFT JOIN $DB_NEOS$v_t_co_dept_multi cdm
+			ON      oc.dept_seq = cdm.dept_seq 
+			LEFT JOIN $DB_NEOS$t_alert_master am
+			ON	oc.comp_seq = am.comp_seq              
+			WHERE	oc.group_seq =  #groupSeq#
+			<isNotEmpty property="compSeqList">
+				and oc.comp_seq IN ($compSeqList$)
+			</isNotEmpty>
+			<isNotEmpty property="gbnOrgList">
+				and oc.gbn_org IN ($gbnOrgList$)
+			</isNotEmpty>
+				and am.use_yn = 'Y'
+			ORDER BY oc.path		
+	</select>
+	
+	<update id="alarmMasterAdmin.updateAlarm" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_alert_master SET
+			alert_yn = #alert#
+			, push_yn = #push#
+			, talk_yn = #talk#
+			, mail_yn = #mail#
+			, sms_yn = #sms#
+			, modify_seq = #modify_seq#
+			, modify_date = now()
+		WHERE comp_seq = #comp_seq# AND group_seq = #grp_seq#
+	</update>
+	
+	<update id="alarmMasterAdmin.updateAlarmAdmin" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_alert_admin SET
+		   alert_yn = CASE (#alert#)
+		   					 WHEN 'Y'   THEN (
+		   					 	CASE (alert_yn)
+		   					 	  WHEN 'B' THEN 'B'
+		   					 	  ELSE 'Y'
+		   					 	END  
+		   					 )
+		   					 ELSE alert_yn
+		   					 END
+		 , push_yn = CASE (#push#)
+		   					 WHEN 'Y'   THEN (
+		   					 	CASE (push_yn)
+		   					 	  WHEN 'B' THEN 'B'
+		   					 	  ELSE 'Y'
+		   					 	END  
+		   					 )
+		   					 ELSE push_yn
+		   					 END
+		 , talk_yn = CASE (#talk#)
+		   					 WHEN 'Y'   THEN (
+		   					 	CASE (talk_yn)
+		   					 	  WHEN 'B' THEN 'B'
+		   					 	  ELSE 'Y'
+		   					 	END  
+		   					 )
+		   					 ELSE talk_yn
+		   					 END
+		  , mail_yn = CASE (#mail#)
+		   					 WHEN 'Y'   THEN (
+		   					 	CASE (mail_yn)
+		   					 	  WHEN 'B' THEN 'B'
+		   					 	  ELSE 'N'
+		   					 	END  
+		   					 )
+		   					 ELSE mail_yn
+		   					 END
+		  , sms_yn = CASE (#sms#)
+		   					 WHEN 'Y'   THEN (
+		   					 	CASE (sms_yn)
+		   					 	  WHEN 'B' THEN 'B'
+		   					 	  ELSE 'N'
+		   					 	END  
+		   					 )
+		   					 ELSE sms_yn
+		   					 END  					 
+	   WHERE comp_seq = #comp_seq# AND group_seq = #grp_seq#
+		 
+	</update>
+	
+	
+	<!-- Admin 부분 -->
+	<select id="alarmAdminMenu.selectAlarmMenu" parameterClass="hashmap" resultClass="egovMap">
+		SELECT  DISTINCT flag_1, flag_2
+		FROM $DB_NEOS$t_co_code_detail ccd
+  		JOIN $DB_NEOS$t_alert_setting a ON ccd.code='COM510' AND ccd.detail_code = a.alert_type
+    	LEFT JOIN $DB_NEOS$t_alert_admin aa ON a.alert_type = aa.alert_type and aa.comp_seq = #compSeq#
+		WHERE ccd.use_yn = 'Y'
+		ORDER BY order_num		
+	</select>
+	
+	<select id = "alarmAdminMenu.selectAlarmMenuDetail" parameterClass = "hashmap" resultClass="egovMap">
+		SELECT
+		#compSeq# as comp_seq,
+		#groupSeq# as group_seq,
+		ifnull(a.alert_type,aa.alert_type) as alert_type,
+		ifnull(a.alert_yn,aa.alert_yn) AS admin_alert,
+		ifnull(a.push_yn,aa.push_yn) AS admin_push, 
+		ifnull(a.talk_yn,aa.talk_yn) AS admin_talk,
+		ifnull(a.mail_yn,aa.mail_yn) AS admin_mail, 
+		ifnull(a.sms_yn,aa.sms_yn) AS admin_sms,
+		ifnull(a.portal_yn,aa.portal_yn) AS admin_portal,
+		ifnull(a.timeline_yn,aa.timeline_yn) AS admin_timeline,
+		ifnull(am.alert_yn,'B') AS master_alert,
+		ifnull(am.push_yn,'B') AS master_push,
+		ifnull(am.talk_yn,'B') AS master_talk,
+		ifnull(am.mail_yn,'B') AS master_mail,
+		ifnull(am.sms_yn,'N') AS master_sms,
+		ifnull(am.portal_yn,'B') AS master_portal, 
+		ifnull(am.timeline_yn,'B') AS master_timeline, 
+		ccd.flag_1,
+		$DB_NEOS$FN_GetMultiLang(#langCode#, ccdmFlag.detail_name_multi) as flag_2,
+		$DB_NEOS$FN_GetMultiLang(#langCode#, ccdm.detail_name_multi) as detail_name,
+		$DB_NEOS$FN_GetMultiLang(#langCode#, ccdm.note) as note
+		FROM $DB_NEOS$t_alert_setting aa
+		JOIN $DB_NEOS$t_co_comp c ON c.comp_seq = #compSeq# and ((ifnull(c.ea_type,'eap') = 'eap' and aa.divide_type != 'EA') or (ifnull(c.ea_type,'eap') = 'ea' and aa.divide_type != 'EAP'))
+		LEFT JOIN $DB_NEOS$t_alert_master am ON aa.comp_seq = am.comp_seq
+		LEFT JOIN $DB_NEOS$t_alert_admin a ON aa.alert_type = a.alert_type and a.comp_seq = #compSeq#
+		JOIN $DB_NEOS$t_co_code_detail ccd ON aa.alert_type = ccd.detail_code and ccd.code = 'COM510'
+		JOIN $DB_NEOS$v_t_co_code_detail_multi ccdm ON ccd.code = ccdm.code and aa.alert_type = ccdm.detail_code
+		JOIN $DB_NEOS$v_t_co_code_detail_multi ccdmFlag ON ccd.flag_1 = ccdmFlag.detail_code AND ccdmFlag.code='ALARAM'
+		WHERE ccd.use_yn = 'Y'
+		<isNotEmpty property="codeValue">
+		AND   ccd.flag_1 = #codeValue#
+		</isNotEmpty>
+		ORDER BY ccd.flag_1,ccd.order_num,ifnull(a.alert_type,aa.alert_type)
+	</select>
+	
+	<select id="alarmAdminMenu.selectAlarmMasterSetting" parameterClass = "hashmap" resultClass="egovMap">
+		SELECT
+		#compSeq# as comp_seq, 
+		#groupSeq# as group_seq,
+		alert_yn as alert,
+		push_yn as push,
+		talk_yn as talk,
+		mail_yn as mail,
+		sms_yn as sms,
+		portal_yn as portal,
+		timeline_yn as timeline
+		FROM $DB_NEOS$t_alert_master
+		WHERE use_yn = 'Y'
+		ORDER BY CASE WHEN comp_seq = #compSeq# THEN 0 ELSE 1 END
+		LIMIT 1;	
+	</select>
+	
+ 	<update id="alarmMasterAdmin.updateAlarmDetail" parameterClass = "hashmap">
+		UPDATE $DB_NEOS$t_alert_admin SET
+		  alert_yn = #alertYN#
+		  , push_yn = #pushYN#
+		  , talk_yn = #talkYN#
+		  , mail_yn = #mailYN#
+		  , sms_yn = #smsYN#
+		  , portal_yn = #portalYN#
+		  , timeline_yn = #timelineYN#
+		  , modify_seq = #modifySeq#
+		  , modify_date = NOW()
+		WHERE comp_seq = #compSeq# 
+		    AND group_seq = #groupSeq# 
+		    AND alert_type=#alertType#
+	</update> 
+	
+	<select id="alarmAdminMenu.selectAlarmModule" parameterClass = "hashmap" resultClass="egovMap">
+		SELECT
+		#compSeq# as comp_seq,
+		#groupSeq# as group_seq,
+		ifnull(a.alert_type,aa.alert_type) as alert_type,
+		ifnull(a.alert_yn,aa.alert_yn) AS admin_alert,
+		ifnull(a.push_yn,aa.push_yn) AS admin_push, 
+		ifnull(a.talk_yn,aa.talk_yn) AS admin_talk,
+		ifnull(a.mail_yn,aa.mail_yn) AS admin_mail, 
+		ifnull(a.sms_yn,aa.sms_yn) AS admin_sms,
+		ifnull(a.portal_yn,aa.portal_yn) AS admin_portal,
+		ifnull(a.timeline_yn,aa.timeline_yn) AS admin_timeline,
+		ifnull(am.alert_yn,'B') AS master_alert,
+		ifnull(am.push_yn,'B') AS master_push,
+		ifnull(am.talk_yn,'B') AS master_talk,
+		ifnull(am.mail_yn,'B') AS master_mail,
+		ifnull(am.sms_yn,'N') AS master_sms,
+		ifnull(am.portal_yn,'B') AS master_portal, 
+		ifnull(am.timeline_yn,'B') AS master_timeline, 
+		ccd.flag_1,
+		$DB_NEOS$FN_GetMultiLang(#langCode#, ccdmFlag.detail_name_multi) as flag_2,
+		$DB_NEOS$FN_GetMultiLang(#langCode#, ccdm.detail_name_multi) as detail_name,
+		$DB_NEOS$FN_GetMultiLang(#langCode#, ccdm.note) as note
+		FROM $DB_NEOS$t_alert_setting aa
+		JOIN $DB_NEOS$t_co_comp c ON c.comp_seq = #compSeq# and ((ifnull(c.ea_type,'eap') = 'eap' and aa.divide_type != 'EA') or (ifnull(c.ea_type,'eap') = 'ea' and aa.divide_type != 'EAP'))
+		LEFT JOIN $DB_NEOS$t_alert_master am ON aa.comp_seq = am.comp_seq
+		LEFT JOIN $DB_NEOS$t_alert_admin a ON aa.alert_type = a.alert_type and a.comp_seq = #compSeq#
+		JOIN $DB_NEOS$t_co_code_detail ccd ON aa.alert_type = ccd.detail_code and ccd.code = 'COM510'
+		JOIN $DB_NEOS$v_t_co_code_detail_multi ccdm ON ccd.code = ccdm.code and aa.alert_type = ccdm.detail_code
+		JOIN $DB_NEOS$v_t_co_code_detail_multi ccdmFlag ON ccd.flag_1 = ccdmFlag.detail_code AND ccdmFlag.code='ALARAM'
+		WHERE ccd.use_yn = 'Y'
+		<isNotEmpty property="codeValue">
+		AND   ccd.flag_1 = #codeValue#
+		</isNotEmpty>
+	</select>
+	
+	<select id="alarmAdminMenu.alarmSettingCheck" parameterClass = "hashmap" resultClass="egovMap">
+		SELECT * 
+		FROM 
+		  (SELECT ccd.detail_code, ccd.code, ccd.flag_1, ccd.flag_2, ccd.use_yn, ccdm.detail_name  
+		   FROM   $DB_NEOS$t_co_code_detail ccd
+		  JOIN $DB_NEOS$v_t_co_code_detail_multi ccdm
+		  ON   ccd.code = ccdm.code 
+		  WHERE ccd.code = ccdm.code
+		   AND ccd.detail_code = ccdm.detail_code
+		   AND ccd.code = 'COM510'
+		   AND ccd.use_yn = 'Y'
+		  ) A
+		  LEFT OUTER JOIN $DB_NEOS$t_alert_admin aa
+		  ON A.detail_code = aa.alert_type AND aa.group_seq = #groupSeq# AND aa.comp_seq = #compSeq#
+		WHERE aa.alert_type IS NULL
+	</select>
+	
+	<insert id="alarmAdminMenu.alarmSetting" parameterClass="java.util.Map" >    <!--  -->
+		INSERT ignore INTO $DB_NEOS$t_alert_admin 
+		select  #compSeq# as comp_seq
+		 		, #groupSeq# as group_seq
+		 		, #detailCode# as alert_type
+		 		, alert_yn
+		 		, push_yn
+		 		, talk_yn
+		 		, mail_yn
+		 		, sms_yn
+		 		, portal_yn
+		 		, timeline_yn
+		 		, use_yn
+		 		, create_seq
+		 		, now()
+		 		, modify_seq
+		 		, now() 
+		from  $DB_NEOS$t_alert_setting
+		where alert_type=#detailCode#
+	</insert>
+	
+	
+	
+	<select id = "alarmAdminMenu.selectAlarmItemMenuDetail" parameterClass = "hashmap" resultClass="egovMap">
+		SELECT
+		#compSeq# as comp_seq,
+		ifnull(a.alert_type,aa.alert_type) as alert_type,
+		ccd.detail_code,
+		ifnull(a.alert_yn,aa.alert_yn) AS alert,
+		ifnull(a.push_yn,aa.push_yn) AS push, 
+		ifnull(a.talk_yn,aa.talk_yn) AS talk,
+		ifnull(a.mail_yn,aa.mail_yn) AS mail, 
+		ifnull(a.sms_yn,aa.sms_yn) AS sms,
+		ifnull(a.portal_yn,aa.portal_yn) AS portal,
+		ccd.flag_1 moduleTp,
+		$DB_NEOS$FN_GetMultiLang(#langCode#, ccdmFlag.detail_name_multi) as moduleNm,
+		$DB_NEOS$FN_GetMultiLang(#langCode#, ccdm.detail_name_multi) as detail_name,
+		$DB_NEOS$FN_GetMultiLang(#langCode#, ccdm.note) as note
+		FROM $DB_NEOS$t_alert_setting aa
+		JOIN $DB_NEOS$t_co_comp c ON c.comp_seq = #compSeq# and ((ifnull(c.ea_type,'eap') = 'eap' and aa.divide_type != 'EA') or (ifnull(c.ea_type,'eap') = 'ea' and aa.divide_type != 'EAP'))
+		LEFT JOIN $DB_NEOS$t_alert_master am ON aa.comp_seq = am.comp_seq
+		LEFT JOIN $DB_NEOS$t_alert_admin a ON aa.alert_type = a.alert_type and a.comp_seq = #compSeq#
+		JOIN $DB_NEOS$t_co_code_detail ccd ON aa.alert_type = ccd.detail_code and ccd.code = 'COM510' and ccd.detail_code = #detailCode#
+		JOIN $DB_NEOS$v_t_co_code_detail_multi ccdm ON ccd.code = ccdm.code and aa.alert_type = ccdm.detail_code
+		JOIN $DB_NEOS$v_t_co_code_detail_multi ccdmFlag ON ccd.flag_1 = ccdmFlag.detail_code AND ccdmFlag.code='ALARAM'
+		WHERE ccd.use_yn = 'Y'
+		limit 1
+	</select>
+	
+</sqlMap>

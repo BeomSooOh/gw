@@ -1,0 +1,42 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<!--css-->
+<link rel="stylesheet" type="text/css" href="/gw/js/portlet/css/common.css">
+<link rel="stylesheet" type="text/css" href="/gw/js/portlet/css/portlet.css">
+
+<!--js-->
+<script type="text/javascript" src="/gw/js/portlet/Scripts/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="/gw/js/portlet/Scripts/common.js"></script>
+
+<!-- 메인 js -->
+<script type="text/javascript" src="/gw/js/portlet/Scripts/jquery.alsEN-1.0.min.js"></script>
+<script type="text/javascript" src="/gw/js/portlet/Scripts/jquery.bxslider.min.js"></script>
+
+<script type="text/javascript">
+
+	var portletBannerKey = window.location.search.split("=")[1];
+
+	$(document).ready(function(){
+	  	
+		// 배너슬라이드
+		$( ".bxslider" ).bxSlider({
+			 pause: "3000",
+			 speed: "1000",
+			 mode:  "fade",
+			 pager: true,
+			 auto: true,        					 
+			 autoHover: true,        					 
+			 controls: false,
+			 onSliderLoad: function(){
+				 parent.fnBannerImgSetCallback(portletBannerKey);
+			 }
+		});
+	});
+</script>
+
+<div class="i_banner">
+	<ul class="bxslider">
+		<li><img width="100%" height="100%" src="/gw/Images/portal/demo/main_img01.png" alt="" /></li>
+		<li><img width="100%" height="100%" src="/gw/Images/portal/demo/main_img02.png" alt="" /></li>
+		<li><img width="100%" height="100%" src="/gw/Images/portal/demo/main_img03.png" alt="" /></li>
+	</ul>
+<div>

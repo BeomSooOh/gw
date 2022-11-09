@@ -1,0 +1,352 @@
+package api.menuAccess.service.impl;
+
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.log4j.Logger;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+
+import api.menuAccess.constants.MenuAccessConstants;
+import io.searchbox.action.Action;
+import io.searchbox.client.JestClient;
+import io.searchbox.client.JestResult;
+import io.searchbox.core.Bulk;
+import io.searchbox.core.BulkResult;
+import io.searchbox.core.BulkResult.BulkResultItem;
+import io.searchbox.core.Delete;
+import io.searchbox.core.DocumentResult;
+import io.searchbox.core.Index;
+import io.searchbox.indices.CreateIndex;
+import io.searchbox.indices.DeleteIndex;
+import io.searchbox.indices.mapping.GetMapping;
+import io.searchbox.indices.mapping.PutMapping;
+import io.searchbox.params.Parameters;
+import main.constants.CommonConstants;
+import main.constants.FormatConstants;
+import main.service.impl.CustomSearchClient;
+import main.web.BizboxAMessage;
+import neos.cmm.vo.Result;
+
+// 메뉴사용내역 인덱스 처리 클래스
+public class MenuAccessIndex{
+    private CustomSearchClient searchClient;
+    private static String suffixIndexName;
+    private static String indexName;
+
+    private Logger logger = Logger.getLogger(MenuAccessIndex.class);
+
+    public MenuAccessIndex(CustomSearchClient searchClient) {
+        this.searchClient = searchClient;
+        
+        init();
+    }
+
+    public CustomSearchClient getSearchClient() {
+        return searchClient;
+    }
+
+    /**
+     * 메뉴사용내역 인덱스 생성
+     * 초 분 시 일 월 주(년)
+     */
+//    @Scheduled(cron="0 0 0 1 * ?")
+//    public void checkNewIndex(){
+//        init();
+//    }
+    /**
+     * 초기화 로직
+     * 스프링에서 객체가 최초 생성시에도 호출함
+     */
+    public void init(){
+
+        indexName = MenuAccessConstants.EL_INDEX_MENU_ACCESS;
+        
+        IndexInitialize(MenuAccessConstants.EL_INDEX_MENU_ACCESS);
+    }
+    /**
+     * 초기화 로직
+     * 회사 리스트와 생성날짜를 입력받아, 인덱스를 생성하여 별칭에 연결하고 매핑들을 생성한다.
+     */
+    public synchronized void IndexInitialize(String indexName){		
+        try {
+            this.createIndex(indexName);
+            this.createType(indexName, MenuAccessConstants.EL_TYPE_MENU_ACCESS, this.getMenuAccessMapper());
+        } catch (IOException e) {
+            logger.error("menu_access 인덱스 생성 실패", e);
+        }
+    }
+    /**
+     * 메뉴사용내역 데이터가 저장되는 타입을 JSON string으로 작성하여 반환.
+     * @return
+     * @throws IOException 
+     */
+    private String getMenuAccessMapper() throws IOException{
+        XContentBuilder builder = jsonBuilder()
+                .startObject()
+                    .startObject("properties")
+                        .startObject("groupSeq").field("type", "string").field("index", "not_analyzed").endObject()
+                        .startObject("empSeq").field("type", "string").field("index", "not_analyzed").endObject()
+                        .startObject("empName").field("type", "string").field("index", "not_analyzed").endObject()
+                        .startObject("loginId").field("type", "string").field("index", "not_analyzed").endObject()
+                        .startObject("langCode").field("type", "string").field("index", "not_analyzed").endObject()
+                        .startObject("useDate").field("type","date").field("format", FormatConstants.FORMAT_DATE_TIME).endObject()
+                        .startObject("typeCode").field("type", "string").field("index", "not_analyzed").endObject()
+                        .startObject("menuNo").field("type", "string").field("index", "not_analyzed").endObject()
+                        .startObject("menuName").field("type", "string").field("index", "not_analyzed").endObject()
+                        .startObject("menuSubNo").field("type", "string").field("index", "not_analyzed").endObject()  // mobile
+                        .startObject("menuSubName").field("type", "string").field("index", "not_analyzed").endObject()  // mobile
+                        .startObject("useDevice").field("type", "string").field("index", "not_analyzed").endObject() // mobile
+                        .startObject("useModel").field("type", "string").field("index", "not_analyzed").endObject() // mobile
+                        .startObject("menuAuth").field("type", "string").field("index", "not_analyzed").endObject() // web
+                        .startObject("accessIp").field("type", "string").field("index", "not_analyzed").endObject() // web
+                    .endObject()
+                .endObject();
+
+        return builder.string();
+    }
+
+
+    /**
+     * 인덱스명을 입력받아 해당 인덱스가 없으면 새로 생성하고 alias에 등록
+     * @param indexName
+     * @return
+     * @throws IOException
+     */
+    public boolean createIndex(String indexName) throws IOException{		
+
+        //이미 있는 인덱스인지 확인
+        if(searchClient.isExistIndex(indexName)){
+            return true;
+        }
+
+        Settings.Builder settings = Settings.builder();
+        settings.put("number_of_shards", 3);
+        settings.put("number_of_replicas", 1);
+        settings.put("analysis.analyzer.whitespace.tokenizer", "whitespace");
+        settings.put("analysis.analyzer.whitespace.filter", "trim, lowercase");
+
+        JestClient client = searchClient.getJestInstance();
+        //새 인덱스로 생성 후 별칭에 등록
+        Action indexCreateAction = new CreateIndex.Builder(indexName).settings(settings).build();
+        JestResult createIndexResult = client.execute(indexCreateAction);
+        if(!createIndexResult.isSucceeded()){
+            logger.error("MENU_ACCESS 인덱스 생성 실패. indexName=" + indexName + ", msg=" + createIndexResult.getErrorMessage());
+            return false;
+        }
+
+//        Action addIndexToAliases = new ModifyAliases.Builder(
+//                new AddAliasMapping.Builder(indexName, MenuAccessConstants.EL_ALIAS_NAME_MENU_ACCESS).build()
+//                ).build();
+//
+//        JestResult addAliasResult = client.execute(addIndexToAliases);
+//        if(!addAliasResult.isSucceeded()){
+//            logger.error("MENU_ACCESS Alias에 인덱스 연결 실패. aliasName=" + MenuAccessConstants.EL_ALIAS_NAME_MENU_ACCESS + ", msg=" + addAliasResult.getErrorMessage());
+//            return false;
+//        }
+
+        return true;
+    }
+
+    /**
+     * 타입 생성.
+     * @param indexName
+     * @param typeName
+     * @param source
+     * @return
+     * @throws IOException
+     */
+    public boolean createType(String indexName, String typeName, String source) throws IOException{
+        //해당 타입이 이미 있는지 체크 후 있으면 바로 종료
+        if(searchClient.isExistType(indexName, typeName)){
+            return true;
+        }
+        //타입이 없으면 새로 생성 시도
+        Action putMapping = new PutMapping.Builder(indexName, typeName, source).build();
+        JestResult putMappingResult = searchClient.getJestInstance().execute(putMapping);
+        if(!putMappingResult.isSucceeded()){
+            logger.error("타입 생성 실패. indexName=" + indexName + ", typeName=" + typeName + ", msg=" + putMappingResult.getErrorMessage() + ", source=" + source);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 인덱스 삭제
+     * @param indexName
+     * @return
+     * @throws IOException
+     */
+    public boolean deleteIndex(String indexName) throws IOException{
+        // 인덱스 확인
+        if(!searchClient.isExistIndex(indexName)){
+            return true;
+        }
+
+        JestClient client = searchClient.getJestInstance();
+        Action indexDeleteAction = new DeleteIndex.Builder(indexName).build();
+        JestResult deleteIndexResult = client.execute(indexDeleteAction);
+        if(!deleteIndexResult.isSucceeded()){
+            logger.error("MENU_ACCESS 인덱스 삭제 실패. indexName=" + indexName + ", msg=" + deleteIndexResult.getErrorMessage());
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * 현재월의 인덱스 구분값을 반환.
+     * @return
+     */
+    public static String getIndexSuffixName(){
+        return suffixIndexName;
+    }
+
+    /**
+     * 인덱스명을 반환
+     * @return
+     */
+    public static String getIndexName(){
+        return indexName;
+    }
+
+    /**
+     * 해당 인덱스가 있는지 확인하고 결과를 반환한다.
+     * @return
+     */
+    public boolean isExistIndex(String indexName) throws IOException{
+        return searchClient.isExistIndex(indexName);
+    }
+    
+    /**
+     * 인덱스 필드 타입 체크
+     * @return
+     */
+    public String getIndexFieldType(String indexName, String fieldName) throws IOException{
+        
+        JestClient client = searchClient.getJestInstance();
+        
+        Action mapping = new GetMapping.Builder().build(); 
+
+        JestResult mappingResult = client.execute(mapping);
+        
+        String fieldType = mappingResult
+                .getJsonObject().get(indexName)
+                .getAsJsonObject().get("mappings")
+                .getAsJsonObject().get(indexName)
+                .getAsJsonObject().get("properties")
+                .getAsJsonObject().get(fieldName)
+                .getAsJsonObject().get("type")
+                .getAsString()
+                ;
+        return fieldType;
+    }
+    
+    /**
+     * 검색어 정보를 입력받아 검색엔진에 등록하고 _id 값을 반환한다.
+     * @param source json 형식의 입력값
+     * @return Result 객체. 결과 Obj 값은 _id:String
+     * @throws IOException 
+     */
+    public Result insert(String source) throws IOException{
+        Index index = new Index
+                .Builder(source)
+                .index(this.indexName)
+                .type(MenuAccessConstants.EL_TYPE_MENU_ACCESS)
+                .setParameter(Parameters.REFRESH, true)
+                .refresh(true)
+                .build();
+
+//        logger.debug("InsertMenuAccessList. query=" + index);
+        DocumentResult result = searchClient.getJestInstance().execute(index);
+        if(!result.isSucceeded()){
+            logger.error("InsertMenuAccessList. Failed to insert menu access list. msg=" + result.getErrorMessage());
+            return new Result(CommonConstants.API_RESPONSE_FAIL, result.getErrorMessage());
+        }
+
+        return new Result(CommonConstants.API_RESPONSE_SUCCESS, BizboxAMessage.getMessage("TX000011955","성공하였습니다"));
+    }
+    
+
+    /**
+     * 
+     */
+    public Result insertBulk(List<Map<String, Object>> reqList) throws IOException{
+        
+//        System.out.println("menuAccessIndex.insertBulk(reqList) size : " + reqList.size());
+        
+        Bulk.Builder bulkBuilder = new Bulk.Builder();
+        for(int i = 1; i <= reqList.size(); i++){
+            Map<String, Object> reqMap = reqList.get(i-1);
+            bulkBuilder.addAction(new Index.Builder(reqMap)
+                    .index(this.indexName)
+                    .type(MenuAccessConstants.EL_TYPE_MENU_ACCESS)
+                    .setParameter(Parameters.REFRESH, true)
+                    .refresh(true)
+                    .build()
+                    );
+            
+            //100건씩 처리 또는 마지막 남은 리스트
+            if(i % MenuAccessConstants.INSERT_BULK_CNT == 0 || i == reqList.size()){
+                Bulk bulkRequest = bulkBuilder.refresh(true).build();
+                BulkResult bulkResult = searchClient.getJestInstance().execute(bulkRequest);
+                if(!bulkResult.isSucceeded()){
+                    logger.error("MenuAccessIndex-insertBulk. Failed to insert mention receivers. msg= " + bulkResult.getErrorMessage());
+                    for(BulkResultItem item : bulkResult.getFailedItems()){
+                        logger.error("MenuAccessIndex-insertBulk. operation=" + item.operation + ", error=" + item.error + ", item=/" + item.index + "/" + item.type + "/" + item.id);
+                        return new Result(CommonConstants.API_RESPONSE_FAIL
+                                , BizboxAMessage.getMessage("TX000002299","저장에 실패하였습니다.") + " MenuAccessIndex-insertBulk. Failed to insert mention receivers. msg=" + bulkResult.getErrorMessage()
+                                , "MenuAccessIndex-insertBulk. operation=" + item.operation + ", error=" + item.error + ", item=/" + item.index + "/" + item.type + "/" + item.id);
+                    }
+                }
+                
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    logger.error("MenuAccessIndex-insertBulk. Thread sleep interrupted msg=" + e.getMessage(), e);
+                }
+                bulkBuilder = new Bulk.Builder(); 
+            }
+        }
+
+        return new Result(CommonConstants.API_RESPONSE_SUCCESS, BizboxAMessage.getMessage("TX000011955","성공하였습니다"), "Insert count :"+ reqList.size());
+    }
+
+    /**
+     * 
+     */
+    public Result deleteBulk(List<String> reqList) throws IOException{
+
+//        System.out.println("menuAccessIndex.deleteBulk(reqList) size : " + reqList.size());
+        Bulk.Builder bulkBuilder = new Bulk.Builder();
+
+        for (int i = 0; i < reqList.size(); i++) {
+            bulkBuilder.addAction(new Delete.Builder(reqList.get(i)).index(this.indexName).type(MenuAccessConstants.EL_TYPE_MENU_ACCESS).refresh(true).build());
+
+            if(MenuAccessConstants.DELETE_BULK_CNT == i+1 || reqList.size() == i+1 ){
+                Bulk bulkRequest = bulkBuilder.refresh(true).build();
+                BulkResult bulkResult = searchClient.getJestInstance().execute(bulkRequest);
+                if(!bulkResult.isSucceeded()){
+                    logger.error("MenuAccessIndex-deleteBulk. Failed to delete mention receivers. msg= " + bulkResult.getErrorMessage());
+                    for(BulkResultItem item : bulkResult.getFailedItems()){
+                        logger.error("MenuAccessIndex-deleteBulk. operation=" + item.operation + ", error=" + item.error + ", item=/" + item.index + "/" + item.type + "/" + item.id);
+                        return new Result(CommonConstants.API_RESPONSE_FAIL
+                                , BizboxAMessage.getMessage("TX000002106","삭제에 실패하였습니다.") + " MenuAccessIndex-deleteBulk. Failed to delete mention receivers. msg=" + bulkResult.getErrorMessage()
+                                , "MenuAccessIndex-deleteBulk. operation=" + item.operation + ", error=" + item.error + ", item=/" + item.index + "/" + item.type + "/" + item.id);
+                    }
+                }
+
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    logger.error("MenuAccessIndex-deleteBulk. Thread sleep interrupted msg=" + e.getMessage(), e);
+                }
+            }
+        }
+
+        return new Result(CommonConstants.API_RESPONSE_SUCCESS, BizboxAMessage.getMessage("TX000011955","성공하였습니다"));
+    }
+}

@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="DutyPositionManage">
+	
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	
+	     <select id="DutyPositionManage.selectCompDutyPositionList" parameterClass="hashmap" resultClass="egovMap">
+	        /* DutyPositionManage.selectCompDutyPositionList - oracle */
+	     	SELECT NVL(a.dp_seq, '') AS "dpSeq",
+				   NVL(a.group_seq, '') AS "groupSeq",
+				   MIN(NVL(a.comp_seq, '')) KEEP (DENSE_RANK FIRST ORDER BY a.dp_seq, a.group_seq, a.comp_seq, a.dp_type) AS "compSeq",
+				   NVL(a.dp_type, '') AS "dpType",
+				   MIN(NVL(a.use_yn, '')) KEEP (DENSE_RANK FIRST ORDER BY a.dp_seq, a.group_seq, a.comp_seq, a.dp_type) AS "useYn",
+				   MIN(NVL(a.order_num, '')) KEEP (DENSE_RANK FIRST ORDER BY a.dp_seq, a.group_seq, a.comp_seq, a.dp_type) AS "orderNum",
+				   MIN(NVL(b.lang_code, 'kr')) KEEP (DENSE_RANK FIRST ORDER BY a.dp_seq, a.group_seq, a.comp_seq, a.dp_type) AS "langCode",
+				   MIN(NVL(b.dp_name, '')) KEEP (DENSE_RANK FIRST ORDER BY a.dp_seq, a.group_seq, a.comp_seq, a.dp_type) AS "dpName",
+				   MIN(NVL(b.desc_text, '')) KEEP (DENSE_RANK FIRST ORDER BY a.dp_seq, a.group_seq, a.comp_seq, a.dp_type) AS "descText",
+				   MIN(NVL(b.comment_text, '')) KEEP (DENSE_RANK FIRST ORDER BY a.dp_seq, a.group_seq, a.comp_seq, a.dp_type) AS "commentText",
+				   'file' AS "spriteCssClass"
+	     	FROM $DB_NEOS$t_co_comp_duty_position a left outer join $DB_NEOS$t_co_comp_duty_position_multi b on a.dp_seq = b.dp_seq
+			WHERE 
+				 b.lang_code = #langCode#
+				 AND a.use_yn = 'Y'
+				<isNotEmpty property="dpSeq">
+				AND	a.dp_seq = #dpSeq#
+				</isNotEmpty>
+				<isNotEmpty property="dpName">
+				AND	b.dp_name like ('%$dpName$%')
+				</isNotEmpty>
+				<isEmpty property="dpSeq">
+				<isNotEmpty property="compSeq">
+			    AND a.comp_seq in (#compSeq#, '0')
+				AND b.comp_seq in (#compSeq#, '0')
+				</isNotEmpty>
+				AND a.dp_type = #dpType#
+				AND b.dp_type = #dpType#
+				AND a.group_seq = #groupSeq#
+				</isEmpty>
+				<isNotEmpty property="notInDpSeqList">
+				AND a.dp_seq NOT IN ($notInDpSeqList$)
+				</isNotEmpty>
+			group by a.dp_seq, a.group_seq, a.dp_type
+	     	ORDER BY a.dp_seq, a.group_seq, a.dp_type
+	     		     	
+	     </select> 	     
+	     
+	     <select id="DutyPositionManage.getDutyPositionList" parameterClass="hashmap" resultClass="egovMap">
+	        /* DutyPositionManage.getDutyPositionList - oracle */
+	     	SELECT a.dp_seq
+                 , a.group_seq
+                 , a.comp_seq
+                 , a.dp_type
+                 , MIN(a.use_yn) KEEP (DENSE_RANK FIRST ORDER BY a.group_seq, a.comp_seq, a.dp_seq, a.dp_type) AS use_yn
+                 , MIN(a.order_num) KEEP (DENSE_RANK FIRST ORDER BY a.group_seq, a.comp_seq, a.dp_seq, a.dp_type) AS order_num
+	             , MIN(b.lang_code) KEEP (DENSE_RANK FIRST ORDER BY a.group_seq, a.comp_seq, a.dp_seq, a.dp_type) AS lang_code
+	     	     , MIN($DB_NEOS$FN_GetMultiLang(#langCode#,b.dp_name_multi)) KEEP (DENSE_RANK FIRST ORDER BY a.group_seq, a.comp_seq, a.dp_seq, a.dp_type) as dp_name
+	     	     , MIN(b.desc_text) KEEP (DENSE_RANK FIRST ORDER BY a.group_seq, a.comp_seq, a.dp_seq, a.dp_type) AS desc_text
+                 , MIN(b.comment_text) KEEP (DENSE_RANK FIRST ORDER BY a.group_seq, a.comp_seq, a.dp_seq, a.dp_type) AS comment_text
+	     	     , MIN($DB_NEOS$get_code_detail_info('0', 'COM521', a.use_yn, #langCode#)) KEEP (DENSE_RANK FIRST ORDER BY a.group_seq, a.comp_seq, a.dp_seq, a.dp_type) AS use_yn_nm
+	     	     , MIN(CASE WHEN NVL(a.comp_seq, '0' ) = '0' 
+	     	                THEN $DB_NEOS$get_code_detail_info('0', 'option0005', '1', #langCode#) 
+	     	                ELSE $DB_NEOS$FN_GetMultiLang(#langCode#,CM.COMP_NAME_MULTI) 
+	     	           END) KEEP (DENSE_RANK FIRST ORDER BY a.group_seq, a.comp_seq, a.dp_seq, a.dp_type) AS COMP_NAME
+	     	FROM  $DB_NEOS$t_co_comp_duty_position a 
+	     	left outer join 
+	     	      $DB_NEOS$v_co_comp_duty_position_multi b 
+	     	on    a.dp_seq = b.dp_seq
+	     	and   a.comp_seq = b.comp_seq
+	     	and   a.dp_type = b.dp_type
+	     	LEFT JOIN 
+	     	      $DB_NEOS$V_T_CO_COMP_MULTI CM
+	     	ON    a.comp_seq   = CM.COMP_SEQ
+	     	AND   CM.USE_YN    = 'Y' 
+	     	LEFT JOIN 
+                  $DB_NEOS$T_CO_GROUP G
+	     	ON    a.group_seq   = G.GROUP_SEQ
+	     	AND   G.USE_YN    = 'Y'  
+	     	WHERE a.group_seq = #groupSeq# 
+			<isNotEmpty property="dpSeq">
+	     	AND	  a.dp_seq = #dpSeq#
+			</isNotEmpty>
+			<isNotEmpty property="dpName">
+	     	AND	  (b.dp_name like ('%$dpName$%') or a.dp_seq like ('%$dpName$%'))
+			</isNotEmpty>
+			<isNotEmpty property="useYn">
+	     	AND	  a.use_yn = #useYn#			
+	     	</isNotEmpty>
+	     	<isNotEmpty property="compSeq"> <!-- 회사선택할경우 -->
+	     	AND a.comp_seq  = #compSeq#
+	     	AND ',' || #compSeq# || ',' like '%,' || a.comp_seq || ',%'
+	     	</isNotEmpty> 
+	     	<isEmpty property="compSeq" >  <!-- 전체선택할경우  -->
+             <isNotEqual property="userSe" compareValue="MASTER"> 
+	     	AND a.comp_seq in( #loginCompSeq# , '0')  <!-- 로그인 관리자 회사코드 -->
+	     	</isNotEqual>
+	     	</isEmpty>	     	
+	     	AND   a.dp_type = #dpType#
+	     	group by a.group_seq, a.comp_seq, a.dp_seq, a.dp_type
+	     	ORDER BY a.group_seq, a.comp_seq, a.dp_seq, a.dp_type
+	     </select> 
+	     
+	     <select id="DutyPositionManage.getDutyPositionSeqCheck" parameterClass="hashmap" resultClass="Integer">
+	        /* DutyPositionManage.getDutyPositionSeqCheck - oracle */
+	     	SELECT count(*)
+	     	FROM  $DB_NEOS$t_co_comp_duty_position a
+	     	WHERE a.dp_seq = #dpSeq#
+	     	AND   a.dp_type = #dpType#	     	
+	     </select> 
+	     
+	     <select id="DutyPositionManage.getDutyPositionSeqLangInfo" parameterClass="hashmap" resultClass="egovMap">
+	     	/* DutyPositionManage.getDutyPositionSeqLangInfo - oracle */
+		     select kr.dp_seq
+		          , MIN(NVL(kr.dp_name,'')) KEEP (DENSE_RANK FIRST ORDER BY kr.dp_seq) as dp_name_kr
+				  , MIN(NVL(en.dp_name,'')) KEEP (DENSE_RANK FIRST ORDER BY kr.dp_seq) as dp_name_en
+				  , MIN(NVL(cn.dp_name,'')) KEEP (DENSE_RANK FIRST ORDER BY kr.dp_seq) as dp_name_cn
+				  , MIN(NVL(jp.dp_name,'')) KEEP (DENSE_RANK FIRST ORDER BY kr.dp_seq) as dp_name_jp
+				  , MIN(NVL(kr.comment_text,'')) KEEP (DENSE_RANK FIRST ORDER BY kr.dp_seq) as comment_text
+			   from 
+			        ((($DB_NEOS$t_co_comp_duty_position_multi kr 
+			        		left join $DB_NEOS$t_co_comp_duty_position_multi en 
+			        			on(((en.lang_code = 'en') 
+			        			and (kr.group_seq = en.group_seq) 
+			        			and (kr.comp_seq = en.comp_seq) 
+			        			and (kr.dp_type = en.dp_type) 
+			        			and (kr.dp_seq = en.dp_seq)))) 
+			        		left join $DB_NEOS$t_co_comp_duty_position_multi jp 
+			        			on(((jp.lang_code = 'jp') 
+			        			and (kr.group_seq = jp.group_seq) 
+			        			and (kr.comp_seq = jp.comp_seq) 
+			        			and (kr.dp_type = jp.dp_type) 
+			        			and (kr.dp_seq = jp.dp_seq)))) 
+			        		left join $DB_NEOS$t_co_comp_duty_position_multi cn 
+			        			on(((cn.lang_code = 'cn') 
+			        			and (kr.group_seq = cn.group_seq) 
+			        			and (kr.comp_seq = cn.comp_seq) 
+			        			and (kr.dp_type = cn.dp_type) 
+			        			and (kr.dp_seq = cn.dp_seq))))
+			  where kr.dp_seq = #dpSeq#
+			    and kr.lang_code ='kr'
+			    and kr.dp_type = #dpType#
+			  group by kr.dp_seq
+	    </select>
+	    
+	     <select id="DutyPositionManage.getDutyPositionInfo" parameterClass="hashmap" resultClass="egovMap">
+	        /* DutyPositionManage.getDutyPositionInfo - oracle */
+	     	SELECT a.dp_seq, a.group_seq, a.comp_seq, a.dp_type, a.use_yn, a.order_num
+	     	      , b.lang_code, $DB_NEOS$FN_GetMultiLang(#langCode#, b.dp_name_multi) as dp_name, b.desc_text, b.comment_text
+	     	FROM  $DB_NEOS$t_co_comp_duty_position a 
+	     	join  $DB_NEOS$v_t_co_comp_duty_position_multi b 
+	     	on    a.dp_seq = b.dp_seq
+	     	and   a.dp_type = b.dp_type
+	     	WHERE a.dp_seq = #dpSeq#
+	     	AND   a.dp_type = #dpType#	   
+	     	AND   ROWNUM = 1 	
+	     </select> 	     
+	     
+	     <select id="DutyPositionManage.getDutyPositionUserCnt" parameterClass="hashmap" resultClass="Integer">
+	        /* DutyPositionManage.getDutyPositionUserCnt - oracle */
+	        SELECT count(*) 
+	          FROM $DB_NEOS$t_co_emp e
+	         INNER JOIN $DB_NEOS$t_co_emp_dept ed
+	            ON e.emp_seq = ed.emp_seq
+	         INNER JOIN $DB_NEOS$t_co_comp c  <!-- 회사사용여부 -->
+	            ON ed.comp_seq = c.comp_seq
+	           AND c.use_yn = 'Y'
+	         WHERE e.work_status = '999' and ed.use_yn = 'Y' and ed.main_dept_yn = 'Y'
+	        <isEqual property="dpType" compareValue="DUTY">
+	           AND ed.duty_code = #dpSeq#
+	        </isEqual>
+	        <isEqual property="dpType" compareValue="POSITION">
+	           AND ed.position_code = #dpSeq#
+	        </isEqual>
+	     </select>
+	    
+	    <insert id="DutyPositionManage.insertDutyPosition" parameterClass="hashmap">
+	        /* DutyPositionManage.insertDutyPosition - oracle */
+	        MERGE INTO $DB_NEOS$t_co_comp_duty_position
+		    USING DUAL
+		       ON (dp_seq  = #dpSeq#
+		      AND  dp_type = #dpType#)
+             WHEN MATCHED THEN
+                  UPDATE SET use_yn      = #useYn#  
+				           , comp_seq    = #compSeq# 
+				           , order_num   = #orderNum#  
+				           , modify_seq  = #empSeq#  
+				           , modify_date = SYSDATE
+             WHEN NOT MATCHED THEN
+                  INSERT (
+                          group_seq   
+				        , dp_seq      
+				        , comp_seq    
+				        , dp_type     
+				        , use_yn      
+				        , order_num   
+				        , create_seq  
+				        , create_date 	
+		    		     )
+		    		    
+		          VALUES (
+		                  #groupSeq#
+				        , #dpSeq#  
+				        , #compSeq#  
+				        , #dpType#  
+				        , #useYn#  
+				        , #orderNum#  
+				        , #empSeq#  
+				        , SYSDATE	
+		                 )  
+	    </insert>
+	     
+	    <update id="DutyPositionManage.insertDutyPositionMulti" parameterClass="hashmap">
+	        /* DutyPositionManage.insertDutyPositionMulti - oracle */
+		    MERGE INTO $DB_NEOS$t_co_comp_duty_position_multi
+		    USING DUAL
+		       ON (dp_seq    = #dpSeq#
+		      AND  lang_code = #multilangCode#
+		      AND  dp_type   = #dpType#)
+             WHEN MATCHED THEN
+                  UPDATE SET dp_name      = #dpName#  
+				           , desc_text    = #descText#  
+				           , comp_seq     = #compSeq# 
+				           , comment_text = #commentText#  
+				           , use_yn       = #useYn#  
+				           , modify_seq   = #empSeq#  
+				           , modify_date  = SYSDATE
+             WHEN NOT MATCHED THEN
+                  INSERT (
+                          group_seq    
+				        , dp_seq       
+				        , lang_code    
+				        , comp_seq     
+				        , dp_type      
+				        , dp_name      
+				        , desc_text    
+				        , comment_text 
+				        , use_yn       
+				        , create_seq   
+				        , create_date  
+		    		     )
+		    		    
+		          VALUES (
+		                  #groupSeq#  
+				        , #dpSeq#  
+				        , #multilangCode#  
+				        , #compSeq#  
+				        , #dpType#  
+				        , #dpName#  
+				        , #descText#  
+				        , #commentText#  
+				        , #useYn#  
+				        , #empSeq#  
+				        , SYSDATE
+		                 )  
+		    
+	    </update>
+	    	    
+	    <delete id="DutyPositionManage.deleteDutyPosition" parameterClass="hashmap">
+	        /* DutyPositionManage.deleteDutyPosition - oracle */
+	    	DELETE 
+	    	FROM  $DB_NEOS$t_co_comp_duty_position 
+	    	WHERE dp_seq    = #dpSeq#
+	    	AND   group_seq = #groupSeq#
+	    	AND   dp_type   = #dpType#
+	    </delete>
+	    
+	    <delete id="DutyPositionManage.deleteDutyPositionMulti" parameterClass="hashmap">
+	        /* DutyPositionManage.deleteDutyPositionMulti - oracle */
+	    	DELETE 
+	    	FROM  $DB_NEOS$t_co_comp_duty_position_multi 
+	    	WHERE dp_seq    = #dpSeq#	  
+	    	AND   group_seq = #groupSeq#
+	    	AND   dp_type   = #dpType#  	
+	    </delete>
+ 
+ 
+ 		<insert id="DutyPositionManageService.insertDutyPositionBatch" parameterClass="hashmap">
+ 			/* DutyPositionManageService.insertDutyPositionBatch - oracle */
+ 			INSERT INTO $DB_NEOS$t_co_dutyposition_batch
+ 			(
+ 				batch_seq
+		      , seq 
+		      , comp_seq
+		      , dp_seq 
+		      , dp_type
+		      , dp_name
+		      , order_num
+ 			)
+ 			VALUES
+ 			(
+ 				#batchSeq# 
+		      ,	#seq# 
+		      ,	#compSeq# 
+		      ,	#dpSeq#  
+		      ,	#dpType#
+		      ,	#dpName# 
+		      ,	#orderNum#
+ 			)
+				 
+ 		</insert>
+
+
+		<select id="DutyPositionManageService.CheckPositionBatchInfo" parameterClass="hashmap" resultClass="egovMap">
+			/* DutyPositionManageService.CheckPositionBatchInfo - oracle */
+			select
+				a.batch_seq,
+				a.seq,
+				a.comp_seq,
+				a.dp_seq,
+				a.dp_type,
+				a.dp_name, 
+				CASE WHEN b.dp_seq IS NULL THEN '0' ELSE '-1' END "checkDpSeq",
+				CASE WHEN a.dp_name = '' THEN '-1' ELSE '0' END "checkDpNameIsNone",
+				CASE WHEN a.dp_seq = '' THEN '-1' ELSE '0' END "checkDpSeqIsNone"
+			from $DB_NEOS$t_co_dutyposition_batch a
+			left join $DB_NEOS$t_co_comp_duty_position b on a.dp_seq = b.dp_seq AND a.dp_type = b.dp_type
+			where a.batch_seq = #retKey#	
+			order by a.order_num	
+		</select>
+		
+		
+		
+		<select id="DutyPositionManageService.getDutyPositionBatchList" resultClass="egovMap" parameterClass="java.util.HashMap">
+			/* DutyPositionManageService.getDutyPositionBatchList - oracle */
+			select
+				batch.batch_seq,
+				batch.seq,
+				batch.comp_seq,
+				batch.dp_seq,
+				batch.dp_type,
+				batch.dp_name,
+				batch.order_num		
+			from $DB_NEOS$t_co_dutyposition_batch batch
+			where batch.batch_seq = #batchKey# and batch.seq in 
+	   		<iterate property="saveList" prepend="" open="(" close=")"  conjunction="," >
+		   		#saveList[].seq#
+	   		</iterate>	
+    	</select>
+    	
+    	<update id="DutyPositionManage.insertDutyPositionBatch" parameterClass="egovMap">
+    		/* DutyPositionManage.insertDutyPositionBatch - oracle */
+	    	MERGE INTO $DB_NEOS$t_co_comp_duty_position
+		    USING DUAL
+		       ON (dp_seq  = #dpSeq#
+		      AND  dp_type = #dpType#)
+             WHEN MATCHED THEN
+                  UPDATE SET use_yn      = #useYn#  
+				           , order_num   = #orderNum#  
+				           , modify_seq  = #empSeq#  
+				           , modify_date = SYSDATE
+             WHEN NOT MATCHED THEN
+                  INSERT (
+                          group_seq   
+				        , dp_seq      
+				        , comp_seq    
+				        , dp_type     
+				        , use_yn      
+				        , order_num   
+				        , create_seq  
+				        , create_date 
+		    		     )
+		    		    
+		          VALUES (
+		                  #groupSeq#
+				        , #dpSeq#  
+				        , #compSeq#  
+				        , #dpType#  
+				        , #useYn#  
+				        , #orderNum#  
+				        , #empSeq#  
+				        , SYSDATE
+		                 )  
+	    </update>
+	     
+	    <update id="DutyPositionManage.insertDutyPositionMultiBatch" parameterClass="egovMap">
+	    	/* DutyPositionManage.insertDutyPositionMultiBatch - oracle */
+		    MERGE INTO $DB_NEOS$t_co_comp_duty_position_multi
+		    USING DUAL
+		       ON (dp_seq    = #dpSeq#
+		      AND  lang_code = #multilangCode#
+		      AND  dp_type   = #dpType#)
+             WHEN MATCHED THEN
+                  UPDATE SET dp_name      = #dpName#  
+				           , desc_text    = #descText#  
+				           , comment_text = #commentText#  
+				           , use_yn       = #useYn#  
+				           , modify_seq   = #empSeq#  
+				           , modify_date  = SYSDATE
+             WHEN NOT MATCHED THEN
+                  INSERT (
+                          group_seq    
+				        , dp_seq       
+				        , lang_code    
+				        , comp_seq     
+				        , dp_type      
+				        , dp_name      
+				        , desc_text    
+				        , comment_text 
+				        , use_yn       
+				        , create_seq   
+				        , create_date  
+		    		     )
+		    		    
+		          VALUES (
+		                  #groupSeq#  
+				        , #dpSeq#  
+				        , #multilangCode#  
+				        , #compSeq#  
+				        , #dpType#  
+				        , #dpName#  
+				        , #descText#  
+				        , #commentText#  
+				        , #useYn#  
+				        , #empSeq#  
+				        , SYSDATE
+		                 )  
+		    
+	    </update> 
+	    
+	    <delete id="DutyPositionManage.delDutyPositionMulti" parameterClass="hashmap">
+	    	/* DutyPositionManage.delDutyPositionMulti - oracle */
+	    	delete from $DB_NEOS$t_co_comp_duty_position_multi
+	    	where dp_seq = #dpSeq# and lang_code = #langCode# and dp_type = #dpType#
+	    </delete>
+</sqlMap>

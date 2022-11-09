@@ -1,0 +1,16 @@
+package ebp.portalView.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import ebp.portalView.vo.RelatedLink;
+import egovframework.com.cmm.service.impl.EgovComAbstractDAO;
+
+@Repository("RelatedDAO")
+public class RelatedDAO extends EgovComAbstractDAO {
+	public List<RelatedLink> selectRelatedLink(Map<String, Object> reqParams) {
+		return list("relatedDAO.selectRelatedLink", reqParams);
+	}
+}

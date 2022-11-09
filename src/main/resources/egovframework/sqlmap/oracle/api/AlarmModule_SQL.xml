@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="alarmModule">
+     <typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+     <typeAlias  alias="alarmVO" type="api.alarm.vo.AlarmVO"/>
+     
+	<select id="alarmModule.getAlarmModuleList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT  aa.comp_seq,
+			aa.group_seq,
+			aa.alert_type,
+			aa.alert_yn AS admin_alert,
+			aa.push_yn AS admin_push, 
+			aa.talk_yn AS admin_talk,
+			aa.mail_yn AS admin_mail, 
+			aa.sms_yn AS admin_sms,
+			aa.portal_yn AS admin_portal,
+			aa.timeline_yn AS admin_timeline,
+			am.alert_yn AS master_alert,
+			am.push_yn AS master_push,
+			am.talk_yn AS master_talk,
+			am.mail_yn AS master_mail,
+			am.sms_yn AS master_sms,
+			am.portal_yn AS master_portal, 
+			am.timeline_yn AS master_timeline, 
+			ccd.flag_1,
+			ccd.flag_2,
+			ccdm.detail_name
+		FROM 	t_alert_admin aa
+		   JOIN t_alert_master am
+		     ON aa.comp_seq = am.comp_seq AND aa.group_seq = am.group_seq
+		   JOIN t_co_code_detail ccd
+		     ON aa.alert_type = ccd.detail_code
+		   JOIN t_co_code_detail_multi ccdm
+		     ON aa.alert_type = ccdm.detail_code
+		WHERE   aa.comp_seq = #compSeq# 
+		    AND   aa.group_seq = #groupSeq# 
+		    AND   ccd.use_yn = 'Y' 
+		    AND   ccdm.lang_code = #langCode#
+		<isNotEmpty property="codeValue">
+			AND LOWER(flag_1) = LOWER(#codeValue#)
+		</isNotEmpty>
+	</select>
+
+	<update id="alamrModule.updateAlarmModule" parameterClass="hashmap">
+		UPDATE t_alert_admin SET
+		  alert_yn = #alert_yn#
+		  , push_yn = #push_yn#
+		  , talk_yn = #talk_yn#
+		  , mail_yn = #mail_yn#
+		  , sms_yn = #sms_yn#
+		  , portal_yn = #portal_yn#
+		  , timeline_yn = #timeline_yn#
+		  , modify_seq = #empSeq#
+		  , modify_date = SYSDATE
+		WHERE comp_seq = #compSeq# 
+		    AND group_seq = #groupSeq# 
+		    AND alert_type=#alarmType#
+	</update>
+</sqlMap>

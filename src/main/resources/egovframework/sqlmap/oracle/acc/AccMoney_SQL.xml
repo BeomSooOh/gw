@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="AccMoneyFormDAO">
+
+    
+    <select id="AccMoneyFormDAO.SelectComp" resultClass="hashmap" parameterClass="hashmap">
+    	/* AccMoneyFormDAO.SelectComp - oracle */
+	    SELECT seq AS "seq"
+	         , parent_seq AS "parent_seq"
+	         , comp_name AS "comp_name"
+	         , display_name AS "display_name"
+	         , order_num AS "order_num" 
+	      FROM $DB_NEOS$v_org_chart_all
+		 WHERE gbn_org = 'c'
+		 ORDER BY order_num
+    </select>
+
+	<insert id="AccMoneyFormDAO.InsertMoneyForm" parameterClass="hashmap">
+		/* AccMoneyFormDAO.InsertMoneyForm - oracle */
+		INSERT INTO $DB_NEOS$teag_form_money 
+		(comp_seq, form_nm, form_tp, form_d_tp, use_yn, created_dt, file_id)
+		VALUES
+		( #comp_seq#, #file_nm#, 'ea0023', 'ba3000', '0', SYSDATE, #file_id#)
+		
+	</insert>
+	
+	<select id="AccMoneyFormDAO.SelectFormBySeq" resultClass="hashmap" parameterClass="hashmap">
+		/* AccMoneyFormDAO.SelectFormBySeq - oracle */
+        SELECT *
+          FROM (SELECT tfm.form_id AS "form_id"
+                     , tfm.form_nm AS "form_nm"
+                     , tfm.comp_seq AS "comp_seq"
+                     , tfm.file_id AS "file_id"
+                     , afd.file_size AS "file_size" 
+                  FROM $DB_NEOS$teag_form_money tfm, $DB_NEOS$t_co_atch_file_detail afd
+		         WHERE tfm.file_id = afd.file_id
+		           AND tfm.comp_seq = #comp_seq#
+		         ORDER BY form_id DESC)
+		 WHERE ROWNUM = 1
+    </select>
+	
+	
+</sqlMap>

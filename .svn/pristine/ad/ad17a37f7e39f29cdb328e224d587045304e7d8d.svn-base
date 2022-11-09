@@ -1,0 +1,243 @@
+package ebp.portalView.controller;
+
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import api.common.model.APIResponse;
+import bizbox.orgchart.service.vo.LoginVO;
+import ebp.portalView.constants.RelatedSearchConstants;
+import ebp.portalView.service.EbpRelatedSearchService;
+import egovframework.com.cmm.util.EgovUserDetailsHelper;
+import main.constants.CommonConstants;
+import main.web.BizboxAMessage;
+import neos.cmm.systemx.secGrade.constant.Constant;
+import neos.cmm.util.MessageUtil;
+import net.sf.json.JSONObject;
+
+@Controller
+@RequestMapping("/ebp/portalView")
+public class EbpRelatedSearchController {
+	
+	@Resource(name = "EbpRelatedSearchService")
+	EbpRelatedSearchService ebpRelatedSearchService;
+	
+	/* 변수정의 로그 */
+	private Logger logger = Logger.getLogger(EbpRelatedSearchController.class);
+
+	/*
+	 * 연관 검색어/메뉴 index 저장(related_search/related_search) 
+	 */
+	@RequestMapping(value="/saveRelatedSearchKeyword.do", method={RequestMethod.GET, RequestMethod.POST})
+	@ResponseBody
+	public APIResponse saveRelatedSearchKeyword(@RequestParam Map<String, String> reqParams, HttpServletRequest servletRequest) throws Exception {
+		APIResponse response = new APIResponse();
+	
+		logger.debug("/saveRelatedSearchKeyword.do Request Params: " + JSONObject.fromObject(reqParams).toString());
+		
+		try{
+			
+			LoginVO loginVO = (LoginVO) EgovUserDetailsHelper.getAuthenticatedUser();
+			
+			if(loginVO == null) {
+				MessageUtil.setApiMessage(response, servletRequest, "systemx.login.", "LOGIN004");
+				return response;
+			}
+			//Validation
+			if(!validateForSaveRelatedSearchKeyword(reqParams, response)) {
+				logger.debug("/saveRelatedSearchKeyword.do Response: " + JSONObject.fromObject(response).toString());
+				return response;
+			}
+			reqParams.put("compSeq", loginVO.getCompSeq());
+			reqParams.put("groupSeq", loginVO.getGroupSeq());
+			reqParams.put("deptSeq", loginVO.getOrgnztId());
+			reqParams.put("empSeq", loginVO.getUniqId());
+			reqParams.put("langCode", loginVO.getLangCode());
+			//연관검색어/메뉴 elasticsearch 저장처리
+			ebpRelatedSearchService.saveRelatedSearchKeyword(reqParams);
+			
+			response.setResultCode(CommonConstants.API_RESPONSE_SUCCESS);
+			response.setResultMessage(BizboxAMessage.getMessage("TX000011955","성공하였습니다"));
+		}catch(Exception e){
+			response.setResultCode(CommonConstants.API_RESPONSE_FAIL);
+			response.setResultMessage(e.getMessage());	
+		}
+		
+		logger.debug("/saveRelatedSearchKeyword.do Response: " + JSONObject.fromObject(response).toString());
+	
+		return response;		
+	}
+	
+	private boolean validateForSaveRelatedSearchKeyword(Map<String, String> reqParams,
+			APIResponse response) {
+		if(!reqParams.containsKey("saveType")) {
+			response.setResultCode(Constant.API_RESPONSE_FAIL);
+			response.setResultMessage("NOT CONTAINS KEY [saveType] in body");
+			return false;
+		}
+		
+		String saveType = reqParams.get("saveType");
+		
+		if(RelatedSearchConstants.TYPE_RELATED_MENU.equals(saveType)) {
+			if(!reqParams.containsKey("searchWord")) {
+				response.setResultCode(Constant.API_RESPONSE_FAIL);
+				response.setResultMessage("NOT CONTAINS KEY [searchWord] in body");
+				return false;
+			}
+			if(!reqParams.containsKey("menuModule")) {
+				response.setResultCode(Constant.API_RESPONSE_FAIL);
+				response.setResultMessage("NOT CONTAINS KEY [menuModule] in body");
+				return false;
+			}
+			if(!reqParams.containsKey("menuId")) {
+				response.setResultCode(Constant.API_RESPONSE_FAIL);
+				response.setResultMessage("NOT CONTAINS KEY [menuId] in body");
+				return false;
+			}
+			if(!reqParams.containsKey("menuName")) {
+				response.setResultCode(Constant.API_RESPONSE_FAIL);
+				response.setResultMessage("NOT CONTAINS KEY [menuName] in body");
+				return false;
+			}
+		}else if(RelatedSearchConstants.TYPE_RELATED_SEARCH_WORD.equals(saveType)) {
+			if(!reqParams.containsKey("searchWord")) {
+				response.setResultCode(Constant.API_RESPONSE_FAIL);
+				response.setResultMessage("NOT CONTAINS KEY [searchWord] in body");
+				return false;
+			}
+			if(!reqParams.containsKey("relatedSearchWord")) {
+				response.setResultCode(Constant.API_RESPONSE_FAIL);
+				response.setResultMessage("NOT CONTAINS KEY [relatedSearchWord] in body");
+				return false;
+			}
+		}else {
+			return false;
+		}
+		return true;
+	}
+	/*
+	 * 최근검색어 조회(tsearch_word/search_word) 
+	 */
+	@RequestMapping(value="/getRelatedSearchKeyword.do", method={RequestMethod.GET, RequestMethod.POST})
+	@ResponseBody
+	public APIResponse getRecentSearchKeyword(@RequestParam Map<String, String> reqParams, HttpServletRequest servletRequest) throws Exception {
+		APIResponse response = new APIResponse();
+	
+		logger.debug("/getRelatedSearchKeyword.do Request Params: " + JSONObject.fromObject(reqParams).toString());
+		
+		try{
+			
+			LoginVO loginVO = (LoginVO) EgovUserDetailsHelper.getAuthenticatedUser();
+			
+			if(loginVO == null) {
+				MessageUtil.setApiMessage(response, servletRequest, "systemx.login.", "LOGIN004");
+				return response;
+			}
+			
+			//Validation
+			if(!validateForGetRelatedSearchKeyword(reqParams, response)) {
+				logger.debug("/getRelatedSearchKeyword.do Response: " + JSONObject.fromObject(response).toString());
+				return response;
+			}
+			
+			response.setResult(ebpRelatedSearchService.getRelatedSearchKeyword(reqParams));
+			response.setResultCode(CommonConstants.API_RESPONSE_SUCCESS);
+			response.setResultMessage(BizboxAMessage.getMessage("TX000011955","성공하였습니다"));
+		}catch(Exception e){
+			response.setResultCode(CommonConstants.API_RESPONSE_FAIL);
+			response.setResultMessage(e.getMessage());	
+		}
+		
+		logger.debug("/getRelatedSearchKeyword.do Response: " + JSONObject.fromObject(response).toString());
+	
+		return response;		
+	}
+	
+	private boolean validateForGetRelatedSearchKeyword(Map<String, String> reqParams,
+			APIResponse response) {
+		if(!reqParams.containsKey("type")) {
+			response.setResultCode(Constant.API_RESPONSE_FAIL);
+			response.setResultMessage("NOT CONTAINS KEY [type] in body");
+			return false;
+		}
+		if(!reqParams.containsKey("searchWord")) {
+			response.setResultCode(Constant.API_RESPONSE_FAIL);
+			response.setResultMessage("NOT CONTAINS KEY [searchWord] in body");
+			return false;
+		}
+		if(!reqParams.containsKey("size")) {
+			response.setResultCode(Constant.API_RESPONSE_FAIL);
+			response.setResultMessage("NOT CONTAINS KEY [size] in body");
+			return false;
+		}
+		return true;
+	}
+	/*
+	 * 연관 링크 조회 
+	 */
+	@RequestMapping(value="/getRelatedLink.do", method={RequestMethod.GET, RequestMethod.POST})
+	@ResponseBody
+	public APIResponse getRelatedLink(@RequestParam Map<String, Object> reqParams, HttpServletRequest servletRequest) throws Exception {
+		APIResponse response = new APIResponse();
+	
+		logger.debug("/getRelatedLink.do Request Params: " + JSONObject.fromObject(reqParams).toString());
+		
+		try{
+			
+			LoginVO loginVO = (LoginVO) EgovUserDetailsHelper.getAuthenticatedUser();
+			
+			if(loginVO == null) {
+				MessageUtil.setApiMessage(response, servletRequest, "systemx.login.", "LOGIN004");
+				return response;
+			}
+			reqParams.put("compSeq", loginVO.getCompSeq());
+			reqParams.put("groupSeq", loginVO.getGroupSeq());
+			reqParams.put("deptSeq", loginVO.getOrgnztId());
+			reqParams.put("empSeq", loginVO.getUniqId());
+			reqParams.put("langCode", loginVO.getLangCode());
+			//Validation
+			if(!validateForGetRelatedLink(reqParams, response)) {
+				logger.debug("/getRelatedLink.do Response: " + JSONObject.fromObject(response).toString());
+				return response;
+			}
+			
+			response.setResult(ebpRelatedSearchService.getRelatedLink(reqParams));
+			response.setResultCode(CommonConstants.API_RESPONSE_SUCCESS);
+			response.setResultMessage(BizboxAMessage.getMessage("TX000011955","성공하였습니다"));
+		}catch(Exception e){
+			response.setResultCode(CommonConstants.API_RESPONSE_FAIL);
+			response.setResultMessage(e.getMessage());	
+		}
+		
+		logger.debug("/getRelatedLink.do Response: " + JSONObject.fromObject(response).toString());
+	
+		return response;		
+	}
+	
+	private boolean validateForGetRelatedLink(Map<String, Object> reqParams,
+			APIResponse response) {
+		
+		if(!reqParams.containsKey("searchWord")) {
+			response.setResultCode(Constant.API_RESPONSE_FAIL);
+			response.setResultMessage("NOT CONTAINS KEY [searchWord] in body");
+			return false;
+		}
+		
+		if(!reqParams.containsKey("count")) {
+			response.setResultCode(Constant.API_RESPONSE_FAIL);
+			response.setResultMessage("NOT CONTAINS KEY [count] in body");
+			return false;
+		}
+		
+		return true;
+	}
+	
+}

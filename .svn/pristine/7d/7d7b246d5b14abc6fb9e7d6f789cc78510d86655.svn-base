@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CodeManage">
+	
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	
+	<select id="CodeManage.selectCmmCodeList" parameterClass="hashmap" resultClass="hashMap">
+       <!-- MariaDB *CodeManage.selectCmmCodeList* 공통코드 리스트 조회 -->
+        SELECT  A.CODE
+			 ,  B.NAME_MULTI NAME    
+			 ,  $DB_NEOS$FN_GetMultiLang(#langCode#, B.NAME_MULTI) NAMEMULTI    	
+             ,  B.NOTE NOTE
+             ,  A.USE_YN
+          FROM  $DB_NEOS$T_CO_CODE A
+             ,  $DB_NEOS$V_T_CO_CODE_MULTI B
+         WHERE  A.CODE = B.CODE  
+         <isNotEmpty property="searchType">        
+         <isEqual property="searchType" compareValue="0">
+           AND A.CODE like CONCAT('%',ifnull(#searchKeyword#,''),'%') 
+         </isEqual>
+         <isEqual property="searchType" compareValue="1">
+           AND $DB_NEOS$FN_GetMultiLang(#langCode#, B.NAME_MULTI) like CONCAT('%',ifnull(#searchKeyword#,''),'%') 
+         </isEqual>
+         </isNotEmpty>
+         <isNotEmpty property="popSearch">
+           AND CONCAT( A.CODE , $DB_NEOS$FN_GetMultiLang(#langCode#, B.NAME_MULTI)) like CONCAT('%',ifnull(#searchKeyword#,''),'%') 	
+         </isNotEmpty>
+    </select>
+    
+    <select id="CodeManage.selectCmmCodeDetailList" parameterClass="hashmap" resultClass="hashMap">
+    <!-- MariaDB *CodeManage.selectCmmCodeDetailListt* 공통코드상세 리스트 조회 -->	
+    	SELECT A.DETAIL_CODE
+		     , $DB_NEOS$FN_GetMultiLang(#langCode#, B.DETAIL_NAME_MULTI) as DETAIL_NAME
+		     , DETAIL_NAME_MULTI as DETAIL_NAME_MULTI
+		     , $DB_NEOS$FN_GetMultiLang(#langCode#, C.NAME_MULTI) AS CODE_NAME			 		 	
+		     , B.NOTE
+		     , B.USE_YN
+		  FROM $DB_NEOS$T_CO_CODE_DETAIL A
+		     , $DB_NEOS$V_T_CO_CODE_DETAIL_MULTI B
+		     , $DB_NEOS$V_T_CO_CODE_MULTI C
+		 WHERE A.DETAIL_CODE = B.DETAIL_CODE
+		   AND A.CODE = C.CODE
+		   AND B.CODE = C.CODE
+		 <isNotEmpty property="searchType">        
+         <isEqual property="searchType" compareValue="0">
+           AND A.DETAIL_CODE like CONCAT('%',ifnull(#searchKeyword#,''),'%') 
+         </isEqual>
+         <isEqual property="searchType" compareValue="1">
+           AND $DB_NEOS$FN_GetMultiLang(#langCode#, B.DETAIL_NAME_MULTI) like CONCAT('%',ifnull(#searchKeyword#,''),'%') 
+         </isEqual>
+         </isNotEmpty>
+		 ORDER BY A.DETAIL_CODE 
+    </select>
+    
+    <insert id="CodeManage.insertCodeProc" parameterClass="hashMap">
+    <!-- MariaDB *CodeManage.insertCodeProc* 공통코드 저장 -->
+    	
+    	INSERT
+              INTO  $DB_NEOS$T_CO_CODE
+                 (  CODE
+                 ,  USE_YN
+                 ,  CREATE_SEQ
+                 ,  CREATE_DATE
+                 ,  MODIFY_SEQ
+                 ,  MODIFY_DATE
+                 )
+            VALUES
+                 (  #codeId#
+                 ,  #useYn#
+                 ,  #loginVO.uniqId#
+                 ,  now()
+                 ,  #loginVO.uniqId#
+                 ,  now()
+                 )
+    </insert>
+    
+    <insert id="CodeManage.insertCodeMultiProc" parameterClass="hashMap">
+    <!-- MariaDB *CodeManage.insertCodeMultiProc* 공통코드 Multi 저장 -->	
+    	INSERT
+              INTO  $DB_NEOS$T_CO_CODE_MULTI
+                 (  CODE
+                 ,  LANG_CODE
+                 ,  NAME
+                 ,  NOTE
+                 ,  USE_YN
+                 ,  CREATE_SEQ
+                 ,  CREATE_DATE
+                 ,	MODIFY_SEQ
+                 ,	MODIFY_DATE
+                 )
+            VALUES
+                 (  #codeId#
+                 ,  #langCode#
+                 ,	#codeNm#
+                 ,	#codeDesc#
+                 ,  #useYn#
+                 ,  #loginVO.uniqId#
+                 ,  now()
+                 ,  #loginVO.uniqId#
+                 ,  now()
+                 )
+    </insert>
+    
+    <update id="CodeManage.updateCmmCode" parameterClass="hashMap">
+    <!-- MariaDB *CodeManage.updateCmmCode* 공통코드 업데이트 -->
+    
+         UPDATE  $DB_NEOS$T_CO_CODE
+            SET  USE_YN        = #useYn#
+              ,  MODIFY_SEQ    = #loginVO.uniqId#
+              ,  MODIFY_DATE = now()
+          WHERE  CODE          = #codeId#
+    </update>
+    
+    <update id="CodeManage.updateCmmCodeMulti" parameterClass="hashMap">
+    <!-- MariaDB *CodeManage.updateCmmCodeMulti* 공통코드 Multi 업데이트 -->	
+
+          INSERT INTO $DB_NEOS$`T_CO_CODE_MULTI`
+			SET 
+				CODE 					= 			#codeId#,
+				LANG_CODE				= 			#langCode#,
+				NAME 					= 			#codeNm#,				
+				NOTE					= 			#codeDesc#,
+				USE_YN					= 			#useYn#,
+				CREATE_SEQ				= 			#loginVO.uniqId#,
+				CREATE_DATE				= 			#now()#				
+			ON DUPLICATE KEY UPDATE				
+				NAME 					= 			#codeNm#,				
+				NOTE					= 			#codeDesc#,
+				USE_YN					= 			#useYn#,
+				MODIFY_SEQ				= 			#loginVO.uniqId#,
+				MODIFY_DATE				= 			#now()#
+    </update>
+
+	<delete id="CodeManage.deleteCmmCode" parameterClass="hashMap">
+    <!-- MariaDB *CodeManage.deleteCmmCode* 공통코드  삭제 -->			
+		DELETE FROM $DB_NEOS$T_CO_CODE
+		 WHERE CODE =  #codeId#
+	
+	</delete>
+	 
+	 <delete id="CodeManage.deleteCmmCodeMulti" parameterClass="hashMap">
+    <!-- MariaDB *CodeManage.deleteCmmCodeMulti* 공통코드 Multi  삭제 -->				
+		DELETE FROM $DB_NEOS$T_CO_CODE_MULTI
+		 WHERE CODE =  #codeId#
+	
+	</delete>
+		
+		
+	<delete id="CodeManage.deleteCmmCodeMultiLang" parameterClass="hashMap">
+		DELETE FROM $DB_NEOS$t_co_code_multi
+		WHERE CODE = #codeId# AND lang_code = #langCode#
+	</delete>
+	
+    <select id="CodeManage.selectCmmGetCodeList" parameterClass="hashmap" resultClass="egovMap">
+	    select
+	    a.detail_code,
+	    $DB_NEOS$FN_GetMultiLang(#langCode#,b.detail_name_multi) as detail_name
+	    from $DB_NEOS$t_co_code_detail a
+	    join $DB_NEOS$v_t_co_code_detail_multi b on a.code = b.code and a.detail_code = b.detail_code
+	    where a.use_yn='Y' and a.code = #code#
+	    order by a.order_num    
+    </select>	
+	
+</sqlMap>

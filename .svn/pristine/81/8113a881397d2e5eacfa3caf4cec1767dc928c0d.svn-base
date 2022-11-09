@@ -1,0 +1,178 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+    <title>DEXT5 Upload Sample</title>
+    <meta http-equiv="Cache-Control" content="no-cache">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <!-- 샘플 페이지 동작을 위한 파일입니다. -->
+    <link href="../../css/sample.common.css" rel="stylesheet" />    
+    <script src="../../vender/jquery-1.9.1.min.js" type="text/javascript"></script>
+    <script src="../../js/sample.common.js" type="text/javascript"></script>
+    <!-- 샘플 페이지 동작을 위한 파일입니다. -->
+
+    <script src="../../../js/dext5upload.js" type="text/javascript"></script>
+    
+    <script type="text/javascript">
+        var G_UploadID;
+
+        function fnPLM_CreateItem() {
+            DEXT5UPLOAD.PLM_SetItemInfo("회의 안건 제목", 130, 0, 0, "", "");
+            DEXT5UPLOAD.PLM_SetItemInfo("내장/외장", 80, 1, 1, "", "|내장|외장|시트");
+
+            var sParams = "|1_크래쉬패드|1_센터페시아|1_오디오|1_AVN|1_히터콘트롤|1_콘솔|1_프런트도어트림|1_리어도어트림";
+            sParams += "|1_파워윈도우스위치|1_클러스터|1_스티어링휠|1_쉬라우드|1_멀티펑션 스위치|1_헤드라이닝|1_룸램프";
+            sParams += "|1_러기지 트림|1_A/B/C 필라트림|1_테일게이트트림|1_프런트 시트|1_시트 벨트|1_리어 시트";
+            sParams += "|2_헤드램프|2_리어콤비램프|2_포그램프|2_원드쉴드 글라스|2_리어 글라스|2_아웃사이드 미러";
+            sParams += "|2_프런트 범퍼|2_FEM/백빔|2_리어 범퍼|2_펜더|2_후드|2_카울|2_사이드아웃터|2_일반루프";
+            sParams += "|2_썬루프|2_테일게이트|2_프런트도어|2_리어 도어|2_사이드 가니쉬|2_스포일러/랙";
+
+            DEXT5UPLOAD.PLM_SetItemInfo("아이템", 80, 1, 1, "", sParams);
+            DEXT5UPLOAD.PLM_SetItemInfo("문제유형", 80, 1, 0, "", "|문제유형1|문제유형2|문제유형3");
+
+            var resultJson = DEXT5UPLOAD.PLM_CreateItem("회의 안건 등록", "png", "");
+            if (resultJson != null) {
+                var resultsLen = resultJson.plm_results.length;
+
+                var resultString = '';
+
+                for (var i = 0; i < resultsLen; i++) {
+                    resultString += '---- ' + (i + 1) + '번 슬라이드 ----<br>';
+
+                    // guid 추출
+                    var oneGuid = resultJson.plm_results[i].guid;
+                    resultString += '[ GUID 정보 ]<br>';
+                    resultString += 'url : ' + oneGuid + '<br>';
+
+                    // slide title 추출
+                    var oneTitle = resultJson.plm_results[i].title;
+                    resultString += '[ TITLE 정보 ]<br>';
+                    resultString += 'title : ' + oneTitle + '<br>';
+
+                    // 메타 정보 추출
+                    var oneMetaArr = resultJson.plm_results[i].meta;
+                    var oneMetaArrLen = oneMetaArr.length;
+                    resultString += '[ meta 정보 ]<br>';
+                    for (var j = 0; j < oneMetaArrLen; j++) {
+                        resultString += (j) + ' : ' + oneMetaArr[j] + '<br>';
+                    }
+
+                    // 원본 ppt 정보
+                    var oneOriginal = resultJson.plm_results[i].original;
+                    resultString += '[ 원본 ppt 업로드 정보 ]<br>';
+                    resultString += 'url : ' + oneOriginal.url + '<br>';
+                    resultString += '파일명 : ' + oneOriginal.saveName + '<br>';
+                    resultString += 'size : ' + oneOriginal.size + '<br>';
+
+                    // asis 이미지 정보
+                    var oneAsIs = resultJson.plm_results[i].asis;
+                    resultString += '[ AsIs 이미지 업로드 정보 ]<br>';
+                    resultString += 'url : ' + oneAsIs.url + '<br>';
+                    resultString += '파일명 : ' + oneAsIs.saveName + '<br>';
+                    resultString += 'size : ' + oneAsIs.size + '<br>';
+
+                    // tobe 이미지 정보
+                    var oneToBe = resultJson.plm_results[i].tobe;
+                    resultString += '[ ToBe 이미지 업로드 정보 ]<br>';
+                    resultString += 'url : ' + oneToBe.url + '<br>';
+                    resultString += '파일명 : ' + oneToBe.saveName + '<br>';
+                    resultString += 'size : ' + oneToBe.size + '<br><br>';
+                }
+            }
+
+            if (resultString && resultString != '') {
+                logBox.innerHTML = '생성 완료 : ' + resultString + '<br/>';
+            }
+        }
+
+        // 생성완료 이벤트
+        function DEXT5UPLOAD_OnCreationComplete(uploadID) {
+            G_UploadID = uploadID;
+
+            var logBox = document.getElementById("logBox");
+            logBox.innerHTML = '업로드 생성 완료 : ' + uploadID + '<br/>';
+        }
+
+        // 전송 완료 이벤트
+        function DEXT5UPLOAD_OnTransfer_Complete(uploadID) {
+            DEXT5UPLOAD.ResetUpload(uploadID);
+        }
+
+        // 오류 이벤트
+        function DEXT5UPLOAD_OnError(uploadID, code, message, uploadedFileListObj) {
+            var logBox = document.getElementById("logBox");
+            logBox.innerHTML += 'Error : ' + code + ', ' + message + '<br/>';
+
+            if (uploadedFileListObj != null && uploadedFileListObj != '') {
+                logBox.innerHTML += '업로드 된 파일 리스트 - <br/>';
+                var uploadedFileLen = uploadedFileListObj.length;
+                for (var i = 0; i < uploadedFileLen; i++) {
+                    logBox.innerHTML += uploadedFileListObj[i].uploadName + ', ' + uploadedFileListObj[i].uploadPath + '</br>';
+
+                    // guid: uploadedFileListObj[i].guid
+                    // originName: uploadedFileListObj[i].originName
+                    // fileSize: uploadedFileListObj[i].fileSize
+                    // uploadName: uploadedFileListObj[i].uploadName
+                    // uploadPath: uploadedFileListObj[i].uploadPath
+                    // logicalPath: uploadedFileListObj[i].logicalPath
+                    // order: uploadedFileListObj[i].order
+                    // status: uploadedFileListObj[i].status
+                    // mark: uploadedFileListObj[i].mark
+                    // responseCustomValue: uploadedFileListObj[i].responseCustomValue
+                }
+            }
+        }
+
+        $(document).ready(function () {
+            if (SampleRunTimes.indexOf('ieplugin') == -1 && !('File' in window && 'FileReader' in window && 'Blob' in window)) {
+                document.getElementById("file_add_btn").style.display = "none";
+                document.getElementById("file_add_nbsp").style.display = "none";
+            }
+        });
+    </script>
+</head>
+<body style="text-align:center;">
+    <ul class="info_lst_box">
+        <li>• 업로드를 생성하는 기본 예제입니다.</li>        
+    </ul>
+    <div class="btn_lst_box">
+        <button type="button" value="전송하기" class="input_image" style="width:150px;" onclick="fnPLM_CreateItem()">PLM_CreateItem</button>&nbsp;
+    </div>
+    <div style="width: 800px; margin: 0 auto;">
+        <script type="text/javascript">
+            // 해당 config 이외의 설정도 가능합니다. (www.dext5.com > 개발센터 참조)
+            //DEXT5UPLOAD.config.InitXml = 'dext5upload.config.xml';
+            //DEXT5UPLOAD.config.SkinName = 'pink';
+            //DEXT5UPLOAD.config.Width = '200px';
+            //DEXT5UPLOAD.config.Height = '500px';
+            //DEXT5UPLOAD.config.MaxTotalFileSize = '20GB';
+            //DEXT5UPLOAD.config.MaxOneFileSize = '20KB';
+            //DEXT5UPLOAD.config.MaxTotalFileCount = '9';
+            //DEXT5UPLOAD.config.MultiFileSelect = false;
+            //DEXT5UPLOAD.config.ExtensionAllowOrLimit = '0';
+            //DEXT5UPLOAD.config.ExtensionArr = 'png';            
+            //DEXT5UPLOAD.config.FolderNameRule = "/uploadfolder";
+            //DEXT5UPLOAD.config.Mode = 'view'; // edit, view
+            //DEXT5UPLOAD.config.ButtonBarEdit = "add,send,remove,remove_all"; 
+            //DEXT5UPLOAD.config.ButtonBarView = "open,download,download_all"; // 0 일경우 버튼바 보이지 않음.
+            //DEXT5UPLOAD.config.Lang = "en-us"; // ko-kr, en-us, ja-jp, zh-cn, zh-tw
+            //DEXT5UPLOAD.config.UploadHolder = "uploadHoder_PlaceHolder";
+            //DEXT5UPLOAD.config.IgnoreSameUploadName = "1";
+            
+            DEXT5UPLOAD.config.InitVisible = false;
+            DEXT5UPLOAD.config.Runtimes = 'ieplugin';
+            DEXT5UPLOAD.config.DevelopLangage = SampleLanguage;
+
+            var upload = new Dext5Upload("dext5upload");
+
+        </script>
+    </div>
+
+    <br /><br />
+
+    <!-- 로그영역 -->
+    <div id="logBox" class="logBox" style="overflow: auto;"></div>
+    <!-- //로그영역 -->
+</body>
+</html>

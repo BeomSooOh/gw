@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ErpOrgAuthManage">
+
+	
+<!-- 	<select id="ErpDeptListInfoSelect" parameterType="hashmap" resultType="hashmap">
+		SELECT	CODE, NAME, NAMEK, GBN, CC 'compSeq', '${compSeq}' as gwCompSeq
+		FROM	(
+			SELECT  CO_CD		'CODE'
+					, CO_NM		'NAME'
+					, CO_NMK	'NAMEK'
+					, 'C'		'GBN'
+					, CO_CD		'CC'
+			FROM	DBO.ZA_COMPANY_DAIKIN 
+			WHERE CO_CD = ${erpCompSeq}
+			UNION ALL
+			SELECT  DIV_CD		'CODE'
+					, '_' +DIV_NM	'NAME'
+					, DIV_NMK	'NAMEK'
+					, 'D'		'GBN'
+					, B.CO_CD		'CC'
+			FROM	DBO.ZA_DIV_DAIKIN A
+				INNER JOIN DBO.ZA_COMPANY_DAIKIN B
+				ON	A.CO_CD = B.CO_CD
+			WHERE A.CO_CD = ${erpCompSeq}
+		)	TBL
+		
+		
+		ORDER BY CC, GBN 
+	</select> -->
+	<select id="ErpDeptListInfoSelect" parameterType="hashmap" resultType="hashmap">
+		SELECT	CODE, NAME, NAMEK, GBN, CC 'compSeq', #{compSeq} as gwCompSeq
+		FROM	(
+			SELECT  CO_CD		as	'CODE'
+					, CO_NM		as	'NAME'
+					, CO_NMK	as	'NAMEK'
+					, 'C'		as	'GBN'
+					, CO_CD		as	'CC'
+			FROM	DBO.ZA_COMPANY_DAIKIN 
+			WHERE CO_CD = #{erpCompSeq}
+			UNION ALL
+			SELECT  DIV_CD		as	'CODE'
+					, DIV_NM	as	'NAME'
+					, DIV_NMK	as	'NAMEK'
+					, 'D'		as	'GBN'
+					, B.CO_CD	as	'CC'
+			FROM	DBO.ZA_DIV_DAIKIN A
+				INNER JOIN DBO.ZA_COMPANY_DAIKIN B
+				ON	A.CO_CD = B.CO_CD
+			WHERE A.CO_CD = #{erpCompSeq}
+		)	TBL
+		
+		ORDER BY CC, GBN 
+	</select>
+	
+	<select id="ErpDeptListInfoAdminSelect" parameterType="hashmap" resultType="hashmap">
+		SELECT	CODE, NAME, NAMEK, GBN, CC 'compSeq', #{compSeq} as gwCompSeq
+		FROM	(
+			SELECT  CO_CD		as	'CODE'
+					, CO_NM		as	'NAME'
+					, CO_NMK	as	'NAMEK'
+					, 'C'		as	'GBN'
+					, CO_CD		as	'CC'
+			FROM	DBO.ZA_COMPANY_DAIKIN 
+			WHERE CO_CD = #{erpCompSeq}
+			UNION ALL
+			SELECT  DIV_CD		as	'CODE'
+					, DIV_NM	as	'NAME'
+					, DIV_NMK	as	'NAMEK'
+					, 'D'		as	'GBN'
+					, B.CO_CD	as	'CC'
+			FROM	DBO.ZA_DIV_DAIKIN A
+				INNER JOIN DBO.ZA_COMPANY_DAIKIN B
+				ON	A.CO_CD = B.CO_CD
+			WHERE A.CO_CD = #{erpCompSeq}
+		)	TBL
+		
+		ORDER BY CC, GBN 
+	</select>
+</mapper>

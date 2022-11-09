@@ -1,0 +1,7 @@
+autoEnabled=true
+eclipse.preferences.version=1
+fileExclusions=GLOB\:**/*.{jsp,js,html,xml}
+idePrefixKey=
+projectKey=gw\:gw
+serverId=SonarQube Bizbox Alpha\n
+sqPrefixKey=

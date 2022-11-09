@@ -1,0 +1,1 @@
+var onefficeCommentStyle=new function(){try{document.write('<link rel="stylesheet" href="/gw/oneffice/css/comment_style.css" type="text/css">'),document.write('<script type="text/javascript" src=/gw/oneffice/js/oneffice_comment_custom.js>\x3c/script>')}catch(a){}};

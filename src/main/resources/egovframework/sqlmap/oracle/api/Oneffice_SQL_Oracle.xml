@@ -1,0 +1,1407 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="OnefficeDao">
+
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	
+	<resultMap id="getDocumentInfoMap" class="hashmap">
+		<result property="doc_no" column="doc_no" />
+		<result property="doc_type" column="doc_type" />
+		<result property="folder_no" column="folder_no" />
+		<result property="doc_name" column="doc_name" />
+		<result property="content" column="content" jdbcType="CLOB" javaType="String"/>
+		<result property="content_size" column="content_size" />
+		<result property="owner_id" column="owner_id" />
+		<result property="readonly" column="readonly" />
+		<result property="important" column="important" />
+		<result property="keyword" column="keyword" />
+		<result property="mod_date" column="mod_date" />
+		<result property="reg_date" column="reg_date" />
+		<result property="access_date" column="access_date" />
+		<result property="deleted" column="deleted" />
+		<result property="security_key" column="security_key" />
+	</resultMap>
+	
+	<resultMap id="getDocumentMap" class="hashmap">
+		<result property="doc_no" column="doc_no" />
+		<result property="doc_type" column="doc_type" />
+		<result property="folder_no" column="folder_no" />
+		<result property="doc_name" column="doc_name" />
+		<result property="content" column="content" jdbcType="CLOB" javaType="String"/>
+		<result property="content_size" column="content_size" />
+		<result property="owner_id" column="owner_id" />
+		<result property="readonly" column="readonly" />
+		<result property="important" column="important" />
+		<result property="keyword" column="keyword" />
+		<result property="mod_date" column="mod_date" />
+		<result property="reg_date" column="reg_date" />
+		<result property="access_date" column="access_date" />	
+        <result property="share_id" column="share_id" />
+        <result property="share_type" column="share_type" />
+        <result property="share_perm" column="share_perm" />
+        <result property="share_date" column="share_date" />
+		<result property="my_id" column="my_id" />
+		<result property="mobile_gateway_url" column="mobile_gateway_url" />
+    </resultMap>
+	
+	<select id="OnefficeDao.getDocumentList" parameterClass="hashmap"  resultClass="hashmap">
+		/* OnefficeDao.getDocumentList - oracle */
+		select
+			a.doc_no AS "doc_no", a.doc_type AS "doc_type", a.folder_no AS "folder_no", a.doc_name AS "doc_name", a.content_size AS "content_size", a.readonly AS "readonly", a.important AS "important", a.keyword AS "keyword",
+			TO_CHAR(a.reg_date,'YYYY-MM-DD hh24:mi:ss') as "reg_date",
+			TO_CHAR(a.mod_date,'YYYY-MM-DD hh24:mi:ss') as "mod_date",
+			TO_CHAR(a.access_date,'YYYY-MM-DD hh24:mi:ss') as "access_date",
+			case when
+				NVL(TRIM(a.security_key),'') IS NULL then '0'
+			else
+				'1' 
+			END as "security_key",
+			(select COUNT(*) from $DB_NEOS$oneffice_share kk where kk.doc_no=a.doc_no) AS "share_count",
+			a.thumbnail as "thumbnail"
+		from
+		$DB_NEOS$oneffice_document a
+		where
+		a.owner_id=#empSeq# and a.folder_no = #folder_no# and a.deleted='0'
+		order by
+		a.doc_type ASC, a.doc_name ASC
+	</select>
+
+	<select id="OnefficeDao.getSearchDocumentList" parameterClass="hashmap"  resultClass="hashmap">
+		/* OnefficeDao.getSearchDocumentList - oracle */
+		<isEqual property="storage" compareValue="share">
+			SELECT
+				distinct
+				b.doc_no AS "doc_no", doc_type AS "doc_type", folder_no AS "folder_no", doc_name AS "doc_name", 
+				content_size AS "content_size", readonly AS "readonly", important AS "important", keyword AS "keyword",
+				TO_CHAR(reg_date,'YYYY-MM-DD hh24:mi:ss') as "reg_date",
+				TO_CHAR(mod_date,'YYYY-MM-DD hh24:mi:ss') as "mod_date",
+				TO_CHAR(access_date,'YYYY-MM-DD hh24:mi:ss') as "access_date",
+				case when
+				NVL(TRIM(b.security_key),'') IS NULL then '0'
+				else
+				'1' END as "security_key",
+				(select COUNT(*) from $DB_NEOS$oneffice_share kk where kk.doc_no=b.doc_no) AS "share_count",
+				b.thumbnail as "thumbnail"
+			FROM
+			$DB_NEOS$oneffice_document b
+			JOIN $DB_NEOS$t_co_group g ON g.group_seq = #groupSeq#
+			LEFT JOIN $DB_NEOS$oneffice_share a ON a.doc_no = b.doc_no
+			LEFT JOIN $DB_NEOS$t_co_emp_comp ec on ec.work_status = '999' and ec.use_yn = 'Y' and ec.emp_seq = #empSeq#
+			LEFT JOIN $DB_NEOS$t_co_dept d on d.dept_seq = ec.dept_seq and d.use_yn = 'Y'
+			WHERE
+			(
+			(a.share_type='0' AND a.share_id = #empSeq#)
+			OR (a.share_type='1' AND ('|' || d.path || '|') like ('%|' || a.share_id || '|%'))
+			OR a.share_type='9'
+			OR #empSeq# IS NULL
+			)
+			and
+			deleted='0' and (doc_name like '%$keyword$%' or keyword like '%$keyword$%')
+			order by
+			doc_type ASC, doc_name ASC
+		</isEqual>
+
+		<isNotEqual property="storage" compareValue="share">
+			select
+			doc_no AS "doc_no", doc_type AS "doc_type", folder_no "folder_no", doc_name AS "doc_name", 
+			content_size AS "content_size", readonly AS "readonly", important AS "important", keyword AS "keyword",
+			TO_CHAR(reg_date,'YYYY-MM-DD hh24:mi:ss') as "reg_date",
+			TO_CHAR(mod_date,'YYYY-MM-DD hh24:mi:ss') as "mod_date",
+			TO_CHAR(access_date,'YYYY-MM-DD hh24:mi:ss') as "access_date",
+			case when
+			NVL(TRIM(security_key),'') IS NULL then '0'
+			else
+			'1' END as security_key,
+			(select COUNT(*) from $DB_NEOS$oneffice_share kk where kk.doc_no=b.doc_no) AS "share_count",
+			b.thumbnail as "thumbnail"
+			from
+			$DB_NEOS$oneffice_document b
+			where
+			owner_id=#empSeq# and deleted='0' and (doc_name like '%$keyword$%' or keyword like '%$keyword$%')
+			order by
+			doc_type ASC, doc_name ASC
+		</isNotEqual>
+	</select>
+
+	<select id="OnefficeDao.getImportantDocumentList" parameterClass="hashmap"  resultClass="hashmap">
+		/* OnefficeDao.getImportantDocumentList - oracle */
+		select
+		doc_no AS "doc_no", doc_type AS "doc_type", folder_no AS "folder_no", doc_name AS "doc_name", 
+		content_size AS "content_size", readonly AS "readonly", important AS "important", keyword AS "keyword",
+		TO_CHAR(reg_date,'YYYY-MM-DD hh24:mi:ss') as "reg_date",
+		TO_CHAR(mod_date,'YYYY-MM-DD hh24:mi:ss') as "mod_date",
+		TO_CHAR(access_date,'YYYY-MM-DD hh24:mi:ss') as "access_date",
+		case when
+			NVL(TRIM(security_key),'') IS NULL then '0'
+		else '1' 
+		END as "security_key",
+		(select COUNT(*) from $DB_NEOS$oneffice_share kk where kk.doc_no=b.doc_no) AS "share_count",
+		b.thumbnail as "thumbnail"
+		from
+		$DB_NEOS$oneffice_document b
+		where
+		owner_id=#empSeq# and deleted='0' and important='1'
+		order by
+		doc_type ASC, doc_name ASC
+	</select>
+
+	<select id="OnefficeDao.getDocument" parameterClass="hashmap"  resultMap="getDocumentMap">
+		/* OnefficeDao.getDocument - oracle */
+
+		<isEqual property="isSecureDoc" compareValue="Y">
+			SELECT * FROM(
+				SELECT
+					ROWNUM AS rnum
+					, T1.*
+				FROM (
+					SELECT b.doc_no as "doc_no"
+						, b.doc_type as "doc_type"
+						, b.folder_no as "folder_no"
+						, b.doc_name as "doc_name"
+						, b.content as "content"
+						, b.content_size as "content_size"
+						, b.owner_id as "owner_id"
+						, b.readonly as "readonly"
+						, b.important as "important"
+						, b.keyword as "keyword"
+						, b.reg_date as "reg_date"
+						, b.mod_date as "mod_date"
+						, b.access_date as "access_date"
+						, a.share_id as "share_id"
+						, a.share_type as "share_type"
+						, a.share_perm as "share_perm"
+						, a.share_date as "share_date"
+						, #empSeq# as "my_id"
+						, concat(g.mobile_gateway_url,'/') as "mobile_gateway_url"
+						, b.thumbnail as "thumbnail"
+					FROM
+					$DB_NEOS$oneffice_document b
+					JOIN $DB_NEOS$t_co_group g ON g.group_seq = #groupSeq#
+					LEFT JOIN $DB_NEOS$oneffice_share a
+					ON a.doc_no = b.doc_no
+					LEFT JOIN $DB_NEOS$t_co_emp_comp ec
+					ON ec.work_status = '999' and ec.use_yn = 'Y' and ec.emp_seq = #empSeq#
+					LEFT JOIN $DB_NEOS$t_co_dept d
+					ON d.dept_seq = ec.dept_seq and d.use_yn = 'Y'
+					WHERE
+					(
+						b.owner_id = #empSeq#
+						OR (a.share_type='0' AND a.share_id = #empSeq#)
+						OR (a.share_type='1' AND ('|' || d.path || '|') like ('%|' || a.share_id || '|%'))
+						OR a.share_type='9'
+						OR #empSeq# IS NULL
+					)
+					AND
+					b.deleted = '0' AND b.doc_no = #doc_no# AND password(#security_key#) = b.security_key
+					ORDER BY
+					a.share_date DESC
+				)T1
+			)T2 where rnum = 1			
+		</isEqual>
+		<isNotEqual property="isSecureDoc" compareValue="Y">
+			SELECT * FROM(
+				SELECT
+					ROWNUM AS rnum
+					, T1.*
+				FROM (
+					SELECT	
+						b.doc_no as "doc_no"
+						, b.doc_type as "doc_type"
+						, b.folder_no as "folder_no"
+						, b.doc_name as "doc_name"
+						, b.content as "content"
+						, b.content_size as "content_size"
+						, b.owner_id as "owner_id"
+						, b.readonly as "readonly"
+						, b.important as "important"
+						, b.keyword as "keyword"
+						, b.reg_date as "reg_date"
+						, b.mod_date as "mod_date"
+						, b.access_date as "access_date"
+						, a.share_id as "share_id"
+						, a.share_type as "share_type"
+						, a.share_perm as "share_perm"
+						, a.share_date as "share_date"
+						, #empSeq# as "my_id"
+						, concat(g.mobile_gateway_url,'/') as "mobile_gateway_url"
+						, b.thumbnail as "thumbnail"
+						
+					FROM
+					$DB_NEOS$oneffice_document b
+					JOIN $DB_NEOS$t_co_group g ON g.group_seq = #groupSeq#
+					LEFT JOIN $DB_NEOS$oneffice_share a ON a.doc_no = b.doc_no
+					LEFT JOIN $DB_NEOS$t_co_emp_comp ec on ec.work_status = '999' and ec.use_yn = 'Y' and ec.emp_seq = #empSeq#
+					LEFT JOIN $DB_NEOS$t_co_dept d on d.dept_seq = ec.dept_seq and d.use_yn = 'Y'
+					WHERE
+					(
+					b.owner_id = #empSeq#
+					OR (a.share_type='0' AND a.share_id = #empSeq#)
+					OR (a.share_type='1' AND ('|' || d.path || '|') like ('%|' || a.share_id || '|%'))
+					OR a.share_type='9'
+					OR #empSeq# = ' '
+					)
+					AND
+					b.deleted = '0' AND b.doc_no = #doc_no#
+					ORDER BY
+					a.share_date DESC
+				)T1
+			)T2 where rnum = 1			
+		</isNotEqual>
+	</select>
+
+	<insert id="OnefficeDao.createFolder" parameterClass="hashmap">
+		/* OnefficeDao.createFolder - oracle */
+		insert into
+		$DB_NEOS$oneffice_document (doc_no,doc_type,folder_no,doc_name,owner_id,reg_date,mod_date,access_date)
+		values (#doc_no#, '0', #folder_no#,#doc_name#,#empSeq#, SYSDATE,SYSDATE,SYSDATE)
+	</insert>
+
+	<update id="OnefficeDao.updateFolder" parameterClass="hashmap">
+		/* OnefficeDao.updateFolder - oracle */
+		update
+		$DB_NEOS$oneffice_document
+		set
+		<isNotEmpty property="doc_name">
+			doc_name=#doc_name#,
+		</isNotEmpty>
+		<isNotNull property="folder_no">
+			folder_no=#folder_no#,
+		</isNotNull>
+		<isNotEmpty property="important">
+			important=#important#,
+		</isNotEmpty>
+		mod_date = SYSDATE,
+		access_date = SYSDATE
+		where
+		doc_no=#doc_no# and deleted='0' and owner_id=#empSeq#
+	</update>
+
+	<update id="OnefficeDao.deleteFolder" parameterClass="hashmap">
+		/* OnefficeDao.deleteFolder - oracle */
+		update
+		$DB_NEOS$oneffice_document
+		set
+		deleted = '1',
+		mod_date=SYSDATE,
+		access_date=SYSDATE
+		Where
+		doc_no=#doc_no# and deleted='0' and owner_id=#empSeq#
+	</update>
+
+	<insert id="OnefficeDao.createDocument" parameterClass="hashmap">
+		/* OnefficeDao.createDocument - oracle */
+		insert into
+		$DB_NEOS$oneffice_document (doc_no,doc_type,folder_no,doc_name,content,content_size,owner_id,reg_date,mod_date,access_date)
+		values (#doc_no#, '1', #folder_no#,#doc_name#,#content#,#contentSize#,#empSeq#,SYSDATE,SYSDATE,SYSDATE)
+	</insert>
+
+	<update id="OnefficeDao.updateDocument" parameterClass="hashmap">
+		/* OnefficeDao.updateDocument - oracle */
+		update
+		$DB_NEOS$oneffice_document
+		set
+		<isNotEmpty property="doc_name">
+			doc_name=#doc_name#,
+		</isNotEmpty>
+		<isNotEmpty property="content">
+			content=#content#,
+		</isNotEmpty>
+		<isNotEmpty property="contentSize">
+			content_size=#contentSize#,
+		</isNotEmpty>
+		<isNotNull property="folder_no">
+			folder_no=#folder_no#,
+		</isNotNull>
+		<isNotEmpty property="readonly">
+			readonly=#readonly#,
+		</isNotEmpty>
+		<isNotEmpty property="important">
+			important=#important#,
+		</isNotEmpty>
+		<isNotNull property="security_key">
+			security_key=password(#security_key#),
+		</isNotNull>
+		mod_date=SYSDATE,
+		access_date=SYSDATE
+		where
+		doc_no=#doc_no# and deleted='0'
+		<isEqual property="isSecureDoc" compareValue="Y">
+			and owner_id = #empSeq#
+		</isEqual>
+	</update>
+
+	<update id="OnefficeDao.deleteDocument" parameterClass="hashmap">
+		/* OnefficeDao.deleteDocument - oracle */
+		update
+		$DB_NEOS$oneffice_document
+		set
+		deleted = '1',
+		mod_date=SYSDATE,
+		access_date=SYSDATE
+		Where
+		doc_no=#doc_no# and deleted='0' and owner_id=#empSeq#
+	</update>
+
+	<select id="OnefficeDao.getTrashList" parameterClass="hashmap"  resultClass="hashmap">
+		/* OnefficeDao.getTrashList - oracle */
+		select
+			doc_no AS "doc_no", doc_type AS "doc_type", folder_no AS "folder_no", doc_name AS "doc_name", 
+			content_size AS "content_size", readonly AS "readonly", important AS "important", keyword AS "keyword",
+			TO_CHAR(reg_date,'YYYY-MM-DD hh24:mi:ss') as "reg_date",
+			TO_CHAR(mod_date,'YYYY-MM-DD hh24:mi:ss') as "mod_date",
+			TO_CHAR(access_date,'YYYY-MM-DD hh24:mi:ss') as "access_date",
+			thumbnail as "thumbnail"
+		from
+		$DB_NEOS$oneffice_document
+		where
+		owner_id=#empSeq# and deleted='1'
+		order by
+		doc_type ASC, doc_name ASC
+	</select>
+
+	<update id="OnefficeDao.recoverTrashDocument" parameterClass="hashmap">
+		/* OnefficeDao.recoverTrashDocument - oracle */
+		update
+		$DB_NEOS$oneffice_document
+		set
+		deleted = '0',
+		mod_date=SYSDATE,
+		access_date=SYSDATE
+		Where
+		doc_no=#doc_no# and deleted='1' and owner_id=#empSeq#
+	</update>
+
+	<delete id="OnefficeDao.deleteTrashDocument" parameterClass="hashmap">
+		/* OnefficeDao.deleteTrashDocument - oracle */
+		delete from
+		$DB_NEOS$oneffice_document
+		Where doc_no=#doc_no# and owner_id=#empSeq# and deleted='1'
+	</delete>
+
+	<select id="OnefficeDao.selectTrashDocument" parameterClass="hashmap" resultClass="hashmap">
+		/* OnefficeDao.selectTrashDocument - oracle */
+		select
+			doc_no as "doc_no",
+			owner_id as "owner_id"
+		from
+		$DB_NEOS$oneffice_document
+		Where doc_no=#doc_no# and owner_id=#empSeq# and deleted='1'
+	</select>
+
+
+	<delete id="OnefficeDao.deleteTrashDocumentChild" parameterClass="hashmap">
+		/* OnefficeDao.deleteTrashDocumentChild - oracle */
+		delete from
+		$DB_NEOS$oneffice_document
+		where owner_id=#empSeq# and TRIM(folder_no) IS NOT NULL and #folderNoStr# like ('%|' || folder_no || '|%')
+	</delete>
+
+
+	<select id="OnefficeDao.selectTrashDocumentChild" parameterClass="hashmap" resultClass="hashmap">
+		/* OnefficeDao.selectTrashDocumentChild - oracle */
+		select
+		doc_no AS "doc_no", owner_id AS "owner_id"
+		from
+		$DB_NEOS$oneffice_document
+		where owner_id=#empSeq# and TRIM(folder_no) IS NOT NULL and #folderNoStr# like ('%|' || folder_no || '|%')
+	</select>
+
+	<select id="OnefficeDao.getTrashAllFolderNoStr" parameterClass="hashmap" resultClass="String">
+		/* OnefficeDao.getTrashAllFolderNoStr - oracle */
+		select NVL(('|' || LISTAGG(doc_no, '|') within group (order by doc_no) || '|'),'') as "folder_no_str" from $DB_NEOS$oneffice_document where owner_id=#empSeq# and doc_type='0' and deleted='1'
+	</select>
+
+
+	<delete id="OnefficeDao.emptyTrash" parameterClass="hashmap">
+		/* OnefficeDao.emptyTrash - oracle */
+		delete from
+		$DB_NEOS$oneffice_document
+		Where owner_id=#empSeq# and deleted='1'
+	</delete>
+
+	<select id="OnefficeDao.selectEmptyTrash" parameterClass="hashmap" resultClass="hashmap">
+		/* OnefficeDao.selectEmptyTrash - oracle */
+		select doc_no AS "doc_no" from
+		$DB_NEOS$oneffice_document
+		Where owner_id=#empSeq# and deleted='1'
+	</select>
+
+	<insert id="OnefficeDao.shareDocument" parameterClass="hashmap">
+		/* OnefficeDao.shareDocument - oracle */
+		insert into $DB_NEOS$oneffice_share (owner_id, doc_no, share_id, share_type, share_perm, share_date)
+		values(#empSeq#, #doc_no#, #share_id#, #share_type#, #share_perm#, SYSDATE)
+	</insert>
+
+	<select id="OnefficeDao.getShareDocument" parameterClass="hashmap"  resultClass="hashmap">
+		/* OnefficeDao.getShareDocument - oracle */
+		select
+			owner_id AS "owner_id"
+			, doc_no AS "doc_no"
+			, share_id AS "share_id"
+			, share_type AS "share_type"
+			, share_perm AS "share_perm"
+			, share_date AS "share_date"
+		from $DB_NEOS$oneffice_share where doc_no = #doc_no# And share_id = #share_id#
+		AND ROWNUM = 1
+	</select>
+
+	<update id="OnefficeDao.updateShareDocument" parameterClass="hashmap">
+		/* OnefficeDao.updateShareDocument - oracle */
+		update $DB_NEOS$oneffice_share set
+		share_type = #share_type#,
+		share_perm = #share_perm#,
+		share_date = SYSDATE
+		where doc_no = #doc_no# And share_id = #share_id#
+	</update>
+
+	<delete id="OnefficeDao.shareDocumentReset" parameterClass="hashmap">
+		/* OnefficeDao.shareDocumentReset - oracle */
+		Delete From $DB_NEOS$oneffice_share
+		Where
+		doc_no = #doc_no# And share_id = #share_id#
+	</delete>
+
+	<delete id="OnefficeDao.unshareDocument" parameterClass="hashmap">
+		/* OnefficeDao.unshareDocument - oracle */
+		Delete From $DB_NEOS$oneffice_share
+		Where
+		(share_id = #share_id# or share_id = '9') And doc_no = #doc_no#
+	</delete>
+
+	<select id="OnefficeDao.getShareInfo" parameterClass="hashmap"  resultClass="hashmap">
+		/* OnefficeDao.getShareInfo - oracle */
+		SELECT
+			b.doc_no AS "doc_no", b.doc_type AS "doc_type", b.folder_no AS "folder_no", b.doc_name AS "doc_name", b.content_size AS "content_size", b.readonly AS "readonly", b.important AS "important", b.keyword AS "keyword",
+			TO_CHAR(b.reg_date,'YYYY-MM-DD hh24:mi:ss') as "reg_date",
+			TO_CHAR(b.mod_date,'YYYY-MM-DD hh24:mi:ss') as "mod_date",
+			TO_CHAR(b.access_date,'YYYY-MM-DD hh24:mi:ss') as "access_date",
+			a.owner_id AS "owner_id", a.share_id AS "share_id", a.share_type AS "share_type", a.share_perm "share_perm", a.share_date AS "share_date",
+			(select COUNT(*) from $DB_NEOS$oneffice_share kk where kk.doc_no=b.doc_no) AS "share_count",
+			em.emp_name as "owner_name",
+			case
+			when a.share_type = '0' then sem.emp_name
+			else
+			null end as "share_name",
+			e.login_id as "owner_login_id",
+			case
+			when a.share_type = '0' then se.login_id
+			else
+			null end as "share_login_id",
+			ed.dept_seq as "owner_org_id",
+	
+			case
+			when a.share_type = '1' then a.share_id
+			else
+			null end as "share_org_id",
+			dm.dept_name as "owner_org_name",
+			case
+			when a.share_type = '1' then
+			(select
+			dept_name
+			from
+			$DB_NEOS$t_co_dept_multi
+			where
+			lang_code = 'kr'
+			and dept_seq = (select NVL(display_dept_seq, dept_seq) from $DB_NEOS$t_co_dept where dept_seq = a.share_id))
+			else
+			null end as "share_org_name",
+			$DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.position_code, 'POSITION', 'kr') as "owner_duty_name",
+			case
+			when a.share_type = '0' then $DB_NEOS$get_emp_duty_position_name(sed.group_seq, sed.comp_seq, sed.position_code, 'POSITION', 'kr')
+			else null end as "share_duty_name",
+			b.thumbnail as "thumbnail"
+		FROM
+		$DB_NEOS$oneffice_share a
+		JOIN
+		$DB_NEOS$oneffice_document b
+		ON
+		a.doc_no = b.doc_no
+		LEFT JOIN
+		$DB_NEOS$t_co_emp e on a.owner_id = e.emp_seq
+		LEFT JOIN
+		$DB_NEOS$t_co_emp_multi em on em.lang_code='kr' and a.owner_id = em.emp_seq
+		LEFT JOIN
+		$DB_NEOS$t_co_emp_dept ed on e.main_comp_seq = ed.comp_seq and e.emp_seq = ed.emp_seq and ed.main_dept_yn='Y'
+		LEFT JOIN
+		$DB_NEOS$t_co_dept d on ed.dept_seq = d.dept_seq
+		LEFT JOIN
+		$DB_NEOS$t_co_dept_multi dm on dm.lang_code='kr' and NVL(d.display_dept_seq, d.dept_seq) = dm.dept_seq
+		LEFT JOIN
+		$DB_NEOS$t_co_emp se on a.share_id = se.emp_seq
+		LEFT JOIN
+		$DB_NEOS$t_co_emp_multi sem on sem.lang_code='kr' and a.share_id = sem.emp_seq
+		LEFT JOIN
+		$DB_NEOS$t_co_emp_dept sed on se.main_comp_seq = sed.comp_seq and se.emp_seq = sed.emp_seq and sed.main_dept_yn='Y'
+		LEFT JOIN
+		$DB_NEOS$t_co_dept sd on sed.dept_seq = sd.dept_seq
+		LEFT JOIN
+		$DB_NEOS$t_co_dept_multi sdm on sdm.lang_code='kr' and NVL(sd.display_dept_seq, sd.dept_seq) = sdm.dept_seq
+		WHERE
+		a.doc_no = #doc_no#
+	</select>
+
+	<select id="OnefficeDao.getShareDocumentList" parameterClass="hashmap"  resultClass="hashmap">
+		/* OnefficeDao.getShareDocumentList - oracle */
+		SELECT distinct
+			b.doc_no AS "doc_no"
+            , MAX(b.doc_type)  KEEP (DENSE_RANK FIRST ORDER BY b.doc_type ASC, b.doc_name ASC )as "doc_type"            
+            , MAX(b.folder_no)  KEEP (DENSE_RANK FIRST ORDER BY b.doc_type ASC, b.doc_name ASC)as "folder_no"
+            , MAX(b.doc_name)  KEEP (DENSE_RANK FIRST ORDER BY b.doc_type ASC, b.doc_name ASC )as "doc_name"
+            , MAX(b.content_size)  KEEP (DENSE_RANK FIRST ORDER BY b.doc_type ASC, b.doc_name ASC)as "content_size"
+            , MAX(b.readonly)  KEEP (DENSE_RANK FIRST ORDER BY b.doc_type ASC, b.doc_name ASC)as "readonly"
+            , MAX(b.important)  KEEP (DENSE_RANK FIRST ORDER BY b.doc_type ASC, b.doc_name ASC)as "important"
+            , MAX(TO_CHAR(b.reg_date,'YYYY-MM-DD hh24:mi:ss'))  KEEP (DENSE_RANK FIRST ORDER BY b.doc_type ASC, b.doc_name ASC)as "reg_date"
+            , MAX(TO_CHAR(b.mod_date,'YYYY-MM-DD hh24:mi:ss'))  KEEP (DENSE_RANK FIRST ORDER BY b.doc_type ASC, b.doc_name ASC)as "mod_date"
+            , MAX(TO_CHAR(b.access_date,'YYYY-MM-DD hh24:mi:ss'))  KEEP (DENSE_RANK FIRST ORDER BY b.doc_type ASC, b.doc_name ASC)as "access_date"
+            , MAX(a.owner_id)  KEEP (DENSE_RANK FIRST ORDER BY b.doc_type ASC, b.doc_name ASC)as "owner_id"
+            , MAX(a.share_id)  KEEP (DENSE_RANK FIRST ORDER BY b.doc_type ASC, b.doc_name ASC)as "share_id"
+            , MAX(a.share_type)  KEEP (DENSE_RANK FIRST ORDER BY b.doc_type ASC, b.doc_name ASC)as "share_type"
+            , MAX(a.share_perm)  KEEP (DENSE_RANK FIRST ORDER BY b.doc_type ASC, b.doc_name ASC)as "share_perm"
+            , MAX(a.share_date)  KEEP (DENSE_RANK FIRST ORDER BY b.doc_type ASC, b.doc_name ASC)as "share_date"
+            , COUNT(b.doc_no) AS "share_count"
+            , MAX(em.emp_name)  KEEP (DENSE_RANK FIRST ORDER BY b.doc_type ASC, b.doc_name ASC)as "emp_name"
+            , MAX(e.login_id)  KEEP (DENSE_RANK FIRST ORDER BY b.doc_type ASC, b.doc_name ASC)as "login_id"
+            , MAX(ed.dept_seq)  KEEP (DENSE_RANK FIRST ORDER BY b.doc_type ASC, b.doc_name ASC)as "dept_seq"
+            , MAX(dm.dept_name)  KEEP (DENSE_RANK FIRST ORDER BY b.doc_type ASC, b.doc_name ASC)as "dept_name"    
+            , MAX($DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.position_code, 'POSITION', #langCode#)) KEEP (DENSE_RANK FIRST ORDER BY b.doc_type ASC, b.doc_name ASC)as "owner_duty_name"
+            , MAX(case when NVL(TRIM(b.security_key),'') IS NULL then '0' else '1' END )  KEEP (DENSE_RANK FIRST ORDER BY b.doc_type ASC, b.doc_name ASC)as "security_key"
+            , b.thumbnail as "thumbnail"
+		FROM
+		$DB_NEOS$oneffice_share a
+		LEFT JOIN
+		$DB_NEOS$oneffice_document b
+		ON
+		a.doc_no = b.doc_no
+		LEFT JOIN
+		$DB_NEOS$t_co_emp e on a.owner_id = e.emp_seq
+		LEFT JOIN
+		$DB_NEOS$t_co_emp_multi em on em.lang_code='kr' and a.owner_id = em.emp_seq
+		LEFT JOIN
+		$DB_NEOS$t_co_emp_dept ed on e.main_comp_seq = ed.comp_seq and e.emp_seq = ed.emp_seq and ed.main_dept_yn='Y'
+		LEFT JOIN
+		$DB_NEOS$t_co_dept d on ed.dept_seq = d.dept_seq
+		LEFT JOIN
+		$DB_NEOS$t_co_dept_multi dm on dm.lang_code='kr' and NVL(d.display_dept_seq, d.dept_seq) = dm.dept_seq
+		LEFT JOIN $DB_NEOS$t_co_emp_comp ec on ec.work_status = '999' and ec.use_yn = 'Y' and ec.emp_seq = #empSeq#
+		LEFT JOIN $DB_NEOS$t_co_dept dd on dd.dept_seq = ec.dept_seq and dd.use_yn = 'Y'
+		WHERE
+		(
+		a.owner_id = #empSeq#
+		OR (a.share_type='0' AND a.share_id = #empSeq#)
+		OR (a.share_type='1' AND ('|' || dd.path || '|') like ('%|' || a.share_id || '|%'))
+		OR (a.share_type='9' AND a.share_id = #empSeq#)
+		)
+		AND
+		b.deleted = '0'
+		GROUP BY
+		b.doc_no
+		ORDER BY "doc_name" ASC
+	</select>
+
+	<select id="OnefficeDao.getDocumentAccessInfo" parameterClass="hashmap"  resultClass="hashmap">
+		/* OnefficeDao.getDocumentAccessInfo - oracle */
+		select
+			ai.owner_id AS "owner_id", ai.doc_no AS "doc_no", ai.doc_name AS "doc_name", ai.access_id AS "access_id", ai.access_perm AS "access_perm"
+			, ai.access_status AS "access_status", TO_CHAR(ai.access_date,'YYYY-MM-DD hh24:mi:ss') as "access_date",
+			$DB_NEOS$fn_getmultilang(#langCode#, em.emp_name_multi) as "name",
+			$DB_NEOS$fn_getmultilang(#langCode#, dm.dept_name_multi) as "org_name"
+		from $DB_NEOS$oneffice_access_info ai
+		join $DB_NEOS$t_co_emp e on ai.access_id = e.emp_seq
+		join $DB_NEOS$v_t_co_emp_multi em on e.emp_seq = em.emp_seq
+		left join $DB_NEOS$t_co_emp_dept ed on e.main_comp_seq = ed.comp_seq and e.emp_seq = ed.emp_seq and ed.use_yn = 'Y'
+		left join $DB_NEOS$v_t_co_dept_multi dm on ed.dept_seq = dm.dept_seq
+		where
+		ai.access_status = '1'
+		and ai.doc_no = #doc_no#
+		order by
+		ai.access_date DESC
+	</select>
+
+
+	<select id="OnefficeDao.getRecentDocumentList" parameterClass="hashmap"  resultClass="hashmap">
+		/* OnefficeDao.getRecentDocumentList - oracle */
+		SELECT * FROM(
+			SELECT
+				ROWNUM AS rnum
+				, T1.*
+			FROM (
+				select
+					doc_no AS "doc_no", doc_type AS "doc_type", folder_no AS "folder_no", doc_name AS "doc_name", content_size AS "content_size", 
+					readonly AS "readonly", important AS "important", keyword AS "keyword",
+					TO_CHAR(reg_date,'YYYY-MM-DD hh24:mi:ss') as "reg_date",
+					TO_CHAR(mod_date,'YYYY-MM-DD hh24:mi:ss') as "mod_date",
+					TO_CHAR(access_date,'YYYY-MM-DD hh24:mi:ss') as "access_date",
+				case when
+					NVL(TRIM(security_key),'') IS NULL then '0'
+				else
+				'1' END as "security_key",
+				(select COUNT(*) from $DB_NEOS$oneffice_share kk where kk.doc_no=b.doc_no) AS "share_count",
+				b.thumbnail	as "thumbnail"
+				from
+				$DB_NEOS$oneffice_document b
+				where
+				owner_id=#empSeq# and doc_type='1' and deleted='0'
+				order by
+				mod_date desc, doc_name ASC
+			)T1
+		)T2 where rnum <![CDATA[<=]]>  $list_count$			
+	</select>
+
+
+	<select id="OnefficeDao.getMyInfo" parameterClass="hashmap"  resultClass="hashmap">
+		/* OnefficeDao.getMyInfo - oracle */
+		select
+			e.group_seq as "group_seq",
+			e.emp_seq as "id",
+			e.login_id as "login_id",
+			c.comp_seq as "comp_id",
+			d.dept_seq as "org_id",
+			d.biz_seq as "biz_seq",
+			NVL(e.email_addr,'') as "mail_id",
+			NVL(c.email_domain,'') as "mail_domain",
+			$DB_NEOS$fn_getmultilang(#langCode#, em.emp_name_multi) as "name",
+			$DB_NEOS$fn_getmultilang(#langCode#, dm.dept_name_multi) as "org_name",
+			$DB_NEOS$fn_getmultilang(#langCode#, cm.comp_name_multi) as "comp_name",
+			$DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.position_code, 'POSITION', #langCode#) as "duty_name",
+<!-- 			(case when NVL(TRIM(e.pic_file_id),'') IS NULL then '/gw/Images/temp/pic_Noimg.png' else (#profilePath# || e.emp_seq || '_thum.jpg') end) as "pic", -->
+<!-- 			NVL((select  -->
+<!-- 				case when -->
+<!-- 					concat('%|',(select path from $DB_NEOS$t_co_dept where dept_seq = d.dept_seq),'|%') like concat('%|',(select path from $DB_NEOS$t_co_dept where dept_seq = org_seq),'|%') is null or concat('%|',(select path from $DB_NEOS$t_co_dept where dept_seq = d.dept_seq),'|%') like concat('%|',(select path from $DB_NEOS$t_co_dept where dept_seq = org_seq),'|%') = 0 -->
+<!-- 			then 'N' else 'Y' end -->
+<!-- 			from -->
+<!-- 				$DB_NEOS$oneffice_report_relate -->
+<!-- 			where rownum = 1 -->
+<!-- 			),'N') report_yn -->
+			'Y' as "report_yn"
+		from $DB_NEOS$t_co_emp e
+		join $DB_NEOS$v_t_co_emp_multi em on e.emp_seq = em.emp_seq
+		join $DB_NEOS$t_co_emp_dept ed on e.emp_seq = ed.emp_seq and ed.comp_seq=#compSeq# and ed.emp_seq=#empSeq#
+		join $DB_NEOS$t_co_emp_comp ec on ed.emp_seq = ec.emp_seq and ed.comp_seq = ec.comp_seq and ec.use_yn='Y'
+		join $DB_NEOS$t_co_dept d on ed.dept_seq = d.dept_seq and d.use_yn='Y'
+		join $DB_NEOS$v_t_co_dept_multi dm on dm.dept_seq = dm.dept_seq
+		join $DB_NEOS$t_co_comp c on ed.comp_seq = c.comp_seq and c.use_yn='Y'
+		join $DB_NEOS$v_t_co_comp_multi cm on cm.comp_seq = cm.comp_seq
+		WHERE ROWNUM = 1 
+	</select>
+
+	<update id="OnefficeDao.accessDocument_0" parameterClass="hashmap">
+		/* OnefficeDao.accessDocument_0 - oracle */
+		UPDATE $DB_NEOS$oneffice_access_info SET access_status='0' WHERE access_status='1' AND access_date <![CDATA[<]]> (SYSDATE-$sess_time$/24/60/60)  
+	</update>
+
+	<update id="OnefficeDao.accessDocument_1" parameterClass="hashmap">
+		/* OnefficeDao.accessDocument_1 - oracle */
+		UPDATE $DB_NEOS$oneffice_access_info SET access_status='0', access_date = SYSDATE WHERE doc_no=#doc_no# AND access_id = #empSeq# AND access_perm=#access_perm# AND access_status='1'
+	</update>
+
+	<insert id="OnefficeDao.accessDocument_2" parameterClass="hashmap">
+		/* OnefficeDao.accessDocument_2 - oracle */
+		INSERT INTO $DB_NEOS$oneffice_access_info  SELECT owner_id, doc_no, doc_name, #empSeq#, #access_perm#, '1',SYSDATE FROM $DB_NEOS$oneffice_document WHERE doc_no = #doc_no#
+	</insert>
+
+	<select id="OnefficeDao.accessDocument_3" parameterClass="hashmap" resultClass="String">
+		/* OnefficeDao.accessDocument_3 - oracle */
+		SELECT access_id AS "access_id" FROM $DB_NEOS$oneffice_access_info WHERE doc_no=#doc_no# AND (access_perm=#access_perm# OR access_perm=#access_perm1#)  AND access_status='1' AND access_date <![CDATA[>=]]> (SYSDATE-$sess_time$/24/60/60)
+	</select>
+
+	<update id="OnefficeDao.accessDocument_4" parameterClass="hashmap">
+		/* OnefficeDao.accessDocument_4 - oracle */
+		UPDATE $DB_NEOS$oneffice_access_info SET access_date = SYSDATE WHERE doc_no=#doc_no# AND access_id = #empSeq# AND access_perm=#access_perm# AND access_status='1'
+	</update>
+
+	<select id="OnefficeDao.getFolderNoStr" parameterClass="hashmap" resultClass="String">
+		/* OnefficeDao.getFolderNoStr - oracle */
+		select NVL(('|' || LISTAGG(doc_no, '|') within group (order by doc_no) || '|'),'') as folder_no_str from $DB_NEOS$oneffice_document where doc_type='0' and TRIM(folder_no) IS NOT NULL and #folderNoStr# like ('%|' || folder_no || '|%')
+	</select>
+
+	<select id="OnefficeDao.getGroupInfo" parameterClass="hashmap"  resultClass="hashmap">
+		/* OnefficeDao.getGroupInfo - oracle */
+		select
+			group_seq AS "group_seq"
+			, group_name AS "group_name"
+			, native_lang_code AS "native_lang_code"
+			, multiple_login_yn AS "multiple_login_yn"
+			, group_display_name AS "group_display_name"
+			, max_count AS "max_count"
+			, login_type AS "login_type"
+			, setup_version AS "setup_version"
+			, mail_url AS "mail_url"
+			, messenger_url AS "messenger_url"
+			, mobile_id AS "mobile_id"
+			, mobile_url AS "mobile_url"
+			, edms_url AS "edms_url"
+			, sms_url AS "sms_url"
+			, manual_url AS "manual_url"
+			, sms_use_yn AS "sms_use_yn"
+			, gw_volume AS "gw_volume"
+			, mail_volume AS "mail_volume"
+			, use_yn AS "use_yn"
+			, create_seq AS "create_seq"
+			, create_date AS "create_date"
+			, modify_seq AS "modify_seq"
+			, modify_date AS "modify_date"
+			, mobile_gateway_url AS "mobile_gateway_url"
+			, bill36524_url AS "bill36524_url"
+			, setup_version_seq AS "setup_version_seq"
+			, master_passwd AS "master_passwd"
+			, group_email_id AS "group_email_id"
+			, group_email_domain AS "group_email_domain"
+			, oneffice_token_api_url AS "oneffice_token_api_url"
+		from $DB_NEOS$t_co_group where group_seq = #groupSeq#
+	</select>
+
+	<insert id="OnefficeDao.setApiLog" parameterClass="hashmap">
+		/* OnefficeDao.setApiLog - oracle */
+		insert into $DB_NEOS$t_co_group_api_history (
+		group_seq
+		, api_tp
+		, req_type
+		, data
+		, req_date
+		)
+		VALUES
+		(
+		#groupSeq#
+		, #apiTp#
+		, #reqType#
+		, #data#
+		, SYSDATE)
+	</insert>
+
+	<insert id="OnefficeDao.accessUserFunction" parameterClass="hashmap">
+		/* OnefficeDao.accessUserFunction - oracle */
+		insert into $DB_NEOS$oneffice_usage_log (user_id, os_type, app_type, call_url, call_date) VALUES
+		(#user_id#, #os_type#, #app_type#, #call_url#, SYSDATE)
+	</insert>
+
+
+	<select id="OnefficeDao.getDocumentSecurityKey" parameterClass="hashmap" resultClass="hashmap">
+		/* OnefficeDao.getDocumentSecurityKey - oracle */
+		SELECT * FROM(
+			SELECT
+				ROWNUM AS rnum
+				, T1.*
+			FROM (
+			SELECT
+				b.security_key AS "security_key"
+			FROM
+			$DB_NEOS$oneffice_document b
+			JOIN $DB_NEOS$t_co_group g ON g.group_seq = #groupSeq#
+			LEFT JOIN $DB_NEOS$oneffice_share a ON a.doc_no = b.doc_no
+			LEFT JOIN $DB_NEOS$t_co_emp_comp ec on ec.work_status = '999' and ec.use_yn = 'Y' and ec.emp_seq = #empSeq#
+			LEFT JOIN $DB_NEOS$t_co_dept d on d.dept_seq = ec.dept_seq and d.use_yn = 'Y'
+			WHERE
+			(
+			b.owner_id = #empSeq#
+			OR (a.share_type='0' AND a.share_id = #empSeq#)
+			OR (a.share_type='1' AND ('|' || d.path || '|') like ('%|' || a.share_id || '|%'))
+			OR a.share_type='9'
+			OR #empSeq# IS NULL
+			)
+			AND
+			b.deleted = '0' AND b.doc_no = #doc_no#
+			ORDER BY
+			a.share_date DESC
+			)T1
+		)T2 where rnum = 1	
+	</select>
+
+	<select id="OnefficeDao.getSecurityDocumentList" parameterClass="hashmap" resultClass="hashmap">
+		/* OnefficeDao.getSecurityDocumentList - oracle */
+		select
+			doc_no AS "doc_no",
+			doc_type AS "doc_type",
+			folder_no AS "folder_no",
+			doc_name AS "doc_name",
+			content_size AS "content_size",
+			readonly AS "readonly",
+			important AS "important",
+			keyword AS "keyword",
+			TO_CHAR(reg_date,'YYYY-MM-DD hh24:mi:ss') as "reg_date",
+			TO_CHAR(mod_date,'YYYY-MM-DD hh24:mi:ss') as "mod_date",
+			TO_CHAR(access_date,'YYYY-MM-DD hh24:mi:ss') as "access_date",
+			security_key AS "security_key",
+			(select COUNT(*) from $DB_NEOS$oneffice_share kk where kk.doc_no=b.doc_no) AS "share_count",
+			b.thumbnail	as "thumbnail"
+		from
+		$DB_NEOS$oneffice_document b
+		where
+		owner_id=#empSeq# and deleted='0' and NVL(TRIM(security_key),'') IS NOT NULL
+		order by
+		doc_type ASC, doc_name ASC
+	</select>
+
+
+	<select id="OnefficeDao.getSecurityInfo" parameterClass="hashmap" resultClass="hashmap">
+		/* OnefficeDao.getSecurityInfo - oracle */
+		<isEmpty property="security_key">
+			SELECT
+				doc_no as "doc_no",
+				DECODE(NVL(TRIM(security_key),''), NULL, 0, 1) AS "status"
+			FROM
+			$DB_NEOS$oneffice_document
+			WHERE
+			doc_no = #doc_no#
+		</isEmpty>
+		<isNotEmpty property="security_key">
+			SELECT
+				doc_no AS "doc_no",
+				case
+					when NVL(TRIM(security_key),'') IS NULL then '0'
+					when NVL(security_key,'') = password(#security_key#) then '2'
+					when NVL(security_key,'') != password(#security_key#) then '3'
+				else '1' end
+				AS "status"
+			FROM
+			$DB_NEOS$oneffice_document
+			WHERE
+			doc_no = #doc_no#
+		</isNotEmpty>
+	</select>
+
+	<insert id="OnefficeDao.copyDocument" parameterClass="hashmap">
+		/* OnefficeDao.copyDocument - oracle */
+		insert into  $DB_NEOS$oneffice_document
+		(
+		select
+		#new_doc_no#, doc_type, #folder_no#, doc_name, content, content_size, #empSeq#, readonly, important, keyword, mod_date, SYSDATE, access_date, deleted, security_key, thumbnail
+		from $DB_NEOS$oneffice_document
+		where doc_no = #doc_no#
+		)
+	</insert>
+
+
+	<select id="OnefficeDao.getEmpListWithinDept" parameterClass="hashmap" resultClass="hashmap">
+		/* OnefficeDao.getEmpListWithinDept - oracle */
+		select
+			$DB_NEOS$FN_GetMultiLang(#langCode#,comp_name_multi) as "compName",
+			a.comp_seq as "compSeq",
+			$DB_NEOS$FN_GetMultiLang(#langCode#,dept_name_multi) as "deptName",
+			b.path as "deptPath",
+			a.dept_seq as "deptSeq",
+			dept_duty_code as "dutyCode",
+			$DB_NEOS$get_emp_duty_position_name(a.group_seq, a.comp_seq, a.duty_code, 'DUTY', #langCode#) as "dutyName",
+			'u' as "empDeptFlag",
+			$DB_NEOS$FN_GetMultiLang(#langCode#,a.emp_name_multi) as "empName",
+			a.emp_seq as "empSeq",
+			a.group_seq as "groupSeq",
+			b.parent_dept_seq as "parentDeptSeq",
+			a.path_name as "pathName",
+			a.dept_position_code as "positionCode",
+			a.email_addr as "empNameAdv",
+			$DB_NEOS$get_emp_duty_position_name(a.group_seq, a.comp_seq, a.position_code, 'POSITION', #langCode#) as "positionName",
+			(a.group_seq || '|' || a.comp_seq || '|' || a.dept_seq || '|' || a.emp_seq || '|' || 'u') "superKey"
+		From $DB_NEOS$v_user_info a
+		inner join $DB_NEOS$t_co_dept b on a.dept_seq = b.dept_seq
+		where ('|' || b.path || '|') like '%|$dept_no$|%' and a.work_status = '999' and a.use_yn = 'Y'
+	</select>
+
+
+	<insert id="OnefficeDao.InsertAccessDocumentHistory" parameterClass="hashmap">
+		/* OnefficeDao.InsertAccessDocumentHistory - oracle */
+		insert into  $DB_NEOS$oneffice_document_history
+		(doc_no, action_user, action_code, action_data, user_gps, user_ip, device_info, reg_date, action_user_name)
+		VALUES
+		(#doc_no#, #action_user#, #action_code#, #action_data#, #user_gps#, #user_ip#, #device_info#, SYSDATE, (select emp_name from $DB_NEOS$t_co_emp_multi where emp_seq = #empSeq# and lang_code = #langCode#))
+	</insert>
+
+	<select id="OnefficeDao.getDocumentHistory" parameterClass="hashmap" resultClass="hashmap">
+		/* OnefficeDao.getDocumentHistory - oracle */
+		select
+			doc_no AS "doc_no", action_user AS "action_user", action_code AS "action_code", action_data AS "action_data"
+			, user_gps AS "user_gps", user_ip AS "user_ip", device_info AS "device_info", reg_date AS "reg_date", action_user_name as "action_user_name"
+		from
+		$DB_NEOS$oneffice_document_history
+		where
+		doc_no = #doc_no#
+		order by
+		reg_date DESC
+	</select>
+
+
+	<select id="OnefficeDao.getUserInfo" parameterClass="hashmap" resultClass="hashmap">
+		/* OnefficeDao.getUserInfo - oracle */
+		select
+			a.group_seq as "group_seq",
+			a.emp_seq as "emp_seq",
+			a.native_lang_code as "lang_code",
+			a.comp_seq as "comp_seq",
+			b.ea_type as "ea_type"
+		from
+		$DB_NEOS$v_user_info a
+		inner join 
+			$DB_NEOS$t_co_comp b
+		on
+			a.comp_seq = b.comp_seq
+		where
+		a.emp_seq = #empSeq# and a.comp_seq = main_comp_seq and a.main_dept_yn = 'Y'
+		and rownum = 1
+	</select>
+
+	<select id="OnefficeDao.getDocumentInfo" parameterClass="hashmap" resultMap="getDocumentInfoMap">
+		/* OnefficeDao.getDocumentInfo - oracle */
+		select
+			doc_no AS "doc_no"
+			,doc_type AS "doc_type"
+			,folder_no AS "folder_no"
+			,doc_name AS "doc_name"
+			,content AS "content"
+			,content_size AS "content_size"
+			,owner_id AS "owner_id"
+			,readonly AS "readonly"
+			,important AS "important"
+			,keyword AS "keyword"
+			,mod_date AS "mod_date"
+			,reg_date AS "reg_date"
+			,access_date "access_date"
+			,deleted AS "deleted"
+			,security_key AS "security_key"
+		from
+		$DB_NEOS$oneffice_document
+		where
+		doc_no = #doc_no#
+		and rownum = 1
+	</select>
+
+
+
+	<select id="OnefficeDao.getReportInfo" parameterClass="hashmap" resultClass="hashmap">
+		select
+			case when type = '1' then '1' else '3' end as "type"
+		from
+			$DB_NEOS$t_sc_work_report
+		where
+			report_seq = #report_no#
+			<isNotEmpty property="readYn">
+			and read_yn = #readYn#
+			</isNotEmpty>
+		and rownum = 1
+	</select>
+	
+	<update id="OnefficeDao.updateReportContetns" parameterClass="hashmap">
+		update 
+			$DB_NEOS$t_sc_work_report_contents
+		set
+			contents = #oneffice_doc_data#
+		where
+			type = #type#
+			and report_seq = #report_no#
+			and seq = '1'
+	</update>
+	
+	<select id="OnefficeDao.getOnefficeUserEnv" parameterClass="hashmap" resultClass="hashmap">
+		select 
+			user_env as "user_env"
+			,last_update as "last_update" 
+			,user_agree as "user_agree"
+			,user_agree_date as "user_agree_date" 	
+		from 
+			$DB_NEOS$oneffice_user_env  
+		where 
+			user_id = #empSeq# 
+	</select>
+	
+	<insert id="OnefficeDao.updateOnefficeUserEnv" parameterClass="hashmap">
+			MERGE INTO $DB_NEOS$oneffice_user_env
+			USING DUAL
+			   ON (user_id   = #empSeq#)
+	         WHEN MATCHED THEN
+	              UPDATE SET user_env    = #user_env#  
+						   , last_update = SYSDATE 						
+	         WHEN NOT MATCHED THEN
+	              INSERT (
+	                      user_id  
+						, user_env 
+						, last_update
+						<isNotEmpty property="user_agree"> 	
+						, user_agree
+						, user_agree_date					
+						</isNotEmpty>
+					     )
+					    
+			      VALUES (
+			              #empSeq#  
+						, #user_env#  
+						, SYSDATE	
+						<isNotEmpty property="user_agree">
+						, #user_agree#		
+						, SYSDATE			
+						</isNotEmpty>
+			             )  
+     </insert>
+     
+     <update id="OnefficeDao.updateDocumentThumbnail" parameterClass="hashmap">
+		update 
+			$DB_NEOS$oneffice_document
+		set
+			thumbnail = #thumbnail#
+		where
+			doc_no = #doc_no#
+	</update>
+	
+	
+	<select id="OnefficeDao.getOnefficeReportContents" parameterClass="hashmap" resultClass="hashmap">
+		select
+			contents as "contents"
+		from
+			$DB_NEOS$t_sc_work_report_contents		
+		where
+			type = #type#
+			and report_seq = #report_no#
+			and seq = '1'
+	</select>
+	
+	
+	<select id="OnefficeDao.getOnefficeDocInfo" parameterClass="hashmap"  resultClass="hashmap">
+		select 
+			doc_no as "doc_no"
+			, doc_type as "doc_type"
+			, folder_no as "folder_no"
+			, doc_name as "doc_name"
+			, content as "content"
+			, content_size as "content_size"
+			, owner_id as "owner_id"
+			, readonly as "readonly"
+			, important as "important"
+			, keyword as "keyword"
+			, mod_date as "mod_date"
+			, reg_date as "reg_date"
+			, access_date as "access_date"
+			, deleted as "deleted"
+			, security_key as "security_key"
+		from 
+			$DB_NEOS$oneffice_document a
+		where 
+			doc_no = #seq#
+			and rownum = 1
+	</select>
+	
+	
+	
+	
+	<select id="OnefficeDao.searchUserInfoList" parameterClass="hashmap"  resultClass="hashmap">
+		select 
+			comp_seq as "comp_id",
+			dept_seq as "org_id",
+			emp_seq as "id",
+			login_id as "login_id",
+			$DB_NEOS$fn_getmultilang(#langCode#, emp_name_multi) as "name",
+			$DB_NEOS$get_emp_duty_position_name(group_seq, comp_seq, dept_position_code, 'POSITION', #langCode#) "duty_name",			
+			(case when nvl(pic_file_id,'') = '' then '/gw/Images/temp/pic_Noimg.png' else #profilePath# || emp_seq || '_thum.jpg' end) as "pic",
+			$DB_NEOS$fn_getmultilang(#langCode#, dept_name_multi) as "org_name",
+			comp_name || '|' || path_name "path_name"
+		from $DB_NEOS$v_user_info 
+		where work_status = '999' and main_dept_yn = 'Y' and use_yn = 'Y' 
+		<isEqual property="option" compareValue="1">
+			and login_id like '%$txt_search$%'
+		</isEqual>
+		<isEqual property="option" compareValue="2">
+			and emp_name like '%$txt_search$%'
+		</isEqual>
+		<isEqual property="option" compareValue="0">
+			and (login_id like '%$txt_search$%' or emp_name like '%$txt_search$%')
+		</isEqual>
+	</select>
+	
+	<update id="OnefficeDao.updateOnefficeReportReadYn" parameterClass="hashmap">
+		update
+			$DB_NEOS$t_sc_work_report
+		set
+			read_yn = 'Y', read_date = TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS')
+		where
+			target_emp_seq = #empSeq# and report_seq = #report_no#
+	</update>
+	
+	<select id="OnefficeDao.manager_select_docno" parameterClass="hashmap">
+		SELECT 
+			COUNT(*) 
+		FROM  
+			oneffice_access_manager
+		WHERE
+			doc_no = #doc_no# and editor_id = #editor_id#
+	</select>
+	 
+	<insert id="OnefficeDao.manager_insert" parameterClass="hashmap">	    
+	   	INSERT INTO 
+	   		$DB_NEOS$oneffice_access_manager(doc_no, editor_id, editor_date, request_id, response_answer)
+	   	SELECT #doc_no#, #editor_id#, now() , "", '0'
+	   	WHERE NOT EXISTS
+	   	(
+	   			SELECT * FROM $DB_NEOS$oneffice_access_manager 
+				WHERE doc_no = #doc_no#
+	   	)
+    </insert>    					
+
+	
+	<delete id="OnefficeDao.manager_delete_docno" parameterClass="hashmap">
+		DELETE FROM
+			$DB_NEOS$oneffice_access_manager
+		WHERE
+			doc_no = #doc_no# and editor_id = #editor_id#
+	</delete>
+
+	<select id="OnefficeDao.manager_search_requestUser" parameterClass="hashmap"  resultClass="hashmap">
+		select 
+			am.request_id AS request_id,
+			am.editor_id AS editor_id,
+			em.emp_name AS request_name,
+			$DB_NEOS$fn_getmultilang(#langCode#, em.emp_name_multi) as name,
+			$DB_NEOS$get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.position_code, 'POSITION', #langCode#) duty_name,			
+			(case when ifnull(e.pic_file_id,'') = '' then '/gw/Images/temp/pic_Noimg.png' else concat(#profilePath#,e.emp_seq,'_thum.jpg') end) as pic
+		From $DB_NEOS$t_co_emp e
+		join $DB_NEOS$v_t_co_emp_multi em on e.emp_seq = em.emp_seq
+		join $DB_NEOS$t_co_emp_comp ec on e.emp_seq = ec.emp_seq and ec.work_status = '999' and ec.use_yn = 'Y'
+		join $DB_NEOS$t_co_emp_dept ed on ec.emp_seq = ed.emp_seq and ec.dept_seq = ed.dept_seq
+		join $DB_NEOS$v_t_co_comp_multi cm on ec.comp_seq = cm.comp_seq 
+		join $DB_NEOS$oneffice_access_manager am on am.request_id = e.emp_seq
+		where 
+			am.doc_no = #doc_no#
+			and 
+			am.editor_id = #editor_id#
+			and (
+				LENGTH(am.request_id) > 0
+				or
+				response_answer != 0
+			)
+	</select>
+
+	<select id="OnefficeDao.manager_search_reponse_answer" parameterClass="hashmap" resultClass="String">
+		SELECT
+			response_answer
+		FROM
+			$DB_NEOS$oneffice_access_manager
+		WHERE
+			doc_no = #doc_no#
+			and (
+				request_id = #request_id#
+				or
+				request_id = #editor_id#
+			)
+	</select>
+	 
+	<update id="OnefficeDao.manager_update_request_id" 	parameterClass="hashmap">
+		update $DB_NEOS$oneffice_access_manager 
+		set
+			request_id=#request_id#,
+			request_time = now()
+		where
+			doc_no= #doc_no#
+			and editor_id = #editor_id#
+			and request_id = ""
+			and response_answer != '1'
+	</update>
+	
+	<update id="OnefficeDao.manager_update_cancel_request_id" 	parameterClass="hashmap">
+		update $DB_NEOS$oneffice_access_manager 
+		set
+			request_id="",
+			response_answer = "",
+			request_time = ""
+		where
+			doc_no= #doc_no#
+			and editor_id = #editor_id#
+			and request_id = #request_id#
+	</update>
+	
+	
+	<update id="OnefficeDao.manager_update_response_answer" parameterClass="hashmap">
+		update $DB_NEOS$oneffice_access_manager 
+		set
+			<isEqual property="response_answer" compareValue="1">
+				editor_id=#request_id#,
+				editor_date = now(),
+				response_answer=#response_answer#
+			</isEqual>
+			
+			<isEqual property="response_answer" compareValue="9">
+				response_answer=#response_answer#
+			</isEqual>
+			
+			<isEqual property="response_answer" compareValue="0">
+				response_answer=#response_answer#,
+				request_id="",
+				request_time = ""
+			</isEqual>
+		where
+		doc_no= #doc_no#
+		<isNotEqual property="response_answer" compareValue="0">
+		and editor_id = #editor_id#
+		</isNotEqual>
+		
+	</update>
+	
+	<update id="OnefficeDao.am_update_changemode_access_info" parameterClass="hashmap">
+		UPDATE $DB_NEOS$oneffice_access_info 
+		SET	
+			access_date = now(),
+			access_perm =#change_access_perm#
+		WHERE 
+		doc_no=#doc_no# AND access_id = #access_id# 
+		AND access_status='1';	
+	</update>
+	
+	<update id="OnefficeDao.am_force_change_editor_id" parameterClass="hashmap">
+		update $DB_NEOS$oneffice_access_manager 
+		set
+			editor_id=#editor_id#,
+			editor_date = now(),
+			request_id = "",
+			request_time = "",
+			response_answer = 0
+		where
+		doc_no= #doc_no#
+	</update>
+	
+	<select id="OnefficeDao.sharedoc_write_open_cnt" parameterClass="hashmap" resultClass="Integer">
+		SELECT 
+			count(*)
+		FROM 
+			$DB_NEOS$oneffice_access_info  ac
+		JOIN $DB_NEOS$oneffice_share sh ON ac.doc_no = sh.doc_no AND ac.access_id = sh.share_id
+		WHERE 
+			ac.access_status = "1"
+			AND
+			sh.share_perm = "W"
+	</select>
+	
+	<delete id="OnefficeDao.syncAccessManagerandAccessInfo" parameterClass="hashmap">
+		DELETE FROM AM USING $DB_NEOS$oneffice_access_manager AM
+		LEFT OUTER JOIN $DB_NEOS$oneffice_access_info AC ON AM.doc_no = AC.doc_no
+		WHERE AM.doc_no!=#doc_no# AND (AC.doc_no IS NULL OR (AC.access_status = 0 AND AC.access_perm = 'W'))
+	</delete>
+
+	<!-- chg own req -->
+	<insert id="OnefficeDao.insertChgOwnReq" parameterClass="hashmap">
+	  	insert into $DB_NEOS$oneffice_change_owner_req (req_id, org_owner_id, new_owner_id)
+  		values (#req_id#, #user_id#, #new_owner_id#)
+	</insert>
+	
+	<delete id="OnefficeDao.deleteChgOwnReq" parameterClass="hashmap">
+		delete from $DB_NEOS$oneffice_change_owner_req
+		where req_id = #req_id#
+		<isNotNull property="state">
+		and state = #state#
+		</isNotNull>
+	</delete>
+
+	<update id="OnefficeDao.updateChgOwnReq" parameterClass="hashmap">
+		update $DB_NEOS$oneffice_change_owner_req
+		set state = #state#, mod_date = now()
+		where req_id = #req_id#
+	</update>
+
+	<select id="OnefficeDao.selectChgOwnReq" parameterClass="hashmap" resultClass="hashmap">
+		select *
+		from $DB_NEOS$oneffice_change_owner_req
+		where req_id = #req_id#
+	</select>
+
+	<select id="OnefficeDao.getChgOwnReq" parameterClass="hashmap" resultClass="hashmap">
+		select req_id,
+				org_owner_id,
+				new_owner_id,
+				case state
+					 when '0' then 'request'
+					 when '1' then 'accept'
+					 when '2' then 'reject'
+					 when '3' then 'confirm'
+				else '-1'end as type,
+				convert(DATE_FORMAT(reg_date,'%Y-%m-%d %H:%i:%s'),char(30)) as reg_date,
+				convert(DATE_FORMAT(mod_date,'%Y-%m-%d %H:%i:%s'),char(30)) as mod_date
+		from $DB_NEOS$oneffice_change_owner_req
+		where org_owner_id = #user_id# or new_owner_id = #user_id#
+		order by reg_date desc
+	</select>
+
+	<!-- chg own doc -->
+	<insert id="OnefficeDao.insertChgOwnDoc" parameterClass="hashmap">
+	  	insert into $DB_NEOS$oneffice_change_owner_doc (req_id, doc_no)	
+	  	values
+  		<iterate property="doc_no_list" conjunction=",">
+  			(#req_id#, #doc_no_list[]#)
+  		</iterate>
+	</insert>
+	
+	<delete id="OnefficeDao.deleteChgOwnDoc" parameterClass="hashmap">
+		delete from $DB_NEOS$oneffice_change_owner_doc
+		where 
+		<isNotNull property="req_id">
+		req_id = #req_id#
+		</isNotNull>	
+		<isNotNull property="doc_no_list">
+		doc_no in
+			<iterate property="doc_no_list" open="(" close=")" conjunction=",">
+				#doc_no_list[]#
+			</iterate>
+		</isNotNull>
+	</delete>
+	
+	<select id="OnefficeDao.selectChgOwnDoc" parameterClass="hashmap" resultClass="hashmap">
+		select doc_no
+		from $DB_NEOS$oneffice_change_owner_doc
+		where req_id = #req_id#
+	</select>
+
+	<!-- chg own -->
+	<select id="OnefficeDao.isFolder" parameterClass="hashmap" resultClass="hashmap">
+		select *
+		from $DB_NEOS$oneffice_document
+		where doc_no = #folder_no# and doc_type = 0
+	</select>
+
+	<update id="OnefficeDao.updateFolderNo" parameterClass="hashmap">
+		update $DB_NEOS$oneffice_document
+		set folder_no = #folder_no#, mod_date=now()
+		where owner_id = #owner_id# and doc_no in 
+		<iterate property="doc_no_list" open="(" close=")" conjunction=",">
+			#doc_no_list[]#
+		</iterate>
+	</update>
+
+	<insert id="OnefficeDao.createTempFolder" parameterClass="hashmap">
+		insert into 
+		$DB_NEOS$oneffice_document (doc_no, doc_type, folder_no, doc_name, owner_id, reg_date, mod_date, access_date, deleted) 
+		values (#doc_no#, '0', #folder_no#, #doc_name#, #empSeq#, now(), now(), now(), '1')
+	</insert>
+
+	<select id="OnefficeDao.getWillChgOwnDocList" parameterClass="hashmap" resultClass="hashmap">
+		select t1.doc_no
+		from (select doc_no
+			  from $DB_NEOS$oneffice_change_owner_doc
+			  where req_id = #req_id#) t1
+			 join
+				$DB_NEOS$oneffice_document as t2
+			 on
+				t1.doc_no = t2.doc_no
+		<!-- 요청 당시의 소유자와 같은지, 삭제되지 않았는지 -->
+		where t2.deleted = '0'
+			  and
+			  t2.owner_id = (select org_owner_id
+							 from $DB_NEOS$oneffice_change_owner_req
+							 where req_id = #req_id#)
+	</select>
+	
+	<select id="OnefficeDao.getAllChild" parameterClass="hashmap" resultClass="hashmap">
+		select doc_no, doc_type
+		from $DB_NEOS$oneffice_document
+		where owner_id = #owner_id# and folder_no != '' and #folderNoStr# like concat('%|', folder_no, '|%');
+	</select>
+
+	<update id="OnefficeDao.updateDocumentOwner" parameterClass="hashmap">
+		update $DB_NEOS$oneffice_document
+		set owner_id = #owner_id#, mod_date = now()
+		where doc_no in
+		<iterate property="doc_no_list" open="(" close=")" conjunction=",">
+			#doc_no_list[]#
+		</iterate>
+	</update>
+
+	<update id="OnefficeDao.updateShareOwner" parameterClass="hashmap">
+		update $DB_NEOS$oneffice_share
+		set owner_id = #owner_id#
+		where doc_no in
+		<iterate property="doc_no_list" open="(" close=")" conjunction=",">
+			#doc_no_list[]#
+		</iterate>
+	</update>
+</sqlMap>

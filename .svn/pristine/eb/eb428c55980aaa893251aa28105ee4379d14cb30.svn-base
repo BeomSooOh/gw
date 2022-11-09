@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="EmpDeptManage">
+	
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+	<delete id="EmpDeptManage.deleteEmpDept" parameterClass="hashmap">
+		DELETE FROM `t_co_emp_dept` 
+		WHERE
+		`dept_seq` = #deptSeq# AND `emp_seq` = #empSeq#
+	</delete>
+	
+	<delete id="EmpDeptManage.deleteEmpDeptMulti" parameterClass="hashmap">
+		DELETE FROM `t_co_emp_dept_multi` 
+		WHERE
+		`dept_seq` = #deptSeq# AND `emp_seq` = #empSeq#
+	</delete>
+	
+</sqlMap>

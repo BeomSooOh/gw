@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="restDAO">
+	<!-- 모바일 웹서비스 로그인처리를 위한 resultMap -->
+	<resultMap id="loginWS" class="restful.mobile.vo.RestfulVO">
+        <result property="groupSeq"    column="groupSeq" nullValue=" "  />
+        <result property="loginId"     column="loginId"   nullValue=" "        />
+        <result property="loginPassword"    column="loginPassword"    nullValue=" "       />
+        <result property="compSeq"     column="compSeq"   nullValue=" "    />
+        <result property="compName"    column="compName"     nullValue=" "      />
+        <result property="bizSeq"      column="bizSeq"       nullValue=" "       />
+        <result property="bizName"     column="bizName"     nullValue=" "     />
+        <result property="deptSeq"     column="deptSeq"        nullValue=" "/>
+        <result property="deptName"    column="deptName"    nullValue=" "    />
+        <result property="empSeq"      column="empSeq"  nullValue=" "   />
+        <result property="empName"     column="empName"     nullValue=" "     />
+        <result property="dutyCode"    column="dutyCode"      nullValue=" " />
+        <result property="dutyName"    column="dutyName"       nullValue=" "   />
+        <result property="positionCode"        column="positionCode"  nullValue=" "     />
+        <result property="positionName"        column="positionName"  nullValue=" "     />
+        <result property="email"        column="email"   nullValue=" "    />
+        <result property="nativeLangCode"      column="nativeLangCode"   nullValue=" "    /> 
+        <result property="setupVersionSeq"		column="setupVersionSeq"		nullValue="0" />
+        <result property="orgnztPath"      column="orgnztPath"   nullValue=" "    /> 
+	</resultMap>
+	
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+	<!-- 모바일 웹서비스 로그인 -->
+	<select id="restDAO.actionLoginMobile" resultMap="loginWS">
+		 SELECT M.LOGIN_ID AS loginId
+		 	  , M.LOGIN_PASSWD AS loginPassword
+		 	  , M.EMP_SEQ AS empSeq
+		 	  , O.EMP_NAME AS empName
+			  , M.EMAIL_ADDR AS email
+			  , M.DUTY_CODE as dutyCode
+			  , (SELECT DP_NAME
+				   FROM t_co_comp_duty_position_multi
+				  WHERE DP_SEQ = M.DUTY_CODE
+					   AND DP_TYPE = 'DUTY' LIMIT 1) AS dutyName
+			  , M.POSITION_CODE AS positionCode
+			  , (SELECT DP_NAME
+				   FROM t_co_comp_duty_position_multi
+				  WHERE DP_SEQ = M.POSITION_CODE
+					AND DP_TYPE = 'POSITION' LIMIT 1) AS positionName
+			  , N.COMP_SEQ AS compSeq
+			  , (SELECT F.COMP_NAME
+				   FROM t_co_comp_multi F
+				  WHERE N.COMP_SEQ=F.COMP_SEQ) AS compName
+			  , N.GROUP_SEQ AS groupSeq			  
+			  , N.BIZ_SEQ AS bizSeq
+			  , (SELECT G.BIZ_NAME
+				   FROM t_co_biz_multi G
+				  WHERE N.BIZ_SEQ=G.BIZ_SEQ) AS bizName
+			  , N.DEPT_SEQ AS deptSeq
+			  , (SELECT A.DEPT_NAME
+				   FROM t_co_dept_multi A
+				  WHERE A.DEPT_SEQ = N.DEPT_SEQ) deptName				  
+			  ,get_lang_code(M.emp_seq,null) as nativeLangCode
+			  , G.setup_version_seq as setupVersionSeq 
+			  , D.path as orgnztPath
+		 FROM T_CO_EMP M, T_CO_EMP_DEPT N, V_T_CO_EMP_MULTI O, T_CO_GROUP G, T_CO_DEPT D, T_CO_COMP C
+		 WHERE M.GROUP_SEQ = G.GROUP_SEQ 
+		 AND M.EMP_SEQ = N.EMP_SEQ
+		 AND M.EMP_SEQ = O.EMP_SEQ
+		 AND N.DEPT_SEQ = D.DEPT_SEQ
+		 AND N.COMP_SEQ = C.COMP_SEQ
+		 AND M.WORK_STATUS = '999'
+		 AND D.USE_YN = 'Y'
+		 AND M.USE_YN = 'Y'
+		 AND N.USE_YN = 'Y'
+		 AND O.USE_YN = 'Y'
+		 AND C.USE_YN = 'Y'
+		 AND D.USE_YN = 'Y'		 
+		 AND N.MAIN_DEPT_YN = 'Y'
+		 AND M.GROUP_SEQ = #groupSeq#
+		 AND M.LOGIN_ID = #loginId#
+		 AND M.LOGIN_PASSWD = IF(#loginPassword# = '▦', M.LOGIN_PASSWD, #loginPassword#)
+	</select>
+
+	<select id="restDAO.selectLoginVO" resultClass="hashMap">
+	<![CDATA[
+	   SELECT   IFNULL(COMP_SEQ, '') AS compSeq
+              , IFNULL(COMP_NAME, '') AS compName
+              , IFNULL(BIZ_SEQ, '') AS bizSeq
+              , IFNULL((SELECT BIZ_NAME
+                   FROM T_CO_BIZ_MULTI 
+                  WHERE BIZ_SEQ = M.BIZ_SEQ ),'') AS bizName 
+              , IFNULL(DEPT_SEQ,'') AS deptSeq
+              , IFNULL(DEPT_NAME,'') as deptName
+              , IFNULL(EMAIL_ADDR,'') as emailAddr  
+              , IFNULL(EMAIL_DOMAIN,'') as emailDomain
+              , get_dept_path('|', DEPT_SEQ, GROUP_SEQ) as orgnztPath
+         FROM V_USER_INFO M
+        WHERE M.WORK_STATUS = '999'
+          AND M.LOGIN_ID = #loginId#
+	]]>
+	</select>
+
+	<select id="restDAO.selectLoginPassword" resultClass="String">
+		 SELECT M.LOGIN_PASSWD AS loginPassword
+		 FROM T_CO_EMP M, T_CO_EMP_DEPT N, T_CO_EMP_MULTI O
+		 WHERE M.EMP_SEQ = N.EMP_SEQ
+		 AND M.EMP_SEQ = O.EMP_SEQ
+		 AND M.WORK_STATUS = '999'
+		 AND N.MAIN_DEPT_YN = 'Y'
+		 AND M.LOGIN_ID = #loginId#
+		 AND M.GROUP_SEQ = #groupSeq#
+	</select>
+	
+	
+	<select id="restDAO.selectOrgImgList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT 
+			img_type, disp_mode, disp_type, file_id, '0' as file_sn, ph_type
+		FROM 
+			t_co_org_img
+		WHERE 
+			org_seq = #orgSeq#
+			AND
+				os_type = #osType#
+			AND
+				app_type = #appType#
+	</select>
+		
+</sqlMap>

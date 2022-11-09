@@ -1,0 +1,27 @@
+<!-- 
+<body>
+	<div name="custMain">
+	    <form name="loginForm" action ="/gw/uat/uia/actionLogin.do" method="post">
+	        <fieldset>      
+	            <input type="text" class="inp engfix"  id="userId" name="id" placeholder="아이디 입력" />
+	            <input type="hidden" id="userIdSub1" name="id_sub1" value="" />
+	            <input type="hidden" id="userIdSub2" name="id_sub2" value="" />
+	            
+	            <input type="password" class="inp engfix" id="userPw" name="password" placeholder="패스워드 입력" />
+	            
+                <input type="checkbox" id="checkId" type="checkbox" name="checkId" onClick="javascript:saveid(document.loginForm);"/>
+                <label for="checkId">아이디저장</label>
+                <input type="image" value="로그인" src="/gw/Images/btn/login_a1_type_btn.png" onclick="actionLogin();return false;">
+	        </fieldset>
+	    </form>
+	</div>
+</body>
+ -->
+ 
+ 
+ <script>
+ 
+ alert(1);
+ </script>
+ 
+ 

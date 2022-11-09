@@ -1,0 +1,453 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="CommonOptionManageDAO">
+
+	
+    <typeAlias  alias="CommonOptionManageVO" type="neos.cmm.systemx.commonOption.vo.CommonOptionManageVO"/>
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+	<select id="CommonOptionDAO.selectCommonOption" resultClass="CommonOptionManageVO" parameterClass="hashmap">
+		SELECT  option_seq as optionSeq
+		      , start_year as startYear
+		      , end_year as endYear
+		      , start_month as startMonth
+		      , end_month as endMonth
+			  , auto_renew_val as autoRenewVal
+			  , login_fail_cnt as loginFailCnt
+			  , info_type as infoType
+			  , pass_chk as passChk
+			  , pass_cycle as passCycle
+			  , pass_re_cycle as passReCycle
+			  , min_length as minLength
+			  , max_length as maxLength
+			  , pass_mix_val as passMixVal
+			  , pass_limit_val as passLimitVal
+			  , menu_open_scope as menuOpenScope
+			  , menu_open_scope_chk1 as menuOpenScopeChk1
+			  , menu_open_scope_chk2 as menuOpenScopeChk2
+			  , menu_open_scope_chk3 as menuOpenScopeChk3
+			  , menu_cnt as menuCnt
+			  , editor_chk as editorChk
+			  , erp_org_chart as erpOrgChart
+		FROM t_co_cmm_option
+	</select>
+
+
+    <insert id="CommonOptionDAO.InsertCommonOption" parameterClass="CommonOptionManageVO"  >
+        INSERT INTO t_co_cmm_option
+                    ( option_seq, start_year , end_year, start_month, end_month, 
+                      auto_renew_val, login_fail_cnt, info_type, pass_chk, pass_cycle, 
+                      pass_re_cycle, min_length, max_length, pass_mix_val, pass_limit_val,
+                      menu_open_scope, menu_open_scope_chk1, menu_open_scope_chk2, menu_open_scope_chk3, menu_cnt, 
+                      editor_chk, erp_org_chart )
+             VALUES  (100000, #startYear#, #endYear#, #startMonth#, #endMonth#,
+             		  #autoRenewVal#, #loginFailCnt#, #infoType#, #passChk#, #passCycle#,
+             		  #passReCycle#, #minLength#, #maxLength#, #passMixVal#, #passLimitVal#,
+             		  #menuOpenScope#, #menuOpenScopeChk1#, #menuOpenScopeChk2#, #menuOpenScopeChk3#, #menuCnt#,
+             		  #editorChk#, #erpOrgChart#
+             
+             ) 
+     </insert>
+
+
+    <update id="CommonOptionDAO.UpdateCommonOption" parameterClass="java.util.HashMap">
+        <![CDATA[
+            UPDATE t_co_cmm_option 
+               SET start_year = #startYear#
+                 , end_year = #endYear#
+                 , start_month = #startMonth#
+                 , end_month = #endMonth#
+                 , auto_renew_val = #autoRenewVal#
+                 , login_fail_cnt = #loginFailCnt#
+                 , info_type = #infoType#
+                 , pass_chk = #passChk#
+                 , pass_cycle = #passCycle#
+                 , pass_re_cycle = #passReCycle#
+                 , min_length = #minLength#
+                 , max_length = #maxLength#
+                 , pass_mix_val = #passMixVal#
+                 , pass_limit_val = #passLimitVal#
+                 , menu_open_scope = #menuOpenScope#
+                 , menu_open_scope_chk1 = #menuOpenScopeChk1#
+                 , menu_open_scope_chk2 = #menuOpenScopeChk2#    
+                 , menu_open_scope_chk3 = #menuOpenScopeChk3#
+                 , menu_cnt = #menuCnt#
+                 , editor_chk = #editorChk#
+                 , erp_org_chart = #erpOrgChart#                                                                   
+             WHERE option_seq='100000'
+        ]]>
+    </update>
+     
+     
+   <select id="CommonOptionDAO.selectCompList"  parameterClass="hashmap" resultClass="egovMap">
+   		/* CommonOptionDAO.selectCompList - oracle */
+		SELECT A.comp_seq, 
+			   MAX(FN_GetMultiLang(#langCode#,B.comp_name_multi)) 
+			    KEEP (DENSE_RANK FIRST ORDER BY A.comp_seq DESC) AS comp_name,
+			   MAX(A.order_num)  
+			    KEEP (DENSE_RANK FIRST ORDER BY A.comp_seq DESC) as order_num 
+		FROM t_co_comp A
+		   , v_t_co_comp_multi B 
+		WHERE
+			A.comp_seq = B.comp_seq
+			AND A.group_seq = #groupSeq#
+			AND	A.use_yn = 'Y'
+		<isNotEqual property="userSe" compareValue="MASTER">
+			AND A.comp_seq = #compSeq#
+		</isNotEqual>
+		GROUP BY A.comp_seq
+		ORDER BY case when order_num is null then -1 else order_num end, A.comp_seq
+	</select>
+	
+	
+	<select id="CommonOptionDAO.selectOptionList"  parameterClass="hashmap" resultClass="egovMap">
+   		/* CommonOptionDAO.selectOptionList - oracle */
+		SELECT	option_id,
+				MAX(option_value) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) AS option_value,
+				MAX(option_gb) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) AS option_gb,
+				MAX(option_group) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) AS option_group,
+				MAX(option_nm) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) AS option_nm,
+				MAX(p_option_id) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) AS p_option_id,
+				MAX(option_value_id) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) AS option_value_id,
+				MAX(p_option_must_value) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) AS p_option_must_value,
+				MAX(option_level) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) AS option_level,
+				MAX(option_desc) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) AS option_desc,
+				MAX(option_value_real) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) AS option_value_real,
+				MAX(co_id) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) AS co_id,
+				MAX(detail_code) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) AS detail_code,
+				MAX(CODE) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) AS CODE,
+				MAX(lang_code) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) AS lang_code,
+				MAX(detail_name) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) AS detail_name,
+				MAX(note) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) AS note, 
+				MAX(use_yn) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) AS use_yn,
+				MAX(create_seq) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) AS create_seq,
+				MAX(create_date) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) AS create_date,
+				MAX(modify_seq) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) AS modify_seq,
+				MAX(modify_date) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) AS modify_date,
+				MAX(detail_name_multi) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) AS detail_name_multi,		 
+				NVL(CASE MAX(T.option_group)  KEEP (DENSE_RANK FIRST ORDER BY option_id DESC) WHEN 'text' 
+				THEN MAX(T.option_value) KEEP (DENSE_RANK FIRST ORDER BY option_id DESC)  
+				ELSE LISTAGG(CASE1.detail_name_multi, ', ') WITHIN GROUP(ORDER BY CASE1.detail_name_multi)
+				END, MAX(get_code_detail_info('0', 'TX000017306', '1', #sLangCode#))  KEEP (DENSE_RANK FIRST ORDER BY option_id DESC))  AS select_value
+		FROM	(
+			SELECT A.option_id AS option_id, 
+			       NVL(B.option_value, A.option_d_value) AS option_value,
+			       A.option_gb AS option_gb,
+			       A.option_group AS option_group, 
+			       FN_GetLanguageName(#sLangCode#,A.option_nm,A.option_nm_en,A.option_nm_jp,A.option_nm_cn) AS option_nm,
+			       A.p_option_id AS p_option_id,
+			       A.option_value_id AS option_value_id,
+			       A.p_option_must_value AS p_option_must_value,
+			       A.option_level AS option_level,
+			       FN_GetLanguageName(#sLangCode#,A.option_desc,A.option_desc_en,A.option_desc_jp,A.option_desc_cn) AS option_desc,
+			       B.option_value AS option_value_real, 
+			       B.co_id AS co_id,
+			       A.sort_order AS sort_order
+			FROM   tcmg_optionset A
+			    LEFT OUTER JOIN tcmg_optionvalue B
+			    ON A.option_id = B.option_id AND B.co_id = #compSeq#
+			 
+			WHERE A.module_gb = #type# 
+			<isNotEqual property="optionId" compareValue="appPathSeq800">
+				AND (A.use_yn != 'N' or a.use_yn is null)
+			</isNotEqual>
+			<isNotEmpty property="cmFlag">
+				AND A.option_id in('com100','com101','com200','com201','com300','com301','com220')
+			</isNotEmpty>
+			<isEmpty property="cmFlag">
+				AND A.option_id not in('com100','com101','com200','com201','com300','com301','com220')
+			</isEmpty>
+			
+			)	T
+			LEFT OUTER JOIN	(
+				SELECT  detail_code, 
+				        CODE, 
+				        lang_code, 
+				        detail_name, 
+				        note, 
+				        use_yn, 
+				        create_seq, 
+				        create_date, 
+				        modify_seq, 
+				        modify_date, 
+				        FN_GetMultiLang(#sLangCode#, detail_name_multi) as detail_name_multi
+				 FROM   v_t_co_code_detail_multi
+			)	CASE1
+			ON 	T.option_value_id = CASE1.code AND T.option_value  LIKE  ('%' || CASE1.detail_code || '%')
+		WHERE T.option_gb = #gubun#
+		<isEqual property="compare" compareValue="compare">
+		AND T.option_id = #optionId#
+		</isEqual>	
+		GROUP BY sort_order, option_id
+		ORDER BY SUBSTR(option_id, 3) ASC
+	</select>
+	
+	
+	<select id="CommonOptionDAO.selectOptionValue"  parameterClass="hashmap" resultClass="egovMap">
+   		/* CommonOptionDAO.selectOptionValue - oracle */
+		SELECT  A.option_id, 
+				A.option_gb, 
+				A.module_gb, 
+				A.option_group, 
+				A.option_nm, 
+				A.p_option_id, 
+				A.p_option_must_value, 
+				A.option_level, 
+				NVL(A.option_desc,' ') AS option_desc,
+				A.option_d_value, 
+				A.option_value_id, 
+				NVL(A.option_desc2,' ') AS option_desc2,
+				A.option_nm_en, 
+				A.option_nm_jp, 
+				A.option_nm_cn, 
+				A.option_desc_en, 
+				A.option_desc_jp, 
+				A.option_desc_cn, 
+				A.use_yn, 
+				C.detail_code,
+				FN_GetMultiLang(#langCode#, C.detail_name_multi) AS detail_name,
+				NVL(B.option_value, A.option_d_value) AS option_value_display
+		FROM   tcmg_optionset A
+		    LEFT JOIN tcmg_optionvalue B
+		    ON A.option_id = B.option_id AND B.co_id = #compSeq#
+		    INNER JOIN v_t_co_code_detail_multi C
+		    ON A.option_value_id = C.code
+		    INNER JOIN t_co_code_detail D
+		    ON C.code = D.code AND C.detail_code = D.detail_code
+		WHERE A.option_id = #optionId# and A.option_group = #gubunType#
+		ORDER BY D.order_num DESC
+	</select>
+	
+	<insert id="CommonOptionDAO.insertOptionValue" parameterClass="java.util.Map">
+		/* CommonOptionDAO.insertOptionValue - oracle */
+		INSERT INTO tcmg_optionvalue 
+		VALUES(#optionId#, #compSeq#, #optionValue#, #empSeq#, SYSDATE, null, null)
+	</insert>
+	
+	<update id="CommonOptionDAO.updateOptionValue" parameterClass="java.util.Map">
+		/* CommonOptionDAO.updateOptionValue - oracle */
+		merge into $DB_NEOS$TCMG_OPTIONVALUE a
+		using (
+		   select
+            option_id
+            from $DB_NEOS$TCMG_OPTIONSET
+		)B on (a.option_id = b.option_id AND a.CO_ID = #compSeq# and A.OPTION_ID = #optionId# and b.option_id = #optionId#)
+		when matched then
+		update set
+		a.OPTION_VALUE = #optionValue#, a.MODIFY_BY = #empSeq#, a.MODIFY_DT = SYSDATE  
+	</update>
+	
+	<select id="CommonOptionDAO.selectLoginOptionValue" parameterClass="hashmap" resultClass="egovMap">
+		SELECT A.option_id, NVL(B.option_value, A.option_d_value) as option_real_value
+		FROM   tcmg_optionset A
+	    LEFT JOIN tcmg_optionvalue B
+		ON A.option_id = B.option_id AND B.co_id = '0'
+		<isNotEmpty property="option">
+			WHERE A.option_id like #option# || '_'
+		</isNotEmpty>
+		<isNotEmpty property="optionArray">
+			WHERE A.option_id IN ($optionArray$)
+		</isNotEmpty>		
+	</select>
+	
+	<select id="CommonOptionDAO.selectGroupOptionValue" parameterClass="hashmap" resultClass="egovMap">
+		/* CommonOptionDAO.selectGroupOptionValue - oracle */
+		SELECT A.*, B.*, NVL(B.option_value, A.option_d_value) as option_real_value
+		FROM   tcmg_optionset A
+		    LEFT JOIN tcmg_optionvalue B
+		    ON A.option_id = B.option_id AND B.co_id = #compSeq#
+		WHERE A.option_id = #option#
+	</select>
+	
+	<select id="CommonOptionDAO.selectErpOptionValue" parameterClass="hashmap" resultClass="egovMap">
+		/* CommonOptionDAO.selectErpOptionValue - oracle */
+		SELECT A.*, B.*, NVL(B.option_value, A.option_d_value) as option_real_value
+		FROM   tcmg_optionset A
+		    LEFT JOIN tcmg_optionvalue B
+		    ON A.option_id = B.option_id AND B.co_id = #compSeq#
+		WHERE A.option_gb = '2' 
+		  AND A.option_id = #option#
+	</select>
+	
+	<select id="CommonOptionDAO.selectErpEmpOptionValue" parameterClass="hashmap" resultClass="egovMap">
+		/* CommonOptionDAO.selectErpEmpOptionValue - oracle */
+		SELECT A.*, B.*, NVL(B.option_value, A.option_d_value) as option_real_value
+		FROM   tcmg_optionset A
+		    LEFT JOIN tcmg_optionvalue B
+		    ON A.option_id = B.option_id AND B.co_id = #compSeq#
+		WHERE A.option_gb = '2' 
+		  AND A.p_option_id = #option#
+	</select>
+	
+	<update id="CommonOptionDAO.resetEmpPwdDate" parameterClass="java.util.Map">
+		update t_co_emp set passwd_date= TO_DATE('1900-01-01', 'YYYY-MM-DD')
+	</update>	
+	
+	<update id="CommonOptionDAO.changeOrderDutyPosition" parameterClass="java.util.Map">
+	MERGE INTO T_CO_EMP_DEPT A
+	     USING( SELECT A.ORDER_TEXT, POSI.ORDER_NUM AS ORDER_NUM_POSI, DUTY.ORDER_NUM AS ORDER_NUM_DUTY, A.ORDER_NUM, E.JOIN_DAY, VEM.EMP_NAME, A.DEPT_SEQ, A.EMP_SEQ
+	             FROM T_CO_EMP_DEPT A 
+	             LEFT JOIN T_CO_COMP_DUTY_POSITION POSI ON A.POSITION_CODE = POSI.DP_SEQ AND POSI.DP_TYPE='POSITION'
+	             LEFT JOIN T_CO_COMP_DUTY_POSITION DUTY ON A.DUTY_CODE = DUTY.DP_SEQ AND DUTY.DP_TYPE='DUTY'
+	             LEFT JOIN T_CO_EMP E ON A.EMP_SEQ = E.EMP_SEQ
+	             LEFT JOIN V_T_CO_EMP_MULTI VEM ON A.EMP_SEQ = VEM.EMP_SEQ AND VEM.LANG_CODE = 'kr'
+	             WHERE A.GROUP_SEQ = #groupSeq# 
+	               AND A.COMP_SEQ = #compSeq#
+	         ) JOINED_TABLE
+       	    ON (A.DEPT_SEQ = JOINED_TABLE.DEPT_SEQ AND A.EMP_SEQ = JOINED_TABLE.EMP_SEQ)
+       	    
+	WHEN MATCHED THEN UPDATE
+    			  SET 
+    			  A.ORDER_TEXT = (
+								LPAD(DECODE(NVL(TO_CHAR(JOINED_TABLE.ORDER_NUM_POSI),' '), ' ','9999999999',TO_CHAR(JOINED_TABLE.ORDER_NUM_POSI)),10,'0') || '|' ||		-- 직급
+								LPAD(DECODE(NVL(TO_CHAR(JOINED_TABLE.ORDER_NUM_DUTY),' '), ' ','9999999999',TO_CHAR(JOINED_TABLE.ORDER_NUM_DUTY)),10,'0') || '|' ||		-- 직책
+								LPAD(DECODE(NVL(TO_CHAR(JOINED_TABLE.ORDER_NUM),' '), ' ','9999999999', TO_CHAR(JOINED_TABLE.ORDER_NUM)),10,'0') || '|' ||				-- 사용자정렬값
+								NVL(LPAD(DECODE(NVL(TO_CHAR(JOINED_TABLE.JOIN_DAY, 'YYYYMMDD'),'99999999'), '00000000','99999999', TO_CHAR(JOINED_TABLE.JOIN_DAY, 'YYYYMMDD')),8,'0'),'99999999') || '|' ||	-- 입사일
+								NVL(JOINED_TABLE.EMP_NAME,' '))	
+	</update>	
+	
+	<select id="CommonOptionDAO.getErpSyncCompList" parameterClass="hashmap" resultClass="egovMap">
+		/* CommonOptionDAO.getErpSyncCompList - oracle */
+		SELECT 	
+			A.group_seq, 
+			A.comp_seq, 
+			erp_seq, 
+			achr_gbn, 
+			erp_type_code,
+			(
+				case 
+				   when erp_type_code = 'ERPiU' then 'iu'
+				   when erp_type_code = 'iCUBE' then 'icube'
+				   else 'etc'
+				end
+			) as erp_type,
+			erp_name, 
+			database_type, 
+			driver, 
+			url, 
+			userid, 
+			password, 
+			A.create_seq, 
+			A.create_date, 
+			A.modify_seq, 
+			A.modify_date, 
+			erp_comp_name, 
+			erp_comp_seq, 
+			A.use_yn,
+			NVL(org_sync_status, ' ') as orgSyncStatus,
+			TO_CHAR(org_sync_date, 'YYYY-MM-DD HH24:MI:SS') as org_sync_date,
+			FN_GetMultiLang(#langCode#,B.comp_name_multi) AS comp_name
+		FROM t_co_erp A JOIN v_t_co_comp_multi B
+		  ON A.comp_seq = B.comp_seq 
+		where achr_gbn = #achrGbn# 
+	</select>
+	
+	<select id="CommonOptionDAO.getNewErpSyncComp" parameterClass="hashmap" resultClass="egovMap">
+		/* CommonOptionDAO.getNewErpSyncComp - oracle */
+		SELECT 	
+			group_seq, 
+			comp_seq, 
+			erp_seq, 
+			achr_gbn, 
+			erp_type_code,
+			(
+				case 
+				   when erp_type_code = 'ERPiU' then 'iu'
+				   when erp_type_code = 'iCUBE' then 'icube'
+				   else 'etc'
+				end
+			) as erp_type,
+			erp_name, 
+			database_type, 
+			driver, 
+			url, 
+			userid, 
+			password, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date, 
+			erp_comp_name, 
+			erp_comp_seq, 
+			use_yn,
+			org_sync_status,
+			TO_CHAR(org_sync_date, 'YYYY-MM-DD HH24:MI:SS') as org_sync_date
+		FROM 
+			t_co_erp 
+		where
+			comp_seq = #compSeq#
+			and achr_gbn = #achrGbn# 
+	</select>
+	
+	<select id="CommonOptionDAO.getGroupOptionList" parameterClass="hashmap" resultClass="egovMap">
+		select
+		a.option_id,
+		NVL(b.option_value, a.option_d_value) as option_value
+		from tcmg_optionset a
+		left join tcmg_optionvalue b on a.option_id = b.option_id and b.co_id in ('0',#compSeq#)
+		where a.option_id in (#optionList#)
+	</select>	
+	
+	<update id="commonOptionDAO.changePasswdStausCode" parameterClass="java.util.Map">
+		/* commonOptionDAO.changePasswdStausCode - oracle */
+		update t_co_emp set
+		  passwd_status_code = #passwdStatusCode#
+	</update>
+	
+	<update id="commonOptionDAO.changeEmpPwdDate" parameterClass="java.util.Map">
+		update t_co_emp set 
+		  passwd_status_code = #passwdStatusCode#
+		where  emp_seq = #empSeq#
+	</update>
+	
+	
+	<update id="commonOptionDAO.changeBizDisplayYn" parameterClass="java.util.Map">
+		update 
+			t_co_biz 
+		set 
+		  display_yn = #displayYn#
+		where  
+			comp_seq = #compSeq#
+	</update>
+	
+	<select id="commonOptionDAO.getCommonOptionList" parameterClass="hashmap" resultClass="hashmap">
+	
+		select
+			a.option_id OPTION_ID,
+			a.option_nm OPTION_NM,
+			NVL(b.option_value, a.option_d_value) OPTION_VALUE,
+			a.p_option_id AS "p_option_id",
+			TO_NUMBER(a.option_level) AS "option_level",
+			c.comp_seq CO_ID,
+			'1' USE_YN,
+			'1' DISPLAY_YN			
+		From tcmg_optionset a
+		join t_co_comp c on c.use_yn = 'Y'
+		left join tcmg_optionvalue b on a.option_id = b.option_id and c.comp_seq = b.co_id
+		where 
+			lower(a.module_gb) = lower(#type#) and a.option_gb = '2'
+		
+		union
+				
+		select
+			a.option_id OPTION_ID,
+			a.option_nm OPTION_NM,
+			NVL(b.option_value, a.option_d_value) OPTION_VALUE,
+			a.p_option_id AS "p_option_id",
+			TO_NUMBER(a.option_level) AS "option_level",
+			c.comp_seq CO_ID,
+			'1' USE_YN,
+			'1' DISPLAY_YN			
+		From tcmg_optionset a
+		join t_co_comp c on c.use_yn = 'Y'
+		left join tcmg_optionvalue b on a.option_id = b.option_id and b.co_id = '0'
+		where 
+			lower(a.module_gb) = lower(#type#) and a.option_gb = '1'	
+					
+<!-- 		union -->
+					
+<!-- 		SELECT -->
+<!-- 			'gwTitle', '그룹웨어 타이틀', NVL(group_display_name,''), NULL, 1, 0, 1, 1 -->
+<!-- 		FROM $DB_NEOS$t_co_group -->
+	</select>
+</sqlMap>

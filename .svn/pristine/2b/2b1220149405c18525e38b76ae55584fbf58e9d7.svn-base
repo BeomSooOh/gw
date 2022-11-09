@@ -1,0 +1,35 @@
+# \uae30\ubcf8 \uc5c5\ub85c\ub4dc \uacbd\ub85c
+SystemX.uploadpath.linux = /ispdata
+SystemX.uploadpath.windows = D:/upload
+
+# \uad00\uc778
+SystemX.stampFilePath.linux =/basic/stamp
+SystemX.stampFilePath.windows =/doc/stamp
+
+# \uc0ac\uc6a9\uc790\uc0ac\uc778
+SystemX.userSignFilePath.linux =/basic/sign
+SystemX.userSignFilePath.windows =/doc/sign
+
+# \ub85c\uace0
+SystemX.fileLogoPath.linux = /basic/template/logo_Images
+SystemX.fileLogoPath.windows = /doc/template/logo_Images
+
+# \uc2ec\ubcfc
+SystemX.fileSimbolPath.linux = /basic/template/symbol_Images
+SystemX.fileSimbolPath.windows = /doc/template/symbol_Images
+
+# \uc0ac\uc6a9\uc790 \ud504\ub85c\ud544
+SystemX.fileStorePath.photo.linux = /basic/photo
+SystemX.fileStorePath.photo.windows = /upload/photo
+
+# \uc0ac\uc778
+SystemX.fileStorePath.sign.linux = /basic/sign
+SystemX.fileStorePath.sign.windows = /upload/sign
+
+# \uc9c1\uc778
+SystemX.fileStorePath.stamp.linux = /basic/stamp
+SystemX.fileStorePath.stamp.windows = /upload/stamp
+
+# \uc591\uc2dd
+SystemX.fileStorePath.template.linux = /basic/template
+SystemX.fileStorePath.template.windows = /upload/template

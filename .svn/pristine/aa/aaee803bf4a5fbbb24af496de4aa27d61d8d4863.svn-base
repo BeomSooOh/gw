@@ -1,0 +1,364 @@
+package main.service.impl;
+
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import io.searchbox.core.SearchResult;
+import io.searchbox.core.SearchResult.Hit;
+import main.constants.FormatConstants;
+import main.constants.SearchConstants;
+import main.service.BizboxTotalSearchService;
+import main.service.MainService;
+import main.vo.SearchWord;
+import main.web.PagingReturnObj;
+import neos.cmm.util.CommonUtil;
+import neos.helper.DateHelper;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+
+@Service("BizboxTotalSearchService")
+public class BizboxTotalSearchServiceImpl implements BizboxTotalSearchService {
+
+	@Resource(name = "BizboxElasticSearchQuery")
+	private BizboxElasticSearchQuery bizboxElasticSearchQuery;
+	
+	@Resource(name = "MainService")
+	MainService mainService;
+	
+	@Autowired
+	private CustomSearchClient searchClient;
+	
+	//메일 이외
+	//업무관리(2), 일정(3), 노트(4), 업무보고(5), 전자결재(6:영리,7:비영리), 문서(8), 게시판(9), 첨부파일(10), 인물(11), ONEFFICE(12)
+	@Override
+	public PagingReturnObj tsearchList(Map<String, String> params, String listType) throws Exception{
+		
+		PagingReturnObj result = new PagingReturnObj();
+		result = bizboxElasticSearchQuery.searchElasticSearch(params, listType);
+		return result;
+	}
+
+	//메일 검색
+	@Override
+	public PagingReturnObj tsearchListForMail(Map<String, String> params) throws Exception {
+		
+		PagingReturnObj mailMap = new PagingReturnObj();
+		mailMap.setResultgrid(new ArrayList<Map<String,Object>>());
+		mailMap.setTotalcount(0);
+		
+		String mailUrl = mainService.getTotalSearchMailDomain(params);
+		String email = params.get("email");
+		String emailDomain = params.get("emailDomain");
+		
+		if(StringUtils.isBlank(email) || StringUtils.isBlank(emailDomain)) {
+			return mailMap;
+		}
+		
+		int pageIndex = 0;
+    	if(params.get("pageIndex") == null || "".equals(params.get("pageIndex"))){
+        	pageIndex = 1;
+        }else{
+        	pageIndex = Integer.parseInt(params.get("pageIndex"));
+        }
+    	
+    	int pageSize = 0;
+        if("1".equals(params.get("boardType"))){
+        	pageSize = 3;
+        }else if(!"1".equals(params.get("boardType")) && !"0".equals(params.get("boardType"))){ // 전체나 메일이 아닐경우
+        	pageIndex = 1;
+        	pageSize = 0;
+        }else{
+        	pageSize = 10;
+        } 
+    	
+        String tTailTmp = "";        
+        String searchWord = escapeSpecialRegexChars(params.get("tsearchKeyword"));
+		//char[] tTail = params.get("tsearchKeyword").toCharArray();
+        char[] tTail = searchWord.toCharArray();
+		for(int i = 0; i < tTail.length; i++){
+			if((tTail[i] >= 65) && (tTail[i] <= 90)){
+				tTail[i] += 32;
+			}
+			tTailTmp += tTail[i];
+		}
+		
+		tTailTmp = URLEncoder.encode(tTailTmp,"UTF-8");
+		String sUrl = mailUrl + "getsearchMailList.do?id="+email+"&domain="+emailDomain+"&mboxSeq=0&page="+pageIndex+"&pageSize="+pageSize+"&search="+tTailTmp+"&type=all&integrate=true";
+        
+		JSONObject obj = new JSONObject();
+		obj.put("id", email);
+		obj.put("domain", emailDomain);
+		obj.put("mboxSeq", "0");
+		obj.put("page", pageIndex);
+		obj.put("pageSize", pageSize);
+		obj.put("search", tTailTmp);
+		obj.put("type", "all");
+		obj.put("integrate", "true");
+		
+		//메일 검색 진행
+		JSONObject mailList = getPostJSON(sUrl, obj.toString());
+		
+		if(mailList != null) {
+
+			int mailCode = -1;
+			
+			if(mailList.containsKey("code")) {
+				try {
+					mailCode = (int) mailList.get("code");
+				}catch(Exception e) {
+					CommonUtil.printStatckTrace(e);//오류메시지를 통한 정보노출
+				}
+			}
+			// mailCode : 성공 = 0, 오류 = -1, 세션오류 = -2
+			if(mailCode == 0){
+				JSONArray mailInfo = mailList.getJSONArray("Records"); // 메일 본문정보
+				int mainCount = 0;
+				
+				if(mailList.containsKey("TotalRecordCount")) {
+					try {
+						mainCount = (int)mailList.get("TotalRecordCount"); // 메일 카운트 가져오기
+					}catch(Exception e) {
+						CommonUtil.printStatckTrace(e);//오류메시지를 통한 정보노출
+					}
+				}
+				Map<String, Object> items = null; // JSONArray에서 Map으로
+				List<Map<String, Object>> mailInsertParam = new ArrayList<Map<String,Object>>(); // 리스트로 담기
+				
+				if(mailInfo != null) {
+					for(int j=0; j<mailInfo.size(); j++) {
+						items = new HashMap<String, Object>();
+						JSONObject info = mailInfo.getJSONObject(j);
+						
+						JSONObject highlightInfo = null;
+						
+						if(info.containsKey("highlight")) {
+							highlightInfo = (JSONObject)info.get("highlight");
+						}
+						
+						if(highlightInfo != null && highlightInfo.containsKey("mail_body")) {
+							items.put("mailBody", highlightInfo.get("mail_body").toString());
+						}else {
+							items.put("mailBody", "");
+						}
+						
+						items.put("subject", info.get("subject") != null ? info.get("subject").toString() : "");
+						items.put("boxName", info.get("boxName") != null ? info.get("boxName").toString() : "");
+						items.put("muid", info.get("muid") != null ? info.get("muid").toString() : "");
+						items.put("size", info.get("size") != null ? info.get("size").toString() : "");
+						items.put("mailTo", info.get("mail_to") != null ? info.get("mail_to").toString() : "");
+						items.put("mailFrom", info.get("mail_from") != null ? info.get("mail_from").toString() : "");
+						items.put("rfc822date", info.get("rfc822date") != null ? info.get("rfc822date").toString() : "");
+						items.put("emailAddr", email+"@"+emailDomain);
+						mailInsertParam.add(items);
+					}
+				}
+				
+				mailMap.setResultgrid(mailInsertParam);
+				mailMap.setTotalcount(mainCount);
+			}
+		}
+		
+		return mailMap;
+	}
+	//검색어 저장
+	@Override
+	public void saveSearchKeyword(Map<String, String> reqParams) throws Exception {
+
+		String mainSource = jsonBuilder()
+				.startObject()
+					.field("groupSeq", reqParams.get("groupSeq"))
+					.field("compSeq", reqParams.get("compSeq"))
+					.field("deptSeq", reqParams.get("deptSeq"))
+					.field("empSeq", reqParams.get("empSeq"))
+					.field("searchWord", reqParams.get("tsearchKeyword"))
+					.field("createDate", DateHelper.convertDateToString(Calendar.getInstance().getTime(), FormatConstants.FORMAT_DATE_STRICT))
+					.field("useYn", "Y")
+				.endObject().string();
+		
+		//Result mainResult = 
+				searchClient.insertSearchWord(mainSource);
+	}
+	//검색어 미사용 처리.
+	@Override
+	public void setNoUseSearchKeyword(Map<String, String> reqParams) throws Exception {
+
+		String mainSource = jsonBuilder()
+				.startObject()
+					.startObject("doc")
+						.field("useYn", "N")
+					.endObject()
+				.endObject().string();
+		
+		//Result mainResult = 
+				searchClient.updateSearchWord(reqParams.get("_id"), mainSource);
+	}
+	
+	public static JSONObject getPostJSON(String url, String data) {
+		StringBuilder sbBuf = new StringBuilder();
+		HttpURLConnection con = null;
+		BufferedReader brIn = null;
+		OutputStreamWriter wr = null;
+		String line = null;
+		try {
+			con = (HttpURLConnection) new URL(url).openConnection();
+			con.setRequestMethod("POST");
+			con.setConnectTimeout(5000);
+			con.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
+			con.setDoOutput(true);
+			con.setDoInput(true);
+
+			wr = new OutputStreamWriter(con.getOutputStream());
+			wr.write(data);
+			wr.flush();
+			brIn = new BufferedReader(new InputStreamReader(con.getInputStream(), "UTF-8"));
+			while ((line = brIn.readLine()) != null) {
+				sbBuf.append(line);
+			}
+			// System.out.println(sbBuf);
+
+			JSONObject rtn = JSONObject.fromObject(sbBuf.toString());
+
+			sbBuf = null;
+
+			return rtn;
+		} catch (Exception e) {
+			CommonUtil.printStatckTrace(e);//오류메시지를 통한 정보노출
+			return null;
+		} finally {
+			try {
+				if(wr!=null) {//Null Pointer 역참조
+				wr.close();
+				}
+			} catch (Exception e) {
+				CommonUtil.printStatckTrace(e);//오류메시지를 통한 정보노출
+			}
+			try {
+				if(brIn!=null) {//Null Pointer 역참조
+				brIn.close();
+				}
+			} catch (Exception e) {
+				CommonUtil.printStatckTrace(e);//오류메시지를 통한 정보노출
+			}
+			try {
+				if(con!=null) {//Null Pointer 역참조
+				con.disconnect();
+				}
+			} catch (Exception e) {
+				CommonUtil.printStatckTrace(e);//오류메시지를 통한 정보노출
+			}
+		}
+	}
+
+	@Override
+	public List<SearchWord> getRecentSearchKeyword(Map<String, String> reqParams) throws Exception{
+		List<SearchWord> searchWordList = new ArrayList<>();
+		int size = Integer.parseInt(reqParams.get("size"));
+		String groupSeq = reqParams.get("groupSeq");
+		String compSeq = reqParams.get("compSeq");
+		String empSeq = reqParams.get("empSeq");
+		
+		//최근 검색어 조회 쿼리
+		BoolQueryBuilder query = QueryBuilders.boolQuery();
+		query.must( QueryBuilders.queryStringQuery("groupSeq :" + groupSeq + ""));
+		query.must( QueryBuilders.queryStringQuery("compSeq :" + compSeq + ""));
+		query.must( QueryBuilders.queryStringQuery("empSeq :" + empSeq + ""));
+		query.must( QueryBuilders.queryStringQuery("useYn :" + "Y" + ""));
+		
+		//소스빌더
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+				 .query(query)
+				 .from(0)
+				 .size(size)
+				 .sort(SortBuilders.fieldSort("createDate").order(SortOrder.DESC))
+				 .explain(false);
+		
+		SearchResult searchResult = searchClient.search(SearchConstants.ALIAS_NAME_TSEARCH_WORD, new ArrayList<String>() { 
+            { 
+                add(SearchConstants.TYPE_SEARCH_WORD); 
+            } 
+        }, sourceBuilder);
+		
+		if ( searchResult != null ) {
+			List<Hit<HashMap, Void>> searchHits = searchResult.getHits(HashMap.class);
+			searchWordList = searchResult.getSourceAsObjectList(SearchWord.class);
+			for(int i=0;i<searchWordList.size();i++) {
+				searchWordList.get(i).setId((String)searchHits.get(i).source.get("es_metadata_id"));
+			}
+		}
+
+		return searchWordList;
+	}
+
+	@Override
+	public Map<String, Object> getMenuAuthMap(Map<String, String> params) {
+		Map<String,Object> menuAuthMap = new HashMap<String,Object>();
+		
+		List<String> menuAuthList = mainService.getTotalSearchMenuAuth(params);
+		
+		menuAuthMap.put("mailYn","N");
+		menuAuthMap.put("scheduleYn","N");
+		menuAuthMap.put("noteYn","N");
+		menuAuthMap.put("reportYn","N");
+		menuAuthMap.put("projectYn","N");
+		menuAuthMap.put("boardYn","N");
+		menuAuthMap.put("edmsYn","N");
+		menuAuthMap.put("eadocYn","N");
+		menuAuthMap.put("onefficeYn","N");
+		
+		for(int i = 0; i < menuAuthList.size() ; i++){
+			if("200000000".equals(menuAuthList.get(i))){
+				menuAuthMap.put("mailYn", "Y");
+			}else if("300000000".equals(menuAuthList.get(i))){
+				menuAuthMap.put("scheduleYn", "Y");
+			}else if("303010000".equals(menuAuthList.get(i))){
+				menuAuthMap.put("noteYn", "Y");
+			}else if("304000000".equals(menuAuthList.get(i))){
+				menuAuthMap.put("reportYn", "Y");
+			}else if("400000000".equals(menuAuthList.get(i))){
+				menuAuthMap.put("projectYn", "Y");
+			}else if("500000000".equals(menuAuthList.get(i))){
+				menuAuthMap.put("boardYn", "Y");
+			}else if("600000000".equals(menuAuthList.get(i))){
+				menuAuthMap.put("edmsYn", "Y");
+			}else if("2000000000".equals(menuAuthList.get(i))){
+				menuAuthMap.put("eadocYn", "Y");
+			}else if("100000000".equals(menuAuthList.get(i))){
+				menuAuthMap.put("eadocYn", "Y");
+			}else if("1".equals(menuAuthList.get(i))){
+				menuAuthMap.put("onefficeYn", "Y");
+			}
+		}
+		return menuAuthMap;
+	}
+	
+	private Pattern SPECIAL_REGEX_CHARS = Pattern.compile("[+-=&()|<>!{}\\[\\]\"~*?:\\\\/]");
+
+	private String escapeSpecialRegexChars(String str) {
+
+	    return SPECIAL_REGEX_CHARS.matcher(str).replaceAll("\\\\$0");
+	}
+
+}

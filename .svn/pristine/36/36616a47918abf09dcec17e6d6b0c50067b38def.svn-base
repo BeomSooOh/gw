@@ -1,0 +1,251 @@
+package ebp.portalView.service.impl;
+
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+
+import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
+
+import org.apache.log4j.Logger;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.springframework.scheduling.annotation.Scheduled;
+
+import ebp.portalView.constants.RelatedSearchConstants;
+import io.searchbox.action.Action;
+import io.searchbox.client.JestClient;
+import io.searchbox.client.JestResult;
+import io.searchbox.core.DocumentResult;
+import io.searchbox.core.Index;
+import io.searchbox.core.Update;
+import io.searchbox.indices.CreateIndex;
+import io.searchbox.indices.aliases.AddAliasMapping;
+import io.searchbox.indices.aliases.ModifyAliases;
+import io.searchbox.indices.mapping.PutMapping;
+import io.searchbox.params.Parameters;
+import main.constants.CommonConstants;
+import main.constants.FormatConstants;
+import main.service.impl.CustomSearchClient;
+import main.web.BizboxAMessage;
+import neos.cmm.vo.Result;
+import neos.helper.DateHelper;
+
+//연관검색어, 연관메뉴 인덱스 처리 클래스
+public class EbpRelatedSearchIndex{
+	private CustomSearchClient searchClient;
+	private String ebpYn;
+	private static String suffixIndexName;
+	private static String indexName;
+	
+	private Logger logger = Logger.getLogger(EbpRelatedSearchIndex.class);
+	
+	public EbpRelatedSearchIndex(CustomSearchClient searchClient, String ebpYn) {
+		this.searchClient = searchClient;
+		this.ebpYn = ebpYn;
+		//우선 EBP 일때만 index적용
+		if("Y".equals(ebpYn)) {
+			init();
+		}
+	}
+	
+	public CustomSearchClient getSearchClient() {
+		return searchClient;
+	}
+
+	/**
+	 * 통합검색 검색어 인덱스 생성
+	 * 매월 1일 00:00시에 호출되어 인덱스를 확인하고 달이 지났으면 바뀐 달의 인덱스를 새로 생성하도록 한다.
+	 */
+	@Scheduled(cron="0 0 0 1 * ?")
+	public void checkNewIndex(){
+		if("Y".equals(ebpYn)) {
+			//우선 EBP 일때만 index적용
+			init();
+		}
+	}
+	/**
+	 * 초기화 로직
+	 * 스프링에서 객체가 최초 생성시에도 호출함
+	 * 인덱스를 확인하고 달이 지났으면 바뀐 달의 인덱스를 새로 생성한다.
+	 */
+	public void init(){
+		Calendar calendar = Calendar.getInstance();
+		Date today = calendar.getTime();
+		calendar.add(Calendar.MONTH, 1);
+		Date nextMonth = calendar.getTime();
+		
+		String curYearMonth = DateHelper.convertDateToString(today, FormatConstants.FORMAT_YEAR_MONTH);
+		String nextYearMonth = DateHelper.convertDateToString(nextMonth, FormatConstants.FORMAT_YEAR_MONTH);
+		
+		this.suffixIndexName = curYearMonth;
+		indexName = RelatedSearchConstants.EL_ALIAS_NAME_RELATED_SEARCH + "_" + suffixIndexName;
+		
+		IndexInitialize(RelatedSearchConstants.EL_ALIAS_NAME_RELATED_SEARCH + "_" + curYearMonth);
+		IndexInitialize(RelatedSearchConstants.EL_ALIAS_NAME_RELATED_SEARCH + "_" + nextYearMonth);
+	}
+	/**
+	 * 초기화 로직
+	 * 회사 리스트와 생성날짜를 입력받아, 인덱스를 생성하여 별칭에 연결하고 매핑들을 생성한다.
+	 */
+	public synchronized void IndexInitialize(String indexName){		
+		try {
+			this.createIndex(indexName);
+			this.createType(indexName, RelatedSearchConstants.EL_TYPE_RELATED_SEARCH, this.getRelatedSearchMapper());
+		} catch (IOException e) {
+			logger.error("related_search 인덱스 생성 실패", e);
+		}
+	}
+	/**
+	 * 연관검색어,메뉴 데이터가 저장되는 타입을 JSON string으로 작성하여 반환.
+	 * @return
+	 * @throws IOException 
+	 */
+	private String getRelatedSearchMapper() throws IOException{
+		XContentBuilder builder = jsonBuilder()
+				.startObject()
+				.startObject("properties")
+					.startObject("searchWord").field("type", "string").field("index", "analyzed").field("analyzer","whitespace").field("term_vector","yes").field("store",true).endObject()
+					.startObject("relatedSearchWord").field("type", "string").field("index", "analyzed").field("analyzer","whitespace").field("term_vector","yes").field("store",true).endObject()
+					.startObject("menuModule").field("type","string").field("index", "not_analyzed").endObject()
+					.startObject("menuId").field("type", "string").field("index", "not_analyzed").endObject()
+					.startObject("menuName").field("type", "string").field("index", "not_analyzed").endObject()
+					.startObject("count").field("type", "long").field("index", "not_analyzed").endObject()
+					.startObject("modifiedDate").field("type","date").field("format", FormatConstants.FORMAT_DATE_STRICT).endObject()
+					.startObject("useYn").field("type", "string").field("index", "not_analyzed").endObject()
+				.endObject()
+		    .endObject();
+		
+		return builder.string();
+	}
+	
+	
+	/**
+	 * 인덱스명을 입력받아 해당 인덱스가 없으면 새로 생성하고 alias에 등록
+	 * @param indexName
+	 * @return
+	 * @throws IOException
+	 */
+	public boolean createIndex(String indexName) throws IOException{		
+		
+		//이미 있는 인덱스인지 확인
+		if(searchClient.isExistIndex(indexName)){
+			return true;
+		}
+		
+		Settings.Builder settings = Settings.builder();
+		settings.put("number_of_shards",5);
+		settings.put("number_of_replicas",1);
+		settings.put("analysis.analyzer.whitespace.tokenizer", "whitespace");
+		settings.put("analysis.analyzer.whitespace.filter", "trim, lowercase");
+		
+		JestClient client = searchClient.getJestInstance();
+		//새 인덱스로 생성 후 별칭에 등록
+		Action indexCreateAction = new CreateIndex.Builder(indexName).settings(settings).build();
+		JestResult createIndexResult = client.execute(indexCreateAction);
+		if(!createIndexResult.isSucceeded()){
+			logger.error("related_search 인덱스 생성 실패. indexName=" + indexName + ", msg=" + createIndexResult.getErrorMessage());
+			return false;
+		}
+		
+		Action addIndexToAliases = new ModifyAliases.Builder(
+				new AddAliasMapping.Builder(indexName, RelatedSearchConstants.EL_ALIAS_NAME_RELATED_SEARCH).build()
+			).build();
+		
+		JestResult addAliasResult = client.execute(addIndexToAliases);
+		if(!addAliasResult.isSucceeded()){
+			logger.error("related_search Alias에 인덱스 연결 실패. aliasName=" + RelatedSearchConstants.EL_ALIAS_NAME_RELATED_SEARCH + ", msg=" + addAliasResult.getErrorMessage());
+			return false;
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * 타입 생성.
+	 * @param indexName
+	 * @param typeName
+	 * @param source
+	 * @return
+	 * @throws IOException
+	 */
+	public boolean createType(String indexName, String typeName, String source) throws IOException{
+		//해당 타입이 이미 있는지 체크 후 있으면 바로 종료
+		if(searchClient.isExistType(indexName, typeName)){
+			return true;
+		}
+		//타입이 없으면 새로 생성 시도
+		Action putMapping = new PutMapping.Builder(indexName, typeName, source).build();
+		JestResult putMappingResult = searchClient.getJestInstance().execute(putMapping);
+		if(!putMappingResult.isSucceeded()){
+			logger.error("타입 생성 실패. indexName=" + indexName + ", typeName=" + typeName + ", msg=" + putMappingResult.getErrorMessage() + ", source=" + source);
+			return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * 현재월의 인덱스 구분값을 반환.
+	 * @return
+	 */
+	public static String getIndexSuffixName(){
+		return suffixIndexName;
+	}
+	
+	/**
+	 * 현재월의 인덱스명을 반환
+	 * @return
+	 */
+	public static String getIndexName(){
+		return indexName;
+	}
+	
+	/**
+	 * 검색어 정보를 입력받아 검색엔진에 등록하고 _id 값을 반환한다.
+	 * @param source json 형식의 입력값
+	 * @return Result 객체. 결과 Obj 값은 _id:String
+	 * @throws IOException 
+	 */
+	public Result insert(String source) throws IOException{
+		Index index = new Index
+				.Builder(source)
+				.index(this.indexName)
+				.type(RelatedSearchConstants.EL_TYPE_RELATED_SEARCH)
+				.setParameter(Parameters.REFRESH, true)
+				.refresh(true)
+				.build();
+		
+		logger.debug("InsertRelatedSearch. query=" + index);
+		DocumentResult result = searchClient.getJestInstance().execute(index);
+		if(!result.isSucceeded()){
+			logger.error(" InsertRelatedSearch. Failed to insert relatedSearch. msg=" + result.getErrorMessage());
+			return new Result("ES001", result.getErrorMessage());
+		}
+		
+		return new Result(CommonConstants.API_RESPONSE_SUCCESS, BizboxAMessage.getMessage("TX000011955","성공하였습니다"), result.getId());
+	}
+	/**
+	 * documentId와 source를 입력 받아 데이터를 수정한다.
+	 * @param source json 형식의 입력값
+	 * @return Result 객체. 결과 Obj 값은 _id:String
+	 * @throws IOException 
+	 */
+	public Result update(String id, String source) throws IOException{
+		Update update = new Update
+				.Builder(source)
+				.index(this.indexName)
+				.type(RelatedSearchConstants.EL_TYPE_RELATED_SEARCH)
+				.id(id)
+				.setParameter(Parameters.REFRESH, true)
+				.refresh(true)
+				.build();
+		
+		logger.debug("UpdateRelatedSearch. query=" + update);
+		DocumentResult result = searchClient.getJestInstance().execute(update);
+		if(!result.isSucceeded()){
+			logger.error(" UpdateRelatedSearch. Failed to insert relatedSearch. msg=" + result.getErrorMessage());
+			return new Result("ES001", result.getErrorMessage());
+		}
+		
+		return new Result(CommonConstants.API_RESPONSE_SUCCESS, BizboxAMessage.getMessage("TX000011955","성공하였습니다"), result);
+	}
+}

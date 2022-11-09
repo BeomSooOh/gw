@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="AttachFileUpload">
+	
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+
+		 <insert id="AttachFileUpload.insertAtchFile" parameterClass="hashmap">
+	     	
+			INSERT INTO `t_co_atch_file` 
+				SET
+					`file_id`         	= #fileId#, 
+					`use_yn`         	= 'Y',
+					`create_seq`		= #createSeq#, 
+					`create_date`		= NOW()
+				ON DUPLICATE KEY UPDATE
+					modify_seq			= #createSeq#, 
+					modify_date			= NOW()
+				
+	     </insert>
+	     
+	      <insert id="AttachFileUpload.insertAtchFileDetail" parameterClass="hashmap">
+		      INSERT INTO `t_co_atch_file_detail` 
+				SET
+					`file_id`         = #fileId#, 
+					`file_sn`         = #fileSn#, 
+					`path_seq` 		  = #pathSeq#, 
+					`file_stre_cours` = #fileStreCours#, 
+					`stre_file_name`  = #streFileName#, 
+					`orignl_file_name`= #orignlFileName#,  
+					`file_extsn`      = #fileExtsn#, 
+					`file_cn`         = #fileCn#, 
+					`file_size`       = #fileSize#
+				ON DUPLICATE KEY UPDATE
+					`path_seq` 		  = #pathSeq#, 
+					`file_stre_cours` = #fileStreCours#, 
+					`stre_file_name`  = #streFileName#, 
+					`orignl_file_name`= #orignlFileName#,  
+					`file_extsn`      = #fileExtsn#, 
+					`file_cn`         = #fileCn#, 
+					`file_size`       = #fileSize#
+	      </insert>
+   
+   		<select id="AttachFileUpload.selectAttachFileDetail" parameterClass="hashmap" resultClass="egovMap">
+   			SELECT 
+				a.file_id, 
+				b.file_sn, 
+				b.path_seq, 
+				b.file_stre_cours, 
+				b.stre_file_name, 
+				b.orignl_file_name, 
+				b.file_extsn, 
+				b.file_size
+			FROM t_co_atch_file a, t_co_atch_file_detail b
+			WHERE a.file_id = b.file_id
+			AND a.use_yn = 'Y'
+			AND b.use_yn = 'Y'
+			AND a.file_id = #fileId#
+			<isNotEmpty property="fileSn">
+			AND b.file_sn = #fileSn#
+			</isNotEmpty>
+   		</select>
+   		
+   		<update id="AttachFileUpload.updateAttachFile" parameterClass="hashmap">
+   			UPDATE t_co_atch_file 
+			SET
+				`use_yn` = #useYn#
+			
+			WHERE
+			`file_id` = #fileId#
+			AND
+				create_seq = #empSeq#
+
+   		</update>
+   		
+   		<update id="AttachFileUpload.updateAttachFileDetail" parameterClass="hashmap">
+   			UPDATE t_co_atch_file_detail
+			SET
+				`use_yn` = #useYn#
+			
+			WHERE
+			`file_id` = #fileId#
+			<isNotEmpty property="fileSn">
+			AND
+				file_sn IN ($fileSn$)
+			</isNotEmpty>
+   		</update>
+   		
+   		<select id="AttachFileUpload.selectAttachFileMaxSn" parameterClass="hashmap" resultClass="java.lang.Integer">
+	   		SELECT MAX(b.file_sn) as file_sn
+			FROM t_co_atch_file a, t_co_atch_file_detail b
+			WHERE
+				a.file_id = b.file_id
+				AND a.file_id = #fileId#
+				AND a.use_yn = 'Y'
+   		</select>
+   		
+   		<delete id="AttachFileUpload.deleteAttachFile" parameterClass="hashmap">
+			DELETE
+			FROM t_co_atch_file
+			WHERE
+				file_id = #Old_picFileId#
+				OR file_id = #Old_signFileId#
+   		</delete>
+   		
+   		<delete id="AttachFileUpload.deleteAttachFileDetail" parameterClass="hashmap">
+			DELETE
+			FROM t_co_atch_file_detail
+			WHERE
+				file_id = #Old_picFileId#
+				OR file_id = #Old_signFileId#
+   		</delete>
+   		
+</sqlMap>

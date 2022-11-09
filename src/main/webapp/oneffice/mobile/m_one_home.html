@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ko" ng-app="onefficeApp" class="ui-mobile">
+<header class="head" data-height="56" data-group="2" data-role="header" style="height: 56px; position: absolute; left: 0; right:0;">
+	<div class="left_div">
+		<a ng-if="viewMode=='folderView'" class="btn_back" ng-click="moveFolderFunc(parentFolderSeq)"></a>
+		<a ng-if="viewMode=='searchView'" class="btn_back" ng-click="changeSearchMode(false)"></a>
+		<a ng-if="viewMode=='mainView'" ng-click="sideMenu()" class="btn_menu"></a>
+		<a ng-if="viewMode=='selectView' || viewMode=='shereView' || viewMode=='moveView'" 	 ng-click="closeCurrentMode()" class="btn_can"></a>
+	</div>
+	
+	<h1 class="homeTitle" ng-if="viewMode=='mainView' || viewMode=='folderView'">{{currentFolderName}}</h1>
+	<h1 ng-if="viewMode=='selectView'">{{selectCount}}개 선택</h1>
+	<h1 ng-if="viewMode=='moveView'">{{copySelectItems.length}}개 {{bMove?'이동':'복사'}}</h1>
+	<h1 ng-if="viewMode=='shereView'">사용자 공유</h1>
+	
+	<div class="head_search Results" ng-if="viewMode=='searchView'">
+		<input id="input_doc" type="search" placeholder="검색어 입력" autofocus data-role="none" ng-model="docFilter" ng-change="setFilterApply(docFilter)" />
+	</div>
+	<div class="right_div" ng-if="viewMode!='searchView'">
+		<a ng-if="viewMode=='mainView' || viewMode=='folderView'"  ng-click ="changeSearchMode(true)" href="#n" class="btn_search"></a>
+		<a ng-if="viewMode=='mainView' || viewMode=='folderView'"  ng-class="{'btn_list':docViewMode , 'btn_win':!docViewMode}" class="btn_list" ng-click="changeFileViewMode()"></a>
+		<a ng-if="viewMode=='selectView'" class="btn_del" ng-class="{'disabled': selectCount === 0}" ng-click="showTrashDialog()"></a>
+		<a ng-if="viewMode=='selectView' && currentFolderType != 7" ng-class="{'disabled': selectCount === 0}" ng-click="changeSelectMoveMode(true)" class="btn_move"></a>
+		<a ng-if="viewMode=='selectView' && currentFolderType == 7" class="btn_restore" ng-click="showTrashDialog('restore')"></a> 
+<!-- 		<a href="#n" class="btn_dustbin"></a> 
+ 		<a href="#n" class="btn_check"></a> 
+ 		<a href="#n" class="btn_send"></a> -->
+		<a ng-if="viewMode=='mainView' || viewMode=='folderView' || viewMode=='selectView'" class="btn_more" ng-click="moreBtnClick()"></a>
+		<a ng-if="viewMode=='moveView'" class="btn_check" ng-click="execCopyMoveCommand()"></a>
+	</div>
+</header>
+
+<div class="refresh" style="width: 100%; height: 0px; max-height: 150px; position: absolute; top: 56px; z-index: 1; display: none; opacity: 0;">
+	<img src="./mobile/images/ico/icon_loading_oneffice.gif" style="width: 30px; height: 30px; position: relative; top: 70%; left: 50%; transform: translate(-50%, -100%);">
+	<div class="refresh_modal" style="opacity: 0;"></div>
+</div>
+
+<article class="side">
+	<div class="side_top" data-height="124" data-role="header" data-group="5" >
+		<div class="prof_ta">
+			<table cellpadding="0" celspacing="0">
+				<tr>
+					<th>
+						<div class="pic">
+							<img ng-src="{{myInfo.pic}}" alt="">
+						</div>
+					</th>
+					<td>
+						<p class="na">{{myInfo.name}}</p>
+						<p class="sosok">{{myInfo.comp_name}}</p>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<a href="#n" class="btn_prof_setting" ng-click="settingBtnClick()"></a>
+	</div>
+	<div class="side_con " id="idx_menu_iscroll"  data-group="2" data-height="*" style="position: absolute; top:124px; left: 0; right:0; z-index: 3">
+		<ul style="width: 100%;">
+			<li>
+				<div class="m1" ng-click="getListsByType(0,'MY ONEFFICE')">
+					<div class="ico"></div>
+					<div class="txt">MY ONEFFICE</div>
+				</div>
+			</li>
+			<li>
+				<div class="m2" ng-click="getListsByType(1,'공유 폴더')">
+					<div class="ico"></div>
+					<div class="txt">공유 폴더</div>
+				</div>
+				<ul>
+					<li>
+						<div class="m2_1" ng-click="getListsByType(2,'공유한 문서')">
+							<div class="ico"></div>
+							<div class="txt">공유한 문서</div>
+						</div>
+					</li>
+					<li>
+						<div class="m2_2" ng-click="getListsByType(3,'공유받은 문서')">
+							<div class="ico"></div>
+							<div class="txt">공유받은 문서</div>
+						</div>
+					</li>
+				</ul>
+			</li>
+			<li>
+				<div class="m3" ng-click="getListsByType(4,'최근 문서')">
+					<div class="ico"></div>
+					<div class="txt">최근 문서</div>
+				</div>
+			</li>
+			<li>
+				<div class="m4" ng-click="getListsByType(5,'보안 문서')">
+					<div class="ico"></div>
+					<div class="txt">보안 문서</div>
+				</div>
+			</li>
+			<li>
+				<div class="m5" ng-click="getListsByType(6,'중요 문서')">
+					<div class="ico"></div>
+					<div class="txt">중요 문서</div>
+				</div>
+			</li>
+			<li>
+				<div class="m6" ng-click="getListsByType(7,'휴지통')">
+					<div class="ico"></div>
+					<div class="txt">휴지통</div>
+				</div>
+			</li>
+		</ul>
+	</div>
+</article>
+
+<section class="con bg_gray" ng-class="{'list_view':!docViewMode}" id="idx_doc_iscroll"  data-height="*" data-role="content" data-group="3" style="position: absolute; top:56px; left: 0; right:0; z-index: 0">
+	<div class="con_in" style="padding-bottom: 56px; right:0;">
+		<!-- 빈데이터 화면 -->
+		
+		<!-- 검색결과 -->
+		<div class="location" ng-if="viewMode=='searchView' && (fileCnt + folderCnt)>0">
+			<ul>
+				<li>검색결과 <span class='search_highlight'>{{fileCnt + folderCnt}}</span></li>
+			</ul>
+			<p class="btn"><a href="#n" class="btn_list" ng-click="changeFileViewMode()"></a><a href="#n" class="btn_more" ng-click="moreBtnClick()"></a></p>
+		</div>
+		<div style="margin-top: 100px;" ng-if="viewMode=='searchView' && (fileCnt + folderCnt)==0">
+			<div class="nodata" >
+				<span class="bg"></span>
+			</div>
+			<div  style="margin-top:10px; text-align: center; color: #666">{{searchComment}}</div>
+		</div>
+		<div class="recent_doc" >
+			<p class="tit">최근문서</p>
+			<div id="idx_recent_document"  class="recent_list" >
+				<div id="idx_recent_iscroll" class="recent_list_in">
+					<ul>
+						<li ng-repeat="doc in recentDataList">
+							<div class="doc_div">
+								<div class="preview" ng-click="openDocument(doc)">
+									<div style="height: 115px; horizontal-align: center;">
+										<img ng-src="{{doc.docData.imageThumbnail}}" alt="">
+									</div>
+								</div>
+									<a class="btn_more" ng-click="moreBtnClick(doc)" myclick="moreBtnClick(doc)"></a>
+								<div class="doc_btm">
+									<p class="txt">{{doc.docData.strTitle}}</p>
+									<div class="dat_cond">
+										<span class="dat">{{doc.docData.dateModifiedDate | date:doc.docData.diffModifiedDate==1?'hh:mm':'yyyy.MM.dd'}}</span>
+										<div class="condi_div">
+											<ul>
+												<li ng-if="doc.docData.bStar==1"><div class="m_star"></div></li>
+												<li ng-if="doc.nShareCount>0"><div class="m_human"></div></li>
+												<li ng-if="doc.docData.bSecurity==1"><div class="m_rock"></div></li>
+												<li ng-if="doc.docData.bViewer==1"><div class="m_eyes"></div></li>
+											</ul>
+										</div>
+									</div>
+								</div>
+							</div>
+						</li>
+					</ul>
+				</div><!-- //recent_list_in -->
+			</div><!-- //recent_list -->
+		</div><!--recent_doc-->
+		<div class="location" ng-if="(viewMode=='folderView' || viewMode=='moveView') && viewMode!='searchView'">
+			<div id="idx_location_iscroll" class="location_iscroll">
+				<ul>
+					<li ng-repeat="folder in folderPathList" ng-click="getDataLoadDocumnet(currentFolderType,folder[0])">{{folder[1]}}</li>
+				</ul>
+			</div>
+			<p class="btn" style="display:none;"><a class="btn_more" ng-if="viewMode!='selectView'" ng-click="moreBtnClick(doc)"></a></p>
+		</div>
+		<div class="my_doc" >
+			<p class="tit" ng-if="viewMode!='folderView' && viewMode!='searchView' && viewMode!='moveView' && currentFolderType==0">MY ONEFFICE</p>
+			<p class="tit ownsearch" ng-if="(viewMode=='searchView')">MY ONEFFICE<span class='search_highlight'></span><a ng-click="searchMoreBtnClick(0)" class="search_more"></a></p>
+			<p class="tit folder" ng-if="(!docViewMode || viewMode=='folderView' || currentFolderType!=0) && folderCnt>0 && (viewMode!='searchView')">폴더</p>
+			<div class="my_list" style="height:auto;">
+				<div ng-repeat="doc in resultDataList | orderBy:sortAline+sortOption" on-long-press="itemOnLongPress(doc)" ng-click="fileSelectionEvent(doc)">
+					<div class="folder_div" ng-class="{'select_on':viewMode == 'selectView', 'copy_on':doc.docData.bTemp}" ng-if="doc.fileType==0" >
+						<div class="folder_div_in" ng-class="{'on':doc.docData.bChecked}">
+							<table cellpadding="0" cellspacing="0">
+								<colgroup>
+									<col width="44"/>
+									<col width=""/>
+									<col width="28"/>
+								</colgroup>
+								<tr>
+									<td ng-click="moveFolderFunc(doc.seq)">
+										<div class="ico_folder" ng-class="{'bookmarked': doc.docData.bStar == 1}"></div>
+										<div class="check_div"  ng-class="{'on':doc.docData.bChecked}"></div>
+									</td>
+									<td ng-click="moveFolderFunc(doc.seq)"><p class="txt">{{doc.sortTitle}}</p></td>
+<!-- 										<td ng-click="moveFolderFunc(doc.seq)"><p class="txt">{{doc.docData.strTitle}}</p></td> -->
+									<td>
+										<div ng-click="moreBtnClick(doc)" class="ico_more" ng-if="viewMode!='selectView'"></div>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+			<p class="tit doc" ng-if="(!docViewMode || viewMode=='folderView'|| currentFolderType!=0) && fileCnt>0 && (viewMode!='searchView')">문서</p>
+			<div class="my_list" style="height:auto; margin-top: 10px;">
+				<div ng-repeat="doc in resultDataList | orderBy:sortAline+sortOption" on-long-press="itemOnLongPress(doc)" ng-click="fileSelectionEvent(doc)">
+					<div class="doc_div " ng-class="{'select_on':viewMode == 'selectView', 'copy_on':doc.docData.bTemp}"  ng-if="doc.fileType==1" ng-click="openDocument(doc)">
+						<div class="preview">
+							<div style="margin-top:10px;">
+								<img ng-src="{{doc.docData.imageThumbnail}}" alt="">
+							</div>
+						</div>
+						<a ng-click="moreBtnClick(doc)" class="btn_more" ng-if="viewMode!='selectView'"></a>
+						<div class="doc_btm" ng-class="{'on':doc.docData.bChecked}">
+							<p class="txt">{{doc.docData.strTitle}}</p>
+							<div class="dat_cond">
+								<span class="dat" ng-if="sortOption!='sortOwner'">{{doc.docData.dateModifiedDate | date:doc.docData.diffModifiedDate==1?'hh:mm':'yyyy.MM.dd'}}</span>
+								<span class="dat" ng-if="sortOption=='sortOwner'">{{doc.userData.strOwnerName}}</span>
+								<div class="condi_div" >
+									<ul>
+										<li ng-if="doc.docData.bStar==1"><div class="m_star"></div></li>
+										<li ng-if="doc.nShareCount>0"><div class="m_human"></div></li>
+										<li ng-if="doc.docData.bSecurity==1"><div class="m_rock"></div></li>
+										<li ng-if="doc.docData.bViewer==1"><div class="m_eyes"></div></li>
+									</ul>
+								</div>
+							</div>
+						</div>
+						<div class="check_div" ng-class="{'on':doc.docData.bChecked}"></div>
+					</div>
+				</div>
+			</div>
+			<p class="tit shareoutsearch" ng-if="(viewMode=='searchView')">공유한 문서<span class='search_highlight'></span><a ng-click="searchMoreBtnClick(1)" class="search_more"></a></p>
+			<div class="my_list" ng-if="(viewMode=='searchView')" style="height:auto;">
+				<div ng-repeat="doc in resultShareOutList | orderBy:sortAline+sortOption" on-long-press="itemOnLongPress(doc)" ng-click="fileSelectionEvent(doc)">
+					<div class="folder_div" ng-class="{'select_on':viewMode == 'selectView', 'copy_on':doc.docData.bTemp}" ng-if="doc.fileType==0" >
+						<div class="folder_div_in" ng-class="{'on':doc.docData.bChecked}" >
+							<table cellpadding="0" cellspacing="0">
+								<colgroup>
+									<col width="44"/>
+									<col width=""/>
+									<col width="28"/>
+								</colgroup>
+								<tr>
+									<td ng-click="moveFolderFunc(doc.seq)">
+										<div class="ico_folder"></div>
+										<div class="check_div"  ng-class="{'on':doc.docData.bChecked}"></div>
+									</td>
+									<td ng-click="moveFolderFunc(doc.seq)"><p class="txt">{{doc.sortTitle}}</p></td>
+									<td>
+										<div ng-if="doc.docData.bStar==1" class="ico_book"></div>
+									</td>
+									<td>
+										<div ng-click="moreBtnClick(doc)" class="ico_more" ng-if="viewMode!='selectView'"></div>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="my_list" ng-if="(viewMode=='searchView')" style="height:auto; margin-top: 10px;">
+				<div ng-repeat="doc in resultShareOutList | orderBy:sortAline+sortOption" on-long-press="itemOnLongPress(doc)" ng-click="fileSelectionEvent(doc)">
+					<div class="doc_div " ng-class="{'select_on':viewMode == 'selectView', 'copy_on':doc.docData.bTemp}"  ng-if="doc.fileType==1" ng-click="openDocument(doc)">
+						<div class="preview">
+							<div style="margin-top:10px;">
+								<img ng-src="{{doc.docData.imageThumbnail}}" alt="">
+							</div>
+						</div>
+						<a ng-click="moreBtnClick(doc)" class="btn_more" ng-if="viewMode!='selectView'"></a>
+						<div class="doc_btm" ng-class="{'on':doc.docData.bChecked}">
+							<p class="txt">{{doc.docData.strTitle}}</p>
+							<div class="dat_cond">
+								<span class="dat" ng-if="sortOption!='sortOwner'">{{doc.docData.dateModifiedDate | date:doc.docData.diffModifiedDate==1?'hh:mm':'yyyy.MM.dd'}}</span>
+								<span class="dat" ng-if="sortOption=='sortOwner'">{{doc.userData.strOwnerName}}</span>
+								<div class="condi_div" >
+									<ul>
+										<li ng-if="doc.docData.bStar==1"><div class="m_star"></div></li>
+										<li ng-if="doc.nShareCount>0"><div class="m_human"></div></li>
+										<li ng-if="doc.docData.bSecurity==1"><div class="m_rock"></div></li>
+										<li ng-if="doc.docData.bViewer==1"><div class="m_eyes"></div></li>
+									</ul>
+								</div>
+							</div>
+						</div>
+						<div class="check_div" ng-class="{'on':doc.docData.bChecked}"></div>
+					</div>
+				</div>
+			</div>
+			<p class="tit shareinsearch" ng-if="(viewMode=='searchView')">공유받은 문서<span class='search_highlight'></span><a ng-click="searchMoreBtnClick(2)" class="search_more"></a></p>
+			<div class="my_list" ng-if="(viewMode=='searchView')" style="height:auto;">
+				<div ng-repeat="doc in resultShareInList | orderBy:sortAline+sortOption" on-long-press="itemOnLongPress(doc)" ng-click="fileSelectionEvent(doc)">
+					<div class="folder_div" ng-class="{'select_on':viewMode == 'selectView', 'copy_on':doc.docData.bTemp}" ng-if="doc.fileType==0" >
+						<div class="folder_div_in" ng-class="{'on':doc.docData.bChecked}" >
+							<table cellpadding="0" cellspacing="0">
+								<colgroup>
+									<col width="44"/>
+									<col width=""/>
+									<col width="28"/>
+								</colgroup>
+								<tr>
+									<td ng-click="moveFolderFunc(doc.seq)">
+										<div class="ico_folder"></div>
+										<div class="check_div"  ng-class="{'on':doc.docData.bChecked}"></div>
+									</td>
+									<td ng-click="moveFolderFunc(doc.seq)"><p class="txt">{{doc.sortTitle}}</p></td>
+									<td>
+										<div ng-if="doc.docData.bStar==1" class="ico_book"></div>
+									</td>
+									<td>
+										<div ng-click="moreBtnClick(doc)" class="ico_more" ng-if="viewMode!='selectView'"></div>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="my_list" ng-if="(viewMode=='searchView')" style="height:auto; margin-top: 10px;">
+				<div ng-repeat="doc in resultShareInList | orderBy:sortAline+sortOption" on-long-press="itemOnLongPress(doc)" ng-click="fileSelectionEvent(doc)">
+					<div class="doc_div " ng-class="{'select_on':viewMode == 'selectView', 'copy_on':doc.docData.bTemp}"  ng-if="doc.fileType==1" ng-click="openDocument(doc)">
+						<div class="preview">
+							<div style="margin-top:10px;">
+								<img ng-src="{{doc.docData.imageThumbnail}}" alt="">
+							</div>
+						</div>
+						<a ng-click="moreBtnClick(doc)" class="btn_more" ng-if="viewMode!='selectView'"></a>
+						<div class="doc_btm" ng-class="{'on':doc.docData.bChecked}">
+							<p class="txt">{{doc.docData.strTitle}}</p>
+							<div class="dat_cond">
+								<span class="dat" ng-if="sortOption!='sortOwner'">{{doc.docData.dateModifiedDate | date:doc.docData.diffModifiedDate==1?'hh:mm':'yyyy.MM.dd'}}</span>
+								<span class="dat" ng-if="sortOption=='sortOwner'">{{doc.userData.strOwnerName}}</span>
+								<div class="condi_div" >
+									<ul>
+										<li ng-if="doc.docData.bStar==1"><div class="m_star"></div></li>
+										<li ng-if="doc.nShareCount>0"><div class="m_human"></div></li>
+										<li ng-if="doc.docData.bSecurity==1"><div class="m_rock"></div></li>
+										<li ng-if="doc.docData.bViewer==1"><div class="m_eyes"></div></li>
+									</ul>
+								</div>
+							</div>
+						</div>
+						<div class="check_div" ng-class="{'on':doc.docData.bChecked}"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div> <!-- //con_in -->
+</section>
+
+<div id="id_actionsheet_scroll" class="action_div" data-height="*"> <!--  btn_more 클릭시 슬라이드  -->
+	<div class="menu_container">
+		<div class="ac m_cancel">
+			<dl>
+				<dt>선택 항목 취소</dt>
+			</dl>
+		</div>
+		<div class="ac m_share">
+			<dl>
+				<dt>공유</dt>
+				<dd>꺼짐<span class="arr"></span></dd>
+			</dl>
+		</div>
+		<div class="ac m_move">
+			<dl>
+				<dt>이동</dt>
+			</dl>
+		</div>
+		<div class="ac m_copy">
+			<dl>
+				<dt>복사</dt>
+			</dl>
+		</div>
+		<div class="ac m_del line_btm">
+			<dl>
+				<dt>삭제</dt>
+			</dl>
+		</div>
+		<div class="ac m_book toggleBtn">
+			<dl>
+				<dt>중요표시</dt>
+				<dd class="">
+					<div class="toggleBG">
+						<input type="button" class="toggleFG" />
+					</div>
+				</dd>
+			</dl>
+		</div>
+		<div class="ac m_modi">
+			<dl>
+				<dt>이름바꾸기</dt>
+			</dl>
+		</div>
+		<div class="ac m_secu">
+			<dl>
+				<dt>문서 보안</dt>
+				<dd>꺼짐<span class="arr"></span></dd>
+			</dl>
+		</div>
+		<div class="ac m_read toggleBtn">
+			<dl>
+				<dt>읽기전용 설정</dt>
+				<dd class="">
+					<div class="toggleBG">
+						<input type="button" class="toggleFG" />
+					</div>
+				</dd>
+			</dl>
+		</div>
+	</div>
+</div>
+
+<div id="home_quick" class="quick_menu" ng-class="{'off': viewMode === 'searchView' || currentFolderType !== 0}">
+	<div class="quick_in" >
+		<div class="main_menu" >
+			<div class="ico"></div>
+		</div>
+		<div class="folder_menu" style="opacity:0;">
+			<div class="text" style="display: none;"><span>새 폴더</span></div>
+			<div class="ico"  ng-click="showInputDialog('newFolder')"></div>
+		</div>
+		<div class="docu_menu" style="opacity:0;">
+			<div class="text" style="display: none;"><span>새 문서</span></div>
+			<div class="ico"  ng-click="createNewFile()"></div>
+		</div>
+		<div class="form_menu" style="opacity:0;" >
+			<div class="text" style="display: none;"><span>문서양식</span></div>
+			<div class="ico" ng-click="showTemplate()"></div>
+		</div>
+	</div>
+	
+	<div class="quick_modal"></div>
+</div>
+
+<div class="modal"></div>
+<div class="cancelmodal" ng-click="clearAllCheckItem()"></div>
+</html>

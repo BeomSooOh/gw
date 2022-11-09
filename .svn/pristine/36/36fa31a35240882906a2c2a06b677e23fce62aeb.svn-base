@@ -1,0 +1,643 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ProjectManageDAO">
+
+    <typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+    <typeAlias alias="oracleLobMap" type="bizbox.orgchart.util.OracleLobMap"/>
+    
+    <select id="PartnerManageDAO.selectPartnerList_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+    /* PartnerManageDAO.selectPartnerList_TOTALCOUNT - oracle */
+		SELECT 
+			count(a.cd_partner) as TOTAL_COUNT
+		FROM $DB_NEOS$t_pr_partner_main a 
+		JOIN $DB_NEOS$t_co_comp c on a.comp_seq = c.comp_seq and c.use_yn='Y'
+		WHERE
+			a.group_seq = #groupSeq#
+			<isNotEmpty property="compSeq">
+				AND a.comp_seq = #compSeq#
+			</isNotEmpty>			
+			<isNotEmpty property="sKeyword">
+				AND (a.cd_partner LIKE '%$sKeyword$%' OR a.ln_partner LIKE '%$sKeyword$%')
+			</isNotEmpty>
+			<isNotEmpty property="clsPartner">
+				AND a.cls_partner = #clsPartner#
+			</isNotEmpty>
+			<isNotEmpty property="useYn">
+				AND a.use_yn = #useYn#
+			</isNotEmpty>
+			<isNotEmpty property="svType">
+				AND a.sv_type = #svType#
+			</isNotEmpty>
+			<isNotEmpty property="noCompany">
+				AND a.no_company LIKE '%$noCompany$%'
+			</isNotEmpty>
+			
+	</select>
+	
+	<select id="PartnerManageDAO.selectPartnerList" parameterClass="hashmap" resultClass="egovMap">
+	/* PartnerManageDAO.selectPartnerList - oracle */
+		SELECT *
+		  FROM(
+		  		SELECT ROWNUM AS RNUM, DUMMY.*
+		  		  FROM(
+						SELECT 
+							a.cd_partner, 
+							a.ln_partner,
+							a.no_company,
+							$DB_NEOS$get_code_detail_info('0', 'COM516', a.cls_partner, #langCode#) AS cls_partner_nm,
+							$DB_NEOS$get_code_detail_info('0', 'COM514', a.use_yn, #langCode#) AS use_yn_nm,
+							$DB_NEOS$get_code_detail_info('0', 'COM515', a.sv_type, #langCode#) AS sv_type_nm,
+							a.flag_delete,
+							a.comp_seq,
+							$DB_NEOS$FN_GetMultiLang(#langCode#, c.comp_name_multi) as comp_name
+						FROM $DB_NEOS$t_pr_partner_main a
+						JOIN $DB_NEOS$t_co_comp b on a.comp_seq = b.comp_seq and b.use_yn='Y'
+						JOIN $DB_NEOS$v_t_co_comp_multi c on a.comp_seq = c.comp_seq
+						WHERE
+							a.group_seq = #groupSeq#
+							<isNotEmpty property="compSeq">
+								AND a.comp_seq = #compSeq#
+							</isNotEmpty>			
+							<isNotEmpty property="sKeyword">
+								AND (a.cd_partner LIKE '%$sKeyword$%' OR a.ln_partner LIKE '%$sKeyword$%')
+							</isNotEmpty>
+							<isNotEmpty property="clsPartner">
+								AND a.cls_partner = #clsPartner#
+							</isNotEmpty>
+							<isNotEmpty property="useYn">
+								AND a.use_yn = #useYn#
+							</isNotEmpty>
+							<isNotEmpty property="svType">
+								AND a.sv_type = #svType#
+							</isNotEmpty>
+							<isNotEmpty property="noCompany">
+								AND a.no_company LIKE '%$noCompany$%'
+							</isNotEmpty>
+							
+							ORDER BY a.create_date desc
+							) DUMMY
+					WHERE ROWNUM <![CDATA[<]]> $startNum$ + $endNum$		
+					)
+			WHERE RNUM <![CDATA[>=]]> $startNum$ 			
+			
+	</select>
+	
+	<select id="PartnerManageDAO.selectPartnerInfo" parameterClass="hashmap" resultClass="oracleLobMap">
+	/* PartnerManageDAO.selectPartnerInfo - oracle */
+		SELECT 
+			a.cd_partner as "cdPartner",
+			a.cd_company as "cdCompany",
+			a.ln_partner as "lnPartner",
+			a.no_company as "noCompany",
+			a.cls_partner as "clsPartner",
+			a.nm_ceo     as "nmCeo",
+			a.tp_job     as "tpJob",
+			a.cls_job    as "clsJob",
+			a.comp_seq   as "compSeq",
+			a.sv_type    as "svType",
+			a.use_yn     as "useYn",
+			a.no_tel1    as "noTel1",
+			a.no_fax1    as "noFax1",
+			a.no_post1   as "noPost1",
+			a.dc_ads1_h  as "dcAds1H",
+			a.dc_ads1_d  as "dcAds1D",
+			a.flag_delete as "flagDelete",
+			a.comp_seq as "compSeq",
+			$DB_NEOS$FN_GetMultiLang(#langCode#, c.comp_name_multi) as "compName",
+			$DB_NEOS$get_code_detail_info('0', 'COM515', a.sv_type, #langCode#) AS "svTypeNm"
+		FROM  
+			$DB_NEOS$t_pr_partner_main a
+			JOIN $DB_NEOS$v_t_co_comp_multi c on a.comp_seq = c.comp_seq
+		WHERE
+			a.cd_partner = #cdPartner#
+			AND a.group_seq = #groupSeq#
+			<isNotEmpty property="compSeq">
+				AND a.comp_seq = #compSeq#
+			</isNotEmpty>			
+	</select>
+	
+	
+	<select id="PartnerManageDAO.selectPartnerDetailList_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+	/* PartnerManageDAO.selectPartnerDetailList_TOTALCOUNT - oracle */
+		SELECT 
+			count(a.cd_partner) as TOTAL_COUNT
+		FROM 
+			$DB_NEOS$t_pr_partner_detail a
+			JOIN $DB_NEOS$t_pr_partner_main b ON a.cd_partner = b.cd_partner and a.cd_company = b.cd_company
+		WHERE
+			a.cd_partner = #cdPartner#
+			AND b.comp_seq = #compSeq#
+			AND a.group_seq = #groupSeq#
+			<isNotEmpty property="noSeq">
+			AND
+				a.no_seq = #noSeq#
+			</isNotEmpty>
+			
+	</select>
+	
+	<select id="PartnerManageDAO.selectPartnerDetailList" parameterClass="hashmap" resultClass="egovMap">
+	/* PartnerManageDAO.selectPartnerDetailList - oracle */
+		SELECT *
+		  FROM(
+		  		SELECT ROWNUM AS RNUM, DUMMY.*
+		  		  FROM(
+						SELECT 
+							a.cd_partner ,
+							a.no_seq     ,
+							a.cd_company ,
+							a.nm_ptr     ,
+							a.no_fax     ,
+							a.e_mail     ,
+							a.no_tel     ,
+							a.no_hp      ,
+							a.create_seq ,
+							a.create_date,
+							a.modify_seq ,
+							a.modify_date
+						FROM  
+							$DB_NEOS$t_pr_partner_detail a
+							JOIN $DB_NEOS$t_pr_partner_main b ON a.cd_partner = b.cd_partner and a.cd_company = b.cd_company
+						WHERE
+							a.cd_partner = #cdPartner#
+							AND b.comp_seq = #compSeq#
+							AND a.group_seq = #groupSeq#
+							<isNotEmpty property="noSeq">
+							AND
+								a.no_seq = #noSeq#
+							</isNotEmpty>
+						
+						ORDER BY a.no_seq
+						) DUMMY
+					<isNotEmpty property="startNum">	
+					WHERE ROWNUM <![CDATA[<]]> 	$startNum$ + $endNum$
+					</isNotEmpty>
+					)
+				<isNotEmpty property="startNum">	
+				WHERE RNUM <![CDATA[>=]]> $startNum$
+				</isNotEmpty>	
+	</select>
+	
+	<insert id="PartnerManageDAO.insertPartnerMain" parameterClass="hashmap">
+	/* PartnerManageDAO.insertPartnerMain - oracle */			
+	 MERGE INTO $DB_NEOS$t_pr_partner_main
+          USING DUAL
+            ON ( cd_partner = #cdPartner# AND cd_company = #cdCompany# 
+            	AND group_seq = #groupSeq# AND comp_seq = #compSeq#)
+        WHEN MATCHED THEN
+          UPDATE SET 
+	            ln_partner    = #lnPartner#,
+				cls_partner   = #clsPartner#,
+				no_company    = #noCompany#,
+				nm_ceo        = #nmCeo#,
+				tp_job        = #tpJob#,
+				cls_job       = #clsJob#,
+				sv_type       = #svType#,
+				no_tel1       = #noTel1#,
+				no_fax1       = #noFax1#,
+				no_post1      = #noPost1#,
+				dc_ads1_h     = #dcAds1H#,
+				dc_ads1_d     = #dcAds1D#,
+				use_yn        = #useYn#,
+				modify_seq =  #editSeq#,                    
+				modify_date = SYSDATE   
+         WHEN NOT MATCHED THEN
+          INSERT(
+          		 cd_partner
+			   , cd_company    
+			   , ln_partner    
+			   , no_company  
+			   , cls_partner   
+			   , nm_ceo        
+			   , tp_job        
+			   , cls_job       
+			   , comp_seq      
+			   , sv_type       
+			   , no_tel1       
+			   , no_fax1       
+			   , no_post1      
+			   , dc_ads1_h     
+			   , dc_ads1_d     
+			   , use_yn        
+			   , create_seq     
+			   , create_date                        
+			   , modify_seq                     
+			   , modify_date
+			   , group_seq                      
+          )VALUES(
+          		 #cdPartner#
+          	   , #cdCompany#
+          	   , #lnPartner#
+          	   , #noCompany#
+          	   , #clsPartner#
+          	   , #nmCeo#
+          	   , #tpJob# 
+          	   , #clsJob#
+          	   , #compSeq#
+          	   , #svType#
+          	   , #noTel1#
+          	   , #noFax1#
+          	   , #noPost1#
+          	   , #dcAds1H#
+          	   , #dcAds1D#
+          	   , #useYn#
+          	   , #editSeq#
+          	   , SYSDATE
+          	   , #editSeq#
+          	   , SYSDATE
+          	   , #groupSeq#                     
+          )	
+			   
+	</insert>
+	
+	<insert id="PartnerManageDAO.insertPartnerDetail" parameterClass="hashmap">
+	/* PartnerManageDAO.insertPartnerDetail - oracle */				
+	 MERGE INTO $DB_NEOS$t_pr_partner_detail
+          USING DUAL
+            ON ( cd_partner = #cdPartner# AND cd_company = #cdCompany# 
+            	AND group_seq = #groupSeq# AND no_seq = #noSeq#)
+        WHEN MATCHED THEN
+          UPDATE SET 
+	            nm_ptr       = #nmPtr#,
+				no_fax       = #noFax#,
+				e_mail       = #eMail#,
+				no_tel       = #noTel#,
+				no_hp        = #noHp#,
+				modify_seq = #editSeq#,  
+				modify_date = SYSDATE        
+         WHEN NOT MATCHED THEN
+          INSERT(
+          		cd_partner
+          	  , no_seq
+          	  , cd_company   
+          	  , nm_ptr
+          	  , no_fax
+          	  , e_mail
+          	  , no_tel 
+          	  , no_hp
+          	  , create_seq 
+          	  , create_date 
+          	  , modify_seq 
+          	  , modify_date 
+          	  , group_seq               
+          )VALUES(
+          		#cdPartner#
+          	  , #noSeq#
+          	  , #cdCompany#
+          	  , #nmPtr#
+          	  , #noFax#
+          	  , #eMail#
+          	  , #noTel#
+          	  , #noHp#
+          	  , #editSeq#  
+          	  , SYSDATE
+          	  , #editSeq#  
+          	  , SYSDATE
+          	  , #groupSeq#                         
+          )		
+	</insert>
+	
+	<delete id="PartnerManageDAO.deletePartnerMain" parameterClass="hashmap">
+	/* PartnerManageDAO.deletePartnerMain - oracle */
+		delete
+		from 
+			$DB_NEOS$t_pr_partner_main
+		where
+			group_seq = #groupSeq#
+			and
+			<isNotEmpty property="cdPartnerList">
+				cd_partner IN ($cdPartnerList$)
+			</isNotEmpty>
+	</delete>
+	
+	<delete id="PartnerManageDAO.deletePartnerDetail" parameterClass="hashmap">
+	/* PartnerManageDAO.deletePartnerDetail - oracle */
+		delete
+		from 
+			$DB_NEOS$t_pr_partner_detail
+		where
+			cd_company || '|' || cd_partner IN (
+				select cd_company || '|' || cd_partner
+				from 
+					$DB_NEOS$t_pr_partner_main
+				where
+					comp_seq = #compSeq#
+					<isNotEmpty property="cdPartnerList">
+					and cd_partner IN ($cdPartnerList$)
+					</isNotEmpty>
+			)
+			and group_seq = #groupSeq#
+	</delete>
+	
+	<select id="PartnerManageDAO.selectErpPartner" parameterClass="hashmap" resultClass="oracleLobMap">
+	/* PartnerManageDAO.selectErpPartner - oracle */
+		select 
+			CD_PARTNER as "cdPartner"
+		  , CD_COMPANY as "cdCompany"
+		  , LN_PARTNER as "lnPartner"
+		  , NO_COMPANY as "noCompany"
+		  , CLS_PARTNER  as "clsPartner"
+		  , NM_CEO as "nmCeo" 
+		  , TP_JOB as "tpJob" 
+		  , CLS_JOB as "clsJob" 
+		  , GROUP_SEQ as "groupSeq" 
+		  , COMP_SEQ as "compSeq" 
+		  , SV_TYPE as "svType" 
+		  , ERP_CD_PARTNER as "erpCdPartner" 
+		  , NO_TEL1 as "noTel1" 
+		  , NO_FAX1 as "noFax1"
+		  , NO_POST1 as "noPost1" 
+		  , DC_ADS1_H as "dcAds1H" 
+		  , DC_ADS1_D as "dcAds1D" 
+		  , USE_YN as "useYn" 
+		  , FLAG_DELETE as "flagDelete" 
+		  , CREATE_SEQ as "createSeq" 
+		  , TO_CHAR(CREATE_DATE,'YYYY-MM-DD HH24:MI:SS') as "createDate" 
+		  , MODIFY_SEQ as "modifySeq" 
+		  , TO_CHAR(MODIFY_DATE,'YYYY-MM-DD HH24:MI:SS') as "modifyDate"
+		from $DB_NEOS$t_pr_partner_main 
+		where
+			erp_cd_partner = #erpCdPartner#
+			and group_seq = #groupSeq#
+	</select>
+	
+	<update id="PartnerManageDAO.updatePartnerMainStatus" parameterClass="egovMap">
+		/* PartnerManageDAO.updatePartnerMainStatus - oracle */
+		UPDATE $dbNeos$t_pr_partner_main 
+		SET
+			erp_cd_partner = #erpCdPartner#, 
+			flag_delete = #flagDelete# , 
+			modify_seq = #editSeq# , 
+			modify_date = SYSDATE
+		WHERE
+			cd_partner = #cdPartner#
+			and group_seq = #groupSeq#
+	</update>
+	
+	<update id="PartnerManageDAO.updatePartnerMainFromErp" parameterClass="egovMap">
+	/* PartnerManageDAO.updatePartnerMainFromErp - oracle */
+		UPDATE $dbNeos$t_pr_partner_main 
+		SET
+			ln_partner = #lnPartner#,
+			no_company = #noCompany#,
+			comp_seq = (SELECT comp_seq FROM $dbNeos$t_co_erp_comp WHERE erp_comp_seq = #cdCompany#),
+			cls_partner= #clsPartner#,
+			nm_ceo     = #nmCeo#,
+			tp_job     = #tpJob#,
+			cls_job    = #clsJob#,
+			no_tel1    = #noTel1#,
+			no_fax1    = #noFax1#,
+			no_post1   = #noPost1#,
+			dc_ads1_h  = #dcAds1H#,
+			dc_ads1_d  = #dcAds1D#,
+			modify_seq = #editSeq#, 
+			modify_date = SYSDATE
+		WHERE
+			erp_cd_partner = #erpCdPartner#
+			AND cd_company = #cdCompany#
+			and group_seq = (SELECT group_seq FROM $dbNeos$t_co_erp_comp WHERE erp_comp_seq = #cdCompany#)
+	</update>
+	
+	
+	<insert id="PartnerManageDAO.insertPartnerMainFromErp" parameterClass="hashMap">
+		/* PartnerManageDAO.insertPartnerMainFromErp - oracle */
+		insert into $dbNeos$t_pr_partner_main 
+		(
+			cd_partner, 
+			cd_company, 
+			ln_partner, 
+			no_company, 
+			cls_partner, 
+			nm_ceo, 
+			tp_job, 
+			cls_job, 
+			sv_type, 
+			erp_cd_partner, 
+			comp_seq,
+			no_tel1, 
+			no_fax1, 
+			no_post1, 
+			dc_ads1_h, 
+			dc_ads1_d, 
+			use_yn, 
+			flag_delete, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date,
+			group_seq
+		)
+		values
+		(
+			#cdPartner#, 
+			#cdCompany#, 
+			#lnPartner#, 
+			#noCompany#, 
+			#clsPartner#, 
+			#nmCeo#, 
+			#tpJob#, 
+			#clsJob#, 
+			#svType#, 
+			#erpCdPartner#, 
+			(SELECT comp_seq FROM $dbNeos$t_co_erp_comp WHERE erp_comp_seq = #cdCompany#),
+			#noTel1#, 
+			#noFax1#, 
+			#noPost1#, 
+			#dcAds1H#, 
+			#dcAds1D#, 
+			'Y', 
+			#flagDelete#, 
+			#editSeq#, 
+			SYSDATE, 
+			#editSeq#, 
+			SYSDATE,
+			(SELECT group_seq FROM $dbNeos$t_co_erp_comp WHERE erp_comp_seq = #cdCompany#)
+		)
+	</insert>
+	
+	<insert id="PartnerManageDAO.insertPartnerDetailFromErp" parameterClass="hashMap">
+		/* PartnerManageDAO.insertPartnerDetailFromErp - oracle */
+		INSERT INTO $dbNeos$t_pr_partner_detail 
+			(
+				cd_partner, 
+				no_seq, 
+				cd_company, 
+				nm_ptr, 
+				no_fax, 
+				e_mail, 
+				no_tel, 
+				no_hp, 
+				create_seq, 
+				create_date, 
+				modify_seq, 
+				modify_date,
+				group_seq
+			)
+			VALUES
+			(
+				#cdPartner#, 
+				#noSeq#, 
+				(SELECT comp_seq FROM $dbNeos$t_co_erp_comp WHERE erp_comp_seq = #cdCompany#), 
+				#nmPtr#, 
+				#noFax#, 
+				#eMail#, 
+				#noTel#, 
+				#noHp#, 
+				#editSeq#, 
+				SYSDATE, 
+				#editSeq#, 
+				SYSDATE,
+				(SELECT group_seq FROM $dbNeos$t_co_erp_comp WHERE erp_comp_seq = #cdCompany#)
+			)
+	</insert>
+	
+	<update id="PartnerManageDAO.updatePartnerRestore" parameterClass="hashmap">
+	/* PartnerManageDAO.updatePartnerRestore - oracle */
+		UPDATE $DB_NEOS$t_pr_partner_main 
+		SET
+			flag_delete = #flagDelete# , 
+			sv_type = #svType# , 
+			modify_seq = #editSeq# , 
+			modify_date = SYSDATE
+		WHERE
+			cd_partner = #cdPartner#
+			AND cd_company = #cdCompany#
+			and group_seq = #groupSeq#
+	
+	</update>
+	
+	<select id="PartnerManageDAO.selectCompList" parameterClass="hashmap" resultClass="egovMap">
+	/* PartnerManageDAO.selectCompList - oracle */
+		select
+			a.comp_seq as "compSeq",
+			$DB_NEOS$FN_GetMultiLang(#langCode#, b.comp_name_multi) as "compName",
+			c.use_yn as "erpUseYn"
+		from $DB_NEOS$t_co_comp a
+		join $DB_NEOS$v_t_co_comp_multi b on a.comp_seq=b.comp_seq and a.use_yn='Y'
+		left join $DB_NEOS$t_co_erp c on a.comp_seq=c.comp_seq and c.achr_gbn=#achrGbn# and c.use_yn='Y'
+		where 1=1
+		<isNotEmpty property="compSeq">
+			and a.comp_seq=#compSeq#
+		</isNotEmpty>		
+		order by a.order_num
+	</select>
+	
+    <insert id="PartnerManageDAO.insertErpPartnerTemp" parameterClass="hashmap">
+        /* PartnerManageDAO.insertErpPartnerTemp - oracle */
+        INSERT INTO $DB_NEOS$t_pr_partner_erp
+        ( sync_seq
+        , sync_dt
+        , cd_partner
+        , cd_company
+        , ln_partner
+        , no_company
+        , cls_partner
+        , nm_ceo
+        , tp_job 
+        , cls_job
+        , group_seq
+        , comp_seq
+        , sv_type 
+        , erp_cd_partner
+        , no_tel1
+        , no_fax1
+        , no_post1
+        , dc_ads1_h 
+        , dc_ads1_d
+        , use_yn 
+        , flag_delete
+        , nm_ptr
+        , no_fax
+        , e_mail
+        , no_tel
+        , no_hp       
+        )
+		<dynamic>
+		    <iterate property="erpPartnerList" conjunction="UNION ALL" >
+				SELECT #syncSeq#
+				     , SYSDATE
+				     , #erpPartnerList[].cdPartner#
+				     , #erpPartnerList[].cdCompany#
+				     , #erpPartnerList[].lnPartner#
+				     , NVL(#erpPartnerList[].noCompany#, '')
+				     , NVL(#erpPartnerList[].clsPartner#, '')
+				     , NVL(#erpPartnerList[].nmCeo#, '')
+				     , NVL(#erpPartnerList[].tpJob#, '')
+				     , NVL(#erpPartnerList[].clsJob#, '')
+				     , #groupSeq#
+				     , #compSeq#
+				     , 'ERP'
+				     , NVL(#erpPartnerList[].cdPartner#, '')
+				     , NVL(#erpPartnerList[].noTel1#, '')
+				     , NVL(#erpPartnerList[].noFax1#, '')
+				     , NVL(#erpPartnerList[].noPost1#, '')
+				     , NVL(#erpPartnerList[].dcAds1H#, '')
+				     , NVL(#erpPartnerList[].dcAds1D#, '')
+				     , NVL(#erpPartnerList[].useYn#  , '')
+				     , NVL(#erpPartnerList[].flagDelete#, '')
+				     , NVL(#erpPartnerList[].nmPtr#, '')
+				     , NVL(#erpPartnerList[].noFax#, '')
+				     , NVL(#erpPartnerList[].eEail#, '')
+				     , NVL(#erpPartnerList[].noTel#, '')
+				     , NVL(#erpPartnerList[].noHp#, '')
+				  FROM DUAL
+		    </iterate>
+		</dynamic>
+    </insert>
+
+    <delete id="PartnerManageDAO.deleteErpPartnerTemp" parameterClass="hashmap">
+        /* PartnerManageDAO.deleteErpPartnerTemp - oracle */
+        DELETE
+          FROM $DB_NEOS$t_pr_partner_erp
+         WHERE sync_dt <![CDATA[<]]> SYSDATE-1
+    </delete>
+	
+	<select id="PartnerManageDAO.selectErpSyncCnt" parameterClass="hashmap" resultClass="egovMap">
+		select
+		count(if(ifnull(b.cd_partner,'') = '',ifnull(b.cd_partner,''),NULL)) as 'new_cnt',
+		count(if(ifnull(b.cd_partner,'') != '',ifnull(b.cd_partner,''),NULL)) as 'mod_cnt'
+		from $DB_NEOS$t_pr_partner_erp a
+		left join $DB_NEOS$t_pr_partner_main b on a.cd_partner = b.cd_partner and a.sync_seq=#syncSeq# and ifnull(a.cd_partner,'') != ''
+	</select>
+	
+    <select id="PartnerManageDAO.selectErpSyncList" parameterClass="hashmap" resultClass="egovMap">
+         /* PartnerManageDAO.selectErpSyncList - oracle */
+         SELECT a.cd_partner
+              , a.cd_company
+              , a.ln_partner
+              , a.no_company
+              , a.cls_partner
+              , a.nm_ceo
+              , a.tp_job
+              , a.cls_job
+              , a.group_seq
+              , a.comp_seq
+              , a.sv_type
+              , a.erp_cd_partner
+              , a.no_tel1
+              , a.no_fax1
+              , a.no_post1
+              , a.dc_ads1_h
+              , a.dc_ads1_d
+              , a.use_yn
+              , a.flag_delete
+              , a.nm_ptr
+              , a.no_fax
+              , a.e_mail
+              , a.no_tel
+              , a.no_hp
+         FROM $DB_NEOS$t_pr_partner_erp a
+    LEFT JOIN $DB_NEOS$t_pr_partner_main b
+          ON a.cd_partner           = b.cd_partner AND a.cd_company = b.cd_company
+        WHERE a.sync_seq             = #syncSeq#
+          AND NVL(a.cd_partner, '') IS NOT NULL
+       <isEqual property="searchTp" compareValue="new">
+          AND b.cd_partner IS NULL
+       </isEqual>
+       <isEqual property="searchTp" compareValue="mod">
+          AND b.cd_partner IS NOT NULL
+       </isEqual>      
+    </select>   
+    
+</sqlMap>

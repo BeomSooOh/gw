@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org//dtd/sql-map-2.dtd">
+<sqlMap namespace="apiMainDAO">
+
+<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	
+   <resultMap id="AlertVO" class="hashmap">
+   	   <result property="alertSeq" />
+   	   <result property="moduleType" />
+   	   <result property="alertType" />
+   	   <result property="eventType" />
+   	   <result property="eventSubType" />
+   	   <result property="data" jdbcType="CLOB" javaType="string" />
+   	   <result property="alertContents" jdbcType="CLOB" javaType="string" />
+   	   <result property="readYn" />
+   	   <result property="readDate" />
+   	   <result property="createDate" />
+   	</resultMap>
+   	
+   <resultMap id="TimeLineVO" class="hashmap">
+   	   <result property="tlSeq" />
+   	   <result property="senderCompSeq" />
+   	   <result property="senderSeq" />
+   	   <result property="moduleType" />
+   	   <result property="alertType" />
+   	   <result property="eventType" />
+   	   <result property="eventSubType" />
+   	   <result property="data" jdbcType="CLOB" javaType="string" />
+   	   <result property="readYn" />
+   	   <result property="readDate" />
+   	   <result property="createDate" />
+   	</resultMap>   	
+	
+	<select id="apiMainDAO.selectAlert_TOTAL_COUNT" parameterClass="hashmap" resultClass="string">
+		SELECT COUNT(*) AS alert_cnt
+        FROM t_co_alert_receiver b
+        WHERE b.emp_seq = #empSeq#
+        AND b.comp_seq = #compSeq#
+        AND b.read_date IS NULL
+        <isNotEmpty property="eventType">
+        AND EXISTS (
+	        			SELECT 1 
+	        			FROM 
+	        			t_co_alert a 
+	        			WHERE a.alert_seq = b.alert_seq
+	        			AND a.lang_code = #langCode#
+						AND a.event_type = #eventType#
+						
+        			)
+        </isNotEmpty>
+	</select>
+	
+	<select id="apiMainDAO.selectAlertList_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+		SELECT count(a.alert_seq) as TOTAL_COUNT
+		FROM t_co_alert a, t_co_alert_receiver b
+		WHERE a.alert_seq = b.alert_seq
+		and b.emp_seq = #empSeq#
+		and b.comp_seq = #compSeq#
+		<isNotEmpty property="syncTime">
+		and SUBSTR(TO_CHAR(a.create_date,'YYYYMMDDHHMISSSSS'),0,17) &lt; #syncTime#
+		</isNotEmpty>
+	</select>
+	
+	<select id="apiMainDAO.selectAlertList" parameterClass="hashmap" resultMap="AlertVO">
+		SELECT 
+			a.alert_seq, 
+			NVL(a.event_type,' ') as module_type, 
+			NVL(a.event_sub_type, ' ') as alert_type, 
+			NVL(a.event_type,' ') as event_type, 
+			NVL(a.event_sub_type, ' ') as event_sub_type, 
+			NVL(a.data, ' ') as data, 
+			NVL(a.alert_contents, ' ') as alert_contents, 
+			NVL2(read_date, 'Y', 'N') as read_yn,
+			NVL(SUBSTR(TO_CHAR(b.read_date, 'YYYYMMDDHHMISS'),0,14), ' ') AS read_date,
+			NVL(SUBSTR(TO_CHAR(a.create_date, 'YYYYMMDDHHMISS'),0,14), ' ') AS create_date
+		FROM t_co_alert a, t_co_alert_receiver b
+		WHERE a.alert_seq = b.alert_seq
+		and b.emp_seq = #empSeq#
+		and b.comp_seq = #compSeq#
+		<isNotEmpty property="syncTime">
+		and SUBSTR(TO_CHAR(a.create_date,'YYYYMMDDHHMISSSSS'),0,17) &lt; #syncTime#
+		</isNotEmpty> 
+		and rownum between $startNum$ and $endNum$
+		ORDER BY NVL(SUBSTR(TO_CHAR(b.read_date,'YYYYMMDDHHMISS'),0,14),'Z') desc, a.create_date desc
+	</select>
+	
+	<update id="apiMainDAO.updateAlertRead" parameterClass="hashmap">
+		UPDATE t_co_alert_receiver 
+		SET
+		read_date = SYSDATE
+		WHERE
+		 	comp_seq = #compSeq# 
+			AND emp_seq = #empSeq#
+		<isNotEmpty property="alertSeqList">
+				<iterate  prepend="AND" property="alertSeqList" open=" alert_seq IN (" close=")" conjunction="," >
+				#alertSeqList[]#
+				</iterate>
+		</isNotEmpty>
+	
+	</update>
+	
+	<update id="apiMainDAO.updateAlertAllRead" parameterClass="hashmap">
+		UPDATE t_co_alert_receiver 
+		SET
+		read_date = SYSDATE
+		WHERE
+		 	comp_seq = #compSeq# 
+			AND emp_seq = #empSeq#
+		<isNotEmpty property="eventType">
+			AND event_type = #eventType#
+		</isNotEmpty>	
+	</update>	
+	
+	<select id="apiMainDAO.selectTimeline_TOTAL_COUNT" parameterClass="hashmap" resultClass="string">
+		SELECT COUNT(*) AS timeline_cnt
+        FROM t_co_timeline_receiver b
+        WHERE b.emp_seq = #empSeq#
+        AND b.comp_seq = #compSeq#
+        AND b.read_date IS NULL
+        AND EXISTS (
+	        			SELECT 1 
+	        			FROM 
+	        			t_co_timeline a 
+	        			WHERE a.tl_seq = b.tl_seq 
+	        			AND a.lang_code = #langCode#
+	        			<isNotEmpty property="eventType">
+						AND a.event_type = #eventType#
+						</isNotEmpty>
+        			)
+	</select>
+	
+	<select id="apiMainDAO.selectTimelineList_TOTALCOUNT" parameterClass="hashmap" resultClass="string">
+		SELECT COUNT(*) AS TOTAL_COUNT
+		FROM t_co_timeline_receiver b
+		WHERE b.emp_seq = #empSeq#
+		AND b.comp_seq = #compSeq#
+		AND 1=(
+	        			SELECT 1 
+	        			FROM 
+							t_co_timeline a 
+	        			WHERE a.tl_seq = b.tl_seq 
+	        			AND a.lang_code = #langCode#
+	        			<isNotEmpty property="eventType">
+						AND a.event_type = #eventType#
+						</isNotEmpty>
+						<isNotEmpty property="syncTime">
+	        			AND SUBSTR(TO_CHAR(a.create_date,'YYYYMMDDHHMISSSSS'),0,17) &lt; #syncTime#
+	        			</isNotEmpty>
+        			)
+	</select>
+	
+	<select id="apiMainDAO.selectTimelineList" parameterClass="hashmap" resultMap="TimeLineVO">
+		SELECT 
+			 a.tl_seq, 
+			 NVL(a.sender_comp_seq, ' ') as sender_comp_seq,
+			 a.sender_seq, 
+			 NVL(a.event_type,' ') as module_type, 
+			 NVL(a.event_sub_type, ' ') as alert_type, 
+			 NVL(a.event_type,' ') as event_type, 
+			 NVL(a.event_sub_type, ' ') as event_sub_type,
+			 NVL(a.data, ' ') as data, 
+			 CASE WHEN read_date IS NULL THEN 'N' ELSE 'Y' END as read_yn,
+			 NVL(SUBSTR(TO_CHAR(b.read_date,'YYYYMMDDHHMISS'),0,14), ' ') AS read_date,
+			 NVL(SUBSTR(TO_CHAR(b.create_date,'YYYYMMDDHHMISS'),0,14), ' ') AS create_date
+		FROM t_co_timeline a, t_co_timeline_receiver b
+		WHERE a.tl_seq = b.tl_seq
+		and b.emp_seq = #empSeq#
+		and b.comp_seq = #compSeq#
+		<isNotEmpty property="syncTime">
+		and SUBSTR(TO_CHAR(a.create_date,'YYYYMMDDHHMISSSSS'),0,17) &lt; #syncTime#
+		</isNotEmpty>
+		
+		and rownum between $startNum$ and $endNum$
+		ORDER BY NVL(SUBSTR(TO_CHAR(b.read_date,'YYYYMMDDHHMISS'),0,14),'Z') desc, a.create_date desc
+	</select>
+	
+	<update id="apiMainDAO.updateTimelineRead" parameterClass="hashmap">
+		UPDATE t_co_timeline_receiver 
+		SET
+		read_date = SYSDATE
+		WHERE
+		 	comp_seq = #compSeq# 
+			AND emp_seq = #empSeq#
+		<isNotEmpty property="tlSeqList">
+				<iterate  prepend="AND" property="tlSeqList" open=" tl_seq IN (" close=")" conjunction="," >
+				#tlSeqList[]#
+				</iterate>
+		</isNotEmpty>
+	
+	</update>
+	
+	<update id="apiMainDAO.updateTimelineAllRead" parameterClass="hashmap">
+		UPDATE t_co_timeline_receiver 
+		SET
+		read_date = SYSDATE
+		WHERE
+		 	comp_seq = #compSeq# 
+			AND emp_seq = #empSeq#
+		<isNotEmpty property="eventType">
+			AND event_type = #eventType#
+		</isNotEmpty>
+	</update>	
+	
+	<select id="apiMainDAO.getGwVolumeIdx" parameterClass="hashmap" resultClass="string">
+		/* apiMainDAO.getGwVolumeIdx - oracledb */
+		select 
+			(nvl(max(idx),0)+1) as "idx"
+		from 
+			$DB_NEOS$t_co_group_volume_history
+		where
+			group_seq = #groupSeq#
+	</select>
+	
+	<select id="apiMainDAO.selectSynctime" resultClass="string">
+		<!-- 2018.10.22 년도앞두자리 누락으로 수정 오범수 -->		
+		/* apiMainDAO.selectSynctime - oracleDB */
+		SELECT TO_CHAR(SYSDATE,'YYYYMMDDHHMISSSSS') AS "sysTime" FROM DUAL
+		
+	</select>
+
+	<select id="apiMainDAO.getDownloadType" parameterClass="hashmap" resultClass="egovMap">
+		/* apiMainDAO.getDownloadType - oracle */
+		select
+		(
+			SELECT NVL(B.option_value,A.option_d_value) AS val
+			FROM $DB_NEOS$tcmg_optionset A
+			LEFT JOIN $DB_NEOS$tcmg_optionvalue B ON A.option_id = B.option_id AND B.co_id = '0'
+			WHERE A.option_id = 'cm1700'
+			AND ROWNUM = 1
+		) option1,
+		(
+			SELECT NVL(B.option_value,A.option_d_value) AS val
+			FROM $DB_NEOS$tcmg_optionset A
+			LEFT JOIN $DB_NEOS$tcmg_optionvalue B ON A.option_id = B.option_id AND B.co_id = '0'
+			WHERE A.option_id = 'pathSeq700'
+			AND ROWNUM = 1
+		) option2,
+	    (
+			SELECT 
+	      	CASE NVL(B.option_value,A.option_d_value) 
+	      	WHEN '0' THEN 'limit▦'
+	      	WHEN '1' THEN NVL(C.option_value, 'limit▦')
+	      	WHEN '2' THEN NVL(D.option_value, 'limit▦')
+	      	END AS val
+			FROM $DB_NEOS$tcmg_optionset A
+			LEFT JOIN $DB_NEOS$tcmg_optionvalue B ON A.option_id = B.option_id AND B.co_id = '0'
+	      	LEFT JOIN $DB_NEOS$tcmg_optionvalue C ON C.option_id = 'cm1711'
+	      	LEFT JOIN $DB_NEOS$tcmg_optionvalue D ON D.option_id = 'cm1713'
+			WHERE A.option_id = 'cm1710'
+			AND ROWNUM = 1
+	    ) option3,
+	    (  
+			SELECT NVL(B.option_value,A.option_d_value) AS val
+			FROM $DB_NEOS$tcmg_optionset A
+			LEFT JOIN $DB_NEOS$tcmg_optionvalue B ON A.option_id = B.option_id AND B.co_id = '0'
+			WHERE A.option_id = 'cm1722'
+			AND ROWNUM = 1
+	    ) option4		
+		FROM DUAL
+	</select>
+	<insert id="apiMainDAO.insertGwVolumeHistory" parameterClass="hashmap">
+		/* apiMainDAO.insertGwVolumeHistory - oracledb */
+		insert into 
+			$DB_NEOS$t_co_group_volume_history (idx, group_seq, gw_volume, mail_volume, target, create_date)
+		values
+			(#idx#, #groupSeq#, #gwVolume#, #mailVolume#, #target#, SYSDATE)
+	</insert>
+	
+	<update id="apiMainDAO.updateGwVolume" parameterClass="hashmap">
+		/* apiMainDAO.updateGwVolume - oracledb */
+		update
+			$DB_NEOS$t_co_group
+		set
+			gw_volume = #gwVolume#, mail_volume = #mailVolume#
+		where
+			group_seq = #groupSeq#
+	</update>
+	
+</sqlMap>

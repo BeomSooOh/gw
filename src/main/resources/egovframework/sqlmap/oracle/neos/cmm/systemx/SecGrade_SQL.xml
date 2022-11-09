@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="secGradeDAO">
+	
+	<resultMap id="secGrade" class="neos.cmm.systemx.secGrade.vo.SecGrade">
+		<result property="id"    		column="sec_id"/>
+        <result property="parent"     		column="upper_sec_id"/>
+        <result property="text"     		column="sec_name"/>
+        <result property="secNameKr"     		column="sec_name_kr"/>
+        <result property="secNameEn"     		column="sec_name_en"/>
+        <result property="secNameJp"     		column="sec_name_jp"/>
+        <result property="secNameCn"     		column="sec_name_cn"/>
+        <result property="secDepth"     		column="sec_depth"/>
+        <result property="compSeq"    		column="comp_seq"/>
+        <result property="module"     		column="module"/>
+        <result property="secOrder"     		column="sec_order"/>
+        <result property="etc"     		column="etc"/>
+        <result property="iconYn"     		column="icon_yn"/>
+        <result property="useYn"     		column="use_yn"/>
+        <result property="createSeq"     		column="create_seq"/>
+        <result property="createDate"    		column="create_date"/>
+        <result property="modifySeq"     		column="modify_seq"/>
+        <result property="modifyDate"     		column="modify_date"/>
+	</resultMap>
+	
+	<resultMap id="secGradeUser" class="neos.cmm.systemx.secGrade.vo.SecGradeUser">
+		<result property="secId"    		column="sec_id"/>
+        <result property="deptSeq"     		column="dept_seq"/>
+        <result property="empSeq"     		column="emp_seq"/>
+        <result property="dpNamePosition"   column="dp_name_position"/>
+        <result property="deptName"    		column="dept_name"/>
+        <result property="empName"     		column="emp_name"/>
+	</resultMap>
+	
+	<resultMap id="compInfo" class="neos.cmm.systemx.secGrade.vo.CompInfo">
+        <result property="secNameKr"     		column="sec_name_kr"/>
+        <result property="secNameEn"     		column="sec_name_en"/>
+        <result property="secNameJp"     		column="sec_name_jp"/>
+        <result property="secNameCn"     		column="sec_name_cn"/>
+        <result property="secOrder"     		column="sec_order"/>
+	</resultMap>
+	
+	<select id="secGradeDAO.selectSecGrade" resultMap="secGrade" parameterClass="hashmap">
+		SELECT sec_id
+		     , upper_sec_id
+		     , $DB_NEOS$FN_GetLanguageName(#langCode#, sec_name_kr, sec_name_en, sec_name_jp, sec_name_cn) AS sec_name
+		     , sec_name_kr
+		     , sec_name_en
+		     , sec_name_jp
+		     , sec_name_cn
+		     , sec_depth
+		     , comp_seq
+		     , module
+		     , sec_order
+		     , etc
+		     , icon_yn
+		     , use_yn
+		     , create_seq
+		     , create_date
+		     , modify_seq
+		     , modify_date
+		  FROM $DB_NEOS$t_co_sec_grade
+		  WHERE 1=1
+		  <isNotEmpty property="secId">
+		    AND sec_id = #secId#
+		  </isNotEmpty>
+		  <isNotEmpty property="compSeqList">
+		    AND comp_seq IN ($compSeqList$)
+		  </isNotEmpty>
+		  <isNotEmpty property="useModule">
+		    AND module = #useModule#
+		  </isNotEmpty>
+	</select>
+	
+	<select id="secGradeDAO.selectSecGradeOne" resultMap="secGrade" parameterClass="hashmap">
+		SELECT sec_id
+		     , upper_sec_id
+		     , $DB_NEOS$FN_GetLanguageName(#langCode#, sec_name_kr, sec_name_en, sec_name_jp, sec_name_cn) AS sec_name
+		     , sec_name_kr
+		     , sec_name_en
+		     , sec_name_jp
+		     , sec_name_cn
+		     , sec_depth
+		     , comp_seq
+		     , module
+		     , sec_order
+		     , etc
+		     , icon_yn
+		     , use_yn
+		     , create_seq
+		     , create_date
+		     , modify_seq
+		     , modify_date
+		  FROM $DB_NEOS$t_co_sec_grade
+		  WHERE sec_id = #secId#
+	</select>
+	
+	<insert id="secGradeDAO.insertSecGradeUser" parameterClass="hashmap">
+		INSERT IGNORE INTO $DB_NEOS$t_co_sec_grade_user (
+		   	sec_id,
+ 			dept_seq,
+ 			emp_seq,
+ 			group_seq,
+ 			comp_seq,
+ 			biz_seq,
+ 			create_seq,
+ 			create_date
+		) SELECT #secId# AS sec_id
+		       , dept_seq
+		       , emp_seq
+		       , group_seq
+		       , comp_seq
+		       , biz_seq
+		       , #createSeq# AS create_seq
+		       , SYSDATE AS create_date 
+		    FROM $DB_NEOS$T_CO_EMP_DEPT 
+		    WHERE dept_seq = #deptSeq#
+		    <isNotEmpty property="empSeq">
+		      AND emp_seq = #empSeq#
+		    </isNotEmpty>
+	</insert>
+	<select id="secGradeDAO.selectSecGradeUserFromUserInfo" resultClass="string" parameterClass="hashmap">
+		SELECT sec_id
+		  FROM $DB_NEOS$T_CO_SEC_GRADE_USER
+		  WHERE comp_seq = #compSeq#
+		    AND dept_seq = #deptSeq#
+		    AND emp_seq = #empSeq#
+	</select>
+	<select id="secGradeDAO.selectSecGradeUser" resultMap="secGradeUser" parameterClass="hashmap">
+		SELECT U.sec_id
+		     , U.dept_seq
+		     , U.emp_seq
+		     , CDPMP.dp_name AS dp_name_position
+		     , DM.dept_name
+		     , concat(EM.emp_name,concat('(',concat(E.login_id,')'))) AS emp_name
+		  FROM $DB_NEOS$T_CO_SEC_GRADE_USER U
+		  LEFT OUTER JOIN $DB_NEOS$T_CO_EMP E ON U.emp_seq = E.emp_seq
+		  LEFT OUTER JOIN $DB_NEOS$T_CO_EMP_MULTI EM ON EM.lang_code = #langCode# AND EM.emp_seq = E.emp_seq
+		  LEFT OUTER JOIN $DB_NEOS$T_CO_COMP_DUTY_POSITION_MULTI CDPMP ON CDPMP.lang_code = #langCode# AND CDPMP.dp_type = 'POSITION' AND E.duty_code = CDPMP.dp_seq
+		  LEFT OUTER JOIN $DB_NEOS$T_CO_DEPT_MULTI DM ON DM.lang_code = #langCode# AND DM.dept_seq = U.dept_seq
+		  WHERE U.sec_id = #secId#
+		    AND U.comp_seq IN ($compSeqList$)
+		    AND (EM.emp_name LIKE concat('%',concat(#searchText#,'%')) OR CDPMP.dp_name LIKE concat('%',concat(#searchText#,'%')) OR DM.dept_name LIKE concat('%',concat(#searchText#,'%')))
+	</select>
+	<select id="secGradeDAO.selectDeptSeqFromCompSeq" resultClass="string" parameterClass="hashmap">
+		SELECT dept_seq
+		  FROM $DB_NEOS$T_CO_DEPT
+		  WHERE comp_seq = #compSeq#
+	</select>
+	<delete id="secGradeDAO.deleteSecGradeUser" parameterClass="hashmap">
+		DELETE 
+		  FROM $DB_NEOS$t_co_sec_grade_user 
+		  WHERE sec_id = #secId#
+		    AND dept_seq = #deptSeq#
+		    AND emp_seq = #empSeq# 
+	</delete>
+	<update id="secGradeDAO.updateSecGrade" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_sec_grade
+		   SET icon_yn = #iconYn#
+		     , use_yn = #useYn#
+		     , sec_name_kr = #secNameKr#
+		     , sec_name_en = #secNameEn#
+		     , sec_name_jp = #secNameJp#
+		     , sec_name_cn = #secNameCn#
+		     , sec_order =  #secOrder#
+		     , etc = #etc#
+		     , modify_seq = #empSeq#
+		     , modify_date = SYSDATE
+	       WHERE sec_id = #secId#
+	</update>
+	
+	<insert id="secGradeDAO.insertSecGrade" parameterClass="hashmap">
+		INSERT INTO $DB_NEOS$t_co_sec_grade (
+		   	sec_id,
+ 			upper_sec_id,
+ 			sec_name_kr,
+ 			sec_name_en,
+ 			sec_name_jp,
+ 			sec_name_cn,
+ 			sec_depth,
+ 			comp_seq,
+ 			module,
+ 			sec_order,
+ 			etc,
+ 			icon_yn,
+ 			use_yn,
+ 			create_seq,
+ 			create_date
+		) VALUES (
+		    #secId#,
+		    #upperSecId#,
+ 			#secNameKr#,
+ 			#secNameEn#,
+ 			#secNameJp#,
+ 			#secNameCn#,
+		    #secDepth#,
+ 			#compSeq#,
+ 			#useModule#,
+ 			#secOrder#,
+ 			#etc#,
+ 			#iconYn#,
+ 			#useYn#,
+ 			#empSeq#,
+ 			SYSDATE
+		)
+	</insert>
+	
+	<select id="secGradeDAO.selectCompInfo" resultMap="compInfo" parameterClass="hashmap">
+	SELECT NVL(C.order_num, 0) AS sec_order
+	     , NVL(CMKR.comp_name, '') AS sec_name_kr
+	     , NVL(CMEN.comp_name, '') AS sec_name_en
+	     , NVL(CMJP.comp_name, '') AS sec_name_jp
+	     , NVL(CMCN.comp_name, '') AS sec_name_cn
+	  FROM $DB_NEOS$T_CO_COMP C
+	  LEFT OUTER JOIN $DB_NEOS$T_CO_COMP_MULTI CMKR ON C.comp_seq = CMKR.comp_seq AND CMKR.lang_code = 'kr'
+	  LEFT OUTER JOIN $DB_NEOS$T_CO_COMP_MULTI CMEN ON C.comp_seq = CMEN.comp_seq AND CMEN.lang_code = 'en'
+	  LEFT OUTER JOIN $DB_NEOS$T_CO_COMP_MULTI CMJP ON C.comp_seq = CMJP.comp_seq AND CMJP.lang_code = 'jp'
+	  LEFT OUTER JOIN $DB_NEOS$T_CO_COMP_MULTI CMCN ON C.comp_seq = CMCN.comp_seq AND CMCN.lang_code = 'cn'
+	  WHERE C.comp_seq = #compSeq#
+	</select>
+	
+	<select id="secGradeDAO.selectSecGradeOneRoot" resultMap="secGrade" parameterClass="hashmap">
+		SELECT sec_id
+		     , upper_sec_id
+		     , '' AS sec_name
+		     , sec_name_kr
+		     , sec_name_en
+		     , sec_name_jp
+		     , sec_name_cn
+		     , sec_depth
+		     , comp_seq
+		     , module
+		     , sec_order
+		     , etc
+		     , icon_yn
+		     , use_yn
+		     , create_seq
+		     , create_date
+		     , modify_seq
+		     , modify_date
+		  FROM $DB_NEOS$t_co_sec_grade
+		  WHERE upper_sec_id = #sharp# 
+		    AND comp_seq = #compSeq#
+	</select>
+	<select id="secGradeDAO.selectSecGradeAllChild" resultMap="secGrade" parameterClass="hashmap">
+		SELECT sec_id
+		<isNotEmpty property="parent">
+	     , DECODE(upper_sec_id, #secId#, #parent#, upper_sec_id) AS upper_sec_id
+	    </isNotEmpty>
+	    <isEmpty property="parent">
+	     , upper_sec_id
+	    </isEmpty>
+	     , '' AS sec_name
+	     , sec_depth - 1 AS sec_depth
+	     , sec_name_kr
+	     , sec_name_en
+	     , sec_name_jp
+	     , sec_name_cn
+	     , comp_seq
+	     , module
+	     , sec_order
+	     , etc
+	     , icon_yn
+	     , use_yn
+	     , create_seq
+	     , create_date
+	     , modify_seq
+	     , modify_date
+	  FROM T_CO_SEC_GRADE
+	  WHERE sec_id != #secId#
+	  START WITH sec_id = #secId# 
+	  CONNECT BY upper_sec_id = prior sec_id;
+	</select>
+	<select id="secGradeDAO.selectSecGradeAllChildString" resultClass="string" parameterClass="hashmap">
+		    SELECT LISTAGG(sec_id, ',')  WITHIN GROUP(ORDER BY sec_id)
+	  FROM T_CO_SEC_GRADE
+	  WHERE sec_id != #secId#
+	  START WITH sec_id = #secId#
+	  CONNECT BY upper_sec_id = prior sec_id;
+	</select>
+	<!-- <update id="secGradeDAO.updateSecGradeAllChild" parameterClass="hashmap">
+	     UPDATE $DB_NEOS$t_co_sec_grade A INNER JOIN (
+			SELECT sec_id
+			     , upper_sec_id
+				  , sec_depth
+				  , sec_name_kr
+				  , IF(upper_sec_id = #secId#, #parent#, upper_sec_id) AS modify_upper_sec_id
+				  , sec_depth - 1 AS modify_sec_depth
+			  FROM (select * from $DB_NEOS$t_co_sec_grade order by upper_sec_id, sec_id) t_co_sec_grade, (select @pv := #secId#) initialisation
+			  where find_in_set(upper_sec_id, @pv) > 0
+			    and @pv := concat(@pv, ',', sec_id)
+		) B ON A.sec_id = B.sec_id
+		SET A.upper_sec_id = B.modify_upper_sec_id, A.sec_depth = B.modify_sec_depth   
+	</update> -->
+	<delete id="secGradeDAO.deleteSecGrade" parameterClass="hashmap">
+		DELETE FROM $DB_NEOS$t_co_sec_grade
+	     WHERE sec_id = #secId#
+	</delete>
+	<update id="secGradeDAO.updateSecGradeChild" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_sec_grade
+		   SET upper_sec_id = #upperSecId#
+		     , sec_depth = #secDepth#
+		     , modify_seq = #empSeq#
+		     , modify_date = SYSDATE
+	       WHERE sec_id = #secId#
+	</update>
+</sqlMap>

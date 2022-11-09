@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<meta http-equiv="expires" content="0" />
+		<meta http-equiv="expires" content="now" />
+		<meta http-equiv="Cache-Control" content="private" />
+		<meta http-equiv="Cache-Control" content="No-Cache" />
+		<meta http-equiv="Pragma" content="No-Cache" />
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta property="og:title" content="{ONEFFICE_OG_TITLE}" />
+		<meta property="og:image" content="{ONEFFICE_OG_IMAGE}" />
+		<meta property="og:type" content="article" /> 
+		<style>
+			html, body {
+				overflow:hidden;
+			}
+			body {
+				margin: 0;
+				padding: 0;
+			}
+		</style>
+
+		<title>ONEFFICE</title>
+		<link rel="shortcut icon" type="image/x-icon" href="./image/cloud/oneffice_Site.png" />
+		<script>
+			var pageLocation = "editor";
+		</script>
+		<script language="javascript" src="./oneffice_loader.js?ver=3.0.33.0"></script>
+		<script>
+			function goOnefficeViewer() {//mobile 뷰어 이동
+				document.location.href = document.location.href.replace(/oneffice\.(html|do)/,"oneffice_view.html");
+			}
+
+			function isSupportEditMobile() {
+				var nCurVal = 0;
+				var strCookies = document.cookie;
+				if (strCookies.length) {
+					nCurVal = parseInt(onefficeUtil.getCookieValue("edtM"),10);
+					if(nCurVal != 1) 
+						nCurVal = 0; //goOnefficeViewer();
+					else
+						onefficeUtil.setCookieValue("edtM", "0",0);//-1
+
+					var hybridE = parseInt(onefficeUtil.getCookieValue("hybridEdit"), 10);
+					if(hybridE && hybridE == 1) {
+						dzeUiConfig.bMobileHybridEdit = true;
+						dzeUiConfig.bCustomize_MenuBar_Display = false;
+						dzeUiConfig.bCustomize_ToolBar1_Display = false;
+						dzeUiConfig.bCustomize_ToolBar2_Display = false;
+						dzeUiConfig.bCustomize_ToolBar3_Display = false;
+
+						MobileEventUtil.listenHybridEvent();    // Mobile Event
+
+						// 모바일 접근 쿠키 삭제
+						onefficeUtil.setCookieValue("hybridEdit", "0", 0);
+					}
+				}
+
+				return nCurVal;
+			}
+
+			try {
+				if (onefficeUtil.getRequestParameter("load_type") === "embeded") {
+					goOnefficeViewer();
+				} else if (document.location.href.indexOf("ref=bizbox_report") < 0 || document.location.href.indexOf("report_no=") < 0) {
+					var agentName = navigator.userAgent.toLowerCase();
+					
+					if (agentName.indexOf("iphone") > -1 || agentName.indexOf("ipad") > -1 || agentName.indexOf("ipot") > -1 || agentName.indexOf("android") > -1) {
+						// mobile
+						var strBindStep = onefficeUtil.getRequestParameter("db_step");
+						var nEditMobile = isSupportEditMobile();
+						
+						if (strBindStep === null && nEditMobile === false) {
+							goOnefficeViewer();
+						}
+					}
+				}
+			} catch (e) {
+				goOnefficeViewer();
+			}
+			
+			if (onefficeExtContent.setExtLocation() === true) {
+				dzeUiConfig.bIndependentEdit = true;
+			}
+
+			onefficeExtContent.setUiConfig();	//UCDOC-1986
+
+			try {
+				window.moveTo(0, 0);
+				window.resizeTo(1366, 900);
+			} catch (e) {}
+
+		</script>
+	</head>
+	<body><div dzeditor="true" style="width:1366px;height:768px;"></div></body>
+</html>

@@ -1,0 +1,680 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="GroupManage">
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	
+	<select id="GroupManage.dynamicReq" parameterClass="hashmap" resultClass="hashmap" remapResults="true">
+		$queryStr$			
+	</select>
+
+	<insert id="GroupManage.insertGroup" parameterClass="hashmap">
+		INSERT INTO $DB_NEOS$t_co_group
+		SET 
+			group_seq        = 			#groupSeq#, 
+			group_name       = 			#groupName#, 
+			native_lang_code = 			#nativeLangCode#, 
+			mail_url         = 			#mailUrl#, 
+			messenger_url    = 			#messengerUrl#, 
+			sms_url          = 			#smsUrl#, 
+			use_yn           = 			'Y',
+			create_seq       = 			#createSeq#, 
+			create_date      = 			now(), 
+			modify_seq       = 			#modifySeq#, 
+			modify_date      = 			now()
+		ON DUPLICATE KEY UPDATE
+			group_name       = 			#groupName#, 
+			group_display_name =        #groupDisplayName#,
+			modify_seq       = 			#modifySeq#, 
+			modify_date      = 			now()
+	</insert>
+
+
+	<select id="GroupManage.selectGroupPathList" parameterClass="hashmap" resultClass="egovMap">
+	SELECT  group_seq, 
+			path_seq, 
+			path_name, 
+			os_type, 
+			absol_path, 
+			IFNULL(avail_capac, '0') as avail_capac, 
+			IFNULL(total_capac,'2048') as total_capac,
+			IFNULL(limit_file_count, '20') as limit_file_count,
+			drm_use_yn, 
+			create_seq, 
+			create_date, 
+			modify_seq, 
+			modify_date
+		FROM $DB_NEOS$t_co_group_path
+		WHERE 
+			true
+		<isNotEmpty property="groupSeq">
+		AND group_seq = #groupSeq#
+		</isNotEmpty>
+		<isNotEmpty property="osType">
+			AND os_type = #osType#
+		</isNotEmpty>
+		<isNotEmpty property="pathSeq">
+			AND path_seq = #pathSeq#
+		</isNotEmpty>
+		<isNotEmpty property="usage">
+			<isEqual property="eaType" compareValue="eap">
+				AND path_seq IN ('100', '400', '1300', '300', '500', '600')
+			</isEqual>
+			<isEqual property="eaType" compareValue="ea">
+				AND path_seq IN ('200', '400', '1300', '300', '500', '600')
+			</isEqual>
+			
+		</isNotEmpty>
+		ORDER BY path_seq
+		<isNotEmpty property="pathSeq">
+		LIMIT 1
+		</isNotEmpty>
+	</select>
+	
+	<update id="GroupManage.updateGroup" parameterClass="hashmap">
+		
+		update 
+			$DB_NEOS$t_co_group
+		set
+			modify_seq = #modifySeq#
+			,modify_date = NOW()
+			<isNotNull property="groupEmailName">,group_email_name=#groupEmailName#</isNotNull>
+			<isNotNull property="groupEmailId">,group_email_id=#groupEmailId#</isNotNull>
+			<isNotNull property="groupEmailDomain">,group_email_domain=#groupEmailDomain#</isNotNull>
+			<isNotNull property="smtpServer">,smtp_server=#smtpServer#</isNotNull>
+			<isNotNull property="smtpPort">,smtp_port=#smtpPort#</isNotNull>
+			<isNotNull property="outSmtpUseYn">,out_smtp_use_yn=#outSmtpUseYn#</isNotNull>
+			<isNotNull property="smtpId">,smtp_id=#smtpId#</isNotNull>
+			<isNotNull property="smtpPw">,smtp_pw=#smtpPw#</isNotNull>
+			<isNotNull property="smtpSecuTp">,smtp_secu_tp=#smtpSecuTp#</isNotNull>
+			<isNotNull property="smtpRecvAddrTp">,smtp_recv_addr_tp=#smtpRecvAddrTp#</isNotNull>
+		where
+			group_seq = #groupSeq#
+			
+	</update>		
+	
+	<update id="GroupManage.updateGroupPath" parameterClass="hashmap">
+		update 
+			$DB_NEOS$t_co_group_path
+		set
+			avail_capac = #availCapac#,
+			total_capac = #totalCapac#,
+			limit_file_count = #limitFileCount#,
+			modify_seq = #modifySeq#,
+			modify_date = now()
+		where
+			group_seq = #groupSeq#
+			and
+				path_seq = #pathSeq#
+			and
+				os_type = #osType#	
+	</update>
+	
+	<select id="GroupManage.selectGroupContainerList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT *
+		FROM 
+		(
+			SELECT a.code, a.detail_code, $DB_NEOS$FN_GetMultiLang(#langCode#, b.detail_name_multi) as detail_name, a.order_num
+			FROM $DB_NEOS$t_co_code_detail a, $DB_NEOS$v_t_co_code_detail_multi b
+			WHERE a.code = b.code
+			AND a.detail_code = b.detail_code
+			AND a.use_yn = 'Y'
+			AND b.use_yn = 'Y'
+			AND a.code = 'COM518'
+		) c LEFT OUTER JOIN (SELECT * FROM $DB_NEOS$t_co_group_container WHERE group_seq = #groupSeq#) d ON c.detail_code = d.con_name
+		<isNotEmpty property="conName">
+			Where d.con_name = #conName#
+		</isNotEmpty>
+		ORDER BY c.order_num
+	</select>
+	
+	<insert id="GroupManage.insertGroupContainer" parameterClass="hashmap">
+		INSERT INTO $DB_NEOS$t_co_group_container
+		SET 
+			group_seq        = 			#groupSeq#, 
+			con_name       	 = 			#conName#, 
+			ip				 = 			#ip#, 
+			port         	 = 			#port#, 
+			create_seq       = 			#editSeq#, 
+			create_date      = 			now(), 
+			modify_seq       = 			#editSeq#, 
+			modify_date      = 			now()
+		ON DUPLICATE KEY UPDATE
+			ip 				 = 			#ip#, 
+			port         	 = 			#port#, 
+			modify_seq       = 			#editSeq#, 
+			modify_date      = 			now()
+	</insert>
+	
+	<select id="GroupManage.selectGroupIpInfo" parameterClass="hashmap" resultClass="egovMap">
+		SELECT 
+			ip, port, B.group_display_name
+		FROM $DB_NEOS$t_co_group_container A
+		INNER JOIN $DB_NEOS$t_co_group B on A.group_seq = B.group_seq
+		WHERE
+			A.group_seq = #groupSeq# AND A.con_name = 'gw'
+	</select>
+	
+	
+	<update id="GroupManage.setLoginImgType" parameterClass="hashmap">
+		UPDATE 
+			$DB_NEOS$t_co_group
+		SET
+			login_type = #type#
+		WHERE
+			group_seq = #groupSeq#
+	</update>
+	
+	
+	
+	<select id="GroupManage.getLogoImgFile" parameterClass="hashmap" resultClass="egovMap">
+		select concat(concat(orignl_file_name,'.'), file_extsn) as name, 
+		file_extsn as extension, file_size as size, b.file_id as fileId, A.display_text as displayText from $DB_NEOS$t_co_org_img A
+		inner join $DB_NEOS$t_co_atch_file B on A.file_id = B.file_id
+		inner join $DB_NEOS$t_co_atch_file_detail C on B.file_id = C.file_id
+		where a.org_seq = #orgSeq#
+		and a.img_type = concat('IMG_COMP_LOGIN_LOGO_', #type#) 
+
+	</select>
+	
+	<select id="GroupManage.getBgImgFile" parameterClass="hashmap" resultClass="egovMap">
+		select concat(concat(orignl_file_name,'.'), file_extsn) as name, 
+		file_extsn as extension,
+		file_size as size,
+		b.file_id as fileId,
+		a.disp_type as dispType
+		from $DB_NEOS$t_co_org_img A
+		inner join $DB_NEOS$t_co_atch_file B on A.file_id = B.file_id
+		inner join $DB_NEOS$t_co_atch_file_detail C on B.file_id = C.file_id
+		where a.org_seq = #orgSeq#
+		and a.img_type = concat('IMG_COMP_LOGIN_BANNER_', #type#) 
+	</select>
+	
+	<select id="GroupManage.getMsgLoginLogoImgFile" parameterClass="hashmap" resultClass="egovMap">
+		select concat(concat(orignl_file_name,'.'), file_extsn) as name, 
+		file_extsn as extension, file_size as size, b.file_id as fileId from $DB_NEOS$t_co_org_img A
+		inner join $DB_NEOS$t_co_atch_file B on A.file_id = B.file_id
+		inner join $DB_NEOS$t_co_atch_file_detail C on B.file_id = C.file_id
+		where a.org_seq = #orgSeq#
+		and a.img_type = 'MSG_LOGO_01' 
+	</select>
+	
+	
+	<select id="GroupManage.getMsgMainTopImgFile" parameterClass="hashmap" resultClass="egovMap">
+		select concat(concat(orignl_file_name,'.'), file_extsn) as name, 
+		file_extsn as extension, file_size as size, b.file_id as fileId from $DB_NEOS$t_co_org_img A
+		inner join $DB_NEOS$t_co_atch_file B on A.file_id = B.file_id
+		inner join $DB_NEOS$t_co_atch_file_detail C on B.file_id = C.file_id
+		where a.org_seq = #orgSeq#
+		and a.img_type = 'MSG_LOGO_02'
+	</select>
+	
+	
+	<select id="GroupManage.getPhoneImgFile" parameterClass="hashmap" resultClass="egovMap">
+		select concat(concat(orignl_file_name,'.'), file_extsn) as name, 
+		file_extsn as extension, file_size as size, b.file_id as fileId from $DB_NEOS$t_co_org_img A
+		inner join $DB_NEOS$t_co_atch_file B on A.file_id = B.file_id
+		inner join $DB_NEOS$t_co_atch_file_detail C on B.file_id = C.file_id
+		where a.org_seq = #orgSeq#
+		and a.img_type = #imgType#
+		and os_type = #osType#
+		and app_type = #appType#
+		and disp_mode = #dispMode#
+		and disp_type = #dispType#		
+		and ph_type = #type#
+	</select>
+	
+	
+	<select id="GroupManage.getMainTopImgFile" parameterClass="hashmap" resultClass="egovMap">
+		select concat(concat(orignl_file_name,'.'), file_extsn) as name, 
+		file_extsn as extension, file_size as size, b.file_id as fileId from $DB_NEOS$t_co_org_img A
+		inner join $DB_NEOS$t_co_atch_file B on A.file_id = B.file_id
+		inner join $DB_NEOS$t_co_atch_file_detail C on B.file_id = C.file_id
+		where a.org_seq = #orgSeq#
+		and a.img_type = 'IMG_COMP_LOGO'	
+	</select>
+	
+	
+	<select id="GroupManage.getMainFootImgFile" parameterClass="hashmap" resultClass="egovMap">
+		select concat(concat(orignl_file_name,'.'), file_extsn) as name, 
+		file_extsn as extension, file_size as size, b.file_id as fileId, A.display_text as displayText from $DB_NEOS$t_co_org_img A
+		inner join $DB_NEOS$t_co_atch_file B on A.file_id = B.file_id
+		inner join $DB_NEOS$t_co_atch_file_detail C on B.file_id = C.file_id
+		where a.org_seq = #orgSeq#
+		and a.img_type = 'IMG_COMP_FOOTER'	
+	</select>
+	
+	
+	<select id="GroupManage.getOrgDisplayText" parameterClass="hashmap" resultClass="egovMap">
+		select concat(concat(orignl_file_name,'.'), file_extsn) as name, 
+		file_extsn as extension, file_size as size, b.file_id as fileId, A.display_text as displayText from $DB_NEOS$t_co_org_img A
+		left join $DB_NEOS$t_co_atch_file B on A.file_id = B.file_id
+		left join $DB_NEOS$t_co_atch_file_detail C on B.file_id = C.file_id
+		where a.org_seq = #orgSeq#
+		and a.img_type = #imgType#	
+	</select>
+	
+	<select id="GroupManage.getGroupInfo" parameterClass="hashmap" resultClass="egovMap" remapResults="true">
+		SELECT
+			*
+		FROM $DB_NEOS$t_co_group
+		<isNotEmpty property="groupSeq">
+			where group_seq = #groupSeq#		
+		</isNotEmpty>
+		LIMIT 1
+	</select>
+	
+	
+	<select id="GroupManage.selectPathInfo" parameterClass="hashmap" resultClass="egovMap">
+		SELECT
+			*
+		FROM $DB_NEOS$t_co_group_path
+		WHERE
+			group_seq = #groupSeq# AND path_seq = #pathSeq# AND os_type = #osType#
+	</select>
+	
+	
+	<select id="GroupManage.getGroupList" parameterClass="hashmap" resultClass="egovMap">
+		/* GroupManage.getGroupList - mariaDB */
+		SELECT  groupping_seq
+		        , CASE WHEN #langCode# = 'en' THEN IF(groupping_name_en = '', groupping_name, groupping_name_en)
+		        	   WHEN #langCode# = 'jp' THEN IF(groupping_name_jp = '', groupping_name, groupping_name_jp)
+		        	   WHEN #langCode# = 'cn' THEN IF(groupping_name_cn = '', groupping_name, groupping_name_cn)
+		        	   ELSE groupping_name END as groupping_name
+		FROM    $DB_NEOS$t_co_groupping
+		WHERE   
+			CASE WHEN #langCode# = 'en' THEN CASE WHEN groupping_name_en = '' THEN groupping_name LIKE CONCAT('%', ifnull(#searchText#,''), '%') ELSE groupping_name_en like CONCAT('%', ifnull(#searchText#,''), '%') END
+			     WHEN #langCode# = 'jp' THEN CASE WHEN groupping_name_jp = '' THEN groupping_name LIKE CONCAT('%', ifnull(#searchText#,''), '%') ELSE groupping_name_jp like CONCAT('%', ifnull(#searchText#,''), '%') END
+			     WHEN #langCode# = 'cn' THEN CASE WHEN groupping_name_cn = '' THEN groupping_name LIKE CONCAT('%', ifnull(#searchText#,''), '%') ELSE groupping_name_cn like CONCAT('%', ifnull(#searchText#,''), '%') END
+				 ELSE groupping_name like CONCAT('%', ifnull(#searchText#,''), '%') END		
+		ORDER BY groupping_order
+	</select>
+	
+	<select id="GroupManage.selectSeq" resultClass="egovMap" parameterClass="hashmap">
+		/* GroupManage.selectSeq - mariaDB */
+		SELECT $DB_NEOS$nextval('groupping')  AS seq 
+	</select>
+	
+	<insert id="GroupManage.groupSave" parameterClass="hashmap">
+		/* GroupManage.groupSave - mariaDB */
+		INSERT INTO $DB_NEOS$t_co_groupping 
+		VALUES(#groupSeq#, #grouppingSeq#, #grouppingName#, #grouppingNameEn#, #grouppingNameJp#, #grouppingNameCn#, #useYn#, #empSeq#, NOW(), null, null, #grouppingOrder#, #grouppingEtc#)
+		
+	</insert>
+	
+	<delete id="GroupManage.groupDel" parameterClass="hashmap" >
+		/* GroupManage.groupDel - mariaDB */
+		delete from $DB_NEOS$t_co_groupping
+		where  groupping_seq = #grouppingSeq#
+	</delete>
+	
+	<insert id="GroupManage.groupingCompAdd" parameterClass="hashmap">
+		/* GroupManage.groupingCompAdd - mariaDB */
+		INSERT INTO $DB_NEOS$t_co_groupping_comp(groupping_seq, comp_seq, use_yn, create_seq, create_date, modify_seq, modify_date)
+		VALUES (#grouppingSeq#, #compSeq#, #useYn#, #empSeq#, NOW(), null, null)
+	</insert>
+	
+	<delete id="GroupManage.groupingCompDel" parameterClass="hashmap">
+		/* GroupManage.groupingCompDel - mariaDB */
+		DELETE FROM $DB_NEOS$t_co_groupping_comp
+		WHERE  groupping_seq = #grouppingSeq#
+	</delete>
+	
+	<select id="GroupManage.groupInfo" resultClass="egovMap" parameterClass="hashmap">
+		/* GroupManage.groupInfo - maiaDB */
+		SELECT groupping_seq
+		       , groupping_name
+		       , groupping_name_en
+		       , groupping_name_jp
+		       , groupping_name_cn
+		       , groupping_order
+		       , groupping_etc
+        FROM   $DB_NEOS$t_co_groupping
+        WHERE  groupping_seq = #grouppingSeq#
+	</select>
+	
+	<update id="GroupManager.groupInfoUpdate" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_groupping SET
+		  groupping_name = #grouppingName#
+		  , groupping_name_en = #grouppingNameEn#
+		  , groupping_name_jp = #grouppingNameJp#
+		  , groupping_name_cn = #grouppingNameCn#
+		  , groupping_order = #grouppingOrder#
+		  , groupping_etc = #grouppingEtc#
+		WHERE groupping_seq = #grouppingSeq#  
+	</update>
+	
+	<select id="GroupManager.selectGroupLangCode" parameterClass="hashmap" resultClass="string">
+		SELECT DISTINCT lang_code
+		FROM $DB_NEOS$t_co_group_lang 
+		WHERE group_seq = #groupSeq#
+		AND main_yn = 'Y'
+	</select>
+	
+	<update id="GroupManager.updateBgType" parameterClass="hashmap">
+		UPDATE $DB_NEOS$t_co_org_img SET disp_type=#bgType# WHERE img_type='IMG_COMP_LOGIN_BANNER_B' AND org_seq=#orgSeq#
+	</update>
+	
+	<update id="GroupManage.setMasterSecu" parameterClass="hashmap">
+		update 
+			$DB_NEOS$t_co_group
+		set
+			master_passwd = #masterSecu#
+			<isNotEmpty property="masterPasswdExpDt">
+			,master_passwd_exp_dt = #masterPasswdExpDt#		
+			</isNotEmpty>			
+		where
+			group_seq = #groupSeq#	
+	</update>		
+	
+	<select id="GroupManage.getGwVolumeInfo" parameterClass="hashmap" resultClass="egovMap">
+		select 
+			ifnull(gw_volume, 0) gw_volume,
+			ifnull(mail_volume, 0) mail_volume,
+			(ifnull(gw_volume, 0) + ifnull(mail_volume, 0)) total_volume
+		from
+			$DB_NEOS$t_co_group
+		where
+			group_seq = #groupSeq#
+	</select>
+	
+	
+	<select id="GroupManage.getGwVolumeHistoryInfo" parameterClass="hashmap" resultClass="egovMap">
+		select 
+			substring(convert(create_date, char(50)),1,10) as create_date,
+			ifnull((ifnull(gw_volume, 0) + ifnull(mail_volume, 0)) - (select ifnull(gw_volume, 0) + ifnull(mail_volume, 0) from $DB_NEOS$t_co_group_volume_history where idx = a.idx-1), 0) as changeVolume,
+			(ifnull(gw_volume, 0) + ifnull(mail_volume, 0)) as total_volume,
+			ifnull(gw_volume, 0) as gw_volume,
+			ifnull(mail_volume, 0) as mail_volume			
+		from 
+			$DB_NEOS$t_co_group_volume_history a
+		where 
+			a.group_seq = #groupSeq#
+		order  by a.create_date desc	
+	</select>
+	
+	<select id="GroupManage.getGwVolumeReport" parameterClass="hashmap" resultClass="egovMap">
+		select
+		all_vol,
+		gw_vol,
+		mail_vol, 
+		size_all,
+		size_gw,
+		size_mail,
+		free_all,
+		free_gw,
+		free_mail,
+		size_ea,
+		size_schedule,
+		size_report,
+		size_project,
+		size_board,
+		size_doc,
+    	size_talk,
+    	size_msg, 		
+		replace((case when all_vol > 1099511627775 then concat(ROUND((all_vol/1099511627776),1), ' TB') when all_vol > 1073741823 then concat(ROUND((all_vol/1073741824),1), ' GB') else concat(ROUND((all_vol/1048576),1), ' MB') end),'.0','') as all_vol_text,
+		replace((case when gw_vol > 1099511627775 then concat(ROUND((gw_vol/1099511627776),1), ' TB') when gw_vol > 1073741823 then concat(ROUND((gw_vol/1073741824),1), ' GB') else concat(ROUND((gw_vol/1048576),1), ' MB') end),'.0','') as gw_vol_text,
+		replace((case when mail_vol > 1099511627775 then concat(ROUND((mail_vol/1099511627776),1), ' TB') when mail_vol > 1073741823 then concat(ROUND((mail_vol/1073741824),1), ' GB') else concat(ROUND((mail_vol/1048576),1), ' MB') end),'.0','') as mail_vol_text,
+		replace((case when size_all > 1099511627775 then concat(ROUND((size_all/1099511627776),1), ' TB') when size_all > 1073741823 then concat(ROUND((size_all/1073741824),1), ' GB') else concat(ROUND((size_all/1048576),1), ' MB') end),'.0','') as size_all_text,
+		replace((case when size_gw > 1099511627775 then concat(ROUND((size_gw/1099511627776),1), ' TB') when size_gw > 1073741823 then concat(ROUND((size_gw/1073741824),1), ' GB') else concat(ROUND((size_gw/1048576),1), ' MB') end),'.0','') as size_gw_text,
+		replace((case when size_mail > 1099511627775 then concat(ROUND((size_mail/1099511627776),1), ' TB') when size_mail > 1073741823 then concat(ROUND((size_mail/1073741824),1), ' GB') else concat(ROUND((size_mail/1048576),1), ' MB') end),'.0','') as size_mail_text,
+		replace((case when abs(free_all) > 1099511627775 then concat(ROUND((free_all/1099511627776),1), ' TB') when abs(free_all) > 1073741823 then concat(ROUND((free_all/1073741824),1), ' GB') else concat(ROUND((free_all/1048576),1), ' MB') end),'.0','') as free_all_text,
+		replace((case when abs(free_gw) > 1099511627775 then concat(ROUND((free_gw/1099511627776),1), ' TB') when abs(free_gw) > 1073741823 then concat(ROUND((free_gw/1073741824),1), ' GB') else concat(ROUND((free_gw/1048576),1), ' MB') end),'.0','') as free_gw_text,
+		replace((case when abs(free_mail) > 1099511627775 then concat(ROUND((free_mail/1099511627776),1), ' TB') when abs(free_mail) > 1073741823 then concat(ROUND((free_mail/1073741824),1), ' GB') else concat(ROUND((free_mail/1048576),1), ' MB') end),'.0','') as free_mail_text,		
+		replace((case when size_ea > 1099511627775 then concat(ROUND((size_ea/1099511627776),1), ' TB') when size_ea > 1073741823 then concat(ROUND((size_ea/1073741824),1), ' GB') else concat(ROUND((size_ea/1048576),1), ' MB') end),'.0','') as size_ea_text,
+		replace((case when size_schedule > 1099511627775 then concat(ROUND((size_schedule/1099511627776),1), ' TB') when size_schedule > 1073741823 then concat(ROUND((size_schedule/1073741824),1), ' GB') else concat(ROUND((size_schedule/1048576),1), ' MB') end),'.0','') as size_schedule_text,
+		replace((case when size_report > 1099511627775 then concat(ROUND((size_report/1099511627776),1), ' TB') when size_report > 1073741823 then concat(ROUND((size_report/1073741824),1), ' GB') else concat(ROUND((size_report/1048576),1), ' MB') end),'.0','') as size_report_text,
+		replace((case when size_project > 1099511627775 then concat(ROUND((size_project/1099511627776),1), ' TB') when size_project > 1073741823 then concat(ROUND((size_project/1073741824),1), ' GB') else concat(ROUND((size_project/1048576),1), ' MB') end),'.0','') as size_project_text,
+		replace((case when size_board > 1099511627775 then concat(ROUND((size_board/1099511627776),1), ' TB') when size_board > 1073741823 then concat(ROUND((size_board/1073741824),1), ' GB') else concat(ROUND((size_board/1048576),1), ' MB') end),'.0','') as size_board_text,
+		replace((case when size_doc > 1099511627775 then concat(ROUND((size_doc/1099511627776),1), ' TB') when size_doc > 1073741823 then concat(ROUND((size_doc/1073741824),1), ' GB') else concat(ROUND((size_doc/1048576),1), ' MB') end),'.0','') as size_doc_text,
+    	replace((case when size_talk > 1099511627775 then concat(ROUND((size_talk/1099511627776),1), ' TB') when size_talk > 1073741823 then concat(ROUND((size_talk/1073741824),1), ' GB') else concat(ROUND((size_talk/1048576),1), ' MB') end),'.0','') as size_talk_text,
+    	replace((case when size_msg > 1099511627775 then concat(ROUND((size_msg/1099511627776),1), ' TB') when size_msg > 1073741823 then concat(ROUND((size_msg/1073741824),1), ' GB') else concat(ROUND((size_msg/1048576),1), ' MB') end),'.0','') as size_msg_text		
+		from
+		(
+		  select
+		  all_vol, 
+		  gw_vol,
+		  mail_vol,
+		  size_all,
+		  size_gw,
+		  size_mail,
+		  all_vol - size_gw - size_mail as free_all,
+		  gw_vol - size_gw as free_gw,
+		  mail_vol - size_mail as free_mail,
+		  size_ea,
+		  size_schedule,
+		  size_report,
+		  size_project, 
+		  size_board,
+		  size_doc,
+		  size_talk,
+          size_msg 		  
+		  from
+		  (
+		    select
+		    gw_vol + mail_vol as all_vol,
+		    gw_vol,
+		    mail_vol,
+		    size_ea + size_schedule + size_report + size_project + size_board + size_doc + size_talk + size_msg + size_mail as size_all,
+		    size_ea + size_schedule + size_report + size_project + size_board + size_doc + size_talk + size_msg as size_gw,
+		    size_mail,
+		    size_ea,
+		    size_schedule,
+		    size_report,
+		    size_project,
+		    size_board,
+		    size_doc,
+        	size_talk,
+        	size_msg		    
+		    from
+		    (
+		      select
+		      -- 계약용량(그룹웨어)
+		      if(ifnull(gw_volume,'')='',0,gw_volume)*1073741824 as gw_vol,
+		      -- 계약용량(메일)
+		      if(ifnull(mail_volume,'')='',0,mail_volume)*1073741824 as mail_vol,
+		      -- 메일
+		      $sizeMail$*1048576 as size_mail,
+		      -- 전자결재
+		      (select ifnull(sum(file_size),0) from $DB_NEOS$t_co_atch_file_detail where file_size is not null and use_yn = 'Y' and path_seq in ('100','200','1400','1500')) as size_ea,
+		      -- 일정관리
+		      (select ifnull(sum(file_size),0) from $DB_NEOS$t_co_atch_file_detail where file_size is not null and use_yn = 'Y' and path_seq = '400') as size_schedule,
+		      -- 업무보고
+		      (select ifnull(sum(file_size),0) from $DB_NEOS$t_co_atch_file_detail where file_size is not null and use_yn = 'Y' and path_seq = '1300') as size_report,
+		      -- 업무관리
+		      (select ifnull(sum(file_size),0) from $DB_NEOS$t_co_atch_file_detail where file_size is not null and use_yn = 'Y' and path_seq = '300') as size_project,
+		      -- 게시판
+			  (select ifnull(sum(file_size),0) from
+			  (select file_size from $DB_EDMS$board_attach_file where file_size is not null
+			  union all
+			  select file_size from $DB_EDMS$board_reply_attach_file where file_size is not null
+			  union all
+			  select file_size from $DB_EDMS$api_attach_file where file_size is not null) doc) as size_board,
+		      -- 문서
+			  (select ifnull(sum(file_size),0) from
+			  (select file_size from $DB_EDMS$doc_attach_file where file_size is not null
+			  union all
+			  select file_size from $DB_EDMS$doc_attach_file_old where file_size is not null
+			  union all
+			  select file_size from $DB_EDMS$bpm_attach_file where file_size is not null
+			  union all
+			  select file_size from $DB_EDMS$bpm_attach_file_old where file_size is not null			  			  
+			  union all
+			  select file_size from $DB_EDMS$doc_temporary_attach_file where file_size is not null) doc) as size_doc,
+	          -- 대화
+	          (select ifnull(sum(ifnull(module_capac,0)),0) from $DB_NEOS$t_co_group_path a where path_seq = '800') as size_talk,
+	          -- 쪽지
+	          (select ifnull(sum(ifnull(module_capac,0)),0) from $DB_NEOS$t_co_group_path a where path_seq = '810') as size_msg		      
+		      from $DB_NEOS$t_co_group
+		    ) result1
+		  ) result2
+		) result3
+	</select>
+	
+	<select id="GroupManage.getMailAdminUrl" parameterClass="hashmap" resultClass="String">
+		select replace(mail_url,'/mail2/','/mailAdmin/') as mailAdminUrl  from $DB_NEOS$t_co_group
+	</select>	
+	
+	
+	
+	<select id="GroupManage.getPerssonelCardMasterAuth" parameterClass="hashmap" resultClass="egovMap">
+		select
+			a.*,
+			ifnull((select file_id from $DB_NEOS$t_at_personnel_card_file where emp_seq = #targetEmpSeq#),'') fileId			
+		from
+			$DB_NEOS$t_at_personnel_card_master_auth a
+		where
+			group_seq = #groupSeq#
+	</select>
+	
+	<select id="GroupManage.getPatchHistoryInfo" parameterClass="hashmap" resultClass="egovMap">
+				
+		select distinct p.box_ver
+		, p.update_result_code
+		, p.user_emp_seq
+		, case when ifnull(p.user_emp_seq,'') = '' then '-' else ifnull(p.user_ip,'') end as user_ip
+		, (select DATE_FORMAT(ifnull(MAX(ps.update_date),p.update_date), '%Y-%m-%d %T') from $DB_NEOS$t_co_patch ps where ps.box_ver = p.box_ver and ps.seq <![CDATA[ < ]]> p.seq and ps.update_result_code = 'ING') as update_start_date
+		, case when DATE_FORMAT(p.update_date, '%Y') != '0000' then DATE_FORMAT(p.update_date, '%Y-%m-%d %T') else DATE_FORMAT(p.fail_update_date, '%Y-%m-%d %T') end as update_end_date
+		, case when ifnull(p.user_emp_seq,'') = '' then '-' else case when em.emp_seq is null then ifnull(p.user_name,'') else $DB_NEOS$FN_GetMultiLang(#langCode#, em.emp_name_multi) end end as emp_name
+		, case when ifnull(p.user_emp_seq,'') = '' then '고객지원센터' when dm.dept_seq is null then ifnull(p.dept_name,'') else ifnull($DB_NEOS$FN_GetMultiLang(#langCode#, dm.dept_name_multi),'') end as dept_name
+		, case when ifnull(p.user_emp_seq,'') = '' then '고객지원센터' when dm.dept_seq is null then ifnull(p.dept_name,'') else replace(ifnull(dm.path_name,''),'|',' > ') end as dept_path_name
+		, case when ifnull(p.user_emp_seq,'') = '' then '-' else get_emp_duty_position_name(ed.group_seq, ed.comp_seq, ed.position_code, 'POSITION', #langCode#) end as position_name
+		from $DB_NEOS$t_co_patch p
+		left join $DB_NEOS$t_co_emp e on p.user_emp_seq = e.emp_seq
+		left join $DB_NEOS$v_t_co_emp_multi em on e.emp_seq = em.emp_seq
+		left join $DB_NEOS$t_co_emp_comp ec on e.main_comp_seq = ec.comp_seq and e.emp_seq = ec.emp_seq
+		left join $DB_NEOS$t_co_emp_dept ed on ec.emp_seq = ed.emp_seq and ec.dept_seq = ed.dept_seq
+		left join $DB_NEOS$v_t_co_dept_multi dm on ed.dept_seq = dm.dept_seq
+		where p.box_ver_seq <![CDATA[ > ]]> 3636 and p.group_seq = #groupSeq# and p.update_result_code != 'ING' and (DATE_FORMAT(p.update_date, '%Y') != '0000' or DATE_FORMAT(p.fail_update_date, '%Y') != '0000')
+		order by p.seq desc
+			
+	</select>
+	
+	<insert id="GroupManage.setUpdateClientToken" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_patch_token
+		(token, group_seq, emp_seq, dept_name, position_name, duty_name, emp_name, login_id, login_ip, create_date, req_result) VALUES
+		(#token#, #groupSeq#, #empSeq#, #deptName#, #positionName#, #dutyName#, #empName#, #loginId#, #loginIp#, NOW(), 'R');	
+	</insert>
+	
+		
+	<insert id="GroupManage.insertBackupServiceInfo" parameterClass="hashmap">
+	
+		insert into $DB_NEOS$t_co_cloud_backup_info	
+		(backup_seq, group_seq, backup_from_dt, backup_to_dt, backup_path, ea_backup_type, ea_proc_state, ea_count, doc_backup_type, doc_proc_state, doc_count, edoc_backup_type, edoc_proc_state, edoc_count, board_backup_type, board_proc_state, board_count, down_zip_path, down_from_dt, down_to_dt, down_popup_yn, down_btn_yn, req_date) VALUES
+		(
+			#backupSeq#,
+		 	#groupSeq#,
+		 	#backupFromDt#,
+		 	#backupToDt#,
+		 	#backupPath#,
+		 	#eaBackupType#,
+		 	#eaProcState#,
+		 	#eaCount#,
+		 	#docBackupType#,
+		 	#docProcState#,
+		 	#docCount#,
+		 	#edocBackupType#,
+		 	#edocProcState#,
+		 	#edocCount#,
+		 	#boardBackupType#,
+		 	#boardProcState#,
+		 	#boardCount#,
+		 	#downZipPath#,
+		 	#downFromDt#,
+		 	#downToDt#,
+		 	#downPopupYn#,
+		 	#downBtnYn#,
+		 	NOW()
+		 );	
+		
+	</insert>	
+	
+	<update id="GroupManage.updateBackupServiceInfo" parameterClass="hashmap">
+		update $DB_NEOS$t_co_cloud_backup_info
+		set
+		req_date = req_date
+		<isNotEmpty property="eaProcState">,ea_proc_state = #eaProcState#</isNotEmpty>
+		<isNotEmpty property="docProcState">,doc_proc_state = #docProcState#</isNotEmpty>
+		<isNotEmpty property="edocProcState">,edoc_proc_state = #edocProcState#</isNotEmpty>
+		<isNotEmpty property="boardProcState">,board_proc_state = #boardProcState#</isNotEmpty>
+		
+		<isNotEmpty property="eaCount">,ea_count = #eaCount#</isNotEmpty>
+		<isNotEmpty property="docCount">,doc_count = #docCount#</isNotEmpty>
+		<isNotEmpty property="edocCount">,edoc_count = #edocCount#</isNotEmpty>
+		<isNotEmpty property="boardCount">,board_count = #boardCount#</isNotEmpty>
+		
+		<isNotEmpty property="downZipPath">,down_zip_path = #downZipPath#</isNotEmpty>
+		<isNotEmpty property="downFromDt">,down_from_dt = #downFromDt#</isNotEmpty>	
+		<isNotEmpty property="downToDt">,down_to_dt = #downToDt#</isNotEmpty>
+		<isNotEmpty property="downPopupYn">,down_popup_yn = #downPopupYn#</isNotEmpty>
+		<isNotEmpty property="downBtnYn">,down_btn_yn = #downBtnYn#</isNotEmpty>		
+		where backup_seq = #backupSeq#
+	</update>	
+	
+	
+	<select id="GroupManage.selectBackupServiceInfo" parameterClass="hashmap" resultClass="egovMap">
+				
+		select
+		backup_seq
+		,group_seq
+		,backup_from_dt
+		,backup_to_dt
+		,backup_path
+		,ea_backup_type
+		,ea_proc_state
+		,ea_count
+		,doc_backup_type
+		,doc_proc_state
+		,doc_count
+		,edoc_backup_type
+		,edoc_proc_state
+		,edoc_count
+		,board_backup_type
+		,board_proc_state
+		,board_count
+		,down_zip_path
+		,down_from_dt
+		,down_to_dt
+		,down_popup_yn
+		,down_btn_yn
+		,case when ifnull(down_zip_path,'') != '' and date_format(now(),'%Y%m%d') between down_from_dt and down_to_dt then 'Y' else 'N' end as down_yn
+		,date_format(req_date,'%Y-%m-%d %H:%i:%s') as req_date
+		
+		from $DB_NEOS$t_co_cloud_backup_info
+		where 
+		backup_seq = #backupSeq#
+			
+	</select>
+	
+	<select id="GroupManage.selectBackupServiceDownList" parameterClass="hashmap" resultClass="egovMap">
+
+		select
+		case ifnull(h.down_tp,'') when 'POP' then '팝업 공지' when 'BTN' then '포털 하단 버튼' else 'URL' end as down_tp
+		,date_format(h.down_date,'%Y-%m-%d %H:%i:%s') as down_date
+		,case ifnull(h.result_tp,'') when 'Y' then '성공' when 'S' then '성공' when 'D' then '만료' else '실패' end as result_tp
+		,ifnull(em.emp_name,'-') as emp_name
+		,ifnull(h.client_ip,'') as client_ip
+		from $DB_NEOS$t_co_cloud_backup_down_his h
+		left join $DB_NEOS$t_co_emp_multi em on h.emp_seq = em.emp_seq and em.lang_code = 'kr'
+		where h.backup_seq = #backupSeq#
+		order by h.down_date desc
+			
+	</select>	
+	
+	<insert id="GroupManage.insertBackupServiceDownHis" parameterClass="hashmap">
+		insert into $DB_NEOS$t_co_cloud_backup_down_his
+		(down_seq, backup_seq, down_tp, down_date, result_tp, emp_seq, client_ip) VALUES
+		(#downSeq#, #backupSeq#, #downTp#, now(), #resultTp#, #empSeq#, #clientIp#);	
+	</insert>	
+	
+	<update id="GroupManage.updateBackupServiceDownHis" parameterClass="hashmap">
+		update $DB_NEOS$t_co_cloud_backup_down_his
+		set
+		result_tp = #resultTp#
+		where backup_seq = #backupSeq# and down_seq = #downSeq#
+	</update>
+	
+	
+		 
+</sqlMap>

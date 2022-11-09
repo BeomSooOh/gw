@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <properties>
+                <property name="name">gw</property>
+                <property name="pattern">[%5p] [%d{yyyy-MM-dd HH:mm:ss}] (%F:%L) -> %m%n</property>
+    </properties>
+    <appenders>
+                <Console name="console" target="SYSTEM_OUT">
+                        <PatternLayout pattern="${pattern}"/>
+                </Console>
+                <RollingFile name="file" fileName="../logs/${name}.log"
+                                 filePattern="../logs/$${date:yyyy}$${date:MM}$${date:dd}/${name}_%d{yyyyMMdd}.log">
+                        <PatternLayout>
+                                <pattern>${pattern}</pattern>
+                        </PatternLayout>
+                        <Policies>
+                                <TimeBasedTriggeringPolicy /><!-- Rotated everyday -->
+                        </Policies>
+                </RollingFile>
+    </appenders>
+    <Loggers>
+        <Logger name="java.sql" level="ERROR" additivity="false">
+            <AppenderRef ref="console" />
+            <AppenderRef ref="file" />
+        </Logger>
+        <Logger name="egovframework" level="ERROR" additivity="false">
+            <AppenderRef ref="console" />
+            <AppenderRef ref="file" />
+        </Logger>
+        <Logger name="main.web" level="ERROR" additivity="false">
+            <AppenderRef ref="console" />
+            <AppenderRef ref="file" />
+        </Logger>
+		  <!-- log SQL with timing information, post execution -->
+	    <logger name="jdbc.sqltiming" level="ERROR" additivity="false">
+	        <appender-ref ref="console" />
+	        <AppenderRef ref="file" />
+	    </logger>
+	    <logger name="org.springframework" level="ERROR" additivity="false">
+	        <appender-ref ref="console" />
+	        <AppenderRef ref="file" />
+	    </logger>
+	    <logger name="api" level="ERROR" additivity="false">
+            <AppenderRef ref="console" />
+            <AppenderRef ref="file" />
+        </logger>
+		<logger name="api.orgchart" level="ERROR" additivity="false">
+		    <AppenderRef ref="console" />
+		    <AppenderRef ref="file" />
+		 </logger>        
+        <logger name="api.menuAccess" level="ERROR" additivity="false">
+            <AppenderRef ref="console" />
+            <AppenderRef ref="file" />
+         </logger>        
+        <Root level="ERROR">
+            <AppenderRef ref="console" />
+            <AppenderRef ref="file" />
+        </Root>
+    </Loggers>
+</Configuration>

@@ -1,0 +1,523 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="EbpOrgchart">
+    <!-- groupSeq search -->
+    <select id="EbpOrgchart.selectGroupSeq" parameterClass="hashmap" resultClass="String">
+        /* EbpOrgchart.selectGroupSeq - mariaDB */
+        SELECT group_seq
+          FROM $DB_NEOS$t_co_group
+    </select>
+    <select id="EbpOrgchart.selectGroupCnt" parameterClass="hashmap" resultClass="String">
+        /* EbpOrgchart.selectGroupCnt - mariaDB */
+        SELECT COUNT(*)
+          FROM $DB_NEOS$t_co_group
+         WHERE group_seq = #groupSeq#
+    </select>
+
+    <!-- 권한 초기화 -->
+    <select id="EbpOrgchart.getAuthcodeCnt" parameterClass="hashmap" resultClass="string">
+        SELECT COUNT(*) AS cnt
+          FROM $DB_NEOS$t_co_authcode
+         WHERE comp_seq = #compSeq#
+
+         <isEqual prepend="AND" property="codeMultiple" compareValue="Y">
+         author_code IN ( #authorUCode# , #authorACode# , #authorMCode# )
+         </isEqual>
+         <isEqual prepend="AND" property="codeMultiple" compareValue="N">
+         author_code = #authorCode#
+         </isEqual>
+
+    </select>
+    <select id="EbpOrgchart.getAuthRelateCnt" parameterClass="hashmap" resultClass="string">
+        SELECT COUNT(*) AS cnt
+          FROM $DB_NEOS$t_co_auth_relate
+         WHERE comp_seq    = #compSeq#
+
+         <isEqual prepend="AND" property="codeMultiple" compareValue="Y">
+         author_code IN ( #authorUCode# , #authorACode# , #authorMCode# )
+         </isEqual>
+         <isEqual prepend="AND" property="codeMultiple" compareValue="N">
+         author_code = #authorCode#
+         </isEqual>
+
+    </select>
+    <select id="EbpOrgchart.getAuthMenuCnt" parameterClass="hashmap" resultClass="string">
+        SELECT COUNT(*) AS cnt
+          FROM $DB_NEOS$t_co_menu_auth
+         WHERE
+
+         <isEqual property="codeMultiple" compareValue="Y">
+         author_code IN ( #authorUCode# , #authorACode# , #authorMCode# )
+         </isEqual>
+         <isEqual property="codeMultiple" compareValue="N">
+         author_code = #authorCode#
+         </isEqual>
+
+    </select>
+
+    <delete id="EbpOrgchart.deleteAllAuthcode" parameterClass="hashmap">
+        /* EbpOrgchart.deleteAllAuthcode - mariaDB */
+        DELETE FROM $DB_NEOS$t_co_authcode
+
+
+         WHERE
+         <isNotEmpty property="codeMultiple">
+           <isEqual property="codeMultiple" compareValue="Y">
+             comp_seq = #compSeq#
+             AND author_code IN ( #authorUCode# , #authorACode# , #authorMCode# )
+           </isEqual>
+           <isEqual property="codeMultiple" compareValue="N">
+             comp_seq    = #compSeq#
+             AND author_code = #authorCode#
+           </isEqual>
+         </isNotEmpty>
+
+         <isEmpty property="codeMultiple">
+           1=1
+         </isEmpty>
+
+    </delete>
+    <delete id="EbpOrgchart.deleteAllAuthcodeMulti" parameterClass="hashmap">
+        /* EbpOrgchart.deleteAllAuthcodeMulti - mariaDB */
+        DELETE FROM $DB_NEOS$t_co_authcode_multi
+
+         WHERE
+         <isEmpty property="authorCode">
+<!--            SUBSTRING_INDEX(author_code, '-', 1) = IFNULL(#compSeq#, SUBSTRING_INDEX(author_code, '-', 1)) -->
+           author_code IN ( SELECT author_code
+                              FROM t_co_authcode
+                          )
+         </isEmpty>
+
+         <isNotEmpty property="authorCode">
+           author_code = #authorCode#
+         </isNotEmpty>
+
+    </delete>
+    <delete id="EbpOrgchart.deleteAllAuthRelate" parameterClass="hashmap">
+        /* EbpOrgchart.deleteAllAuthRelate - mariaDB */
+        DELETE FROM $DB_NEOS$t_co_auth_relate
+
+         WHERE
+         <isNotEmpty property="codeMultiple">
+           <isEqual property="codeMultiple" compareValue="Y">
+             comp_seq = #compSeq#
+             AND author_code IN ( #authorUCode# , #authorACode# , #authorMCode# )
+           </isEqual>
+           <isEqual property="codeMultiple" compareValue="N">
+             comp_seq    = #compSeq#
+             AND author_code = #authorCode#
+           </isEqual>
+         </isNotEmpty>
+
+         <isEmpty property="codeMultiple">
+           1=1
+         </isEmpty>
+
+         <isNotEmpty property="empSeq">
+           emp_seq = #empSeq#
+           <isNotEmpty property="compSeq">
+             AND comp_seq = #compSeq#
+           </isNotEmpty>
+           <isNotEmpty property="deptSeq">
+             AND dept_seq = #deptSeq#
+           </isNotEmpty>
+         </isNotEmpty>
+
+    </delete>
+    <delete id="EbpOrgchart.deleteAllMenuAuth" parameterClass="hashmap">
+        /* EbpOrgchart.deleteAllMenuAuth - mariaDB */
+        DELETE FROM $DB_NEOS$t_co_menu_auth
+
+         WHERE
+         <isNotEmpty property="codeMultiple">
+           <isEqual property="codeMultiple" compareValue="Y">
+             author_code IN ( #authorUCode# , #authorACode# , #authorMCode# )
+           </isEqual>
+           <isEqual property="codeMultiple" compareValue="N">
+             author_code = #authorCode#
+           </isEqual>
+         </isNotEmpty>
+
+         <isEmpty property="codeMultiple">
+<!--            SUBSTRING_INDEX(author_code, '-', 1) = IFNULL(#compSeq#, SUBSTRING_INDEX(author_code, '-', 1)) -->
+             author_code IN ( SELECT author_code
+                                FROM t_co_authcode
+                            )
+         </isEmpty>
+
+    </delete>
+
+    <!-- 임시 직급 직책 추가 -->
+    <insert id="EbpOrgchart.insertTmpDutyPosition" parameterClass="hashmap">
+        INSERT IGNORE INTO $DB_NEOS$t_co_comp_duty_position
+        ( dp_seq, group_seq, comp_seq, dp_type, use_yn, order_num, create_seq, create_date )
+        VALUES
+        ( CONCAT(#compSeqDef#, '-', #dpType#), #groupSeq#, #compSeqDef#, #dpType#, 'Y', 100, 'orgAdapter', now() )
+    </insert>
+    <insert id="EbpOrgchart.insertTmpDutyPositionMulti" parameterClass="hashmap">
+        INSERT IGNORE INTO $DB_NEOS$t_co_comp_duty_position_multi
+        ( dp_seq, lang_code, group_seq, comp_seq, dp_type, dp_name, use_yn, create_seq, create_date )
+        VALUES
+        ( CONCAT(#compSeqDef#, '-', #dpType#), 'kr', #groupSeq#, #compSeqDef#, #dpType#, '임시', 'Y', 'orgAdapter', now() )
+    </insert>
+
+    <!-- 권한 추가 -->
+    <insert id="EbpOrgchart.insertAuthcode" parameterClass="hashmap">
+        /* EbpOrgchart.insertAuthcode - mariaDB */
+        INSERT INTO $DB_NEOS$t_co_authcode
+        ( author_code, author_type, author_base_yn, author_use_yn, group_seq, comp_seq
+        , create_seq, create_date, modify_seq, modify_date, order_num, dept_seq )
+        VALUES
+        ( #authorCode#
+        , #authorType#
+        , #authorBaseYn#
+        , #authorUseYn#
+        , #groupSeq#
+        , #compSeq#
+        , #createSeq#
+        , #createDate#
+        , #modifySeq#
+        , #modifyDate#
+        , #orderNum#
+        , #deptSeq#
+        )
+        ON DUPLICATE KEY UPDATE
+           author_type    = #authorType#
+         , author_base_yn = #authorBaseYn#
+         , author_use_yn  = #authorUseYn#
+         , group_seq      = #groupSeq#
+         , comp_seq       = #compSeq#
+         , create_seq     = #createSeq#
+         , create_date    = #createDate#
+         , modify_seq     = #modifySeq#
+         , modify_date    = #modifyDate#
+         , order_num      = #orderNum#
+         , dept_seq       = #deptSeq#
+    </insert>
+    <insert id="EbpOrgchart.insertAuthcodeMulti" parameterClass="hashmap">
+        /* EbpOrgchart.insertAuthcodeMulti - mariaDB */
+        INSERT INTO $DB_NEOS$t_co_authcode_multi
+        ( author_code, lang_code, author_nm, author_dc, create_seq, create_date, modify_seq, modify_date )
+        VALUES
+        ( #authorCode#
+        , #langCode#
+        , #authorNm#
+        , #authorDc#
+        , #createSeq#
+        , #createDate#
+        , #modifySeq#
+        , #modifyDate#
+        )
+        ON DUPLICATE KEY UPDATE
+           author_nm    = #authorNm#
+         , author_dc    = #authorDc#
+         , create_seq   = #createSeq#
+         , create_date  = #createDate#
+         , modify_seq   = #modifySeq#
+         , modify_date  = #modifyDate#
+
+    </insert>
+    <insert id="EbpOrgchart.insertAuthRelate" parameterClass="hashmap">
+        /* EbpOrgchart.insertAuthRelate - mariaDB */
+        INSERT INTO $DB_NEOS$t_co_auth_relate
+        ( author_code, author_type, comp_seq, dept_seq, emp_seq )
+        VALUES
+        ( #authorCode#
+        , #authorType#
+        , #compSeq#
+        , #deptSeq#
+        , #empSeq#
+        )
+        ON DUPLICATE KEY UPDATE
+          author_type = #authorType#
+    </insert>
+    <insert id="EbpOrgchart.insertMenuAuth" parameterClass="hashmap">
+        /* EbpOrgchart.insertMenuAuth - mariaDB */
+        INSERT IGNORE INTO $DB_NEOS$t_co_menu_auth
+        ( menu_no, author_code )
+        VALUES
+        ( #menuNo#
+        , #authorCode#
+        )
+    </insert>
+    <insert id="EbpOrgchart.insertEmpOption" parameterClass="hashmap">
+        /* EbpOrgchart.insertEmpOption - mariaDB */
+        INSERT INTO $DB_NEOS$t_co_emp_option
+        ( emp_seq, admin_use_yn, cus_use_yn, create_seq, create_date, master_use_yn )
+        VALUES
+        ( #empSeq#
+        , 'Y'
+        , 'Y'
+        , 'ebpOrgchartSync'
+        , now()
+        , 'Y'
+        )
+        ON DUPLICATE KEY UPDATE
+           admin_use_yn  = 'Y'
+         , cus_use_yn    = 'Y'
+         , create_seq    = 'ebpOrgchartSync'
+         , create_date   = now()
+         , master_use_yn = 'Y'
+    </insert>
+
+    <!-- 조직도 초기화 -->
+    <delete id="EbpOrgchart.deleteAllComp" parameterClass="hashmap">
+        /* EbpOrgchart.deleteAllComp - mariaDB */
+        DELETE FROM $DB_NEOS$t_co_comp
+
+    </delete>
+    <delete id="EbpOrgchart.deleteAllCompMulti" parameterClass="hashmap">
+        /* EbpOrgchart.deleteAllCompMulti - mariaDB */
+        DELETE FROM $DB_NEOS$t_co_comp_multi
+    </delete>
+    <delete id="EbpOrgchart.deleteAllBiz" parameterClass="hashmap">
+        /* EbpOrgchart.deleteAllBiz - mariaDB */
+        DELETE FROM $DB_NEOS$t_co_biz
+
+    </delete>
+    <delete id="EbpOrgchart.deleteAllBizMulti" parameterClass="hashmap">
+        /* EbpOrgchart.deleteAllBizMulti - mariaDB */
+        DELETE FROM $DB_NEOS$t_co_biz_multi
+
+    </delete>
+    <delete id="EbpOrgchart.deleteAllDept" parameterClass="hashmap">
+        /* EbpOrgchart.deleteAllDept - mariaDB */
+        DELETE FROM $DB_NEOS$t_co_dept
+
+    </delete>
+    <delete id="EbpOrgchart.deleteAllDeptMulti" parameterClass="hashmap">
+        /* EbpOrgchart.deleteAllDeptMulti - mariaDB */
+        DELETE FROM $DB_NEOS$t_co_dept_multi
+
+    </delete>
+    <delete id="EbpOrgchart.deleteAllDutyPosition" parameterClass="hashmap">
+        /* EbpOrgchart.deleteAllDutyPosition - mariaDB */
+        DELETE FROM $DB_NEOS$t_co_comp_duty_position
+
+    </delete>
+    <delete id="EbpOrgchart.deleteAllDutyPositionMulti" parameterClass="hashmap">
+        /* EbpOrgchart.deleteAllDutyPositionMulti - mariaDB */
+        DELETE FROM $DB_NEOS$t_co_comp_duty_position_multi
+
+    </delete>
+    <delete id="EbpOrgchart.deleteAllEmp" parameterClass="hashmap">
+        /* EbpOrgchart.deleteAllEmp - mariaDB */
+        DELETE FROM $DB_NEOS$t_co_emp
+
+    </delete>
+    <delete id="EbpOrgchart.deleteAllEmpMulti" parameterClass="hashmap">
+        /* EbpOrgchart.deleteAllEmpMulti - mariaDB */
+        DELETE FROM $DB_NEOS$t_co_emp_multi
+         WHERE emp_seq IN ( SELECT emp_seq
+                              FROM t_co_emp
+                          )
+    </delete>
+    <delete id="EbpOrgchart.deleteAllEmpDept" parameterClass="hashmap">
+        /* EbpOrgchart.deleteAllEmpDept - mariaDB */
+        DELETE FROM $DB_NEOS$t_co_emp_dept
+    </delete>
+    <delete id="EbpOrgchart.deleteAllEmpDeptMulti" parameterClass="hashmap">
+        /* EbpOrgchart.deleteAllEmpDeptMulti - mariaDB */
+        DELETE FROM $DB_NEOS$t_co_emp_dept_multi
+    </delete>
+    <delete id="EbpOrgchart.deleteAllEmpComp" parameterClass="hashmap">
+        /* EbpOrgchart.deleteAllEmpComp - mariaDB */
+        DELETE FROM $DB_NEOS$t_co_emp_comp
+    </delete>
+    <delete id="EbpOrgchart.deleteAllEmpOption" parameterClass="hashmap">
+        /* EbpOrgchart.deleteAllEmpOption - mariaDB */
+        DELETE FROM $DB_NEOS$t_co_emp_option
+         WHERE emp_seq IN ( SELECT emp_seq
+                              FROM t_co_emp
+                          )
+    </delete>
+
+
+    <!-- Last Sync Date search -->
+<!--     <select id="EbpOrgchart.selectLastSyncDate" parameterClass="hashmap" resultClass="String"> -->
+<!--         /* EbpOrgchart.selectLastSyncDate - mariaDB */ -->
+<!--         SELECT DATE_FORMAT(sync_date, '%Y-%m-%d %H:%i:%s') AS sync_date -->
+<!--           FROM $DB_NEOS$t_co_erp_sync -->
+<!--          WHERE 1=1 -->
+<!--            AND comp_seq IN ('ebpSyncOrgchart', 'ebpSyncOrgchartAll')-->
+<!--          ORDER BY sync_date DESC -->
+<!--          LIMIT 1 -->
+<!--     </select> -->
+
+    <!-- DELETE Sync Data use_yn = N update -->
+    <update id="EbpOrgchart.deleteComp" parameterClass="hashmap">
+        /* EbpOrgchart.deleteComp - mariaDB */
+        UPDATE $DB_NEOS$t_co_comp
+           SET use_yn      = 'N'
+             , modify_seq  = 'ebpOrgchartSync'
+             , modify_date = now()
+         WHERE comp_seq    = #compSeq#
+    </update>
+    <update id="EbpOrgchart.deleteCompMulti" parameterClass="hashmap">
+        /* EbpOrgchart.deleteCompMulti - mariaDB */
+        UPDATE $DB_NEOS$t_co_comp_multi
+           SET use_yn      = 'N'
+             , modify_seq  = 'ebpOrgchartSync'
+             , modify_date = now()
+         WHERE comp_seq    = #compSeq#
+    </update>
+    <update id="EbpOrgchart.deleteBiz" parameterClass="hashmap">
+        /* EbpOrgchart.deleteBiz - mariaDB */
+        UPDATE $DB_NEOS$t_co_biz
+           SET use_yn      = 'N'
+             , modify_seq  = 'ebpOrgchartSync'
+             , modify_date = now()
+         WHERE biz_seq     = #bizSeq#
+    </update>
+    <update id="EbpOrgchart.deleteBizMulti" parameterClass="hashmap">
+        /* EbpOrgchart.deleteBizMulti - mariaDB */
+        UPDATE $DB_NEOS$t_co_biz_multi
+           SET use_yn      = 'N'
+             , modify_seq  = 'ebpOrgchartSync'
+             , modify_date = now()
+         WHERE biz_seq     = #bizSeq#
+    </update>
+    <update id="EbpOrgchart.deleteDept" parameterClass="hashmap">
+        /* EbpOrgchart.deleteDept - mariaDB */
+        UPDATE $DB_NEOS$t_co_dept
+           SET use_yn      = 'N'
+             , modify_seq  = 'ebpOrgchartSync'
+             , modify_date = now()
+         WHERE dept_seq    = #deptSeq#
+    </update>
+    <update id="EbpOrgchart.deleteDeptMulti" parameterClass="hashmap">
+        /* EbpOrgchart.deleteDeptMulti - mariaDB */
+        UPDATE $DB_NEOS$t_co_dept_multi
+           SET use_yn      = 'N'
+             , modify_seq  = 'ebpOrgchartSync'
+             , modify_date = now()
+         WHERE dept_seq    = #deptSeq#
+    </update>
+    <update id="EbpOrgchart.deleteDutyPosition" parameterClass="hashmap">
+        /* EbpOrgchart.deleteDutyPosition - mariaDB */
+        UPDATE $DB_NEOS$t_co_comp_duty_position
+           SET use_yn      = 'N'
+             , modify_seq  = 'ebpOrgchartSync'
+             , modify_date = now()
+         WHERE dp_seq      = #dpSeq#
+           AND dp_type     = #dpType#
+    </update>
+    <update id="EbpOrgchart.deleteDutyPositionMulti" parameterClass="hashmap">
+        /* EbpOrgchart.deleteDutyPositionMulti - mariaDB */
+        UPDATE $DB_NEOS$t_co_comp_duty_position_multi
+           SET use_yn      = 'N'
+             , modify_seq  = 'ebpOrgchartSync'
+             , modify_date = now()
+         WHERE dp_seq      = #dpSeq#
+           AND dp_type     = #dpType#
+    </update>
+    <update id="EbpOrgchart.deleteEmp" parameterClass="hashmap">
+        /* EbpOrgchart.deleteEmp - mariaDB */
+        UPDATE $DB_NEOS$t_co_emp
+           SET login_id    = CONCAT(login_id,'▦',#empSeq#)
+             , email_addr  = CONCAT(email_addr,'▦',#empSeq#)
+             , use_yn      = 'D'
+             , work_status = '001'
+             , modify_seq  = 'ebpOrgchartSync'
+             , modify_date = now()
+         WHERE emp_seq     = #empSeq#
+    </update>
+    <update id="EbpOrgchart.deleteEmpMulti" parameterClass="hashmap">
+        /* EbpOrgchart.deleteEmpMulti - mariaDB */
+        UPDATE $DB_NEOS$t_co_emp_multi
+           SET use_yn      = 'N'
+             , modify_seq  = 'ebpOrgchartSync'
+             , modify_date = now()
+         WHERE emp_seq     = #empSeq#
+    </update>
+    <update id="EbpOrgchart.deleteEmpDept" parameterClass="hashmap">
+        /* EbpOrgchart.deleteEmpDept - mariaDB */
+        UPDATE $DB_NEOS$t_co_emp_dept
+           SET use_yn      = 'N'
+             , modify_seq  = 'ebpOrgchartSync'
+             , modify_date = now()
+         WHERE emp_seq     = #empSeq#
+    </update>
+    <update id="EbpOrgchart.deleteEmpDeptMulti" parameterClass="hashmap">
+        /* EbpOrgchart.deleteEmpDeptMulti - mariaDB */
+        UPDATE $DB_NEOS$t_co_emp_dept_multi
+           SET use_yn      = 'N'
+             , modify_seq  = 'ebpOrgchartSync'
+             , modify_date = now()
+         WHERE emp_seq     = #empSeq#
+    </update>
+    <update id="EbpOrgchart.deleteEmpComp" parameterClass="hashmap">
+        /* EbpOrgchart.deleteEmpComp - mariaDB */
+        UPDATE $DB_NEOS$t_co_emp_comp
+           SET use_yn      = 'N'
+             , work_status = '001'
+             , modify_seq  = 'ebpOrgchartSync'
+             , modify_date = now()
+         WHERE emp_seq     = #empSeq#
+    </update>
+
+    <update id="EbpOrgchart.deleteAuthcode" parameterClass="hashmap">
+        /* EbpOrgchart.deleteAuthcode - mariaDB */
+        UPDATE $DB_NEOS$t_co_authcode
+           SET author_use_yn = 'N'
+             , modify_seq    = 'ebpOrgchartSync'
+             , modify_date   = now()
+
+         WHERE
+
+         <isNotEmpty property="codeMultiple">
+           <isEqual property="codeMultiple" compareValue="Y">
+             comp_seq = #compSeq#
+             AND author_code IN ( #authorUCode# , #authorACode# , #authorMCode# )
+           </isEqual>
+           <isEqual property="codeMultiple" compareValue="N">
+             comp_seq    = #compSeq#
+             AND author_code = #authorCode#
+           </isEqual>
+         </isNotEmpty>
+
+         <isEmpty property="codeMultiple">
+           comp_seq = IFNULL(#compSeq#, comp_seq)
+         </isEmpty>
+
+    </update>
+
+    <insert id="EbpOrgchart.setApiLog" parameterClass="hashmap">
+        /* EbpOrgchart.setApiLog - mariaDB */
+        INSERT INTO $DB_NEOS$t_co_group_api_history
+        (group_seq, api_tp, req_type, data, req_date)
+        VALUES
+        ( #groupSeq#
+        , #apiTp#
+        , #reqType#
+        , #data#
+        , now()
+        )
+    </insert>
+
+    <select id="EbpOrgchart.selectDeptOrderNumList" parameterClass="hashmap" resultClass="hashmap">
+       	SELECT
+		@rownum:=@rownum+1 orderNum, b.dept_seq deptSeq
+		FROM $DB_NEOS$t_co_dept b, (SELECT @rownum:=0) TMP
+		order by comp_seq, dept_level, dept_cd;
+    </select>
+    
+    <update id="EbpOrgchart.updateDeptOrderNum" parameterClass="hashmap">
+    	UPDATE
+    		$DB_NEOS$t_co_dept 
+    	SET
+    		order_num = #orderNum#
+    	WHERE
+    		dept_seq = #deptSeq#
+    </update>
+    
+    
+    <update id="EbpOrgchart.updateEmpPasswdStatusCodeAll" parameterClass="hashmap">
+        /* EbpOrgchart.updateEmpPasswdStatusCodeAll - mariaDB */
+        UPDATE $DB_NEOS$t_co_emp
+           SET passwd_status_code = 'P'
+    </update>
+</sqlMap>

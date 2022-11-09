@@ -1,0 +1,43 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="expires" content="0" />
+<meta http-equiv="expires" content="now" />
+<meta http-equiv="Cache-Control" content="private" />
+<meta http-equiv="Cache-Control" content="No-Cache" />
+<meta http-equiv="Pragma" content="No-Cache" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<title>미리보기</title>
+
+<script type="text/javascript" language="javascript">
+//<![CDATA[
+function fnLoadPreview()
+{
+	//화면 출력
+	document.body.innerHTML = opener.fnGetEditorPreviewHTML();
+
+	//Title 다국어 변경
+	document.title = opener.ID_RES_CONST_STRING_PREVIEW;
+
+	//HyperLink
+	var aLinks = document.body.getElementsByTagName("a");
+	aLinks = [].slice.call(aLinks);
+	aLinks.forEach(function(aLink) {
+		if(aLink.href.replace(document.location.href,'').indexOf("#") === 0) {	//bookmark
+			return;
+		}
+
+		aLink.addEventListener("click", function(evnt) {
+			window.open(aLink.href, "", "width=1366,height=768,left=0,top=0,resizable=yes,scrollbars=yes");
+			evnt.preventDefault();
+		});
+	});
+}
+//]]>
+</script>
+</head>
+
+<body onload="fnLoadPreview();">
+</body>
+</html>

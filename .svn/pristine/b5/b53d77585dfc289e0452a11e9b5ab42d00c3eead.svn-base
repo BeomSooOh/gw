@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="ErpICubeProjectManageDAO">
+
+	<typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	
+	<select id="ErpICubeProjectManageDAO.selectProjectList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT 
+			A.CO_CD as cd_company,
+			A.PJT_CD as no_project,
+			A.PJT_NM as nm_project,
+			A.ORD_AM as am_wonamt,
+			A.PROG_FG as sta_project,
+			A.FR_DT as sd_project,
+			A.TO_DT as ed_project,
+			A.START_DT as dt_change,
+			A.MODIFY_DT as gw_insert_time,
+			A.INSERT_ID,
+			A.INSERT_DT,
+			A.INSERT_IP,
+			A.MODIFY_ID,
+			A.MODIFY_IP,
+			A.total_count
+		FROM (
+			    SELECT row_number() over(order by MODIFY_DT) RN,*,count(*) over() as total_count
+	  			FROM SPJT
+			    <isNotEmpty property="lastDt">
+			    WHERE MODIFY_DT > #lastDt#
+			    </isNotEmpty>
+		    ) A
+		WHERE RN >= $startRow$ AND RN &lt; $endRow$
+	</select>
+	
+	<select id="ErpICubeProjectManageDAO.selectProjectDeleteList" parameterClass="hashmap" resultClass="egovMap">
+		SELECT 
+			A.PJT_CD as no_project,
+			A.CO_CD as cd_company,
+			A.SQ as sq,
+			A.PJT_NM as nm_project,
+			A.INSERT_ID,
+			A.INSERT_DT as gw_delete_time,
+			A.INSERT_IP,
+			A.total_count
+        FROM (
+            SELECT row_number() over(order by INSERT_DT) RN,*,count(*) over() as total_count
+			from SPJT_DEL
+            <isNotEmpty property="lastDt">
+            WHERE INSERT_DT > #lastDt#
+            </isNotEmpty>
+            ) A
+        WHERE RN >= $startRow$ AND RN &lt; $endRow$
+	</select>
+        
+</sqlMap>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="AccMoneyFormDAO">
+
+    
+    <select id="AccMoneyFormDAO.SelectComp" resultClass="hashmap" parameterClass="hashmap">
+	    SELECT seq, parent_seq, comp_name, display_name, order_num FROM $DB_NEOS$v_org_chart_all
+		WHERE gbn_org = 'c'
+		ORDER BY order_num
+    </select>
+
+	<insert id="AccMoneyFormDAO.InsertMoneyForm" parameterClass="hashmap">
+		INSERT INTO $DB_NEOS$teag_form_money 
+		(comp_seq, form_nm, form_tp, form_d_tp, use_yn, created_dt, file_id)
+		VALUES
+		( #comp_seq#, #file_nm#, 'ea0023', 'ba3000', '0', NOW(), #file_id#)
+		
+	</insert>
+	
+	<select id="AccMoneyFormDAO.SelectFormBySeq" resultClass="hashmap" parameterClass="hashmap">
+        SELECT tfm.form_id, tfm.form_nm, tfm.comp_seq, tfm.file_id, afd.file_size FROM $DB_NEOS$teag_form_money tfm, $DB_NEOS$t_co_atch_file_detail afd
+		WHERE tfm.file_id = afd.file_id
+		AND tfm.comp_seq = #comp_seq#
+		ORDER BY form_id DESC
+		LIMIT 1
+    </select>
+	
+	<update id="AccMoneyFormDAO.UpdateSmartOption001" parameterClass="hashmap">
+		/* /mariadb/acc/AccMoney_SQL.xml - AccMoneyFormDAO.UpdateSmartOption001 */
+		/* 스마트 자금관리 옵션 업데이트 / 자금이체 적요  1 : 충금통장적요 / 2 : 전표적요 */
+		UPDATE	$DB_NEOS$t_ex_smartoption
+		SET	VALUE = #smart001Value#
+		WHERE 	CODE = 'smart001'		
+	</update>
+	
+	<select id="AccMoneyFormDAO.SelectSmartOption001" resultClass="hashmap" parameterClass="hashmap">
+		/* /mariadb/acc/AccMoney_SQL.xml - AccMoneyFormDAO.SelectSmartOption001 */
+		/* 스마트 자금관리 옵션 조회 / 자금이체 적요  1 : 충금통장적요 / 2 : 전표적요 */
+		SELECT	value
+		FROM	$DB_NEOS$t_ex_smartoption
+		WHERE	CODE = 'smart001'	
+	</select>
+	
+</sqlMap>

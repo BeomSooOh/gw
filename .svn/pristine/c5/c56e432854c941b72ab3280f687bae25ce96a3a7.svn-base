@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC
+					"-//Apache Software Foundation//DTD Tiles Configuration 2.0//EN"
+					"http://tiles.apache.org/dtds/tiles-config_2_0.dtd">
+<tiles-definitions>
+	
+	<!-- body 정의 Start -->
+	
+	<!-- main -->
+	<definition name=".main" template="/WEB-INF/jsp/templates/tiles2/main_tiles.jsp">
+    </definition>
+    
+    <!-- timeline -->
+	<definition name=".timeline" template="/WEB-INF/jsp/templates/tiles2/timeline_tiles.jsp">
+    </definition>
+    
+    <!-- totalsearch -->
+	<definition name=".totalsearch" template="/WEB-INF/jsp/templates/tiles2/totalsearch_tiles.jsp">
+    </definition>
+	
+	<!-- bizbox -->
+    <definition name=".contents" template="/WEB-INF/jsp/templates/tiles2/contents_tiles.jsp">
+    </definition>
+	
+	<!-- mail -->
+    <definition name=".mail" template="/WEB-INF/jsp/templates/tiles2/mail_tiles.jsp">
+    </definition>
+    
+	<!-- mail -->
+    <definition name=".onecontents" template="/WEB-INF/jsp/templates/tiles2/onecontents_tiles.jsp">
+    </definition>    
+    
+    <!-- mail 계정 -->
+    <definition name=".mailex" template="/WEB-INF/jsp/templates/tiles2/mailex_tiles.jsp">
+    </definition>
+    
+    <definition name=".default" template="/WEB-INF/jsp/templates/tiles2/default_tiles.jsp">
+    </definition>
+
+	<definition name=".popup" template="/WEB-INF/jsp/templates/tiles2/popup_tiles.jsp">
+	</definition>
+
+	<definition name=".lump_popup" template="/WEB-INF/jsp/templates/tiles2/lump_popup_tiles.jsp">
+	</definition>
+
+	<definition name=".popup_v2" template="/WEB-INF/jsp/templates/tiles2/popup_tiles_v2.jsp">
+	</definition>  	 
+	
+    <definition name=".approvalDoc" template="/WEB-INF/jsp/templates/tiles2/approvalDoc.jsp">
+    </definition>  	 
+	
+    <definition name=".certPop" template="/WEB-INF/jsp/templates/tiles2/certPop.jsp">
+    </definition>
+    
+    <!-- EBP 메인 -->
+    <definition name=".ebpMain" template="/WEB-INF/jsp/templates/tiles2/ebpMain_tiles.jsp">
+    </definition>
+    	
+	<!-- body 정의 End -->
+	
+	 
+    <definition name="/neos/cmm/systemx/cert/pop/certRequestPrint" extends=".certPop">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/cmm/systemx/cert/pop/certRequestPrint.jsp" />
+    </definition> 
+	<definition name="/*/*/*/reportstoragebox/*" extends=".contents">
+		<put-attribute name="body" value="/WEB-INF/jsp/{1}/{2}/{3}/reportstoragebox/{4}.jsp" />
+	</definition>
+	<definition name="/*/*/*/approvalbox/*" extends=".contents">
+		<put-attribute name="body" value="/WEB-INF/jsp/{1}/{2}/{3}/approvalbox/{4}.jsp" />
+	</definition>
+	
+    <definition name="/neos/edoc/document/*/*/*/*" extends=".contents">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/edoc/document/{1}/{2}/{3}/{4}.jsp" />
+    </definition>
+    <definition name="/neos/edoc/document/*/board/*" extends=".contents">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/edoc/document/{1}/board/{2}.jsp" />
+    </definition> 
+    <definition name="/neos/edoc/document/*/popup/*" extends=".popup_v2">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/edoc/document/{1}/popup/{2}.jsp" />
+    </definition> 
+        
+    <definition name="/neos/edoc/eapproval/iu/hwp/*/*" extends=".approvalDoc">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/edoc/eapproval/iu/hwp/{1}/{2}.jsp" />
+    </definition>   
+            
+            
+	<!-- 메인 Start -->
+    	
+    <!-- EBP 메인 -->
+    <definition name="/main/userEbpMain" extends=".ebpMain">
+    	<put-attribute name="body" value="/WEB-INF/jsp/main/userEbpMain.jsp" />
+    </definition>
+    
+	<!--  메인 -->
+	<definition name="/main/*" extends=".main">
+        <put-attribute name="body" value="/WEB-INF/jsp/main/{1}.jsp" />
+    </definition>
+    
+    <!--  timeline -->
+	<definition name="/main/timeline/*" extends=".timeline">
+        <put-attribute name="body" value="/WEB-INF/jsp/main/timeline/{1}.jsp" />
+    </definition>
+
+	<!--  totalsearc -->
+	<definition name="/main/totalsearch/totalSearch" extends=".totalsearch">
+        <put-attribute name="body" value="/WEB-INF/jsp/main/totalsearch/totalSearch.jsp" />
+    </definition>
+	
+	<!-- 메일전용계정 -->
+	<definition name="/main/mail/bizboxMainEx" extends=".mailex">
+        <put-attribute name="body" value="/WEB-INF/jsp/main/mail/bizboxMainEx.jsp" />
+    </definition> 
+	
+	<!--  메일 -->
+	<definition name="/main/mail/*" extends=".mail">
+        <put-attribute name="body" value="/WEB-INF/jsp/main/mail/{1}.jsp" />
+    </definition> 
+    
+    <definition name="/main/temp/*" extends=".default">
+        <put-attribute name="body" value="/WEB-INF/jsp/main/temp/{1}.jsp" />
+    </definition>   
+    
+    <definition name="/main/empty/*" extends=".default">
+        <put-attribute name="body" value="/WEB-INF/jsp/main/empty/{1}.jsp" />
+    </definition> 
+    
+    <definition name="/main/portlet/*" extends=".default">
+        <put-attribute name="body" value="/WEB-INF/jsp/main/portlet/{1}.jsp" />
+    </definition>
+       
+    <definition name="/main/pop/*" extends=".popup">
+        <put-attribute name="body" value="/WEB-INF/jsp/main/pop/{1}.jsp" />
+    </definition>
+    
+	<!-- 메인 End -->
+	
+	<!--  oneContents -->
+	<definition name="/main/onecontents/*" extends=".onecontents">
+        <put-attribute name="body" value="/WEB-INF/jsp/main/onecontents/{1}.jsp" />
+    </definition> 	
+	
+	<!--  서브 메인 -->
+	
+	<definition name="/neos/cmm/cmmPage/*" extends=".default">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/cmm/cmmPage/{1}.jsp" />
+    </definition>
+    
+    <definition name="/neos/cmm/cmmPage/pop/*" extends=".popup">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/cmm/cmmPage/pop/{1}.jsp" />
+    </definition>
+	
+	<!--  서브 메인 End-->
+	
+	
+	<!-- 확장기능 Start -->
+	
+	<definition name="/neos/cmm/ex/*" extends=".contents">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/cmm/ex/{1}.jsp" />
+    </definition>
+    <definition name="/neos/cmm/ex/*/*" extends=".contents">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/cmm/ex/{1}/{2}.jsp" />
+    </definition>
+    <definition name="/neos/cmm/ex/*/admin/*" extends=".contents">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/cmm/ex/{1}/admin/{2}.jsp" />
+    </definition>
+    <definition name="/neos/cmm/ex/*/pop/*" extends=".popup">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/cmm/ex/{1}/pop/{2}.jsp" />
+    </definition>
+    
+	<!-- 확장기능 End -->
+	
+	
+	<!-- 마이페이지 Start -->
+	<definition name="/neos/cmm/mp/*" extends=".contents">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/cmm/mp/{1}.jsp" />
+    </definition>
+    <definition name="/neos/cmm/mp/*/*" extends=".contents">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/cmm/mp/{1}/{2}.jsp" />
+    </definition>
+    
+    <definition name="/neos/cmm/mp/*/pop/*" extends=".popup">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/cmm/mp/{1}/pop/{2}.jsp" />
+    </definition>
+	<!-- 마이페이지 End -->
+	
+	
+	
+	
+	
+	
+	<!-- 시스템관리 Start -->
+	
+	<definition name="/neos/cmm/systemx/*" extends=".contents">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/cmm/systemx/{1}.jsp" />
+    </definition>
+    
+    <definition name="/neos/cmm/systemx/*/*" extends=".contents">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/cmm/systemx/{1}/{2}.jsp" />
+    </definition>
+    
+    <definition name="/neos/cmm/systemx/*/pop/*" extends=".popup">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/cmm/systemx/{1}/pop/{2}.jsp" />
+    </definition>
+    
+	<definition name="/neos/cmm/System/*" extends=".contents">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/cmm/System/{1}.jsp" />
+    </definition>
+    
+    <definition name="/neos/cmm/System/*/*" extends=".contents">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/cmm/System/{1}/{2}.jsp" />
+    </definition>
+        
+    <definition name="/neos/cmm/System/*/popup/*" extends=".popup">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/cmm/System/{1}/popup/{2}.jsp" />
+    </definition>        
+   
+    <definition name="/neos/cmm/cmmncode/*/*" extends=".contents">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/cmm/cmmncode/{1}/{2}.jsp" />
+    </definition>
+    
+    <definition name="/acc/money/*" extends=".contents">
+        <put-attribute name="body" value="/WEB-INF/jsp/acc/money/{1}.jsp" />
+    </definition>
+    
+    <definition name="/acc/auth/*" extends=".contents">
+        <put-attribute name="body" value="/WEB-INF/jsp/acc/auth/{1}.jsp" />
+    </definition>
+    
+    <!-- ERP -->
+    <definition name="/neos/cmm/erp/*/*" extends=".contents">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/cmm/erp/{1}/{2}.jsp" />
+    </definition>
+    <definition name="/neos/cmm/erp/*/pop/*" extends=".popup">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/cmm/erp/{1}/pop/{2}.jsp" />
+    </definition>
+    
+    <!-- ActiveDirectory -->
+    <definition name="/neos/cmm/activeDirectory/*/*" extends=".contents">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/cmm/activeDirectory/{1}/{2}.jsp" />
+    </definition>
+    <definition name="/neos/cmm/activeDirectory/*/pop/*" extends=".popup">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/cmm/activeDirectory/{1}/pop/{2}.jsp" />
+    </definition>
+    
+	<!-- 시스템관리 End -->
+	
+	
+	 <definition name="/neos/edoc/eapproval/workflow/*" extends=".popup_v2">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/edoc/eapproval/workflow/{1}.jsp" />
+    </definition>    
+    <definition name="/popup_sign/*/*/*/*/*/*" extends=".popup">
+        <put-attribute name="body" value="/WEB-INF/jsp/{1}/{2}/{3}/{4}/{5}/{6}.jsp" />
+    </definition>
+    <definition name="/popup_sign/*/*/*/*/*" extends=".popup">
+        <put-attribute name="body" value="/WEB-INF/jsp/{1}/{2}/{3}/{4}/{5}.jsp" />
+    </definition>
+    <definition name="/popup_sign/*/*/*" extends=".popup">
+        <put-attribute name="body" value="/WEB-INF/jsp/{1}/{2}/{3}.jsp" />
+    </definition>
+
+
+	<definition name="/*/*/*/popup/*" extends=".popup">
+		<put-attribute name="body" value="/WEB-INF/jsp/{1}/{2}/{3}/popup/{4}.jsp" />
+	</definition>
+	<definition name="/popup/*/*/*/*/*/*" extends=".popup">
+		<put-attribute name="body" value="/WEB-INF/jsp/{1}/{2}/{3}/{4}/{5}/{6}.jsp" />
+	</definition>
+	
+    <definition name="/popup/*/*/*/*/*" extends=".popup">
+        <put-attribute name="body" value="/WEB-INF/jsp/{1}/{2}/{3}/{4}/{5}.jsp" />
+    </definition>
+    	
+	<definition name="/popup_lump/*/*/*/*/*/*" extends=".lump_popup">
+		<put-attribute name="body" value="/WEB-INF/jsp/{1}/{2}/{3}/{4}/{5}/{6}.jsp" />
+	</definition>
+	<definition name="/popup_lump/*/*/*/*/*" extends=".lump_popup">
+		<put-attribute name="body" value="/WEB-INF/jsp/{1}/{2}/{3}/{4}/{5}.jsp" />
+	</definition>
+	<definition name="/popup_lump/*/*/*/*" extends=".lump_popup">
+		<put-attribute name="body" value="/WEB-INF/jsp/{1}/{2}/{3}/{4}.jsp" />
+	</definition>
+	<definition name="/popup_lump/*/*/*" extends=".lump_popup">
+		<put-attribute name="body" value="/WEB-INF/jsp/{1}/{2}/{3}.jsp" />
+	</definition>
+
+    <definition name="/popup2/*/*/*/*" extends=".popup_v2">
+        <put-attribute name="body" value="/WEB-INF/jsp/{1}/{2}/{3}/{4}.jsp" />
+    </definition>
+     <definition name="/popup2/*/*/*" extends=".popup_v2">
+        <put-attribute name="body" value="/WEB-INF/jsp/{1}/{2}/{3}.jsp" />
+    </definition>
+    <definition name="/popup2/*/*/*/*/*/*" extends=".popup_v2">
+        <put-attribute name="body" value="/WEB-INF/jsp/{1}/{2}/{3}/{4}/{5}/{6}.jsp" />
+    </definition>
+    <definition name="/neos/cmm/popup/*" extends=".popup_v2">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/cmm/popup/{1}.jsp" />
+    </definition>
+    <definition name="/acc/auth/popup/*" extends=".popup_v2">
+        <put-attribute name="body" value="/WEB-INF/jsp/acc/auth/popup/{1}.jsp" />
+    </definition>
+        
+        
+    <!-- 전자결재 문서함 -->
+    
+    <definition name="/neos/edoc/document/*/*/*/*" extends=".contents">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/edoc/document/{1}/{2}/{3}/{4}.jsp" />
+    </definition>
+    <definition name="/neos/edoc/document/*/board/*" extends=".contents">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/edoc/document/{1}/board/{2}.jsp" />
+    </definition> 
+    <definition name="/neos/edoc/document/*/popup/*" extends=".popup_v2">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/edoc/document/{1}/popup/{2}.jsp" />
+    </definition>
+    <definition name="/neos/edoc/document/record/board/common/popup/*" extends=".popup_v2">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/edoc/document/record/board/common/popup/{1}.jsp" />
+    </definition>    
+    <definition name="/neos/edoc/delivery/baebu/popup/*" extends=".popup_v2">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/edoc/delivery/baebu/popup/{1}.jsp" />
+    </definition>  
+    <definition name="/neos/edoc/delivery/*/*/*/*" extends=".contents">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/edoc/delivery/{1}/{2}/{3}/{4}.jsp" />
+    </definition>
+    <definition name="/neos/edoc/delivery/send/popup/*" extends=".popup_v2">
+        <put-attribute name="body" value="/WEB-INF/jsp/neos/edoc/delivery/send/popup/{1}.jsp" />
+    </definition>   
+    	
+    	
+	<!-- 샘플(테스트용) 추후 제거 -->
+	
+	<definition name="/sample/*" extends=".contents">
+        <put-attribute name="body" value="/WEB-INF/jsp/sample/{1}.jsp" />
+    </definition>
+    
+    
+    <definition name="/erp/g20/abdocu/*" extends=".popup_v2">
+        <put-attribute name="body" value="/WEB-INF/jsp/erp/g20/abdocu/{1}.jsp" />
+    </definition>    
+
+</tiles-definitions>

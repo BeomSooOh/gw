@@ -1,0 +1,141 @@
+/*
+* 복사하기(확장-드롭다운) 다이알로그
+* commandId 로 나열
+*/
+var dzeCopyExtList = [ID_COMMAND_COPY, ID_COMMAND_COPY_EXT_STYLE];
+/*
+* 앞으로 가져오기(확장-드롭다운) 다이알로그
+* commandId 로 나열
+*/
+var dzeBringForwardList = [ID_COMMAND_BRING_FORWARD, ID_COMMAND_BRING_TO_FRONT];
+/*
+* 뒤로 보내기(확장-드롭다운) 다이알로그
+* commandId 로 나열
+*/
+var dzeSendBackwardList = [ID_COMMAND_SEND_BACKWARD, ID_COMMAND_SEND_TO_BACK];
+/*
+* 화살표(확장-드롭다운) 다이알로그
+* commandId 로 나열
+*/
+var dzeLineArrowList=  [ID_COMMAND_LINE_ARROW_NONE,ID_COMMAND_LINE_ARROW1,ID_COMMAND_LINE_ARROW2,ID_COMMAND_LINE_ARROW3
+    ,ID_COMMAND_LINE_ARROW4,ID_COMMAND_LINE_ARROW5,ID_COMMAND_LINE_ARROW6
+    ,ID_COMMAND_LINE_ARROW7,ID_COMMAND_LINE_ARROW8,ID_COMMAND_LINE_ARROW9
+    ,ID_COMMAND_LINE_ARROW10];
+/*
+* 텍스트 맞춤(확장-드롭다운) 다이알로그
+* commandId 로 나열
+*/
+var dzeObjTxtVAlignList = [ID_COMMAND_OBJ_TXT_VALIGN_TOP,ID_COMMAND_OBJ_TXT_VALIGN_MIDDLE,ID_COMMAND_OBJ_TXT_VALIGN_BOTTOM];
+/*
+* 텍스트 줄 바꿈(확장-드롭다운) 다이알로그
+* commandId 로 나열
+*/
+//var dzeObjTxtLayoutList = [ID_COMMAND_TXTLAYOUT_IN_LINE_WITH_TEXT,ID_COMMAND_TXTLAYOUT_SQUARE,ID_COMMAND_TXTLAYOUT_TIGHT
+//                        ,ID_COMMAND_TXTLAYOUT_THROUGH,ID_COMMAND_TXTLAYOUT_TOP_AND_BOTTOM,ID_COMMAND_TXTLAYOUT_BEHIND_TEXT
+//                        ,ID_COMMAND_TXTLAYOUT_IN_FRONT_OF_TEXT,ID_COMMAND_TXTLAYOUT_LEFT_TEXT,ID_COMMAND_TXTLAYOUT_RIGHT_TEXT
+//                        ,ID_COMMAND_TXTLAYOUT_OTHERS];
+
+// 지원 가능한 기능만 메뉴 활성화
+var dzeObjTxtLayoutList = [ID_COMMAND_TXTLAYOUT_IN_LINE_WITH_TEXT,
+							ID_COMMAND_TXTLAYOUT_BEHIND_TEXT, ID_COMMAND_TXTLAYOUT_IN_FRONT_OF_TEXT,
+							ID_COMMAND_TXTLAYOUT_LEFT_TEXT,ID_COMMAND_TXTLAYOUT_RIGHT_TEXT,
+							ID_COMMAND_TXTLAYOUT_OTHERS];
+/*
+* 맞춤(확장-드롭다운) 다이알로그
+* commandId 로 나열
+*/
+var dzeObjAlignList = [ID_COMMAND_OBJ_ALIGN_LEFT,ID_COMMAND_OBJ_ALIGN_CENTER,ID_COMMAND_OBJ_ALIGN_RIGHT,ID_COMMAND_OBJ_ALIGN_TOP,ID_COMMAND_OBJ_ALIGN_MIDDLE,ID_COMMAND_OBJ_ALIGN_BOTTOM];
+/*
+* 회전(확장-드롭다운) 다이알로그
+* commandId 로 나열
+*/
+var dzeObjRotationList = [ID_COMMAND_ROTATE_RIGHT_90,ID_COMMAND_ROTATE_LEFT_90,ID_COMMAND_ROTATE_FLIP_VERTICAL,ID_COMMAND_ROTATE_FLIP_HORIZONTAL,ID_COMMAND_ROTATE_OTHERS];
+
+/*
+* 문단 삽입하기(시작점 / 끝점) 다이알로그
+* commandId 로 나열
+*/
+var dzeInsertParagraphList = [ID_COMMAND_INSERT_PARAGRAPH_STARTPOINT, ID_COMMAND_INSERT_PARAGRAPH_ENDPOINT];
+
+/*
+* 이미지/표 - 테두리 두께 선택 다이알로그
+* commandId 로 나열
+*/
+var dzeObjectBorderThicknessList = [ID_COMMAND_IMAGE_BORDER_NONE, ID_COMMAND_IMAGE_BORDER_1PX, ID_COMMAND_IMAGE_BORDER_2PX, ID_COMMAND_IMAGE_BORDER_3PX, ID_COMMAND_IMAGE_BORDER_4PX, ID_COMMAND_IMAGE_BORDER_5PX, ID_COMMAND_IMAGE_BORDER_6PX, ID_COMMAND_IMAGE_BORDER_7PX, ID_COMMAND_IMAGE_BORDER_8PX, ID_COMMAND_IMAGE_BORDER_9PX, ID_COMMAND_IMAGE_BORDER_10PX];
+
+/*
+* 이미지/표 - 테두리 종류 선택 다이알로그
+* commandId 로 나열
+*/
+var dzeObjectBorderTypeList = [ID_COMMAND_IMAGE_BORDER_NONE, ID_COMMAND_IMAGE_BORDER_SOLID, ID_COMMAND_IMAGE_BORDER_DASHED, ID_COMMAND_IMAGE_BORDER_DOTTED, ID_COMMAND_IMAGE_BORDER_DOUBLE];
+/*
+* 텍스트박스 Preset - 테두리 종류 선택 다이알로그
+* commandId 로 나열 
+*/
+var dzeSVGObjLineStyleList = [ID_COMMAND_IMAGE_BORDER_SOLID, ID_COMMAND_IMAGE_BORDER_DASHED, ID_COMMAND_IMAGE_BORDER_DOTTED];
+
+/*
+* 붙여넣기(선택하여 붙여넣기) 다이알로그
+* commandId 로 나열
+*/
+var dzePasteExtList = [ID_COMMAND_EDIT_PASTESPECIAL];
+
+/*
+* 표 - 삭제 - 행/열/표 삭제 다이알로그
+* commandId 로 나열
+*/
+var dzeTableDeleteExtList = [ID_COMMAND_TABLE_DELETE_ROW, ID_COMMAND_TABLE_DELETE_COL, ID_COMMAND_TABLE_DELETE_TABLE];
+
+/*
+* 표 - 계산식 - 가로 합계 / 세로 합계 / 가로 평균 / 세로 평균 / 가로 곱 / 세로 곱 선택 다이알로그
+* commandId 로 나열
+*/
+var dzeTableFomulaExtList = [ID_COMMAND_TABLE_HORIZONTAL_SUM, ID_COMMAND_TABLE_VERTICAL_SUM, ID_COMMAND_TABLE_HORIZONTAL_AVERAGE, ID_COMMAND_TABLE_VERTICAL_AVERAGE, ID_COMMAND_TABLE_HORIZONTAL_MULTIPLY, ID_COMMAND_TABLE_VERTICAL_MULTIPLY];
+
+/*
+* 표 - 1,000단위 구분 쉼표 - 자릿점 넣기 / 자릿점 빼기 선택 다이알로그
+* commandId 로 나열
+*/
+var dzeTableNumberFormatList = [ID_COMMAND_TABLE_TABLE_ADD_NUMBER_FORMAT, ID_COMMAND_TABLE_TABLE_REMOTE_NUMBER_FORMAT];
+
+/*
+* 표 - 선택 - 셀/열/행/표 선택 다이알로그
+* commandId 로 나열
+*/
+var dzeTableSelectList = [ID_COMMAND_TABLE_SELECT_CELL, ID_COMMAND_TABLE_SELECT_COL, ID_COMMAND_TABLE_SELECT_ROW, ID_COMMAND_TABLE_SELECT_TABLE];
+
+/*
+* 머리글 - 머리글 편집 / 머리글 제거 다이알로그
+* commandId 로 나열
+*/
+var dzeHeaderExtList = [ID_COMMAND_EDIT_HEADER, ID_COMMAND_REMOVE_HEADER];
+
+/*
+* 바닥글 - 바닥글 편집 / 바닥글 제거 다이알로그
+* commandId 로 나열
+*/
+var dzeFooterExtList = [ID_COMMAND_EDIT_FOOTER, ID_COMMAND_REMOVE_FOOTER];
+
+/*
+* 머리글/바닥글 옵션 다이알로그
+* commandId 로 나열
+*/
+var dzeHeaderFooterOptions = [ID_COMMAND_HEADER_FOOTER_OPTION_DIFF_FIRST_PAGE, ID_COMMAND_HEADER_FOOTER_OPTION_DIFF_ODD_EVEN_PAGES, ID_COMMAND_HEADER_FOOTER_OPTION_SHOW_DOCUMENT_TEXT];
+
+/*
+* 새 페이지 삽입(확장-드롭다운) 다이알로그
+* commandId 로 나열
+*/
+var dzeObjInsertNewPageList = [ID_COMMAND_INSERT_NEW_PAGE_ABOVE, ID_COMMAND_INSERT_NEW_PAGE_BELOW];
+
+/*
+* 페이지 번호(확장-드롭다운) 다이알로그
+* commandId 로 나열
+*/
+var dzePgNum = [ ID_COMMAND_PGNUM_TEMPLATE_UP, ID_COMMAND_PGNUM_TEMPLATE_DOWN, ID_COMMAND_PGNUM_FORMAT, ID_COMMAND_PGNUM_REMOVE ];
+
+/*
+* form control (checkbox, select, radio) (확장-드롭다운) 다이알로그
+* commandId 로 나열
+*/
+var dzeInsertFormControl = [ ID_COMMAND_FORM_TAG_CHECKBOX, ID_COMMAND_FORM_TAG_SELECT, ID_COMMAND_FORM_TAG_RADIO ];

@@ -1,0 +1,821 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="MainManageDAO">
+
+    <typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+    <typeAlias alias="oracleLobMap" type="bizbox.orgchart.util.OracleLobMap"/>
+	
+	<select id="MainManageDAO.selectMainPortlet" parameterClass="hashmap" resultClass="egovMap">
+		/* MainManageDAO.selectMainPortlet - oracle */
+
+	    select
+			l.portlet_tp,
+			l.portlet_nm,
+			l.width,
+			p.portal_id,
+	        s.position,
+	        s.portlet_key,
+			case when l.resize_yn = 'Y' and NVL(s.abjust_height,0) != 0 then s.abjust_height else l.height end as height,
+			s.position,
+	    	l.iframe_yn,
+	    	case l.iframe_yn when 'Y' then (case when l.portlet_tp in ('top_ea','cn_ea','top_ea_ea','cn_ea_ea') then (TO_CHAR(l.iframe_url) || 'portletTp=' || l.portlet_tp) else TO_CHAR(l.iframe_url) end) when 'I' then TO_CHAR(s.if_url) else ' ' end as if_url,
+	    	l.iframe_error_url,
+	    	case when l.iframe_yn = 'P' then NVL((SELECT listagg((file_id || '|' || link_url || '|' || case when ss.link_id is null then 'N' else 'Y' end || '|' || case when ss.sso_type is null then ' ' else ss.sso_type end || '|' || case when ss.link_id is null then ' ' else ss.link_id end || '|' || case when ss.link_tp is null then ' ' else ss.link_tp end || '|' || case when ss.link_seq is null then ' ' else ss.link_seq end), '▦') 
+            WITHIN GROUP(ORDER BY (file_id || '|' || link_url || '|' || case when ss.link_id is null then 'N' else 'Y' end || '|' || case when ss.sso_type is null then ' ' else ss.sso_type end || '|' || case when ss.link_id is null then ' ' else ss.link_id end || '|' || case when ss.link_tp is null then ' ' else ss.link_tp end || '|' || case when ss.link_seq is null then ' ' else ss.link_seq end)) 
+            FROM t_co_portlet_link A left join t_co_sso ss ON A.link_id = ss.link_id and A.link_seq = ss.link_seq where TO_CHAR(SYSDATE, 'YYYY-MM-DD') between show_from and (case when NVL(show_to,' ') = ' ' then '9999-99-99' else show_to end) and use_yn='Y' and a.link_id=s.link_id),' ') else ' ' end as link_list,
+			('/gw/Images/portal/' || l.portlet_tp || '.png') as img_url,
+			NVL(DBMS_LOB.SUBSTR( NVL(u.custom_value0,s.val0), 2000, 1),' ') as val0,
+			NVL(DBMS_LOB.SUBSTR( s.val1, 2000, 1),' ') as val1,
+			NVL(DBMS_LOB.SUBSTR( s.val2, 2000, 1),' ') as val2,
+			NVL(DBMS_LOB.SUBSTR( s.val3, 2000, 1),' ') as val3,
+			NVL(DBMS_LOB.SUBSTR( s.val4, 2000, 1),' ') as val4,
+			s.sort			  as sort,
+			NVL(s.portlet_nm_kr, l.portlet_nm) as portlet_nm_kr, 
+			case when s.portlet_nm_en = ' ' then s.portlet_nm_kr else s.portlet_nm_en end as portlet_nm_en,
+			case when s.portlet_nm_cn = ' ' then s.portlet_nm_kr else s.portlet_nm_cn end as portlet_nm_cn,
+			case when s.portlet_nm_jp = ' ' then s.portlet_nm_kr else s.portlet_nm_jp end as portlet_nm_jp,
+			NVL(if_sso.sso_type,' ') as if_sso,
+			NVL(if_sso.link_id,' ') as link_id
+			from $DB_NEOS$t_co_portal p
+			join $DB_NEOS$t_co_portlet_set s on p.portal_id = s.portal_id
+			join $DB_NEOS$t_co_portlet l on s.portlet_tp = l.portlet_tp
+			left join $DB_NEOS$t_co_sso if_sso on if_sso.link_seq = -1 and if_sso.link_id = s.link_id and if_sso.link_tp = s.portlet_tp
+			left outer join $DB_NEOS$t_co_portlet_user_set u on p.portal_id = u.portal_id and l.portlet_tp = u.portlet_tp and u.emp_seq = #empSeq#
+			where s.use_yn = 'Y' and p.portal_id = (select * from(select portal_id from $DB_NEOS$t_co_portal where use_yn='Y' order by (case when comp_seq=#compSeq# then 0 else portal_id end)) where rownum = 1)
+			order by s.sort
+	</select>
+	
+	
+	<select id="MainManageDAO.selectMainPortletLnb" parameterClass="hashmap" resultClass="egovMap">
+		/* MainManageDAO.selectMainPortletLnb - oracle */
+
+		select 
+		lnb_menu_gubun as "lnbMenuGubun",
+		gnb_menu_no as "gnbMenuNo",
+		$DB_NEOS$FN_GetMultiLang(#langCode#,gnb.menu_nm_multi) as "gnbMenuNm",
+		lnb_menu_no as "lnbMenuNo",
+		$DB_NEOS$FN_GetMultiLang(#langCode#,lnb.menu_nm_multi) as "lnbMenuNm"
+		from $DB_NEOS$t_co_main_portlet p
+		left join $DB_NEOS$v_t_co_menu_multi gnb on p.gnb_menu_no=gnb.menu_no
+		left join $DB_NEOS$v_t_co_menu_multi lnb on p.lnb_menu_no=lnb.menu_no
+		where portlet_type=#portletType# and (comp_seq=0 or comp_seq=#compSeq#)
+		and rownum=1
+		order by comp_seq desc
+	</select>	
+	
+	<select id="MainManageDAO.selectAlertReceiverList" parameterClass="hashmap" resultClass="oracleLobMap">
+	<![CDATA[
+		/* MainManageDAO.selectAlertReceiverList - oracle */
+
+	    SELECT
+	    RESULT.alert_seq as "alertSeq", 
+	    RESULT.event_type as "moduleType", 
+	    RESULT.event_sub_type as "alertType",
+	    RESULT.seq as "seq", 
+	    RESULT.sub_seq as "subSeq",
+	    RESULT.url_path as "urlPath",
+	    RESULT.alert_contents as "alertContents",
+	    RESULT.alert_title as "alertTitle",
+	    RESULT.lnb_menu_no as "lnbMenuNo",
+	    RESULT.read_date as "readDate",
+		$DB_NEOS$get_menu_first_info('0', RESULT.lnb_menu_no, #langCode#) AS "gnbMenuNo",
+		$DB_NEOS$get_menu_first_info('1', RESULT.lnb_menu_no, #langCode#) AS "gnbMenuNm",
+		$DB_NEOS$get_menu_info('3', RESULT.lnb_menu_no, #langCode#) AS "urlGubun",
+		$DB_NEOS$get_menu_info('2', RESULT.lnb_menu_no, #langCode#) AS "menuGubun",
+		TO_CHAR(RESULT.create_date, 'YYYY.MM.DD HH24:MI') as "createDate",
+		RESULT.data as "jsonData",
+		RESULT.lang_code as "langCode",
+		case when RESULT.create_date + 0.5 > SYSDATE then 'Y' else 'N' end as "newYN"
+		    
+	    FROM 
+	    (
+	    	SELECT *
+	    	  FROM(
+	    	  		SELECT ROWNUM AS RNUM, DUMMY.*
+	    	  		  FROM(
+						    SELECT DISTINCT
+						    a.alert_seq, 
+						    a.event_type,
+						    a.event_sub_type,
+						    a.seq, a.sub_seq,
+						    TO_CHAR(a.url_path) as url_path,
+						    TO_CHAR(a.alert_contents) as alert_contents, 
+						    a.alert_title,
+						    c.lnb_menu_no,
+						    b.read_date,
+						    a.create_date,
+						    TO_CHAR(a.data) as data,
+						    a.lang_code
+							FROM $DB_NEOS$t_co_alert a, $DB_NEOS$t_co_alert_receiver b, $DB_NEOS$t_co_alert_menu c
+							WHERE a.alert_seq = b.alert_seq
+							and a.event_sub_type = c.event_sub_type
+							and b.emp_seq = #empSeq#
+							and b.comp_seq = #compSeq#
+							and a.lang_code = #langCode#
+							ORDER BY CASE WHEN b.read_date IS NULL THEN 0 ELSE 1 END , a.create_date desc
+							) DUMMY
+						WHERE ROWNUM < 50
+				)
+				WHERE RNUM >= 0
+	    ) RESULT
+	    ORDER BY CASE WHEN RESULT.read_date IS NULL THEN 0 ELSE 1 END , RESULT.create_date desc
+	 ]]>   
+	</select>
+	
+	
+	<select id="MainManageDAO.selectAlertReceiverReadCnt" parameterClass="hashmap" resultClass="egovMap">
+		/* MainManageDAO.selectAlertReceiverReadCnt - oracle */
+
+		SELECT count(*) as alert_cnt
+		FROM $DB_NEOS$t_co_alert_receiver b
+		WHERE b.emp_seq = #empSeq#
+		and b.comp_seq = #compSeq#
+		and b.read_date is null
+		AND exists (SELECT 1 FROM $DB_NEOS$t_co_alert a where a.alert_seq = b.alert_seq)
+	</select>
+	
+	<update id="MainManageDAO.updateAlertReceiver" parameterClass="hashmap">
+		/* MainManageDAO.updateAlertReceiver - oracle */
+
+		UPDATE $DB_NEOS$t_co_alert_receiver 
+		SET
+		read_date = SYSDATE
+		WHERE
+		alert_seq = #alertSeq# 
+		AND group_seq = #groupSeq# 
+		AND comp_seq = #compSeq# 
+		AND emp_seq = #empSeq#		
+	</update>
+	       
+	<select id="MainManageDAO.selectAdminAuthCnt" parameterClass="hashmap" resultClass="string">
+		/* MainManageDAO.selectAdminAuthCnt - oracle */
+
+		select count(*) as cnt
+		from  $DB_NEOS$t_co_authcode A
+		INNER JOIN $DB_NEOS$t_co_auth_relate B
+		ON    A.author_code = B.author_code
+		where A.comp_seq = #compSeq#
+		and   B.comp_seq = #compSeq#
+		and   B.emp_seq = #empSeq#
+		and   A.author_use_yn = 'Y'		
+		and   A.author_type = '005'
+	</select>
+	
+	<select id="MainManageDAO.selectMasterAuthCnt" parameterClass="hashmap" resultClass="string">
+		/* MainManageDAO.selectMasterAuthCnt - oracle */
+ 
+		select count(*) as cnt
+		from $DB_NEOS$t_co_emp_option A
+		where A.emp_seq = #empSeq#
+ 		and A.master_use_yn = 'Y'
+	</select>	
+	
+	<procedure id="MainManageDAO.selectLinkMenuInfo" parameterClass="hashmap" resultClass="egovMap">
+		/* MainManageDAO.selectLinkMenuInfo - oracle */
+		
+		EXEC P_TCMH_checkSSOToken(#linkType#, #ssoToken#)
+    </procedure>
+    
+	<select id="MainManageDAO.selectCustInfo" parameterClass="hashmap" resultClass="egovMap">
+		/* MainManageDAO.selectCustInfo - oracle */
+		
+		select *
+		  from(
+				select group_seq, comp_seq, emp_seq 
+				from $DB_NEOS$v_user_info 
+				where work_status in ('999','004') and use_yn='Y' and main_dept_yn='Y' 
+				<isNotEmpty property="skFlag">
+					and erp_emp_num = #ssoToken#
+				</isNotEmpty>
+				<isEmpty property="skFlag">
+					and login_id = #ssoToken#
+				</isEmpty>
+				order by (case when main_comp_seq=comp_seq then 0 else 1 end), comp_seq
+		) 
+		where rownum = 1
+	</select>	
+	
+    
+    
+    <delete id="MainManageDAO.deleteAlert" parameterClass="hashmap">
+    	/* MainManageDAO.selectCustInfo - oracle */
+    	
+    	delete from $DB_NEOS$t_co_alert
+    	where alert_seq = #alertSeq#
+    </delete>
+    
+    <delete id="MainManageDAO.deleteAlertReceiver" parameterClass="hashmap">
+    	/* MainManageDAO.deleteAlertReceiver - oracle */
+    	
+    	delete from $DB_NEOS$t_co_alert_receiver
+    	where alert_seq = #alertSeq#
+    		and group_seq = #groupSeq#
+    		and comp_seq = #compSeq#
+    		and emp_seq = #empSeq#
+    </delete>
+    
+    <update id="MainManageDAO.alertRemoveNew" parameterClass="hashmap">
+    	/* MainManageDAO.alertRemoveNew - oracle */
+    	
+		MERGE INTO $DB_NEOS$t_co_alert_receiver receiver
+	     USING( SELECT DISTINCT b.alert_seq, b.group_seq, b.comp_seq, b.dept_seq, b.emp_seq
+	             FROM $DB_NEOS$t_co_alert_receiver b , $DB_NEOS$t_co_alert a
+	             WHERE a.alert_seq = b.alert_seq
+				   AND b.emp_seq = #empSeq#
+				   AND b.comp_seq = #compSeq#			
+				   AND b.read_date is null
+	         ) JOINED_TABLE
+       	    ON (receiver.alert_seq = JOINED_TABLE.alert_seq AND receiver.group_seq = JOINED_TABLE.group_seq
+       	    	AND receiver.comp_seq = JOINED_TABLE.comp_seq AND receiver.dept_seq = JOINED_TABLE.dept_seq
+       	    	AND receiver.emp_seq = JOINED_TABLE.emp_seq)
+       	    
+		WHEN MATCHED THEN UPDATE
+				SET receiver.read_date = SYSDATE
+    </update>
+    
+    <select id="MainManageDAO.getAlaramCompList" parameterClass="hashmap" resultClass="egovMap">
+    	/* MainManageDAO.alertRemoveNew - oracle */
+    	
+    	SELECT comp_seq
+    	FROM $DB_NEOS$t_co_comp
+    	WHERE email_domain = #emailDomain#
+    </select>
+    
+    <select id="MainManageDAO.getCompMailDomain" parameterClass="hashmap" resultClass="egovMap">
+    	/* MainManageDAO.getCompMailDomain - oracle */
+    	
+    	select email_domain
+    	from $DB_NEOS$t_co_comp
+    	where comp_seq = #compSeq#    
+    </select>
+    
+    <update id="MainManageDAO.mailAlertRemoveNew" parameterClass="hashmap">
+    	/* MainManageDAO.mailAlertRemoveNew - oracle */
+    	
+		MERGE INTO $DB_NEOS$t_co_alert_receiver receiver
+	     USING( SELECT DISTINCT b.alert_seq, b.group_seq, b.comp_seq, b.dept_seq, b.emp_seq
+	             FROM $DB_NEOS$t_co_alert_receiver b , $DB_NEOS$t_co_alert a
+	             WHERE a.alert_seq = b.alert_seq
+				   AND b.emp_seq = #empSeq#
+				   AND b.comp_seq in($sCompSeq$)
+				   AND b.read_date is null
+				   AND b.event_type = 'MAIL'
+	         ) JOINED_TABLE
+       	    ON (receiver.alert_seq = JOINED_TABLE.alert_seq AND receiver.group_seq = JOINED_TABLE.group_seq
+       	    	AND receiver.comp_seq = JOINED_TABLE.comp_seq AND receiver.dept_seq = JOINED_TABLE.dept_seq
+       	    	AND receiver.emp_seq = JOINED_TABLE.emp_seq)
+       	    
+		WHEN MATCHED THEN UPDATE
+				SET receiver.read_date = SYSDATE			
+    </update>
+    
+    
+    <select id="MainManageDAO.eapprovalCount" parameterClass="hashmap" resultClass="egovMap">
+    	SELECT 
+    		NVL((SELECT alram_cnt FROM $DB_NEOS$t_eap_box_emp_count WHERE group_seq = #groupSeq# AND comp_seq = #compSeq# AND emp_seq = #empSeq# and ea_box_id = '0' and box_code = '20' limit 1),'0') eapproval,
+		    NVL((SELECT alram_cnt FROM $DB_NEOS$t_eap_box_emp_count	WHERE group_seq = #groupSeq# AND comp_seq = #compSeq# AND emp_seq = #empSeq# and ea_box_id = '0' and box_code = '60' limit 1) ,'0') eapprovalRef
+    </select>
+    
+    <select id="MainManageDAO.eapprovalReqCount" parameterClass="hashmap" resultClass="egovMap">
+    	/* MainManageDAO.eapprovalReqCount - oracle */
+    	
+		select count(*) as cnt 
+		from $DB_NEOS$t_co_emp e
+		join $DB_NEOS$t_co_emp_comp ec on e.emp_seq = ec.emp_seq and ec.work_status='999' and ec.use_yn='Y'
+		join $DB_NEOS$t_co_comp c on ec.comp_seq = c.comp_seq and c.use_yn='Y'
+		join $DB_NEOS$teag_appdoc ad on ec.comp_seq = ad.co_id and ec.emp_seq = ad.user_id and ad.doc_sts in ('20','30')
+		join $DB_NEOS$teag_form form on ad.form_id = form.form_id and NVL(form.use_yn,'1') = '1'
+		where e.emp_seq = #empSeq#
+    </select>    
+    
+    <select id="MainManageDAO.emailCount" parameterClass="hashmap" resultClass="egovMap">
+    	/* MainManageDAO.emailCount - oracle */
+    	
+    	SELECT 
+    		*
+   		FROM
+   			$DB_NEOS$t_co_event_count
+		WHERE
+			group_seq = #groupSeq# 
+			AND emp_seq = #empSeq#
+		AND ROWNUM = 1	    	
+    </select>    
+    
+    <select id="MainManage.getArtList" parameterClass="hashmap" resultClass="egovMap">
+    	/* MainManageDAO.getArtList - oracle */
+    
+		select *from $DB_EDMS$board_art
+		where cat_seq_no = '3083'
+		
+		<isEmpty property="NumItems">
+		and rownum <![CDATA[<=]]> 10
+		</isEmpty>
+		<isNotEmpty property="NumItems">
+		and rownum <![CDATA[<=]]> #NumItems#
+		</isNotEmpty>
+		order by write_date desc
+		
+	</select>
+
+	<insert id="MenuManageDAO.insertMenuHistory" parameterClass="hashmap">
+		/* MainManageDAO.insertMenuHistory - oracle */
+		
+		MERGE INTO $DB_NEOS$t_co_emp_menu_history
+	    USING DUAL
+	       ON (emp_seq  = #empSeq#
+	      AND  use_date = systimestamp)
+	           WHEN MATCHED THEN
+	                UPDATE SET access_ip = #accessIp#,
+	 	                menu_no   = #menuNo#,
+	 	                menu_nm   = #menuNm#,
+	 	                menu_auth = #menuAuth# 	
+	           WHEN NOT MATCHED THEN
+	                INSERT (
+	                        emp_seq
+	 	           , use_date
+	 	           , access_ip
+	 	           , menu_no
+	 	           , menu_nm
+	 	           , menu_auth		
+	    		     )
+	    		    
+	          VALUES (
+	                   #empSeq#
+	 	            , systimestamp
+	 	            , #accessIp#
+	 	            , #menuNo#
+	 	            , #menuNm#
+	 	            , #menuAuth#
+	                 )  
+	</insert>
+	
+	<update id="MainManage.updateSSoKey" parameterClass="hashmap">
+		/* MainManageDAO.updateSSoKey - oracle */
+		
+		UPDATE $DB_NEOS$t_co_emp
+			set ls_role_id = #key#
+		WHERE login_id = #loginId#
+	
+	</update>
+	
+	<select id="MainManage.selectEmpBySsoKey" parameterClass="hashmap" resultClass="string">
+		/* MainManage.selectEmpBySsoKey - oracle */
+		
+		SELECT 
+			login_id 
+		FROM
+			$DB_NEOS$t_co_emp
+		where ls_role_id = #key#
+	</select>
+	
+	<select id="MainManageDAO.getDeptPathTotalSearch" parameterClass="hashmap" resultClass="string">
+		/* MainManageDAO.getDeptPathTotalSearch - oracle */
+		
+		select b.path from
+		$DB_NEOS$v_user_info a
+		inner join $DB_NEOS$t_co_dept b on a.group_seq=b.group_seq
+		and a.comp_seq=b.comp_seq
+		and a.dept_seq=b.dept_seq
+		where a.emp_seq=#empSeq#
+		and a.dept_seq=#deptSeq#
+		and a.comp_seq=#compSeq#
+		and a.group_seq=#groupSeq#
+		and a.use_yn='Y'
+		and a.work_status='999'
+		and a.main_dept_yn='Y'
+	</select>
+	
+	<select id="MainManageDAO.getTotalSearchMailDomain" parameterClass="hashmap" resultClass="string">
+		/* MainManageDAO.getTotalSearchMailDomain - oracle */
+		
+		select 
+			NVL(comp_mail_url,(select mail_url from $DB_NEOS$t_co_group where group_seq=#groupSeq#)) as "sreturn"
+		from $DB_NEOS$t_co_comp
+		where comp_seq=#compSeq#
+		AND ROWNUM = 1
+	</select>
+	
+	<select id="MainManageDAO.getboardFileInfo" parameterClass="hashmap" resultClass="egovMap">
+		/* MainManageDAO.getboardFileInfo - oracle */
+		
+		select art_seq_no
+			,org_file_name
+			,tmp_file_name
+		from $DB_EDMS$board_attach_file
+		where file_seq_no=#fileId#
+		and rownum=1
+	</select>
+	
+	<select id="MainManageDAO.getAutoAttOptionInfo" parameterClass="hashmap" resultClass="egovMap">
+		/* MainManageDAO.getAutoAttOptionInfo - oracle */
+		
+		select
+		NVL(DBMS_LOB.SUBSTR( s.val3, 2000, 1),'N') as val3
+		from $DB_NEOS$t_co_portal p
+		join $DB_NEOS$t_co_portlet_set s on p.portal_id = s.portal_id
+		join $DB_NEOS$t_co_portlet l on s.portlet_tp = l.portlet_tp
+		where s.portlet_tp = 'lr_user' AND s.use_yn = 'Y' and p.portal_id = (case when (select count(*) from t_co_portal where use_yn='Y' and comp_seq=#compSeq#) > 0 then (select portal_id from t_co_portal where use_yn='Y' and comp_seq=#compSeq# and rownum=1) else 1 end)
+		and rownum=1
+		order by s.sort	
+	</select>
+	
+	<select id="MainManageDAO.getTotalSearchMenuAuth" parameterClass="hashmap" resultClass="java.lang.String">
+		/* MainManageDAO.getTotalSearchMenuAuth - oracle */
+		
+		SELECT menu_no
+		FROM (
+			SELECT distinct cma.menu_no
+			FROM (
+				SELECT distinct car.author_code
+				FROM $DB_NEOS$t_co_auth_relate car
+				JOIN $DB_NEOS$t_co_authcode a ON car.author_code = a.author_code  AND car.author_type = a.author_type AND a.author_use_yn = 'Y'
+				WHERE (car.author_type = '001' and car.comp_seq=#compSeq# and car.emp_seq=#empSeq#) or (car.author_type = '002' and car.dept_seq=#deptSeq#)
+			) a2_ahtu
+			JOIN $DB_NEOS$t_co_menu_auth cma ON a2_ahtu.author_code = cma.author_code
+			JOIN $DB_NEOS$t_co_menu cm ON cma.menu_no = cm.menu_no and cm.use_yn = 'Y' and NVL(cm.delete_yn,'N') = 'N'
+		) a3_menu
+		WHERE a3_menu.menu_no IN (100000000,600000000, 500000000, 400000000, 300000000, 303010000, 304000000, 2000000000, 200000000, 1)
+	</select>
+	
+	<select id="MainManageDAO.selectGerpTokenInfo" parameterClass="hashmap" resultClass="oracleLobMap">
+		/* MainManageDAO.selectGerpTokenInfo - oracle */
+		
+		select link_seq as "linkSeq"
+			 , link_type as "linkType"
+			 , event_type as "eventType" 
+			 , event_sub_type as "eventSubType" 
+			 , url_path as "urlPath" 
+			 , group_seq as "groupSeq" 
+			 , comp_seq as "compSeq" 
+			 , emp_seq as "empSeq" 
+			 , login_ip as "loginIp" 
+			 , token as "token" 
+			 , create_date as "createDate" 
+			 , seq as "seq" 
+			 , sub_seq as "subSeq"
+		from $DB_NEOS$t_msg_tcmh_link where token=#ssoToken#
+	</select>
+	
+	<select id="MainManageDAO.checkLinkToken" parameterClass="hashmap" resultClass="oracleLobMap">
+		/* MainManageDAO.checkLinkToken - oracle */
+		
+		select link_seq as "linkSeq"
+			 , link_type as "linkType"
+			 , event_type as "eventType" 
+			 , event_sub_type as "eventSubType" 
+			 , url_path as "urlPath" 
+			 , group_seq as "groupSeq" 
+			 , comp_seq as "compSeq" 
+			 , emp_seq as "empSeq" 
+			 , login_ip as "loginIp" 
+			 , token as "token" 
+			 , create_date as "createDate" 
+			 , seq as "seq" 
+			 , sub_seq as "subSeq"
+      	from $DB_NEOS$t_msg_tcmh_link 
+    	where token = #ssoToken# 
+     	and (SYSDATE - create_date)*24*60 <![CDATA[ < ]]> 5	
+	</select>
+	
+	<select id="MainManageDAO.selectLinkSeq" parameterClass="hashmap" resultClass="java.lang.String">
+		/* MainManageDAO.selectLinkSeq - oracle */
+	
+		select link_seq from $DB_NEOS$t_msg_tcmh_link where token = #ssoToken#
+	</select>
+	
+	<select id="MainManageDAO.selectLinkInfo" parameterClass="hashmap" resultClass="oracleLobMap" remapResults="true">
+		/* MainManageDAO.selectLinkInfo - oracle */		
+		
+		<isEqual property="sRet" compareValue="1">
+			<isNotEmpty property="linkType">
+				<isEqual property="linkType" compareValue="L">
+					select #sRet# as "ret", 
+					a.group_seq as "groupSeq",
+					a.comp_seq as "compSeq",
+					a.emp_seq as "empSeq",
+					a.link_seq as "linkSeq", 
+					a.link_type as "linkType", 
+					a.event_type as "eventType",
+					a.event_sub_type as "eventSubType",
+					a.login_ip as "loginIp",
+					case when b.msg_target = 'mail' 
+					then (select url_path from t_co_menu d where d.menu_no = b.menu_no) 
+					when b.msg_target = 'eap' then ((select url_path from t_co_menu c where c.menu_no = b.menu_no) || '?menu_no=' || b.menu_no) 
+					when b.msg_target = 'project' and a.seq is not null then ('/Views/Common/project/projectView.do?pSeq=' || a.seq) else TO_CHAR(a.url_path) end as "urlPath", 
+					case when b.msg_target = 'project' and a.seq is not null then '401010000'
+					else TO_CHAR(b.menu_no) end as "menuNo",
+					case when b.msg_target = 'project' and a.seq is not null then '400000000'
+					else TO_CHAR(b.gnb_menu_no) end as "gnbMenuNo",
+					case when b.msg_target = 'project' and a.seq is not null then '401010000'
+					else TO_CHAR(b.lnb_menu_no) end as "lnbMenuNo",
+					case b.menu_no when 0 then b.link_nm_kr else get_menu_first_info('1', b.menu_no, 'kr') end as "linkNmKr", 
+					b.link_nm_en as "linkNmEn", 
+					b.link_nm_jp as "linkNmJp", 
+					b.link_nm_cn as "linkNmCn", 
+					b.link_kind as "linkKind", 
+					b.msg_target as "msgTarget", 
+					b.target_url as "targetUrl", 
+					b.link_param as "linkParam", 
+					c.encrypt_type as "encryptType", 
+					'B' as "messengerViewType", 
+					case when a.event_type = 'PROJECT' then 'project'
+					when a.event_type = 'MAIL' then 'mail2'
+					when a.event_type = 'REPORT' then 'schedule'
+					when a.event_type = 'EAPPROVAL' then 'eapproval'
+					when a.event_type = 'SCHEDULE' then 'schedule'
+					when a.event_type = 'BOARD' then 'edms'
+					when a.event_type = 'EDMS' then 'edms'
+					else '' end as "moduleTp"
+					from t_msg_tcmh_link a, t_msg_tcmg_link b, t_co_encrypt c
+					where	a.link_seq = b.link_seq
+					and a.token = #ssoToken#
+					and b.encrypt_seq = c.encrypt_seq 
+					and rownum=1			        	
+				</isEqual>
+				
+				<isEqual property="linkType"  compareValue="S">		
+					<isNotEmpty property="sLinkSeq">			
+						select #sRet# as "ret", 
+						a.group_seq as "groupSeq",
+						a.comp_seq as "compSeq",
+						a.emp_seq as "empSeq",
+						a.link_seq as "linkSeq", 
+						a.link_type as "linkType", 
+						a.event_type as "eventType",
+						a.event_sub_type as "eventSubType",
+						case when b.msg_target = 'mail' 
+						then (select url_path from t_co_menu d where d.menu_no = b.menu_no) 
+						when b.msg_target = 'eap' then ((select url_path from t_co_menu c where c.menu_no = b.menu_no) || '?menu_no=' || b.menu_no) 
+						else TO_CHAR(a.url_path) end as "urlPath",
+						TO_CHAR(b.menu_no) as "menuNo",
+						TO_CHAR(b.gnb_menu_no) as "gnbMenuNo",
+						TO_CHAR(b.lnb_menu_no) as "lnbMenuNo",
+						case b.menu_no when 0 then b.link_nm_kr else get_menu_first_info('1', b.menu_no, 'kr') end as "linkNmKr", 
+						b.link_nm_en as "linkNmEn", 
+						b.link_nm_jp as "linkNmJp", 
+						b.link_nm_cn as "linkNmCn", 
+						b.link_kind as "linkKind", 
+						b.msg_target as "msgTarget", 
+						b.target_url as "targetUrl", 
+						b.link_param as "linkParam", 
+						c.encrypt_type as "encryptType", 
+						case when b.msg_target = 'sms' then 'B' else 'C' end as "messengerViewType",
+						case when a.event_type = 'PROJECT' then 'project'
+						when a.event_type = 'MAIL' then 'mail2'
+						when a.event_type = 'REPORT' then 'schedule'
+						when a.event_type = 'EAPPROVAL' then 'eapproval'
+						when a.event_type = 'SCHEDULE' then 'schedule'
+						when a.event_type = 'BOARD' then 'edms'
+						when a.event_type = 'EDMS' then 'edms'
+						else '' end as "moduleTp"
+						from t_msg_tcmh_link a, t_msg_tcmg_link b, t_co_encrypt c
+						where	a.link_seq = b.link_seq
+						and a.token = #ssoToken#
+						and b.encrypt_seq = c.encrypt_seq 
+						and rownum=1
+			        </isNotEmpty>
+			        <isEmpty property="sLinkSeq">
+						SELECT	'1' AS "ret", a.group_seq as "groupSeq", a.comp_seq as "compSeq", a.emp_seq as "empSeq", a.link_seq as "linkSeq", 
+				              a.link_type as "linkType", a.event_type as "eventType", a.event_sub_type as "eventSubType",
+				              a.url_path AS "urlPath", 
+				              ' ' as "menuNo", ' ' as "gnbMenuNo", ' ' as "lnbMenuNo", 
+				              ' ' AS "linkNmKr", 
+				              ' ' as "linkNmEn", ' ' as "linkNmJp", ' ' as "linkNmCn",
+				              ' ' as "linkKind", 'oneffice' as "msgTarget", ' ' as "targetUrl", ' ' as "linkParam", ' ' as "encryptType",
+				              'C' as "messengerViewType",
+				              ' ' as "moduleTp"
+				  			FROM $DB_NEOS$t_msg_tcmh_link a
+				  		WHERE	
+				  			a.token = #ssoToken#
+			        </isEmpty>
+				</isEqual>
+				
+				<isEqual property="linkType"  compareValue="A">
+						select	#sRet# as "ret", tl.group_seq as "groupSeq", tl.comp_seq as "compSeq", tl.emp_seq as "empSeq", tl.link_seq as "linkSeq", tl.link_type as "linkType", tl.event_type as "eventType", tl.event_sub_type as "eventSubType", 
+				                case lower(tl.event_type) 
+				                when 'mail' then (case tl.url_path when ' ' then (select url_path from $DB_NEOS$t_co_menu d where d.menu_no = cam.lnb_menu_no) else tl.url_path end) 
+				                when 'schedule' then concat('/schedule', tl.url_path)
+				                when 'board' then
+				                (case when tl.event_sub_type in('BO002','BO004','BO007','BO009') then replace(concat('/home', tl.url_path),'viewPost.do', 'viewBoard.do')
+				                else
+				                	(case (select cat_type from $DB_EDMS$board_category where cat_seq_no = tl.seq)
+									 when 'B' then replace(concat('/board', tl.url_path),'viewPost.do', 'viewBoard.do')
+									 else concat('/board', tl.url_path) end)
+								end)				                
+				                when 'edms' then concat('/doc', tl.url_path)
+				                when 'eapproval' then DECODE(ces.messenger_view_type, 'B',(select url_path from $DB_NEOS$t_co_menu where menu_no = cam.lnb_menu_no and rownum = 1), TO_CHAR(tl.url_path))
+				                else TO_CHAR(tl.url_path) end as "urlPath",
+				                $DB_NEOS$get_menu_first_info('0', cam.lnb_menu_no, 'kr') as "gnbMenuNo", 
+				                TO_CHAR(cam.lnb_menu_no) as "menuNo", 				             
+								CASE WHEN tl.seq is null or tl.seq = ' '
+								then TO_CHAR(cam.lnb_menu_no)
+								ELSE (
+				                		CASE lower(tl.event_type)
+				                		WHEN 'schedule' then (CASE WHEN (SELECT COUNT(*) FROM $DB_NEOS$t_sc_sch WHERE sch_seq=tl.seq AND gbn_code='E') > 0 THEN '301030000_my' ELSE '301040000_all' END)
+				                		WHEN 'board' THEN CAST(cam.lnb_menu_no AS UNSIGNED) + CAST(tl.seq AS UNSIGNED)
+					            		WHEN 'edms' THEN (cam.lnb_menu_no || '_' || tl.seq)
+					            		ELSE TO_CHAR(cam.lnb_menu_no) END
+					            	 )
+			            		END AS "lnbMenuNo",      
+				                $DB_NEOS$get_menu_first_info('1', cam.lnb_menu_no, 'kr') as "linkNmKr", ' ' as "linkNmEn", ' ' as "linkNmJp", ' ' as "linkNmCn",
+				                'I' as "linkKind", 
+				                NVL((select cm.url_gubun from $DB_NEOS$t_co_menu cm where cm.menu_no = cam.lnb_menu_no), lower(tl.event_type)) as "msgTarget", 
+				                case lower(tl.event_type)
+				                when 'eapproval' then DECODE(ces.messenger_view_type, 'B',(select url_path from $DB_NEOS$t_co_menu where menu_no = cam.lnb_menu_no and rownum = 1), TO_CHAR(tl.url_path))
+								else TO_CHAR(tl.url_path) end as "targetUrl",
+				                ' ' as "linkParam", ' ' as "encryptType",
+				                ces.messenger_view_type as "messengerViewType",
+				                case when tl.event_type = 'PROJECT' then 'project'
+								   when tl.event_type = 'MAIL' then 'mail2'
+								   when tl.event_type = 'REPORT' then 'schedule'
+							  	   when tl.event_type = 'EAPPROVAL' then 'eapproval'
+							  	   when tl.event_type = 'SCHEDULE' then 'schedule'
+							  	   when tl.event_type = 'BOARD' then 'edms'
+							  	   when tl.event_type = 'EDMS' then 'edms'
+							  else ' ' end as "moduleTp"
+				    	from $DB_NEOS$t_msg_tcmh_link tl, $DB_NEOS$t_co_alert_menu cam, $DB_NEOS$t_co_event_setting ces
+				    	where	tl.token = #ssoToken#
+				        and tl.event_type = cam.event_type
+				        and tl.event_sub_type = cam.event_sub_type 
+				        and tl.event_type = ces.type
+  				        and tl.event_sub_type = ces.code
+				        and rownum = 1				
+				</isEqual>
+				
+				<isEqual property="linkType"  compareValue="R">					
+					select	#sRet# as "ret", tl.group_seq as "groupSeq", tl.comp_seq as "compSeq", tl.emp_seq as "empSeq", tl.link_seq as "linkSeq", tl.link_type as "linkType", tl.event_type as "eventType", tl.event_sub_type as "eventSubType", 
+			                case lower(tl.event_type) 
+			                when 'mail' then (case tl.url_path when ' ' then (select url_path from $DB_NEOS$t_co_menu d where d.menu_no = cam.lnb_menu_no) else tl.url_path end) 
+			                when 'schedule' then concat('/schedule', tl.url_path)
+			                when 'board' then
+			                (case when tl.event_sub_type in('BO002','BO004','BO007','BO009') then replace(concat('/home', TO_CHAR(tl.url_path)),'viewPost.do', 'viewBoard.do')
+			               	else
+				                	(case (select cat_type from $DB_EDMS$board_category where cat_seq_no = tl.seq)
+									 when 'B' then replace(concat('/board', TO_CHAR(tl.url_path)),'viewPost.do', 'viewBoard.do')
+									 else concat('/board', TO_CHAR(tl.url_path)) end)
+							end)									 			                
+			                when 'edms' then concat('/doc', TO_CHAR(tl.url_path))
+			                when 'eapproval' then DECODE(ces.messenger_view_type, 'B',(select url_path from $DB_NEOS$t_co_menu where menu_no = cam.lnb_menu_no limit 1), TO_CHAR(tl.url_path))
+			                else TO_CHAR(tl.url_path) end as "urlPath",
+			                $DB_NEOS$get_menu_first_info('0', cam.lnb_menu_no, 'kr') as gnbMenuNo, 
+			                TO_CHAR(cam.lnb_menu_no) as "menuNo", 				             
+							CASE WHEN tl.seq is null or tl.seq = ' '
+							then TO_CHAR(cam.lnb_menu_no)
+							ELSE ( 			             
+			                		CASE lower(tl.event_type)
+			                		WHEN 'schedule' then (CASE WHEN (SELECT COUNT(*) FROM $DB_NEOS$t_sc_sch WHERE sch_seq=tl.seq AND gbn_code='E') > 0 THEN '301030000_my' ELSE '301040000_all' END)
+			                		WHEN 'board' THEN CAST(cam.lnb_menu_no AS UNSIGNED) + CAST(tl.seq AS UNSIGNED)
+				            		WHEN 'edms' THEN CONCAT(cam.lnb_menu_no, '_', tl.seq)
+				            		ELSE TO_CHAR(cam.lnb_menu_no) END
+				            	 )
+		            		END AS "lnbMenuNo",      
+			                $DB_NEOS$get_menu_first_info('1', cam.lnb_menu_no, 'kr') as "linkNmKr", ' ' as "linkNmEn", ' ' as "linkNmJp", ' ' as "linkNmCn",
+			                'I' as "linkKind", 
+			                NVL((select cm.url_gubun from $DB_NEOS$t_co_menu cm where cm.menu_no = cam.lnb_menu_no), lower(tl.event_type)) as "msgTarget",
+			                case lower(tl.event_type)
+				            when 'eapproval' then DECODE(ces.messenger_view_type, 'B',(select url_path from $DB_NEOS$t_co_menu where menu_no = cam.lnb_menu_no and rownum = 1), TO_CHAR(tl.url_path))
+							else TO_CHAR(tl.url_path) end as "targetUrl", 
+			                ' ' as "linkParam", ' ' as "encryptType",
+			                ces.messenger_view_type as "messengerViewType"
+			                case when tl.event_type = 'PROJECT' then 'project'
+							   when tl.event_type = 'MAIL' then 'mail2'
+							   when tl.event_type = 'REPORT' then 'schedule'
+						  	   when tl.event_type = 'EAPPROVAL' then 'eapproval'
+						  	   when tl.event_type = 'SCHEDULE' then 'schedule'
+						  	   when tl.event_type = 'BOARD' then 'edms'
+						  	   when tl.event_type = 'EDMS' then 'edms'
+						  else ' ' end as "moduleTp"
+			    	from $DB_NEOS$t_msg_tcmh_link tl, $DB_NEOS$t_co_alert_menu cam, $DB_NEOS$t_co_event_setting ces
+			    	where	tl.token = #ssoToken#
+			        and tl.event_type = cam.event_type
+			        and tl.event_sub_type = cam.event_sub_type 
+			        and tl.event_type = ces.type
+ 				        and tl.event_sub_type = ces.code
+			        and rownum = 1					
+				</isEqual>
+				
+				<isEqual property="linkType"  compareValue="B">
+					select	#sRet# as "ret", tl.group_seq as "groupSeq", tl.comp_seq as "compSeq", tl.emp_seq as "empSeq", tl.link_seq as "linkSeq", 
+			              tl.link_type as "linkType", tl.event_type as "eventType", tl.event_sub_type as "eventSubType", 
+			              case tm.url_gubun when 'mail' then (select url_path from $DB_NEOS$t_co_menu d where d.menu_no = tm.gnb_menu_no) else TO_CHAR(tl.url_path) end as "urlPath", 
+			              TO_CHAR(tm.lnb_menu_no) as "menuNo", TO_CHAR(tm.gnb_menu_no) as "gnbMenuNo", TO_CHAR(m.lnb_menu_no) as "lnbMenuNo", 
+			              ' ' as "linkNmKr", ' ' as "linkNmEn", ' ' as "linkNmJp", ' ' as "linkNmCn",
+			              'I' as "linkKind", tm.url_gubun as "msgTarget", TO_CHAR(tm.url_path) as "targetUrl", ' ' as "linkParam", ' ' as "encryptType",
+			              'C' as "messengerViewType,
+			              case when tl.event_type = 'PROJECT' then 'project'
+								   when tl.event_type = 'MAIL' then 'mail2'
+								   when tl.event_type = 'REPORT' then 'schedule'
+							  	   when tl.event_type = 'EAPPROVAL' then 'eapproval'
+							  	   when tl.event_type = 'SCHEDULE' then 'schedule'
+							  	   when tl.event_type = 'BOARD' then 'edms'
+							  	   when tl.event_type = 'EDMS' then 'edms'
+							  else ' ' end as "moduleTp"
+			  			from $DB_NEOS$t_msg_tcmh_link tl, $DB_NEOS$t_co_timeline_menu tm
+			  		where	tl.token = #ssoToken#
+			        and tl.event_type = tm.event_type
+			        and tl.event_sub_type = tm.event_sub_type 
+			        and rownum = 1
+				</isEqual>
+				
+				<isEqual property="linkType"  compareValue="P">
+					select	#sRet# as "ret", tl.group_seq as "groupSeq", tl.comp_seq as "compSeq", tl.emp_seq as "empSeq", tl.link_seq as "linkSeq", 
+				              tl.link_type as "linkType", tl.event_type as "eventType", tl.event_sub_type as "eventSubType", TO_CHAR(tl.url_path) as "urlPath", 
+				              ' ' as "menuNo", ' ' as "gnbMenuNo", ' ' as "lnbMenuNo", 
+				              ' ' as "linkNmKr", ' ' as "linkNmEn", ' ' as "linkNmJp", ' ' as "linkNmCn",
+				              'I' as "linkKind", tm.url_gubun as "msgTarget", TO_CHAR(tm.url_path) as "targetUrl", ' ' as "linkParam", ' ' as "encryptType",
+				              'C' as "messengerViewType",
+				              ' ' as "moduleTp"
+				  	from $DB_NEOS$t_msg_tcmh_link tl
+				  	where	tl.token = #ssoToken# 
+				     and rownum = 1
+				</isEqual>
+			</isNotEmpty>
+			<isEmpty property="linkType">
+				 select	#sRet# as "ret", tl.group_seq as "groupSeq", tl.comp_seq as "compSeq", tl.emp_seq as "empSeq", tl.link_seq as "linkSeq", 
+		              tl.link_type as "linkType", tl.event_type as "eventType", tl.event_sub_type as "eventSubType", 
+		              case tm.url_gubun when 'mail' then (select url_path from $DB_NEOS$t_co_menu d where d.menu_no = tm.gnb_menu_no) else TO_CHAR(tl.url_path) end as "urlPath", 
+		              TO_CHAR(tm.lnb_menu_no) as "menuNo", TO_CHAR(tm.gnb_menu_no) as "gnbMenuNo", TO_CHAR(m.lnb_menu_no) as "lnbMenuNo",
+		              $DB_NEOS$get_menu_first_info('1', tm.lnb_menu_no, 'kr') as "linkNmKr", ' ' as "linkNmEn", ' ' as "linkNmJp", ' ' as "linkNmCn",
+		              'I' as "linkKind", tm.url_gubun as "msgTarget", TO_CHAR(tm.url_path) as "targetUrl", ' ' as "linkParam", ' ' as "encryptType",
+		              ces.messenger_view_type as "messengerViewType",
+		              case when tl.event_type = 'PROJECT' then 'project'
+						   when tl.event_type = 'MAIL' then 'mail2'
+						   when tl.event_type = 'REPORT' then 'schedule'
+					  	   when tl.event_type = 'EAPPROVAL' then 'eapproval'
+					  	   when tl.event_type = 'SCHEDULE' then 'schedule'
+					  	   when tl.event_type = 'BOARD' then 'edms'
+					  	   when tl.event_type = 'EDMS' then 'edms'
+					  else ' ' end as "moduleTp"
+		  			from $DB_NEOS$t_msg_tcmh_link tl, $DB_NEOS$t_co_timeline_menu tm, $DB_NEOS$t_co_event_setting ces
+		  		where	tl.token = #ssoToken#
+		        and tl.event_type = tm.event_type
+		        and tl.event_sub_type = tm.event_sub_type 
+		        and tl.event_type = ces.type
+			    and tl.event_sub_type = ces.code
+		        and rownum = 1				
+			</isEmpty>
+		</isEqual>
+		
+		<isEqual property="sRet" compareValue="0">
+			select	#sRet# as "ret", ' ' as "groupSeq", ' ' as "compSeq", ' ' as "empSeq", ' ' as "linkSeq",
+            ' ' as "linkType", ' ' as "eventType", ' ' as "eventSubType", ' ' as "urlPath",
+            ' ' as "menuNo", ' ' as "gnbMenuNo", ' ' as "lnbMenuNo", 
+            ' ' as "linkNmKr", ' ' as "linkNmEn", ' ' as "linkNmJp", ' ' as "linkNmCn",
+            ' ' as "linkKind", ' ' as "msgTarget", ' ' as "targetUrl", ' ' as "linkParam", ' ' as "encryptType",
+			' ' as "messengerViewType", ' ' as "moduleTp"
+            from dual
+		</isEqual>
+	
+	</select>
+	
+	<select id="MainManageDAO.getBoardFileList" parameterClass="hashmap" resultClass="egovMap">
+		/* MainManageDAO.getBoardFileList - oracle */
+		
+		select * from $DB_EDMS$board_attach_file
+	</select>
+	
+	<select id="MainManageDAO.getBoardType" parameterClass="hashmap" resultClass="string">
+		/* MainManageDAO.getBoardFileList - oracle */
+		
+		select
+			cat_type
+		from
+			$DB_EDMS$board_category
+		where
+			cat_seq_no = #boardNo#
+	</select>
+	
+	
+	<select id="MainManageDAO.getErpConnectInfo" parameterClass="hashmap" resultClass="egovMap">
+		select 
+			group_seq as "group_seq"
+			, comp_seq as "comp_seq"
+			, erp_seq as "erp_seq"
+			, achr_gbn as "achr_gbn"
+			, erp_type_code as "erp_type_code"
+			, erp_name as "erp_name"
+			, database_type as "database_type"
+			, driver as "driver"
+			, url as "url"
+			, userid as "userid"
+			, password as "password"
+			, create_seq as "create_seq"
+			, create_date as "create_date"
+			, modify_seq as "modify_seq"
+			, modify_date as "modify_date"
+			, erp_comp_seq as "erp_comp_seq"
+			, erp_comp_name as "erp_comp_name"
+			, use_yn as "use_yn"
+			, org_sync_status as "org_sync_status"
+			, org_sync_date as "org_sync_date"
+			, g20_yn  as "g20_yn"
+		from 
+			$DB_NEOS$t_co_erp
+		where
+			comp_seq = #compSeq# and achr_gbn = #achrGbn#	
+	</select>
+	
+	
+</sqlMap>

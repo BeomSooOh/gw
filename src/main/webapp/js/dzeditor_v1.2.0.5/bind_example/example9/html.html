@@ -1,0 +1,79 @@
+<h3>* 테스트 방법</h3>
+<p><span style="font-size:10pt;">1) input 우측 버튼 클릭</span></p>
+<p><span style="font-size:10pt;">2) 외부 데이터 영역 수정 클릭</span></p>
+<p><span style="font-size:10pt;">3) 표시 형식 탭 클릭</span></p>
+<p><span style="font-size:10pt;">4) 숫자, 통화 테스트</span></p>
+<p><a href="http://jira.duzon.com:8080/browse/UCDOC-5164" target="_blank">http://jira.duzon.com:8080/browse/UCDOC-5164</a><span style="font-size:10pt;"><br /></span></p>
+<p><br /></p>
+<p><br /></p>
+<table cellspacing="0" cellpadding="3" style="border-collapse:collapse;width:74%;margin-left:auto;margin-right:auto;table-layout:fixed;overflow-wrap:break-word;word-break:normal;">
+    <colgroup>
+    <col style="width:98px;" />
+    <col style="width:204px;" />
+    <col style="width:204px;" />
+    </colgroup>
+    <tbody>
+        <tr style="height:16px;">
+            <td style="width:91px;height:9px;border:1px solid rgb(0, 0, 0);text-align:center;background-color:rgb(222, 235, 247);">
+                <p style="font-family:굴림;"><b>input 형식</b></p>
+            </td>
+            <td style="width:197px;height:9px;border:1px solid rgb(0, 0, 0);text-align:center;background-color:rgb(222, 235, 247);">
+                <p style="font-family:굴림;"><b>샘플</b></p>
+            </td>
+            <td style="width:197px;height:9px;border:1px solid rgb(0, 0, 0);text-align:center;background-color:rgb(222, 235, 247);">
+                <p style="font-family:굴림;"><b>형식 옵션</b></p>
+            </td>
+        </tr>
+        <tr style="height:19px;">
+            <td style="width:91px;height:12px;border:1px solid rgb(0, 0, 0);text-align:center;">
+                <p style="font-family:굴림;">general</p>
+            </td>
+            <td style="width:197px;height:12px;border:1px solid rgb(0, 0, 0);text-align:center;">
+                <p style="font-family:굴림;"><input type="text" class="dze_external_data_area" style="font-family:굴림;font-size:9pt;width:150px;" value="일반 input" /><br /></p>
+            </td>
+            <td style="width:197px;height:12px;border:1px solid rgb(0, 0, 0);text-align:center;">
+                <p><span style="font-family:굴림;font-size:9pt;"><br /></span></p>
+            </td>
+        </tr>
+        <tr style="height:19px;">
+            <td style="width:91px;height:65px;border:1px solid rgb(0, 0, 0);text-align:center;" rowspan="3">
+                <p style="font-family:굴림;">number</p>
+            </td>
+            <td style="width:197px;height:12px;border:1px solid rgb(0, 0, 0);text-align:center;">
+                <p style="font-family:굴림;font-size:9pt;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><input type="text" class="dze_external_data_area" style="font-family:굴림;font-size:9pt;width:150px;" dze_format_type="number" value="12345" /><br /></p>
+            </td>
+            <td style="width:197px;height:12px;border:1px solid rgb(0, 0, 0);text-align:center;">
+                <p><span style="font-family:굴림;font-size:9pt;"><br /></span></p>
+            </td>
+        </tr>
+        <tr style="height:19px;">
+            <td style="width:197px;height:12px;border:1px solid rgb(0, 0, 0);text-align:center;">
+                <p style="font-size:9pt;font-family:굴림;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><input type="text" class="dze_external_data_area" style="font-family:굴림;font-size:9pt;width:150px;" dze_format_type="number" dze_format_precision="2" value="12345.00" /><br /></p>
+            </td>
+            <td style="width:197px;height:12px;border:1px solid rgb(0, 0, 0);text-align:center;">
+                <p style="font-family:굴림;"><span style="font-family:굴림;">소수 자릿수 사용 (2)</span><br /></p>
+            </td>
+        </tr>
+        <tr style="height:19px;">
+            <td style="width:197px;height:12px;border:1px solid rgb(0, 0, 0);text-align:center;">
+                <p style="font-size:9pt;font-family:굴림;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><input type="text" class="dze_external_data_area" style="font-family:굴림;font-size:9pt;width:150px;" dze_format_type="number" dze_format_separator="," value="12,345" /><br /></p>
+            </td>
+            <td style="width:197px;height:12px;border:1px solid rgb(0, 0, 0);text-align:center;">
+                <p><span style="font-family:굴림;font-size:9pt;">자리점 사용 (,)</span></p>
+            </td>
+        </tr>
+        <tr style="height:19px;">
+            <td style="width:91px;height:14px;border:1px solid rgb(0, 0, 0);text-align:center;">
+                <p style="font-family:굴림;">currency</p>
+            </td>
+            <td style="width:197px;height:12px;border:1px solid rgb(0, 0, 0);text-align:center;">
+                <p style="font-size:9pt;font-family:굴림;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><input type="text" class="dze_external_data_area" style="font-family:굴림;font-size:9pt;width:150px;" dze_format_type="currency" dze_format_precision="2" dze_format_symbol="won" value="₩13,123,213.00" /><br /></p>
+            </td>
+            <td style="width:197px;height:12px;border:1px solid rgb(0, 0, 0);text-align:center;">
+                <p style="font-size:9pt;font-family:굴림;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><span style="font-size:9pt;">소수 자릿수 사용 (2)<br /></span></p>
+                <p style="font-size:9pt;font-family:굴림;color:rgb(0, 0, 0);margin-top:0px;margin-bottom:0px;"><span style="font-size:9pt;">기호 (₩)</span></p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<p><br /></p>
